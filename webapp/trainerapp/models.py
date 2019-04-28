@@ -20,6 +20,7 @@ class Value(models.Model):
 class Task(models.Model):
     name = models.CharField(max_length=150)
     values = models.ManyToManyField(Value)
+    cntx_size = models.IntegerField(default=7)
 
     def __str__(self):
         return self.name
@@ -31,7 +32,6 @@ class UseCase(models.Model):
     cuis = models.TextField(default="")
     tuis = models.TextField(default="")
     tokens = models.TextField(default="")
-    cntx_size = models.IntegerField(default=7)
     cntx_tokens = models.TextField(default="")
     filters = models.ManyToManyField(Filter)
     other = models.TextField(default="")
