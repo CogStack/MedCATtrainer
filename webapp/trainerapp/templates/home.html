@@ -1,68 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<title>CAT Trainer</title>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-		<!-- Add additional CSS in static file -->
-		{% load static %}
-		<link rel="stylesheet" href="{% static 'css/home.css' %}">
-	</head>
-	<body>
-		<nav class="navbar navbar-expand-lg navbar-light bg-light">
-			<a class="navbar-brand" href="#">CAT</a>
-			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-				<span class="navbar-toggler-icon"></span>
-			</button>
+{% extends 'base.html' %}
+{% load staticfiles %}
 
-			<div class="collapse navbar-collapse" id="navbarSupportedContent">
-				<ul class="navbar-nav mr-auto">
-					<li class="nav-item active">
-						<a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="#">Profile <span class="sr-only">(current)</span></a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="#">Help <span class="sr-only">(current)</span></a>
-					</li>
-				</ul>
-			</div>
-		</nav>
+{% block style %} 
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
 
-		<div class='container usecase'>
-			<table class="table table-striped">
-				<thead>
-					<tr>
-						<th scope="col">#</th>
-						<th scope="col" style='width: 25%'>UseCase</th>
-						<th scope="col">Description</th>
-						<th scope="col" style='width: 15%'>Trainable Tasks</th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for usecase in usecases %}
-                        <tr>
-                            <th scope="row">{{ forloop.counter }}</th>
-                            <td>
-                                <a href="{% url 'train' id=usecase.id %}">
-                                    {{ usecase.title }}</td>
-                                </a>
-                            <td>{{ usecase.description }}</td>
-                            <td>
-                                {% for task in usecase.tasks.all %}
-                                {{ task.name }} <br />
-                                {% endfor %}
-                            </td>
-                        </tr>
+{% block body %}
+<div class='container usecase'>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col" style='width: 25%'>UseCase</th>
+                <th scope="col">Description</th>
+                <th scope="col" style='width: 15%'>Trainable Tasks</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for usecase in usecases %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>
+                    <a href="{% url 'train' id=usecase.id %}">
+                        {{ usecase.title }}</td>
                     </a>
-					{% endfor %}
-				</tbody>
-			</table>
-		</div>
-		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-	</body>
-</html>
+                    <td>{{ usecase.description }}</td>
+                    <td>
+                        {% for task in usecase.tasks.all %}
+                        {{ task.name }} <br />
+                        {% endfor %}
+                    </td>
+            </tr>
+            </a>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

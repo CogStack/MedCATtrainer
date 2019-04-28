@@ -86,5 +86,5 @@ def train(request, id=0):
     # Context is now used by the HTML file from Tom
     print(context)
 
-    return render(request, 'home.html', context)
+    return render(request, 'tom.html', context)
 
