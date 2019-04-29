@@ -1,0 +1,32 @@
+.app-container {
+  display: flex;
+  min-height: 90vh;
+  flex-direction: column;
+}
+
+.app-footer {
+  height: 30px;
+}
+
+.app-main {
+  display: flex;
+  flex: 1;
+}
+
+.app-sidebar {
+  flex: 0 0 200px;
+}
+
+.note-container {
+  flex: 1;
+  overflow: auto;
+}
+
+.clinical-note {
+  white-space: pre-wrap;
+}
+
+.highlight {
+  box-shadow: 0 0 10px 5px #1F0A23;
+}
+

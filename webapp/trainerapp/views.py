@@ -1,3 +1,5 @@
+import json
+
 from django.shortcuts import render
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from .models import UseCase
@@ -84,7 +86,6 @@ def train(request, id=0):
     context['data'] = TEST
 
     # Context is now used by the HTML file from Tom
-    print(context)
+    print(json.dumps(context, indent=2))
 
-    return render(request, 'tom.html', context)
-
+    return render(request, 'app.html', context)

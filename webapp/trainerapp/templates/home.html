@@ -22,8 +22,8 @@
                 <th scope="row">{{ forloop.counter }}</th>
                 <td>
                     <a href="{% url 'train' id=usecase.id %}">
-                        {{ usecase.title }}</td>
-                    </a>
+                        {{ usecase.title }}</a></td>
+
                     <td>{{ usecase.description }}</td>
                     <td>
                         {% for task in usecase.tasks.all %}
