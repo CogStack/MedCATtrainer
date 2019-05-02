@@ -17,25 +17,19 @@
       </div>
     </div>
     <div class="row app-main">
-      <sidebar v-bind:current-doc="current.docIndex" v-bind:current-span="current.spanIndex"
-               v-bind:texts="allTexts">
-      </sidebar>
-      <clinical-text v-bind:text="current.text" v-bind:spans="current.spans" v-bind:labels="current.labels"
-                     v-bind:span-index="current.spanIndex" class="col-9 border-top"
-                     style="height: 100%; overflow: auto;" id="mainTextArea">
-      </clinical-text>
+      <sidebar :text="text" :items="items" :tasks="tasks"
+               :task-idx="current.taskIndex"
+               :span-idx="current.spanIndex"></sidebar>
+      <clinical-text :text="text" :span="current.span"
+                     :task="tasks[current.taskIndex]"
+                     class="border-top" style="height: 100%; overflow: auto;"
+                     id="mainTextArea"></clinical-text>
     </div>
     <div class="row app-footer">
-      <div class="col-sm-12" style="text-align: center">
-        <button :disabled="current.docIndex === -1 || (current.docIndex === 0 && current.spanIndex === 0)"
-                v-on:click="back" type="button" style="height: 100%" class="btn btn-warning mb-2"><i class="fas fa-backward"></i></button>
-        <button :disabled="!allTexts.length" v-on:click="yes" type="button" style="height: 100%" class="btn btn-success mb-2">Yes</button>
-        <button :disabled="!allTexts.length" v-on:click="no" type="button" style="height: 100%" class="btn btn-danger mb-2">No</button>
-        <button :disabled="current.docIndex === -1 || (current.docIndex === allTexts.length - 1 && current.spanIndex === current.spans.length - 1)"
-                v-on:click="next" type="button" style="height: 100%"
-                class="btn btn-warning mb-2"><i class="fas fa-forward"></i></button>
-        <button :disabled="!allTexts.length" v-on:click="save" class="btn btn-primary mb-2" type="button" style="height: 100%; float: right;">Submit</button>
-      </div>
+      <task-bar :tasks="tasks" :current-task="current.task" :select="select"></task-bar>
+      <nav-bar :tasks-complete="tasksComplete" :submit-func="submit"
+        :current="current" :total-tasks="tasks.length" :total-spans="items.length"
+        :next="next" :back="back" :submit="submit"></nav-bar>
     </div>
   </div>
 
@@ -45,12 +39,17 @@
   <!--<script src=¡"https://intercoolerreleases-leaddynocom.netdna-ssl.com/intercooler-1.2.1.min.js"></script>-->
 
   <!-- switch to production CDN before going to prod! -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
 
   <script type="text/javascript">
     taskTrainingData = function() {
-      return {{ data | js }};
+      let trainingData = {
+        data: {{ data | js }},
+        tasks: {{ tasks | js }}
+      };
+      return JSON.parse(JSON.stringify(trainingData));
     };
   </script>
   <script src="{% static 'js/app.js' %}"></script>

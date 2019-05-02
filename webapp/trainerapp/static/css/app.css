@@ -1,3 +1,13 @@
+/* variables */
+:root {
+  --task-color-0: #28a745;  /* bootstrap success, green */;
+  --task-color-1: #dc3545;  /* bootstrap danger, red */
+  --task-color-2: #ffc107;  /* bootstrap warning */
+  --task-color-3: #17a2b8;  /* bootstrap info  */
+  --task-color-4: #007bff;  /* bootstrap primary */
+  --task-color-5: #868e96;  /* bootstrap secondary */
+}
+
 .app-container {
   display: flex;
   min-height: 90vh;
@@ -14,7 +24,12 @@
 }
 
 .app-sidebar {
-  flex: 0 0 200px;
+  flex: 0 0 350px;
+  overflow-x: auto;
+}
+
+.app-sidebar td, .app-sidebar th {
+  /*padding: 5px;*/
 }
 
 .note-container {
@@ -26,7 +41,60 @@
   white-space: pre-wrap;
 }
 
-.highlight {
+.highlight-task-default {
   box-shadow: 0 0 10px 5px #1F0A23;
+}
+
+.highlight-task-0 {
+  box-shadow: 0 0 10px 5px var(--task-color-0);
+}
+
+.highlight-task-1 {
+  box-shadow: 0 0 10px 5px var(--task-color-1);
+}
+
+.highlight-task-2 {
+  box-shadow: 0 0 10px 5px var(--task-color-2);
+}
+
+.highlight-task-3 {
+  box-shadow: 0 0 10px 5px var(--task-color-3);
+}
+
+.highlight-task-4 {
+  box-shadow: 0 0 10px 5px var(--task-color-4);
+}
+
+.highlight-task-5 {
+  box-shadow: 0 0 10px 5px var(--task-color-5);
+}
+
+.task-btn-0 {
+  background-color: var(--task-color-0);
+  color: white;
+}
+
+.task-btn-1 {
+  background-color: var(--task-color-1);
+  color: white;
+}
+
+.task-btn-2 {
+  background-color: var(--task-color-2);
+  color: white;
+}
+
+.task-btn-3 {
+  background-color: var(--task-color-3);
+  color: white;
+}
+
+.task-btn-4 {
+  background-color: var(--task-color-4);
+  color: white;
+}
+
+.task-btn-5 {
+  background-color: var(--task-color-5);
 }
 

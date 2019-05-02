@@ -1,46 +1,15 @@
 Vue.component('clinical-text', {
-  props: ['text', 'spans', 'labels', 'spanIndex'],
+  props: ['text', 'span', 'task'],
   computed: {
     formattedText: function() {
-
-      let wrap_in_text = function(txt, spanTxt, valStart, valEnd) {
-        return txt.slice(0, valStart-1) + spanTxt + txt.slice(valEnd+1, txt.length)
-      };
-      let txt = this.text;
-      let formattedTxt = '';
-
-      // find non_overlapping spans and slice each of those...
-      if (this.spans && this.spans.length > 0) {
-        let sortedSpans = this.spans.sort((a, b) => a[0] - b[0]);
-
-        let start = 0;
-        let end = sortedSpans[0][0];
-
-        for (let i = 0; i < sortedSpans.length; i++) {
-          formattedTxt += txt.slice(start, end);
-          const valStart = sortedSpans[i][0];
-          const valEnd = sortedSpans[i][1];
-          let spanTxt = '';
-          if (this.labels[i] === null)
-            spanTxt = `<span class="bg-primary text-white">${txt.slice(valStart, valEnd)}</span>`;
-          else if (this.labels[i])
-            spanTxt = `<span class="bg-success text-white">${txt.slice(valStart, valEnd)}</span>`;
-          else
-            spanTxt = `<span class="bg-danger text-white">${txt.slice(valStart, valEnd)}</span>`;
-
-          if (this.spanIndex === i) {
-            spanTxt = `<span id="focusSpan" class="highlight">${spanTxt}</span>`;
-          }
-          formattedTxt += spanTxt;
-
-          if (i !== sortedSpans.length - 1)
-            end = sortedSpans[i+1][0];
-          else
-            end = txt.length - 1;
-          start = sortedSpans[i][1];
-        }
-        formattedTxt += txt.slice(start, end);
+      let taskHighlight = 'highlight-task-default';
+      if (this.task.taskName in this.span.taskLabels) {
+        taskHighlight = 'highlight-task-' + this.span.taskLabels[this.task.taskName];
       }
+      let highlightText = this.text.slice(this.span.start_ind, this.span.end_ind);
+      let formattedTxt = `<span id="focusSpan" class="${taskHighlight}">${highlightText}</span>`;
+      formattedTxt = this.text.slice(0, this.span.start_ind) + formattedTxt +
+          this.text.slice(this.span.end_ind, this.text.length);
       return formattedTxt;
     }
   },
@@ -60,109 +29,176 @@ Vue.component('clinical-text', {
 });
 
 Vue.component('sidebar', {
-  props: ['texts', 'currentDoc', 'currentSpan'],
+  props: ['text', 'items', 'tasks', 'taskIdx', 'spanIdx'],
+  computed: {
+    taskValues: function() {
+      let mappedTasks = {};
+      for(let task of this.tasks) {
+        let mappedVals = {};
+        for(let val of task.values) {
+          mappedVals[val[1]] = val[0]
+        }
+        mappedTasks[task.taskName] = mappedVals;
+      }
+      return mappedTasks;
+    },
+  },
+  methods: {
+    taskValue: function(task, item) {
+      let spanTaskVal = task.taskName in item.taskLabels ? item.taskLabels[task.taskName] : 'n/a';
+      return spanTaskVal !== 'n/a' ? this.taskValues[task.taskName][spanTaskVal] : 'n/a';
+    }
+  },
   template: `
-    <div class="col-3 mb-2 border-top border-right app-sidebar">
-      <div v-if="texts.length > 0">
-        <h3>Document:{{currentDoc + 1}} of {{texts.length}}</h3>
-        <h4>Span:{{currentSpan + 1}} of {{texts[currentDoc].spans.length}}</h4>
-        <h4></h4>
+    <div class="mb-2 border-top border-right app-sidebar">
+      <div v-if="text.length > 0">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Text Span</th>
+              <th v-for="task in tasks">{{task.taskName}}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(item, index) in items">
+              <td>{{text.slice(item.start_ind, item.end_ind)}}</td>
+              <td v-for="task in tasks">{{taskValue(task, item)}}</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
       </div>
     </div>
   `
 });
 
-let data = {
-  allTexts: [],
-  current: {
-    text: '',
-    spans: [],
-    labels: [],
-    spanIndex: -1,
-    docIndex: -1,
-  },
-  searchTerm: '',
-  classifierTask: '',
-};
-
-let nextSpan = function(data) {
-  if (data.current.docIndex === data.allTexts.length - 1 &&
-      data.current.spanIndex === data.current.spans.length - 1)
-    return;
-  if (data.current.spanIndex === data.current.spans.length - 1) {
-    data.current.docIndex ++;
-    data.current.spanIndex = 0;
-    let newCurrText = data.allTexts[data.current.docIndex];
-    data.current.text = newCurrText.text;
-    data.current.spans = newCurrText.spans;
-    data.current.labels = newCurrText.labels;
-  } else {
-    data.current.spanIndex++;
-  }
-
-};
-
-// call data resource here.
-
-data.allTexts = taskTrainingData().entities.map(i => {
-  // per document / text there should be multiple spans...
-  return {
-    labels: [null],
-    spans: [[i.cntx.cntx_ent_start, i.cntx.cntx_ent_end]],
-    type: [i.type],
-    text: taskTrainingData().text
-  };
-  // convert spans to this data model ... append all other useful info... to this model
+Vue.component('taskBar', {
+  props: ['tasks', 'currentTask', 'select'],
+  template: `
+    <div class="col-sm-6" style="text-align: center">
+      <span>{{currentTask.taskName}}</span>
+      <span v-for="(val, index) of currentTask.values">
+        <button  :class="'btn task-btn-' + index"
+              @click="select(val[1])"> {{ val[0] }}
+        </button>
+      </span>
+    </div>
+  `
 });
-// side bar and clinical text components
-data.current.docIndex = 0;
-data.current.spanIndex = 0;
-const currText = data.allTexts[data.current.docIndex];
-data.current.text = currText.text;
-data.current.spans = currText.spans;
-data.current.labels = currText.labels;
+
+Vue.component('navBar', {
+  props: ['tasksComplete', 'current', 'totalTasks', 'totalSpans', 'next', 'back', 'submit'],
+  methods: {
+    nextDisabled: function() {
+      return this.current.spanIndex === (this.totalSpans - 1)  &&
+          this.current.taskIndex === (this.totalTasks - 1);
+    },
+    backDisabled: function() {
+      return this.current.spanIndex === 0 && this.current.taskIndex === 0
+    }
+  },
+  template: `
+    <div class="col-sm-6">
+      <button :disabled="backDisabled()" @click="back" type="button" class="btn btn-warning mb-2">
+        <i class="fas fa-backward"></i>
+      </button>
+      <button :disabled="nextDisabled()"  @click="next" type="button" class="btn btn-warning mb-2">
+        <i class="fas fa-forward"></i>
+      </button> 
+      <button :disabled="!tasksComplete" @click.prevent="submit" class="btn btn-primary mb-2" type="button" 
+      style="float: right;">Submit</button>
+    </div>
+  `
+});
+
+
+let trainData = taskTrainingData();
+
+let data = {
+  items: [],
+  text: trainData.data.text,
+  current: {
+    spanIndex: 0,
+    taskIndex: 0,
+    span: null,
+    task: {
+      values: []
+    },
+  },
+  tasksComplete: true,  // Is this needed?
+  tasks: []
+};
+
+data.tasks = _.pairs(trainData.tasks).map((task) => {
+  return {
+    taskName: task[0],
+    values: task[1]
+  };
+});
+
+
+data.items = trainData.data.entities.map(i => {
+  let item = {};
+  Object.assign(item, i);
+  item.taskLabels = {}; // one per task?
+  return item;
+});
+
+data.current.span =  data.items[0];
+data.current.task = data.tasks[0];
+
+let next = function() {
+  let taskIndex = data.current.taskIndex;
+  let spanIndex = data.current.spanIndex;
+  if (taskIndex < data.tasks.length - 1) {
+    data.current.taskIndex++;
+    data.current.task = data.tasks[data.current.taskIndex];
+  } else if (spanIndex < data.items.length-1) {
+    data.current.spanIndex++;
+    data.current.span = data.items[data.current.spanIndex];
+    data.current.taskIndex = 0;
+    data.current.task = data.tasks[0];
+  } else
+    console.error('Cannot proceed to next element that does not exist');
+};
+
+let back = function() {
+  let taskIndex = data.current.taskIndex;
+  let spanIndex = data.current.spanIndex;
+  if (taskIndex > 0) {
+    data.current.taskIndex--;
+    data.current.task = data.tasks[data.current.taskIndex];
+  } else if (spanIndex > 0) {
+    data.current.spanIndex--;
+    data.current.span = data.items[data.current.spanIndex];
+  } else
+    console.log('Cannot proceed to next element.');
+};
 
 
 let app = new Vue({
   el: '#app',
   data: data,
   methods: {
-    yes: function (e) {
-      e.preventDefault();
-      data.allTexts[data.current.docIndex].labels[data.current.spanIndex] = true;
-      nextSpan(data);
+    select: function (val) {
+      app.$set(data.current.span.taskLabels, data.current.task.taskName, val);
+      if (!(data.current.spanIndex === (data.items.length - 1)  &&
+          data.current.taskIndex === (data.tasks.length - 1)))
+        next()
     },
-    no: function (e) {
-      e.preventDefault();
-      data.allTexts[data.current.docIndex].labels[data.current.spanIndex] = false;
-      nextSpan(data);
-    },
-    back: function (e) {
-      e.preventDefault();
-      if (data.current.spanIndex === 0) {
-        data.current.docIndex--;
-        data.current.spanIndex = 0;
-        let newCurrText = data.allTexts[data.current.docIndex];
-        data.current.text = newCurrText.text;
-        data.current.spans = newCurrText.spans;
-        data.current.labels = newCurrText.labels;
-      } else {
-        data.current.spanIndex--;
-      }
-    },
-    next: function (e) {
-      e.preventDefault();
-      nextSpan(data);
-    },
-    save: function(e) {
-      e.preventDefault();
-      this.$http.post('/store', data.allTexts)
-          .then(response => {
-
-          });
+    next: next,
+    back: back,
+    submit: function () {
+      let payload = taskTrainingData().data;
+      // collate task labels per span and set within the entity object.
+      payload.entities = payload.entities.map((e) => {
+        return Object.assign(e, e.taskLabels)
+      });
+      this.$http.post('/save', payload);
     }
   }
 });
+
 
 
 
