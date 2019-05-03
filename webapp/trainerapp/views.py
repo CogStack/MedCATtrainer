@@ -49,6 +49,7 @@ TEST = {'text': 'sp. significantly reducing (60%) the number of parasites in the
     'cntx_ent_start': 18,
     'cntx_ent_end': 25}}]}
 
+
 def home(request):
     context = {}
     context['usecases'] = UseCase.objects.all()

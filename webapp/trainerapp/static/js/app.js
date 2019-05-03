@@ -75,13 +75,19 @@ Vue.component('sidebar', {
 Vue.component('taskBar', {
   props: ['tasks', 'currentTask', 'select'],
   template: `
-    <div class="col-sm-6" style="text-align: center">
-      <span>{{currentTask.taskName}}</span>
-      <span v-for="(val, index) of currentTask.values">
-        <button  :class="'btn task-btn-' + index"
-              @click="select(val[1])"> {{ val[0] }}
-        </button>
-      </span>
+    <div class="task-bar col-sm-6 border-top border-right" style="text-align: center">
+      <div class="row">
+        <div class="col-sm-3">
+        Task: <span>{{currentTask.taskName}}</span>
+      </div>
+      <div class="col-sm-9">
+        <span v-for="(val, index) of currentTask.values">
+          <button  :class="'btn task-btn-' + index"
+                @click="select(val[1])"> {{ val[0] }}
+          </button>
+        </span>
+      </div>
+      </div>
     </div>
   `
 });
@@ -98,7 +104,7 @@ Vue.component('navBar', {
     }
   },
   template: `
-    <div class="col-sm-6">
+    <div class="nav-bar col-sm-6 border-top">
       <button :disabled="backDisabled()" @click="back" type="button" class="btn btn-warning mb-2">
         <i class="fas fa-backward"></i>
       </button>

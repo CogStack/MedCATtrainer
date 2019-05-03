@@ -32,6 +32,10 @@
   /*padding: 5px;*/
 }
 
+.nav-bar, .task-bar {
+  padding: 10px;
+}
+
 .note-container {
   flex: 1;
   overflow: auto;
