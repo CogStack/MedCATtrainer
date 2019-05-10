@@ -37,7 +37,7 @@ class UseCase(models.Model):
     other = models.TextField(default="")
     tasks = models.ManyToManyField(Task)
     type = models.CharField(max_length=50, default='all')
-    folder = models.CharField(max_length=50, default='train')
+    folder = models.CharField(max_length=50, default='', blank=True)
 
     def __str__(self):
         return self.title
