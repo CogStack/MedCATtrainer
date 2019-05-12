@@ -124,6 +124,35 @@ Vue.component('navBar', {
   `
 });
 
+Vue.component('modal', {
+  template: `
+  <transition name="modal">
+    <div class="modal-mask">
+      <div class="modal-wrapper">
+        <div class="modal-container">
+
+          <div class="modal-header">
+            <slot name="header">
+              
+            </slot>
+          </div>
+
+          <div class="modal-body">
+            <slot name="body">
+            </slot>
+          </div>
+
+          <div class="modal-footer">
+            <slot name="footer">
+            </slot>
+          </div>
+        </div>
+      </div>
+    </div>
+  </transition>
+`
+});
+
 
 let trainData = taskTrainingData();
 
@@ -138,6 +167,9 @@ let data = {
       values: []
     },
   },
+  reload: () => location.reload(),
+  saveModal: false,
+  failModal: false,
   tasksComplete: true,  // Is this needed?
   tasks: []
 };
@@ -217,6 +249,16 @@ let app = new Vue({
         headers: {
           'X-CSRFToken': Cookies.get('csrftoken')
         }
+        // show modal
+      }).then((resp) => {
+        if (resp.status === 200) {
+          data.savedModal = true;
+        } else {
+          console.log(resp);
+          data.failModal = true;
+        }
+      }).catch((err) => {
+        data.failModal = true;
       });
     }
   }

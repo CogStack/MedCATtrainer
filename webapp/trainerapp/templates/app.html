@@ -29,6 +29,20 @@
         :current="current" :total-tasks="tasks.length" :total-spans="items.length"
         :next="next" :back="back" :submit="submit"></nav-bar>
     </div>
+    <modal v-if="saveModal">
+      <h3 slot="header" class="text-success">Save Successful</h3>
+      <div slot="body"></div>
+      <div slot="footer">
+        <button class="btn btn-primary" @click="reload()">Next Document</button>
+      </div>
+    </modal>
+
+    <modal v-if="failModal">
+      <h3 slot="header" class="text-danger">Save Failed</h3>
+      <div slot="body">
+        Please contact cat-trainer-dev team for further investigation
+      </div>
+    </modal>
   </div>
 
   <script src="https://code.jquery.com/jquery-3.3.1.js" crossorigin="anonymous"></script>
