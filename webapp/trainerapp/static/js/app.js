@@ -2,9 +2,13 @@ Vue.component('clinical-text', {
   props: ['text', 'span', 'task'],
   computed: {
     formattedText: function() {
+      let taskValuesToTasks = Object.assign(...this.task.values.map(([key, val]) => ({[val]: key})));
+      let taskValueNamesToButtonIndices = Object.assign(...this.task.values.map((val, i) =>  ({[val[0]]: i})));
+
       let taskHighlight = 'highlight-task-default';
       if (this.task.taskName in this.span.taskLabels) {
-        taskHighlight = 'highlight-task-' + this.span.taskLabels[this.task.taskName];
+        let btnIndex = taskValueNamesToButtonIndices[taskValuesToTasks[this.span.taskLabels[this.task.taskName]]];
+        taskHighlight = 'highlight-task-' + btnIndex;
       }
       let highlightText = this.text.slice(this.span.start_ind, this.span.end_ind);
       let formattedTxt = `<span id="focusSpan" class="${taskHighlight}">${highlightText}</span>`;
