@@ -2,10 +2,12 @@ import json
 
 from django.shortcuts import render, redirect
 from django.contrib.staticfiles.templatetags.staticfiles import static
+
 from .models import UseCase
 from .cat_train import get_doc, save_doc
 
 DATA_DIR = "/tmp/"
+
 
 def home(request):
     context = {}
@@ -50,9 +52,9 @@ def train(request, id=0):
 
 
 def train_save(request, id=0):
-    # This expects a POST reuqest with the data
+    # This expects a POST request with the data
     usecase = UseCase.objects.get(id=id)
-    data = reqest.POST['data']
+    data = json.loads(request.body)
     in_path = DATA_DIR + "input/" + usecase.folder
     out_path = DATA_DIR + "output/" + usecase.folder
 

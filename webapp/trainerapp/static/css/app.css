@@ -8,37 +8,73 @@
   --task-color-5: #868e96;  /* bootstrap secondary */
 }
 
-.app-container {
-  display: flex;
-  min-height: 90vh;
-  flex-direction: column;
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+.app-header, .app-footer {
+  flex: 1;
 }
 
 .app-footer {
-  height: 30px;
+  display: flex;
+}
+
+.app-container {
+  display: flex;
+  height: calc(100% - 56px);
+  flex-direction: column;
+  padding: 5px;
 }
 
 .app-main {
   display: flex;
-  flex: 1;
+  flex: 1 1 auto;
+  overflow: hidden;
 }
 
 .app-sidebar {
-  flex: 0 0 350px;
-  overflow-x: auto;
+  flex: 0 0 450px;
+  overflow: auto;
 }
 
-.app-sidebar td, .app-sidebar th {
-  /*padding: 5px;*/
+.app-sidebar table {
+  font-size: 10pt;
 }
 
 .nav-bar, .task-bar {
-  padding: 10px;
+  padding: 5px;
 }
 
+.nav-bar {
+  width: 300px;
+}
+
+.task-bar {
+  width: 100%;
+  text-align: center;
+}
+
+.task-bar-task {
+  display: inline-block;
+  width: 200px;
+}
+
+.task-name {
+  font-weight: bold;
+  font-size: 22px;
+}
+
+.task-bar-choices {
+  display: inline-block;
+  width: calc(100% - 212px);
+}
+
+
 .note-container {
-  flex: 1;
-  overflow: auto;
+  overflow: scroll;
+  flex: 1 1 auto;
 }
 
 .clinical-note {

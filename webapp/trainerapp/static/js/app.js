@@ -23,7 +23,8 @@ Vue.component('clinical-text', {
   },
   template: `
     <div class="note-container">
-      <p class="clinical-note" v-html="formattedText"></p>
+      <div class="clinical-note" v-html="formattedText">
+      </div>
     </div>
   `
 });
@@ -56,12 +57,16 @@ Vue.component('sidebar', {
           <thead>
             <tr>
               <th>Text Span</th>
+              <th>CUI</th>
+              <th>Accuracy</th>
               <th v-for="task in tasks">{{task.taskName}}</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(item, index) in items">
               <td>{{text.slice(item.start_ind, item.end_ind)}}</td>
+              <td>{{item.cui}}</td>
+              <td>{{item.acc.toFixed(2)}}</td>
               <td v-for="task in tasks">{{taskValue(task, item)}}</td>
             </tr>
           </tbody>
@@ -75,18 +80,16 @@ Vue.component('sidebar', {
 Vue.component('taskBar', {
   props: ['tasks', 'currentTask', 'select'],
   template: `
-    <div class="task-bar col-sm-6 border-top border-right" style="text-align: center">
-      <div class="row">
-        <div class="col-sm-3">
-        Task: <span>{{currentTask.taskName}}</span>
+    <div class="task-bar border-top border-right">
+      <div class="task-bar-task">
+        Task: <span class="task-name">{{currentTask.taskName}}</span>
       </div>
-      <div class="col-sm-9">
+      <div class="task-bar-choices">
         <span v-for="(val, index) of currentTask.values">
           <button  :class="'btn task-btn-' + index"
                 @click="select(val[1])"> {{ val[0] }}
           </button>
         </span>
-      </div>
       </div>
     </div>
   `
@@ -104,7 +107,7 @@ Vue.component('navBar', {
     }
   },
   template: `
-    <div class="nav-bar col-sm-6 border-top">
+    <div class="nav-bar border-top">
       <button :disabled="backDisabled()" @click="back" type="button" class="btn btn-warning mb-2">
         <i class="fas fa-backward"></i>
       </button>
@@ -197,10 +200,20 @@ let app = new Vue({
     submit: function () {
       let payload = taskTrainingData().data;
       // collate task labels per span and set within the entity object.
-      payload.entities = payload.entities.map((e) => {
-        return Object.assign(e, e.taskLabels)
+      // payload.entities = payload.entities.map((e) => {
+      //   return Object.assign(e, e.taskLabels)
+      // });
+
+      payload.entities = _.zip(payload.entities, data.items).map((p) => {
+        return Object.assign(p[0], p[1].taskLabels)
       });
-      this.$http.post('/save', payload);
+
+      let docId = document.URL.split('/').slice(-1);
+      this.$http.post(`/save/${docId}`, payload, {
+        headers: {
+          'X-CSRFToken': Cookies.get('csrftoken')
+        }
+      });
     }
   }
 });

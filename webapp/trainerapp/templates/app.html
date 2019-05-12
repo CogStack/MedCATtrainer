@@ -11,21 +11,19 @@
 
 {% block body %}
   <div id="app" class="container-fluid app-container">
-    <div class="row">
-      <div class="col-sm-12">
-        <h4>{{ title }} Training Samples</h4>
-      </div>
+    <div class="app-header">
+      <h4>{{ title }} Training Samples</h4>
     </div>
-    <div class="row app-main">
+    <div class="app-main">
       <sidebar :text="text" :items="items" :tasks="tasks"
                :task-idx="current.taskIndex"
                :span-idx="current.spanIndex"></sidebar>
       <clinical-text :text="text" :span="current.span"
                      :task="tasks[current.taskIndex]"
-                     class="border-top" style="height: 100%; overflow: auto;"
+                     class="border-top"
                      id="mainTextArea"></clinical-text>
     </div>
-    <div class="row app-footer">
+    <div class="app-footer">
       <task-bar :tasks="tasks" :current-task="current.task" :select="select"></task-bar>
       <nav-bar :tasks-complete="tasksComplete" :submit-func="submit"
         :current="current" :total-tasks="tasks.length" :total-spans="items.length"
@@ -40,6 +38,7 @@
 
   <!-- switch to production CDN before going to prod! -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
 
