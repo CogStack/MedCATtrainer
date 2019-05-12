@@ -252,7 +252,7 @@ let app = new Vue({
         // show modal
       }).then((resp) => {
         if (resp.status === 200) {
-          data.savedModal = true;
+          data.saveModal = true;
         } else {
           console.log(resp);
           data.failModal = true;
