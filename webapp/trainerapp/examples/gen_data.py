@@ -49,7 +49,7 @@ def gen_training_data():
 
     output_dir = '/Users/tom/phd/cattrainer/webapp/trainerapp/examples/input/train'
     for i, text in enumerate(output_texts):
-        text['f_name'] = f'{i}.json',
+        text['f_name'] = f'{i}.json'
         json.dump(text, open(f'{output_dir}/{text["f_name"]}', 'w'))
 
 
