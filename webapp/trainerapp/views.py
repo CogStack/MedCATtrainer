@@ -60,5 +60,12 @@ def train_save(request, id=0):
     out_path = DATA_DIR + "output/" + usecase.folder
 
     save_doc(data, in_path, out_path)
-
     return redirect('train', id)
+
+
+def upload(request, id=0):
+    usecase = UseCase.objects.get(id=id)
+    upload_path = f'{DATA_DIR}/input/{usecase.folder}'
+    for f in request.FILES:
+        print(f)
+        # actually write to location
