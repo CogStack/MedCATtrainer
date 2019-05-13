@@ -8,10 +8,10 @@ from .cat_train import get_doc, save_doc
 
 DATA_DIR = "/tmp/"
 
-
 def home(request):
     context = {}
     context['usecases'] = UseCase.objects.all()
+    context['data_dir'] = DATA_DIR + 'input/' 
 
     return render(request, 'home.html', context=context)
 
