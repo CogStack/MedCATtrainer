@@ -70,7 +70,7 @@ Vue.component('sidebar', {
             <tr v-for="(item, index) in items">
               <td>{{text.slice(item.start_ind, item.end_ind)}}</td>
               <td>{{item.cui}}</td>
-              <td>{{item.acc.toFixed(2)}}</td>
+              <td>{{parseFloat(item.acc).toFixed(2)}}</td>
               <td v-for="task in tasks">{{taskValue(task, item)}}</td>
             </tr>
           </tbody>
@@ -153,7 +153,6 @@ Vue.component('modal', {
 `
 });
 
-
 let trainData = taskTrainingData();
 
 let data = {
@@ -180,7 +179,6 @@ data.tasks = _.pairs(trainData.tasks).map((task) => {
     values: task[1]
   };
 });
-
 
 data.items = trainData.data.entities.map(i => {
   let item = {};
@@ -219,7 +217,6 @@ let back = function() {
   } else
     console.log('Cannot proceed to next element.');
 };
-
 
 let app = new Vue({
   el: '#app',
@@ -263,8 +260,3 @@ let app = new Vue({
     }
   }
 });
-
-
-
-
-

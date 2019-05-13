@@ -36,7 +36,7 @@ def gen_training_data():
                 'label': cui,
                 'cui': cui,
                 'tui': tui,
-                'acc': random(),
+                'acc': str(random()),
                 'type': 'Medical Device',
                 'cntx': {
                     'text': m[0],
