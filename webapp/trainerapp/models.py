@@ -28,15 +28,15 @@ class Task(models.Model):
 
 class UseCase(models.Model):
     title = models.CharField(max_length=150)
-    description = models.TextField(default="")
-    cuis = models.TextField(default="")
-    tuis = models.TextField(default="")
-    tokens = models.TextField(default="")
-    cntx_tokens = models.TextField(default="")
+    description = models.TextField(default="", blank=True)
+    cuis = models.TextField(default="", blank=True)
+    tuis = models.TextField(default="", blank=True)
+    tokens = models.TextField(default="", blank=True)
+    cntx_tokens = models.TextField(default="", blank=True)
     filters = models.ManyToManyField(Filter)
-    other = models.TextField(default="")
+    other = models.TextField(default="", blank=True)
     tasks = models.ManyToManyField(Task)
-    type = models.CharField(max_length=50, default='all')
+    type = models.CharField(max_length=50, default='all', blank=True)
     folder = models.CharField(max_length=50, default='', blank=True)
 
     def __str__(self):

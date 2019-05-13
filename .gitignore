@@ -24,5 +24,6 @@ tmp_*
 *.lyx#
 *~
 *hidden*
+db.sqlite3
 nohup.out
 tmp.py

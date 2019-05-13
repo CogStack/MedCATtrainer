@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  cattrainer:
+    build:
+        network: host
+        context: ./webapp
+    command: python /webapp/manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./data:/data
+      - ./webapp:/webapp
+      - ./models:/models
+    ports:
+      - "8001:8000"

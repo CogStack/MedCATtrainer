@@ -1,4 +1,5 @@
 import json
+import os
 
 from django.shortcuts import render, redirect
 from django.contrib.staticfiles.templatetags.staticfiles import static
@@ -6,7 +7,7 @@ from django.contrib.staticfiles.templatetags.staticfiles import static
 from .models import UseCase
 from .cat_train import get_doc, save_doc
 
-DATA_DIR = "/tmp/"
+DATA_DIR = os.getenv("DATA_DIR", "/tmp/")
 
 def home(request):
     context = {}

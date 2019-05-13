@@ -6,8 +6,18 @@ from medcat.utils.spacy_pipe import SpacyPipe
 import numpy as np
 from functools import partial
 
+from medcat.cat import CAT
+from medcat.utils.vocab import Vocab
+from medcat.cdb import CDB
+
 nlp = SpacyPipe(spacy_split_all, disable=['ner', 'parser'])
 nlp.add_punct_tagger(tagger=partial(spacy_tag_punct, skip_stopwords=False))
+
+vocab = Vocab()
+vocab.load_dict(os.getenv('VOCAB_PATH', '../models/vocab.dat'))
+cdb = CDB()
+cdb.load_dict(os.getenv('CDB_PATH', '../models/cdb.dat'))
+cat = CAT(cdb=cdb, vocab=vocab)
 
 def get_doc(params, in_path, is_text=False):
     """
@@ -25,19 +35,18 @@ def get_doc(params, in_path, is_text=False):
     cntx_tokens = params.get('cntx_tokens', [])
     cntx_size = 5 # This is not really used anymore, but good for cntx_tokens
     filters = [(x[0], str(x[1]), float(x[2])) for x in params.get('filters', [])]
-    if not is_text:
-        f_names = [x for x in os.listdir(in_path) if '.json' in x and not x.startswith(".")]
-    else:
-        f_names = [x for x in os.listdir(in_path) if '.txt' in x and not x.startswith(".")]
+    f_names = [x for x in os.listdir(in_path) if ('.txt' in x or '.json' in x) and not x.startswith(".")]
 
     out_data = {}
     for f_name in f_names:
         f = open(os.path.join(in_path, f_name), 'r')
-        if is_text:
-            #TOOD: Fix this
-            return -1
+        if '.txt' in f_name:
+            # It is a text file
+            data = json.loads(cat.get_json(f.read()))
+        else:
+            # Already processed by cat - json
+            data = json.load(f)
 
-        data = json.load(f)
         out_data['text'] = data['text']
         out_data['f_name'] = f_name
         out_data['entities'] = []

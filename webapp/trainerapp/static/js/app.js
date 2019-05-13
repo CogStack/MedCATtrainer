@@ -70,7 +70,7 @@ Vue.component('sidebar', {
             <tr v-for="(item, index) in items">
               <td>{{text.slice(item.start_ind, item.end_ind)}}</td>
               <td>{{item.cui}}</td>
-              <td>{{item.acc.toFixed(2)}}</td>
+              <td>{{parseFloat(item.acc).toFixed(2)}}</td>
               <td v-for="task in tasks">{{taskValue(task, item)}}</td>
             </tr>
           </tbody>
