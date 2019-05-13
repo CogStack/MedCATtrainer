@@ -1,6 +1,7 @@
 import json
 import os
 
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.staticfiles.templatetags.staticfiles import static
 
@@ -8,6 +9,7 @@ from .models import UseCase
 from .cat_train import get_doc, save_doc
 
 DATA_DIR = os.getenv("DATA_DIR", "/tmp/")
+
 
 def home(request):
     context = {}
@@ -65,7 +67,10 @@ def train_save(request, id=0):
 
 def upload(request, id=0):
     usecase = UseCase.objects.get(id=id)
-    upload_path = f'{DATA_DIR}/input/{usecase.folder}'
-    for f in request.FILES:
-        print(f)
-        # actually write to location
+    upload_path = f'{DATA_DIR}input/{usecase.folder}'
+    for f in request.FILES.values():
+        with open(f'{upload_path}/{f.name}', 'wb') as file:
+            for bytes in f.chunks():
+                file.write(bytes)
+
+    return HttpResponse(status=200)
