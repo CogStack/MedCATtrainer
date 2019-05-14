@@ -36,20 +36,23 @@ def train(request, id=0):
 
     #Get the tasks for this usecase
     tasks = {}
+    task_descriptions = {}
     for task in usecase.tasks.all():
         tasks[task.name] = []
+        task_descriptions[task.name] = {'description': task.description}
+        task_descriptions[task.name]['values'] = {}
         for value in task.values.all():
             tasks[task.name].append((value.name, value.value))
+            task_descriptions[task.name]['values'][value.name] = value.description
 
     context = {}
     context['tasks'] = tasks
     context['title'] = usecase.title
+    context['description'] = usecase.description
+    context['taskDescriptions'] = task_descriptions
     in_path = DATA_DIR + "input/" + usecase.folder
     context['data'] = get_doc(params, in_path)
     print(context['data'])
-
-    # Context is now used by the HTML file from Tom
-    #print(json.dumps(context, indent=2))
 
     return render(request, 'app.html', context)
 
