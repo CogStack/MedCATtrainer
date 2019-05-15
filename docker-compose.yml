@@ -10,7 +10,12 @@ services:
       - ./data:/data
       - ./webapp/trainerapp:/webapp/trainerapp
       - ./models:/models
+      - db-volume:/webapp/db
     ports:
       - "8001:8000"
     env_file:
             - .env
+
+volumes:
+  db-volume:
+
