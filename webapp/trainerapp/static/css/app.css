@@ -21,6 +21,11 @@ html, body {
   display: inline-block;
 }
 
+.file-name-heading {
+  display: inline-block;
+  padding-left: 50px;
+}
+
 .help {
   float: right;
   font-size: 22px;
