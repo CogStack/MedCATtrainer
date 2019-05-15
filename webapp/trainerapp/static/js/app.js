@@ -33,6 +33,8 @@ Vue.component('clinical-text', {
   `
 });
 
+
+
 Vue.component('sidebar', {
   props: ['text', 'items', 'tasks', 'taskIdx', 'spanIdx'],
   computed: {
@@ -153,11 +155,36 @@ Vue.component('modal', {
 `
 });
 
+Vue.component('help-modal', {
+  props: ['descriptions'],
+  template: `
+  <div>
+    <div v-for="(info, taskName) in descriptions">
+      <h4>Task: {{taskName}}</h4>
+      <p>{{info.description}}</p>
+      <table class="table table-striped">
+        <thead>
+          <th>Value</th>
+          <th>Description</th>
+        </thead>
+        <tbody>
+          <tr v-for="(valueHelp, value) in info.values">
+            <td>{{value}}</td>
+            <td>{{valueHelp}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  `
+});
+
 let trainData = taskTrainingData();
 
 let data = {
   items: [],
   text: trainData.data.text,
+  taskDescriptions: trainData.taskDescriptions,
   current: {
     spanIndex: 0,
     taskIndex: 0,
@@ -169,6 +196,7 @@ let data = {
   reload: () => location.reload(),
   saveModal: false,
   failModal: false,
+  helpModal: false,
   tasksComplete: true,  // Is this needed?
   tasks: []
 };

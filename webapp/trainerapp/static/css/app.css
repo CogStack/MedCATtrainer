@@ -15,6 +15,20 @@ html, body {
 
 .app-header, .app-footer {
   flex: 1;
+  height: 50px;
+}
+
+.app-header h4 {
+  display: inline-block;
+}
+
+.help {
+  float: right;
+  font-size: 22px;
+}
+
+.help-modal .modal-container {
+  width: 80%;
 }
 
 .app-footer {
