@@ -8,8 +8,9 @@ services:
     command: python /webapp/manage.py runserver 0.0.0.0:8000
     volumes:
       - ./data:/data
-      - ./webapp:/webapp
+      - ./webapp/trainerapp:/webapp/trainerapp
       - ./models:/models
+      - db-volume:/webapp/db.sqlite3
     ports:
       - "8001:8000"
     env_file:
