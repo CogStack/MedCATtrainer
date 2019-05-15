@@ -10,7 +10,6 @@ services:
       - ./data:/data
       - ./webapp/trainerapp:/webapp/trainerapp
       - ./models:/models
-      - db-volume:/webapp/db.sqlite3
     ports:
       - "8001:8000"
     env_file:
