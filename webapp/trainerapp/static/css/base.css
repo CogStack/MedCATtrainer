@@ -17,7 +17,7 @@
 }
 
 .modal-container {
-  width: 300px;
+  width: 400px;
   margin: 0px auto;
   padding: 20px 30px;
   background-color: #fff;
@@ -27,10 +27,22 @@
   font-family: Helvetica, Arial, sans-serif;
 }
 
+.modal-header div {
+  width: 100%;
+}
+
 .modal-header h3 {
   margin-top: 0;
   color: #42b983;
   text-align: center;
+}
+
+.modal-header h4 {
+  display: inline-block;
+}
+
+.modal-header .close {
+  float: right;
 }
 
 .modal-body {
@@ -44,6 +56,10 @@
 
 .modal-default-button {
   float: right;
+}
+
+.modal-content {
+  border: 0;
 }
 
 /*

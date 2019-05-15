@@ -29,6 +29,13 @@ Vue.component('upload-files', {
       }).catch((err) => {
         this.failModal = true;
       });
+    },
+    trainUseCase: function(id) {
+      location.href = `train/${id}`;
+    },
+    closeModals: function() {
+      this.failModal = false;
+      this.successModal = false;
     }
   },
   template: `
@@ -39,17 +46,23 @@ Vue.component('upload-files', {
         accept=".json,.txt,.text,text" v-on:change="fileUpload(id)"/>
     </span>
     <modal v-if="successModal">
-        <h3 slot="header" class="text-success">Save Successful</h3>
+    <div slot="header">
+        <h4 class="text-success">Save Successful</h4>
+        <button class="close" @click="closeModals"><i class="fas fa-times fa-lg"></i></button>
+      </div>
         <div slot="body"></div>
         <div slot="footer">
-          <button class="btn btn-primary" @click="trainUseCase">Label Items</button>
+          <button class="btn btn-primary" @click="trainUseCase()">Label Items</button>
         </div>
     </modal>
   
     <modal v-if="failModal">
-      <h3 slot="header" class="text-danger">Save Failed</h3>
-      <div slot="body">
-        <p>Failed to upload training items for {{title}}.</p>
+      <div slot="header">
+        <h4 slot="header" class="text-danger">Save Failed</h4>
+        <button class="close" @click="closeModals()"><i class="fas fa-times fa-lg"></i></button>
+      </div>
+      <div class="modal-content" slot="body">
+        <p>Failed to upload training items</p>
         <p>Please contact the dev team</p> 
       </div>
     </modal>
