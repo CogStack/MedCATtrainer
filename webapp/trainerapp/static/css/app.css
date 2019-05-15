@@ -14,8 +14,7 @@ html, body {
 }
 
 .app-header, .app-footer {
-  flex: 1;
-  height: 50px;
+  flex: 0 0 50px;
 }
 
 .app-header h4 {
