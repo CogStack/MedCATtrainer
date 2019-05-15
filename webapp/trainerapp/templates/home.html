@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
 {% load staticfiles %}
+{% load js %}
 
 {% block style %} 
 <link rel="stylesheet" href="{% static 'css/home.css' %}">
 {% endblock %}
 
 {% block body %}
-<div class='container usecase'>
+<div class='container usecase' id="app">
     <table class="table table-striped">
         <thead>
             <tr>
@@ -14,6 +15,7 @@
                 <th scope="col" style='width: 25%'>UseCase</th>
                 <th scope="col">Description</th>
                 <th scope="col" style='width: 15%'>Trainable Tasks</th>
+                <th scope="col">Upload Files</th>
             </tr>
         </thead>
         <tbody>
@@ -24,16 +26,33 @@
                     <a href="{% url 'train' id=usecase.id %}">
                         {{ usecase.title }}</a></td>
 
-                    <td>{{ usecase.description }}</td>
-                    <td>
-                        {% for task in usecase.tasks.all %}
-                        {{ task.name }} <br />
-                        {% endfor %}
-                    </td>
+                <td>{{ usecase.description }}</td>
+                <td>
+                    {% for task in usecase.tasks.all %}
+                    {{ task.name }} <br />
+                    {% endfor %}
+                </td>
+                <td>
+                    <upload-files :id="{{ usecase.id }}"></upload-files>
+                </td>
             </tr>
             </a>
             {% endfor %}
         </tbody>
     </table>
 </div>
+<!-- external js -->
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
+<script type="text/javascript">
+  let contexts = function() {
+    let context = {
+      context: {{ data | js }}
+    };
+    return JSON.parse(JSON.stringify(context));
+  };
+</script>
+<script src="{% static 'js/home.js' %}"></script>
+
 {% endblock %}

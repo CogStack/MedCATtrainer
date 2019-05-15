@@ -12,6 +12,7 @@ class Filter(models.Model):
 class Value(models.Model):
     name = models.CharField(max_length=150)
     value = models.IntegerField(default=1)
+    description = models.TextField(default="", blank=True)
 
     def __str__(self):
         return self.name
@@ -21,6 +22,7 @@ class Task(models.Model):
     name = models.CharField(max_length=150)
     values = models.ManyToManyField(Value)
     cntx_size = models.IntegerField(default=7)
+    description = models.TextField(default="", blank=True)
 
     def __str__(self):
         return self.name

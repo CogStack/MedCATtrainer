@@ -1,6 +1,7 @@
 import json
 import os
 
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.staticfiles.templatetags.staticfiles import static
 
@@ -8,6 +9,7 @@ from .models import UseCase
 from .cat_train import get_doc, save_doc
 
 DATA_DIR = os.getenv("DATA_DIR", "/tmp/")
+
 
 def home(request):
     context = {}
@@ -34,20 +36,23 @@ def train(request, id=0):
 
     #Get the tasks for this usecase
     tasks = {}
+    task_descriptions = {}
     for task in usecase.tasks.all():
         tasks[task.name] = []
+        task_descriptions[task.name] = {'description': task.description}
+        task_descriptions[task.name]['values'] = {}
         for value in task.values.all():
             tasks[task.name].append((value.name, value.value))
+            task_descriptions[task.name]['values'][value.name] = value.description
 
     context = {}
     context['tasks'] = tasks
     context['title'] = usecase.title
+    context['description'] = usecase.description
+    context['taskDescriptions'] = task_descriptions
     in_path = DATA_DIR + "input/" + usecase.folder
     context['data'] = get_doc(params, in_path)
     print(context['data'])
-
-    # Context is now used by the HTML file from Tom
-    #print(json.dumps(context, indent=2))
 
     return render(request, 'app.html', context)
 
@@ -60,5 +65,15 @@ def train_save(request, id=0):
     out_path = DATA_DIR + "output/" + usecase.folder
 
     save_doc(data, in_path, out_path)
-
     return redirect('train', id)
+
+
+def upload(request, id=0):
+    usecase = UseCase.objects.get(id=id)
+    upload_path = f'{DATA_DIR}input/{usecase.folder}'
+    for f in request.FILES.values():
+        with open(f'{upload_path}/{f.name}', 'wb') as file:
+            for bytes in f.chunks():
+                file.write(bytes)
+
+    return HttpResponse(status=200)

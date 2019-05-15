@@ -7,3 +7,7 @@ p.welcome{
 .usecase{
   margin-top: 100px;
 }
+
+.file-upload {
+  display: inline;
+}
