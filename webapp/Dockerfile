@@ -22,4 +22,4 @@ RUN python manage.py makemigrations && \
     python manage.py migrate trainerapp
 
 # This should not be done like this, but who cares
-RUN python manage.py shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', password='admin', email='test@test.com')"
+RUN python manage.py shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', password='admin', email='test@test.com')"; exit 0

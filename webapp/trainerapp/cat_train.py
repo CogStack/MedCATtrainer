@@ -10,14 +10,16 @@ from medcat.cat import CAT
 from medcat.utils.vocab import Vocab
 from medcat.cdb import CDB
 
-nlp = SpacyPipe(spacy_split_all, disable=['ner', 'parser'])
-nlp.add_punct_tagger(tagger=partial(spacy_tag_punct, skip_stopwords=False))
-
-vocab = Vocab()
-vocab.load_dict(os.getenv('VOCAB_PATH', '../models/vocab.dat'))
-cdb = CDB()
-cdb.load_dict(os.getenv('CDB_PATH', '../models/cdb.dat'))
-cat = CAT(cdb=cdb, vocab=vocab)
+try:
+    nlp = SpacyPipe(spacy_split_all, disable=['ner', 'parser'])
+    nlp.add_punct_tagger(tagger=partial(spacy_tag_punct, skip_stopwords=False))
+    vocab = Vocab()
+    vocab.load_dict(os.getenv('VOCAB_PATH', '../models/vocab.dat'))
+    cdb = CDB()
+    cdb.load_dict(os.getenv('CDB_PATH', '../models/cdb.dat'))
+    cat = CAT(cdb=cdb, vocab=vocab)
+except Exception as e:
+    print(str(e))
 
 def get_doc(params, in_path, is_text=False):
     """
