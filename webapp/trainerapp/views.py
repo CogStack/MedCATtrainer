@@ -87,14 +87,22 @@ def train(request, id=0):
     return render(request, 'app.html', context)
 
 
-def train_save(request, id=0):
-    # This expects a POST request with the data
+def _store_doc(request, id, out_path):
     usecase = UseCase.objects.get(id=id)
     data = json.loads(request.body)
     in_path = _in_path(usecase.folder)
-    out_path = _out_path(usecase.folder)
     save_doc(data, in_path, out_path)
     return redirect('train', id)
+
+
+def train_save(request, id=0):
+    usecase = UseCase.objects.get(id=id)
+    return _store_doc(request, id, _out_path(usecase.folder))
+
+
+def incomplete(request, id=0):
+    usecase = UseCase.objects.get(id=id)
+    return _store_doc(request, id, _incomplete_path(usecase.folder))
 
 
 def upload(request, id=0):
@@ -103,20 +111,6 @@ def upload(request, id=0):
     os.makedirs(in_path, exist_ok=True)
     for f in request.FILES.values():
         with open(f'{in_path}/{f.name}', 'wb') as file:
-            for bytes in f.chunks():
-                file.write(bytes)
-    return HttpResponse(status=200)
-
-
-def incomplete(request, id=0):
-    # TODO: Should this be any different to upload?
-    # ideally we'd want to know where the entities are that CAT has missed?
-    # log somewhere or we get an alert??
-    usecase = UseCase.objects.get(id=id)
-    incomplete_path = _incomplete_path(usecase.folder)
-    os.makedirs(incomplete_path, exist_ok=True)
-    for f in request.FILES.values():
-        with open(f'{incomplete_path}/{f.name}', 'wb') as file:
             for bytes in f.chunks():
                 file.write(bytes)
     return HttpResponse(status=200)
