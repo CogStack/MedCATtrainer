@@ -102,27 +102,28 @@ def save_doc(data, in_path, out_path, del_cntx=True):
     """
 
     f_name = data['f_name']
-    f_in = open(os.path.join(in_path, f_name), 'r')
-    f_out = open(os.path.join(out_path, f_name), 'w')
-    ents = data['entities']
-    ids = [x['id'] for x in ents]
-    new_ents = []
+    if '.json' not in f_name:
+        os.remove(os.path.join(in_path, f_name))
+        f_out = open(os.path.join(out_path, f_name.replace('.txt', '.json')), 'w')
+        json.dump(data, f_out)
+    else:
+        f_in = open(os.path.join(in_path, f_name), 'r')
+        f_out = open(os.path.join(out_path, f_name), 'w')
+        ents = data['entities']
+        ids = [x['id'] for x in ents]
+        new_ents = []
 
-    doc = json.load(f_in)
-    for ent in doc['entities']:
-        if ent['id'] not in ids:
-            new_ents.append(ent)
+        doc = json.load(f_in)
 
-    if del_cntx:
-        for ent in ents:
-            if 'cntx' in ent:
-                del ent['cntx']
+        for ent in doc['entities']:
+            if ent['id'] not in ids:
+                new_ents.append(ent)
 
-    new_ents.extend(ents)
-    doc['entities'] = new_ents
+        new_ents.extend(ents)
+        doc['entities'] = new_ents
 
-    # Remoe old file
-    f_in.close()
-    os.remove(os.path.join(in_path, f_name))
+        # Remove old file
+        f_in.close()
+        os.remove(os.path.join(in_path, f_name))
 
-    json.dump(doc, f_out)
+        json.dump(doc, f_out)
