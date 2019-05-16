@@ -5,6 +5,7 @@ import re
 from datetime import datetime
 from io import BytesIO
 from zipfile import ZipFile
+import pathlib
 
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
@@ -71,8 +72,17 @@ def train(request, id=0):
     context['description'] = usecase.description
     context['taskDescriptions'] = task_descriptions
     in_path = DATA_DIR + "input/" + usecase.folder
+    # Create input, sometimes it does not exist
+    pathlib.Path(_in_path(usecase.folder)).mkdir(parents=True, exist_ok=True)
+
     context['data'] = get_doc(params, in_path)
     print(context['data'])
+
+    # Create folders if they don't exist
+    pathlib.Path(_out_path(usecase.folder)).mkdir(parents=True, exist_ok=True)
+    pathlib.Path(_incomplete_path(usecase.folder)).mkdir(parents=True, exist_ok=True)
+
+
 
     return render(request, 'app.html', context)
 

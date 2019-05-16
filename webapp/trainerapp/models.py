@@ -35,7 +35,7 @@ class UseCase(models.Model):
     tuis = models.TextField(default="", blank=True)
     tokens = models.TextField(default="", blank=True)
     cntx_tokens = models.TextField(default="", blank=True)
-    filters = models.ManyToManyField(Filter)
+    filters = models.ManyToManyField(Filter, blank=True)
     other = models.TextField(default="", blank=True)
     tasks = models.ManyToManyField(Task)
     type = models.CharField(max_length=50, default='all', blank=True)

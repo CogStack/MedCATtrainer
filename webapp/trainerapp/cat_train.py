@@ -18,6 +18,8 @@ try:
     cdb = CDB()
     cdb.load_dict(os.getenv('CDB_PATH', '../models/cdb.dat'))
     cat = CAT(cdb=cdb, vocab=vocab)
+    cat.spacy_cat.MIN_ACC = 0
+    cat.spacy_cat.MIN_CUI_COUNT_STRICT = 3
 except Exception as e:
     print(str(e))
 
@@ -61,7 +63,7 @@ def get_doc(params, in_path, is_text=False):
                 for name, value, acc in filters:
                     if name in ent:
                         ent_val = ent['name']
-                        ent_acc = ent.get(name + "_acc", 0)
+                        ent_acc = ent.get(name + "_acc", 100)
                         if ent_val != value or ent_acc < acc:
                             skip_flag = True
                 if skip_flag:
@@ -76,7 +78,8 @@ def get_doc(params, in_path, is_text=False):
                 ent['cntx'] = {'text': str(doc[start:end+1])}
                 # Check cntx_text filter if exists
                 if cntx_tokens:
-                    cntx_tokens = [str(x).lower() for x in cntx_tokens]
+                    # Get the tokens and remove the zero length
+                    cntx_tokens = [x for x in [str(x).lower() for x in cntx_tokens] if len(x) > 0]
                     if any([True if x in ent['cntx']['text'] else False for x in cntx_tokens]):
                         # Skip this entity
                         continue
