@@ -2,10 +2,11 @@
 /books/
 /articles/
 /other/
-/data/
+data/*.txt
+data/*.json
 /output/
 /graphics/
-/models/*.dat
+models/*
 tmp/
 *_tmp/
 
