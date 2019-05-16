@@ -2,13 +2,15 @@
 /books/
 /articles/
 /other/
-data/
 /output/
 /graphics/
-models/
-!.keep
+/webapp/models/*
+data/
 tmp/
 *_tmp/
+
+# Keep folders with this
+!.keep
 
 #tmp and similar files
 .nfs*

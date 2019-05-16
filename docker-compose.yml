@@ -7,9 +7,6 @@ services:
         context: ./webapp
     command: python /webapp/manage.py runserver 0.0.0.0:8000
     volumes:
-      - ./data:/data
-      - ./webapp/trainerapp:/webapp/trainerapp
-      - ./models:/models
       - db-volume:/webapp/db
     ports:
       - "8001:8000"
