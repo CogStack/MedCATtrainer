@@ -10,12 +10,13 @@ from .cat_train import get_doc, save_doc
 
 DATA_DIR = os.getenv("DATA_DIR", "/tmp/")
 
+_INPUT_DIR = 'input'
+_OUTPUT_DIR = 'output'
+_INCOMPLETE_DIR = 'incomplete'
 
 def home(request):
     context = {}
     context['usecases'] = UseCase.objects.all()
-    context['data_dir'] = DATA_DIR + 'input/' 
-
     return render(request, 'home.html', context=context)
 
 def train(request, id=0):
@@ -63,17 +64,30 @@ def train_save(request, id=0):
     data = json.loads(request.body)
     in_path = DATA_DIR + "input/" + usecase.folder
     out_path = DATA_DIR + "output/" + usecase.folder
-
     save_doc(data, in_path, out_path)
     return redirect('train', id)
 
 
 def upload(request, id=0):
     usecase = UseCase.objects.get(id=id)
-    upload_path = f'{DATA_DIR}input/{usecase.folder}'
+    upload_path = f'{DATA_DIR}{_OUTPUT_DIR}/{usecase.folder}'
+    os.makedirs(upload_path, exist_ok=True)
     for f in request.FILES.values():
         with open(f'{upload_path}/{f.name}', 'wb') as file:
             for bytes in f.chunks():
                 file.write(bytes)
+    return HttpResponse(status=200)
 
+
+def incomplete(request, id=0):
+    # TODO: Should this be any different to upload?
+    # ideally we'd want to know where the entities are that CAT has missed?
+    # log somewhere or we get an alert??
+    usecase = UseCase.objects.get(id=id)
+    incomplete_path = f'{DATA_DIR}{_INCOMPLETE_DIR}/{usecase.folder}'
+    os.makedirs(incomplete_path, exist_ok=True)
+    for f in request.FILES.values():
+        with open(f'{incomplete_path}/{f.name}', 'wb') as file:
+            for bytes in f.chunks():
+                file.write(bytes)
     return HttpResponse(status=200)

@@ -26,9 +26,9 @@
     </div>
     <div class="app-footer">
       <task-bar :tasks="tasks" :current-task="current.task" :select="select"></task-bar>
-      <nav-bar :tasks-complete="tasksComplete" :submit-func="submit"
+      <nav-bar :tasks-complete="tasksComplete"
         :current="current" :total-tasks="tasks.length" :total-spans="items.length"
-        :next="next" :back="back" :submit="submit"></nav-bar>
+        :next="next" :back="back" :submit="submit" :mark-incomplete="incomplete"></nav-bar>
     </div>
     <modal v-if="saveModal">
       <h3 slot="header" class="text-success">Save Successful</h3>

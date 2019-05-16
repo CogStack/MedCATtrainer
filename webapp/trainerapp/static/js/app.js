@@ -102,7 +102,7 @@ Vue.component('taskBar', {
 });
 
 Vue.component('navBar', {
-  props: ['tasksComplete', 'current', 'totalTasks', 'totalSpans', 'next', 'back', 'submit'],
+  props: ['tasksComplete', 'current', 'totalTasks', 'totalSpans', 'next', 'back', 'submit', 'markIncomplete'],
   methods: {
     nextDisabled: function() {
       return this.current.spanIndex === (this.totalSpans - 1)  &&
@@ -119,9 +119,10 @@ Vue.component('navBar', {
       </button>
       <button :disabled="nextDisabled()"  @click="next" type="button" class="btn btn-warning mb-2">
         <i class="fas fa-forward"></i>
-      </button> 
+      </button>
       <button :disabled="!tasksComplete" @click.prevent="submit" class="btn btn-primary mb-2" type="button" 
-      style="float: right;">Submit</button>
+      style="float: right">Submit</button>
+      <button @click.prevent="markIncomplete" class="btn btn-info mb-2 mr-1" style="float:right">Incomplete</button> 
     </div>
   `
 });
@@ -133,7 +134,7 @@ Vue.component('modal', {
       <div class="modal-wrapper">
         <div class="modal-container">
 
-          <div class="modal-header">
+          <div class="modal-header">  
             <slot name="header">
               
             </slot>
@@ -246,6 +247,30 @@ let back = function() {
     console.log('Cannot proceed to next element.');
 };
 
+let storeDoc = function(endpoint) {
+  let payload = taskTrainingData().data;
+  payload.entities = _.zip(payload.entities, data.items).map((p) => {
+    return Object.assign(p[0], p[1].taskLabels)
+  });
+
+  let docId = document.URL.split('/').slice(-1);
+  this.$http.post(`/${endpoint}/${docId}`, payload, {
+    headers: {
+      'X-CSRFToken': Cookies.get('csrftoken')
+    }
+    // show modal
+  }).then((resp) => {
+    if (resp.status === 200) {
+      data.saveModal = true;
+    } else {
+      console.log(resp);
+      data.failModal = true;
+    }
+  }).catch((err) => {
+    data.failModal = true;
+  });
+};
+
 let app = new Vue({
   el: '#app',
   data: data,
@@ -258,33 +283,7 @@ let app = new Vue({
     },
     next: next,
     back: back,
-    submit: function () {
-      let payload = taskTrainingData().data;
-      // collate task labels per span and set within the entity object.
-      // payload.entities = payload.entities.map((e) => {
-      //   return Object.assign(e, e.taskLabels)
-      // });
-
-      payload.entities = _.zip(payload.entities, data.items).map((p) => {
-        return Object.assign(p[0], p[1].taskLabels)
-      });
-
-      let docId = document.URL.split('/').slice(-1);
-      this.$http.post(`/save/${docId}`, payload, {
-        headers: {
-          'X-CSRFToken': Cookies.get('csrftoken')
-        }
-        // show modal
-      }).then((resp) => {
-        if (resp.status === 200) {
-          data.saveModal = true;
-        } else {
-          console.log(resp);
-          data.failModal = true;
-        }
-      }).catch((err) => {
-        data.failModal = true;
-      });
-    }
+    submit: function() { storeDoc.bind(this, 'save')() },
+    incomplete: function() { storeDoc.bind(this, 'incomplete')() }
   }
 });
