@@ -52,7 +52,7 @@ Vue.component('upload', {
       </div>
         <div slot="body"></div>
         <div slot="footer">
-          <button class="btn btn-primary" @click="trainUseCase()">Label Items</button>
+          <button class="btn btn-primary" @click="trainUseCase(id)">Label Items</button>
         </div>
     </modal>
   
