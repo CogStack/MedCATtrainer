@@ -15,7 +15,8 @@
                 <th scope="col" style='width: 25%'>UseCase</th>
                 <th scope="col">Description</th>
                 <th scope="col" style='width: 15%'>Trainable Tasks</th>
-                <th scope="col">Upload Files</th>
+                <th scope="col">Upload</th>
+                <th scope="col">Download</th>
             </tr>
         </thead>
         <tbody>
@@ -33,7 +34,10 @@
                     {% endfor %}
                 </td>
                 <td>
-                    <upload-files :id="{{ usecase.id }}"></upload-files>
+                    <upload :id="{{ usecase.id }}"></upload>
+                </td>
+                <td>
+                    <download :id="{{ usecase.id }}"></download>
                 </td>
             </tr>
             </a>

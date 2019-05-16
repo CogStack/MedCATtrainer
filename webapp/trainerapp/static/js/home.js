@@ -1,4 +1,4 @@
-Vue.component('upload-files', {
+Vue.component('upload', {
   props: ['id', 'title'],
   data: function() {
     return {
@@ -41,9 +41,9 @@ Vue.component('upload-files', {
   template: `
   <div class="file-upload ">
     <span>
-    <button class="btn btn-primary" @click="$refs.files.click()"><i class="fas fa-upload"></i></button>
-    <input style="display: none;" ref="files" multiple type="file" 
-        accept=".json,.txt,.text,text" v-on:change="fileUpload(id)"/>
+      <button class="btn btn-primary" @click="$refs.files.click()"><i class="fas fa-upload"></i></button>
+      <input style="display: none;" ref="files" multiple type="file" 
+          accept=".json,.txt,.text,text" v-on:change="fileUpload(id)"/>
     </span>
     <modal v-if="successModal">
     <div slot="header">
@@ -66,6 +66,25 @@ Vue.component('upload-files', {
         <p>Please contact the dev team</p> 
       </div>
     </modal>
+  </div>
+  `
+});
+
+
+Vue.component('download', {
+  props: ['id'],
+  methods: {
+    download: function() {
+      this.$http.get(`/download/${this.id}`).then((resp) => {
+        console.log(resp);
+      }).catch((err) => {
+        console.log(err);
+      })
+    }
+  },
+  template: `
+  <div class="download">
+    <button class="btn btn-primary" @click="download()"><i class="fas fa-download"></i></button>
   </div>
   `
 });
