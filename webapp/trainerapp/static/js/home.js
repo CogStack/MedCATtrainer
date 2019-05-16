@@ -73,18 +73,11 @@ Vue.component('upload', {
 
 Vue.component('download', {
   props: ['id'],
-  methods: {
-    download: function() {
-      this.$http.get(`/download/${this.id}`).then((resp) => {
-        console.log(resp);
-      }).catch((err) => {
-        console.log(err);
-      })
-    }
-  },
   template: `
   <div class="download">
-    <button class="btn btn-primary" @click="download()"><i class="fas fa-download"></i></button>
+    <a :href="'/download/' + id">
+      <button class="btn btn-primary"><i class="fas fa-download"></i></button>
+    </a>
   </div>
   `
 });
