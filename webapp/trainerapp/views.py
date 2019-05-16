@@ -122,9 +122,9 @@ def download(request, id=0):
     s = BytesIO()
     labelled_zip = ZipFile(s, 'w')
     for file_name in os.listdir(output_path):
-        labelled_zip.write(os.path.join(output_path, file_name), 'complete')
+        labelled_zip.write(os.path.join(output_path, file_name), f'complete/{file_name}')
     for file_name in os.listdir(incomplete_path):
-        labelled_zip.write(os.path.join(incomplete_path, file_name), 'incomplete')
+        labelled_zip.write(os.path.join(incomplete_path, file_name), f'incomplete/{file_name}')
 
     # fix for Linux zip files read in Windows
     for file in labelled_zip.filelist:
