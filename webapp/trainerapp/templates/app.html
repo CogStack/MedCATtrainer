@@ -54,6 +54,18 @@
         <button class="btn btn-primary" @click="helpModal = false">Close</button>
       </div>
     </modal>
+
+    <modal v-if="errorModal">
+      <h3 slot="header" class="text-danger">Failed To Load Next Tagged File</h3>
+      <div slot="body">
+        <p>No files found to annotate and tag.</p>
+        <p>Either upload more files to tag</p>
+        <p>Or tagged and annotated files from the home screen.</p>
+      </div>
+      <div slot="footer">
+        <a href="/"><button class="btn btn-primary">CAT Home</button></a>
+      </div>
+    </modal>
   </div>
 
   <script src="https://code.jquery.com/jquery-3.3.1.js" crossorigin="anonymous"></script>

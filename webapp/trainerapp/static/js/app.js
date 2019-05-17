@@ -2,6 +2,9 @@ Vue.component('clinical-text', {
   props: ['text', 'span', 'task'],
   computed: {
     formattedText: function() {
+      if (!this.task) {
+        return "";
+      }
       let taskValuesToTasks = Object.assign(...this.task.values.map(([key, val]) => ({[val]: key})));
       let taskValueNamesToButtonIndices = Object.assign(...this.task.values.map((val, i) =>  ({[val[0]]: i})));
 
@@ -58,7 +61,7 @@ Vue.component('sidebar', {
   },
   template: `
     <div class="mb-2 border-top border-right app-sidebar">
-      <div v-if="text.length > 0">
+      <div v-if="text && text.length > 0">
         <table class="table table-striped">
           <thead>
             <tr>
@@ -198,26 +201,34 @@ let data = {
   saveModal: false,
   failModal: false,
   helpModal: false,
+  errorModal: false,
   tasksComplete: true,  // Is this needed?
   tasks: []
 };
 
-data.tasks = _.pairs(trainData.tasks).map((task) => {
-  return {
-    taskName: task[0],
-    values: task[1]
-  };
-});
+if (trainData === undefined ||
+    trainData.data === undefined ||
+    _.isEmpty(trainData.data)) {
+  data.errorModal = true;
+} else {
+  data.tasks = _.pairs(trainData.tasks).map((task) => {
+    return {
+      taskName: task[0],
+      values: task[1]
+    };
+  });
 
-data.items = trainData.data.entities.map(i => {
-  let item = {};
-  Object.assign(item, i);
-  item.taskLabels = {}; // one per task?
-  return item;
-});
+  data.items = trainData.data.entities.map(i => {
+    let item = {};
+    Object.assign(item, i);
+    item.taskLabels = {}; // one per task?
+    return item;
+  });
 
-data.current.span =  data.items[0];
-data.current.task = data.tasks[0];
+  data.current.span =  data.items[0];
+  data.current.task = data.tasks[0];
+}
+
 
 let next = function() {
   let taskIndex = data.current.taskIndex;
