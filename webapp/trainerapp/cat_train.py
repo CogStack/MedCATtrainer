@@ -42,6 +42,7 @@ def get_doc(params, in_path, is_text=False):
     f_names = [x for x in os.listdir(in_path) if ('.txt' in x or '.json' in x) and not x.startswith(".")]
 
     out_data = {}
+    out_data['f_names'] = f_names
     for f_name in f_names:
         f = open(os.path.join(in_path, f_name), 'r')
         if '.txt' in f_name:

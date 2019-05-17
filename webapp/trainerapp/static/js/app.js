@@ -197,6 +197,7 @@ let data = {
       values: []
     },
   },
+  f_names: trainData.data.f_names,
   reload: () => location.reload(),
   saveModal: false,
   failModal: false,

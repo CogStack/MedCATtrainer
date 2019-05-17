@@ -12,7 +12,11 @@
   <div id="app" class="container-fluid app-container">
     <div class="app-header">
       <h4>{{ title }} Training Samples</h4>
-      <h5 class="file-name-heading">Editing File: <strong>{{ data.f_name }}</strong></h5>
+      <h5 class="file-name-heading">Editing File:
+        <span class="file-name">{{ data.f_name }}</span>
+        out of
+        <span class="file-name">{{ data.f_names | length }}</span>
+      </h5>
       <button class="help btn btn-default" @click="helpModal = true"><i class="fa fa-question-circle fa-lg"></i></button>
     </div>
     <div class="app-main">
