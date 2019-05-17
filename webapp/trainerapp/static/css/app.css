@@ -41,6 +41,11 @@ html, body {
   width: 80%;
 }
 
+.help-modal-body {
+  max-height: 500px;
+  overflow: auto;
+}
+
 .app-footer {
   display: flex;
 }
