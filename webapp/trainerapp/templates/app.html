@@ -14,22 +14,25 @@
       <h4>{{ title }} Training Samples</h4>
       <h5 class="file-name-heading">Editing File:
         <span class="file-name">{{ data.f_name }}</span>
-        out of
-        <span class="file-name">{{ data.f_names | length }}</span>
+        |
+        <span class="file-name">{{ data.f_names | length }} Docs Remaining</span>
       </h5>
       <button class="help btn btn-default" @click="helpModal = true"><i class="fa fa-question-circle fa-lg"></i></button>
     </div>
     <div class="app-main">
       <sidebar :text="text" :items="items" :tasks="tasks"
                :task-idx="current.taskIndex"
-               :span-idx="current.spanIndex"></sidebar>
+               :span-idx="current.spanIndex"
+               :select-item="selectItem"></sidebar>
       <clinical-text :text="text" :span="current.span"
                      :task="tasks[current.taskIndex]"
+                     :select-item="selectItem"
+                     :all-spans="items"
                      class="border-top"
                      id="mainTextArea"></clinical-text>
     </div>
     <div class="app-footer">
-      <task-bar :tasks="tasks" :current-task="current.task" :select="select"></task-bar>
+      <task-bar :tasks="tasks" :current-task="current.task" :select="markItem"></task-bar>
       <nav-bar :tasks-complete="tasksComplete"
         :current="current" :total-tasks="tasks.length" :total-spans="items.length"
         :next="next" :back="back" :submit="submit" :mark-incomplete="incomplete"></nav-bar>
