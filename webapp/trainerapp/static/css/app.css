@@ -77,6 +77,14 @@ html, body {
   : 5px red solid;
 }
 
+.handle {
+  float: left;
+  width: 10px;
+  height: 100%;
+  background: #ddd;
+  cursor: ew-resize;
+}
+
 .nav-bar, .task-bar {
   padding: 5px;
 }

@@ -343,3 +343,23 @@ let app = new Vue({
   }
 });
 
+(function() {
+  var minOffset = 200;
+  var maxOffset = 600;
+
+  $('.handle').mousedown(function(ev, handler) {
+    $(document).mousemove(function(ev, handler) {
+      var offset = ev.pageX;
+
+      offset = offset < minOffset ? minOffset : offset;
+      offset = offset > maxOffset ? maxOffset : offset;
+
+      $('.app-sidebar').css('flex-basis', offset);
+    });
+  });
+
+  $(document).mouseup(function(e) {
+    $(document).unbind('mousemove');
+  });
+}());
+
