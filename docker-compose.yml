@@ -12,7 +12,7 @@ services:
     ports:
       - "8001:8000"
     env_file:
-            - .env
+            - envs/env_fullumls_long
 
 volumes:
   db-volume:

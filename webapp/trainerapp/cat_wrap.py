@@ -46,9 +46,13 @@ class CatWrap(object):
                                'cntx_tokens': ['not', 'maybe wrong', 'error', ...]
                                'filters': [('negated', 1, 0.6), ('historical', '10years', 0.5)]}
         """
+        no_checks = False
         cuis = params.get('cuis', [])
         tuis = params.get('tuis', [])
         tokens= [tkn for tkn in params.get('tokens', []) if len(tkn.strip()) > 0]
+        if "*" in cuis or "*" in tuis:
+            no_checks = True
+
         cntx_tokens = params.get('cntx_tokens', [])
         cntx_size = 5 # This is not really used anymore, but good for cntx_tokens
         filters = [(x[0], str(x[1]), float(x[2])) for x in params.get('filters', [])]
@@ -70,7 +74,7 @@ class CatWrap(object):
             out_data['entities'] = []
 
             for ent in data['entities']:
-                if ent['cui'] in cuis or ent['tui'] in tuis or any([True if x in ent['source_value'] else False for x in tokens]):
+                if no_checks or ent['cui'] in cuis or ent['tui'] in tuis or any([True if x in ent['source_value'] else False for x in tokens]):
                     # Check filters first, skip if not valid
                     skip_flag = False
                     for name, value, acc in filters:
@@ -84,12 +88,14 @@ class CatWrap(object):
                         continue
 
                     # Check cntx_text filter if exists
+                    """
                     if cntx_tokens:
                         # Get the tokens and remove the zero length
                         cntx_tokens = [x for x in [str(x).lower() for x in cntx_tokens] if len(x) > 0]
                         if any([True if x in ent['cntx']['text'] else False for x in cntx_tokens]):
                             # Skip this entity
                             continue
+                    """
                     out_data['entities'].append(ent)
 
             # Doc is fine, return it
