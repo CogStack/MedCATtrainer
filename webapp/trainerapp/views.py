@@ -10,9 +10,15 @@ import pathlib
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
+from spacy import displacy
 from .models import UseCase
-from .cat_train import get_doc, save_doc
+from .cat_wrap import CatWrap
+
+cat_wrap = CatWrap()
 
 DATA_DIR = os.getenv("DATA_DIR", "/tmp/")
 
@@ -37,6 +43,24 @@ def home(request):
     context = {}
     context['usecases'] = UseCase.objects.all()
     return render(request, 'home.html', context=context)
+
+
+def train_usecase(request):
+    context = {}
+    context['usecases'] = UseCase.objects.all()
+    return render(request, 'train_usecase.html', context=context)
+
+
+def train_annotations(request):
+    context = {}
+
+    if request.POST and 'text' in request.POST:
+        doc_html, doc_json = cat_wrap.get_html_and_json(request.POST['text'])
+
+        context['doc_html'] = doc_html
+        context['doc_json'] = doc_json
+        context['text'] = request.POST['text']
+    return render(request, 'train_annotations.html', context=context)
 
 
 def train(request, id=0):
@@ -75,8 +99,7 @@ def train(request, id=0):
     # Create input, sometimes it does not exist
     pathlib.Path(_in_path(usecase.folder)).mkdir(parents=True, exist_ok=True)
 
-    context['data'] = get_doc(params, in_path)
-    print(context['data'])
+    context['data'] = cat_wrap.get_doc(params, in_path)
 
     # Create folders if they don't exist
     pathlib.Path(_out_path(usecase.folder)).mkdir(parents=True, exist_ok=True)
@@ -91,8 +114,46 @@ def _store_doc(request, id, out_path):
     usecase = UseCase.objects.get(id=id)
     data = json.loads(request.body)
     in_path = _in_path(usecase.folder)
-    save_doc(data, in_path, out_path)
+    cat_wrap.save_doc(data, in_path, out_path)
     return redirect('train', id)
+
+
+def add_cntx(request):
+    data = json.loads(request.body)
+    cui = data['cui'] # ID of the annotation
+    tkn_inds = data['tkn_inds'] # [ind_first, ind_last] - Index of the first and last token
+    text = data['text'] # Text of the document
+    negative = data['negative'] # 0 or 1 
+    print("HERE")
+    print(data)
+
+    cat_wrap.cat.add_concept_cntx(cui=cui, text=text, tkn_inds=tkn_inds, negative=negative)
+
+
+def add_concept(request):
+    data = json.loads(request.body)
+    concept = data['concept']
+    text = data.get('text', None)
+    tkn_inds = data.get('tkn_inds', None)
+
+    cat_wrap.cat.add_concept(concept, text, tkn_inds)
+
+
+def add_concept_manual(request):
+    concept = json.loads(request.body)
+    text = concept['text']
+    tkn_inds = None
+
+    # This is a bit of a hack, the add_concept version should be used in the future
+    if text is not None:
+        doc = cat_wrap.cat(text)
+        for tkn in doc:
+            if len(tkn.text.strip()) > 1 and tkn.text.strip() in concept['source_value'].strip():
+                tkn_inds = [tkn.i]
+                break
+    cat_wrap.cat.add_concept(concept, text, tkn_inds)
+
+    return train_annotations(request)
 
 
 def train_save(request, id=0):
@@ -142,3 +203,30 @@ def download(request, id=0):
     return response
 
 
+@csrf_exempt
+def api(request):
+    errors = []
+    annotations = []
+    data = json.loads(request.body)
+    text = ""
+    if 'content' not in data or 'text' not in data['content']:
+        errors.append("Wrong input format, please consult the API documentation")
+    else:
+        text = data['content']['text']
+        try:
+            annotations = cat_wrap.cat.get_entities(text)
+        except Exception as e:
+            errors.append(str(e))
+
+    res = {
+        "result": {
+            "text": text,
+            "annotations": annotations,
+            "metadata": {},
+            "success": True if not errors else False,
+            "errors": errors,
+            "footer": {}
+        }
+    }
+
+    return JsonResponse(res)

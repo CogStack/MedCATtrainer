@@ -8,6 +8,7 @@ services:
     command: python /webapp/manage.py runserver 0.0.0.0:8000
     volumes:
       - db-volume:/webapp/db
+      - models-volume:/webapp/models
     ports:
       - "8001:8000"
     env_file:
@@ -15,4 +16,4 @@ services:
 
 volumes:
   db-volume:
-
+  models-volume:
