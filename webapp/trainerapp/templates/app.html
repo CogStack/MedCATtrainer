@@ -12,20 +12,28 @@
   <div id="app" class="container-fluid app-container">
     <div class="app-header">
       <h4>{{ title }} Training Samples</h4>
-      <h5 class="file-name-heading">Editing File: <strong>{{ data.f_name }}</strong></h5>
+      <h5 class="file-name-heading">Editing File:
+        <span class="file-name">{{ data.f_name }}</span>
+        |
+        <span class="file-name">{{ data.f_names | length }} Docs Remaining</span>
+      </h5>
       <button class="help btn btn-default" @click="helpModal = true"><i class="fa fa-question-circle fa-lg"></i></button>
     </div>
     <div class="app-main">
       <sidebar :text="text" :items="items" :tasks="tasks"
                :task-idx="current.taskIndex"
-               :span-idx="current.spanIndex"></sidebar>
+               :span-idx="current.spanIndex"
+               :select-item="selectItem"></sidebar>
+      <div class="handle"></div>
       <clinical-text :text="text" :span="current.span"
                      :task="tasks[current.taskIndex]"
+                     :select-item="selectItem"
+                     :all-spans="items"
                      class="border-top"
                      id="mainTextArea"></clinical-text>
     </div>
     <div class="app-footer">
-      <task-bar :tasks="tasks" :current-task="current.task" :select="select"></task-bar>
+      <task-bar :tasks="tasks" :current-task="current.task" :select="markItem"></task-bar>
       <nav-bar :tasks-complete="tasksComplete"
         :current="current" :total-tasks="tasks.length" :total-spans="items.length"
         :next="next" :back="back" :submit="submit" :mark-incomplete="incomplete"></nav-bar>
@@ -47,11 +55,23 @@
 
     <modal v-if="helpModal" class="help-modal">
       <h3 slot="header">{{ title }} Tagging Help</h3>
-      <div slot="body">
+      <div slot="body" class="help-modal-body">
           <help-modal :descriptions="taskDescriptions"></help-modal>
       </div>
       <div slot="footer">
         <button class="btn btn-primary" @click="helpModal = false">Close</button>
+      </div>
+    </modal>
+
+    <modal v-if="errorModal">
+      <h3 slot="header" class="text-danger">Failed To Load Next Tagged File</h3>
+      <div slot="body">
+        <p>No files found to annotate and tag.</p>
+        <p>Either upload more files to tag</p>
+        <p>Or tagged and annotated files from the home screen.</p>
+      </div>
+      <div slot="footer">
+        <a href="/"><button class="btn btn-primary">CAT Home</button></a>
       </div>
     </modal>
   </div>

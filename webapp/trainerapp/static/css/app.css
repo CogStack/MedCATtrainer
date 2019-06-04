@@ -24,6 +24,12 @@ html, body {
 .file-name-heading {
   display: inline-block;
   padding-left: 50px;
+  font-size: 18px;
+}
+
+.file-name {
+  font-size: 22px;
+  font-weight: bold;
 }
 
 .help {
@@ -33,6 +39,11 @@ html, body {
 
 .help-modal .modal-container {
   width: 80%;
+}
+
+.help-modal-body {
+  max-height: 500px;
+  overflow: auto;
 }
 
 .app-footer {
@@ -59,6 +70,19 @@ html, body {
 
 .app-sidebar table {
   font-size: 10pt;
+  cursor: pointer;
+}
+
+.app-sidebar table tr.active {
+  : 5px red solid;
+}
+
+.handle {
+  float: left;
+  width: 10px;
+  height: 100%;
+  background: #ddd;
+  cursor: ew-resize;
 }
 
 .nav-bar, .task-bar {
@@ -101,31 +125,45 @@ html, body {
 }
 
 .highlight-task-default {
+  background: lightgrey;
+  border: 5px solid lightgrey;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.highlight-task-selected {
   box-shadow: 0 0 10px 5px #1F0A23;
+  border-radius: 5px;
 }
 
 .highlight-task-0 {
   box-shadow: 0 0 10px 5px var(--task-color-0);
+  border-radius: 5px;
 }
 
 .highlight-task-1 {
   box-shadow: 0 0 10px 5px var(--task-color-1);
+  border-radius: 5px;
 }
 
 .highlight-task-2 {
   box-shadow: 0 0 10px 5px var(--task-color-2);
+  border-radius: 5px;
 }
 
 .highlight-task-3 {
   box-shadow: 0 0 10px 5px var(--task-color-3);
+  border-radius: 5px;
 }
 
 .highlight-task-4 {
   box-shadow: 0 0 10px 5px var(--task-color-4);
+  border-radius: 5px;
 }
 
 .highlight-task-5 {
   box-shadow: 0 0 10px 5px var(--task-color-5);
+  border-radius: 5px;
 }
 
 .task-btn-0 {

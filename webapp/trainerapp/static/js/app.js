@@ -1,20 +1,36 @@
 Vue.component('clinical-text', {
-  props: ['text', 'span', 'task'],
+  props: ['text', 'span', 'task', 'selectItem', 'allSpans'],
   computed: {
     formattedText: function() {
+      if (!this.task) {
+        return "";
+      }
       let taskValuesToTasks = Object.assign(...this.task.values.map(([key, val]) => ({[val]: key})));
       let taskValueNamesToButtonIndices = Object.assign(...this.task.values.map((val, i) =>  ({[val[0]]: i})));
 
-      let taskHighlight = 'highlight-task-default';
-      if (this.task.taskName in this.span.taskLabels) {
-        let btnIndex = taskValueNamesToButtonIndices[taskValuesToTasks[this.span.taskLabels[this.task.taskName]]];
-        taskHighlight = 'highlight-task-' + btnIndex;
+      let taskHighlightDefault = 'highlight-task-default';
+      let formattedText = '';
+      let start = 0;
+
+      for (let i = 0; i < this.allSpans.length; i++) {
+        // highlight the span with default
+        let highlightText = this.text.slice(this.span.start_ind, this.span.end_ind);
+        let spanText = `<span @click="selectItem(${i})" class="${taskHighlightDefault}">${highlightText}</span>`;
+        if (this.allSpans[i] === this.span) {
+          let taskHighlight = 'highlight-task-selected';
+          if (this.task.taskName in this.span.taskLabels) {
+            let btnIndex = taskValueNamesToButtonIndices[taskValuesToTasks[this.span.taskLabels[this.task.taskName]]];
+            taskHighlight = 'highlight-task-' + btnIndex;
+          }
+          spanText = `<span id="focusSpan" class="${taskHighlight}">${spanText}</span>`;
+        }
+        let precedingText = this.text.slice(start, this.allSpans[i].start_ind);
+        start = this.allSpans[i].end_ind;
+        formattedText += precedingText + spanText;
+        if (i === this.allSpans.length -1 )
+          formattedText += this.text.slice(start, this.text.length - 1);
       }
-      let highlightText = this.text.slice(this.span.start_ind, this.span.end_ind);
-      let formattedTxt = `<span id="focusSpan" class="${taskHighlight}">${highlightText}</span>`;
-      formattedTxt = this.text.slice(0, this.span.start_ind) + formattedTxt +
-          this.text.slice(this.span.end_ind, this.text.length);
-      return formattedTxt;
+      return formattedText ;
     }
   },
   updated: function() {
@@ -25,18 +41,41 @@ Vue.component('clinical-text', {
       });
     });
   },
+  created: function() {
+    this.$root.$on('select-item', (i) => {
+      this.selectItem(this.allSpans[i])
+    })
+  },
   template: `
     <div class="note-container">
-      <div class="clinical-note" v-html="formattedText">
+      <div class="clinical-note">
+        <render-string :string="formattedText">
+        </render-string>
       </div>
     </div>
-  `
+  `,
+});
+
+Vue.component('render-string', {
+  props: ['string',],
+  render: function(h) {
+    const that = this;
+    const render = {
+      template: `<div>${this.string}</div>`,
+      methods: {
+        selectItem: function(i) {
+          this.$root.$emit('select-item', i)
+        },
+      }
+    };
+    return h(render)
+  },
+
 });
 
 
-
 Vue.component('sidebar', {
-  props: ['text', 'items', 'tasks', 'taskIdx', 'spanIdx'],
+  props: ['text', 'items', 'tasks', 'taskIdx', 'spanIdx', 'selectItem'],
   computed: {
     taskValues: function() {
       let mappedTasks = {};
@@ -58,8 +97,8 @@ Vue.component('sidebar', {
   },
   template: `
     <div class="mb-2 border-top border-right app-sidebar">
-      <div v-if="text.length > 0">
-        <table class="table table-striped">
+      <div v-if="text && text.length > 0">
+        <table class="table table-striped table-hover">
           <thead>
             <tr>
               <th>Text Span</th>
@@ -69,7 +108,9 @@ Vue.component('sidebar', {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item, index) in items">
+            <tr @click="selectItem(item)" 
+                :class="{'bg-primary': index === spanIdx, 'text-white': index === spanIdx}"
+                v-for="(item, index) in items">
               <td>{{text.slice(item.start_ind, item.end_ind)}}</td>
               <td>{{item.cui}}</td>
               <td>{{parseFloat(item.acc).toFixed(2)}}</td>
@@ -194,30 +235,39 @@ let data = {
       values: []
     },
   },
+  f_names: trainData.data.f_names,
   reload: () => location.reload(),
   saveModal: false,
   failModal: false,
   helpModal: false,
+  errorModal: false,
   tasksComplete: true,  // Is this needed?
   tasks: []
 };
 
-data.tasks = _.pairs(trainData.tasks).map((task) => {
-  return {
-    taskName: task[0],
-    values: task[1]
-  };
-});
+if (trainData === undefined ||
+    trainData.data === undefined ||
+    _.isEmpty(trainData.data)) {
+  data.errorModal = true;
+} else {
+  data.tasks = _.pairs(trainData.tasks).map((task) => {
+    return {
+      taskName: task[0],
+      values: task[1]
+    };
+  });
 
-data.items = trainData.data.entities.map(i => {
-  let item = {};
-  Object.assign(item, i);
-  item.taskLabels = {}; // one per task?
-  return item;
-});
+  data.items = trainData.data.entities.map(i => {
+    let item = {};
+    Object.assign(item, i);
+    item.taskLabels = {}; // one per task?
+    return item;
+  });
 
-data.current.span =  data.items[0];
-data.current.task = data.tasks[0];
+  data.current.span =  data.items[0];
+  data.current.task = data.tasks[0];
+}
+
 
 let next = function() {
   let taskIndex = data.current.taskIndex;
@@ -275,7 +325,7 @@ let app = new Vue({
   el: '#app',
   data: data,
   methods: {
-    select: function (val) {
+    markItem: function (val) {
       app.$set(data.current.span.taskLabels, data.current.task.taskName, val);
       if (!(data.current.spanIndex === (data.items.length - 1)  &&
           data.current.taskIndex === (data.tasks.length - 1)))
@@ -284,6 +334,32 @@ let app = new Vue({
     next: next,
     back: back,
     submit: function() { storeDoc.bind(this, 'save')() },
-    incomplete: function() { storeDoc.bind(this, 'incomplete')() }
+    incomplete: function() { storeDoc.bind(this, 'incomplete')() },
+    selectItem: function(item) {
+      data.current.taskIndex = 0;
+      data.current.spanIndex = data.items.indexOf(item);
+      data.current.span = item;
+    }
   }
 });
+
+(function() {
+  var minOffset = 200;
+  var maxOffset = 600;
+
+  $('.handle').mousedown(function(ev, handler) {
+    $(document).mousemove(function(ev, handler) {
+      var offset = ev.pageX;
+
+      offset = offset < minOffset ? minOffset : offset;
+      offset = offset > maxOffset ? maxOffset : offset;
+
+      $('.app-sidebar').css('flex-basis', offset);
+    });
+  });
+
+  $(document).mouseup(function(e) {
+    $(document).unbind('mousemove');
+  });
+}());
+
