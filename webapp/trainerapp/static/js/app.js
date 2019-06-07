@@ -14,7 +14,7 @@ Vue.component('clinical-text', {
 
       for (let i = 0; i < this.allSpans.length; i++) {
         // highlight the span with default
-        let highlightText = this.text.slice(this.span.start_ind, this.span.end_ind);
+        let highlightText = this.text.slice(this.allSpans[i].start_ind, this.allSpans[i].end_ind);
         let spanText = `<span @click="selectItem(${i})" class="${taskHighlightDefault}">${highlightText}</span>`;
         if (this.allSpans[i] === this.span) {
           let taskHighlight = 'highlight-task-selected';
