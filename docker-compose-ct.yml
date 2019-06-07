@@ -1,7 +1,7 @@
 version: '3.4'
 
 services:
-  cattrainer:
+  MedCATweb:
     build:
         network: host
         context: ./webapp
