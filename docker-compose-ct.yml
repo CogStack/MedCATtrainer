@@ -1,0 +1,17 @@
+version: '3.4'
+
+services:
+  cattrainer:
+    build:
+        network: host
+        context: ./webapp
+    command: python /webapp/manage.py runserver 0.0.0.0:8000
+    volumes:
+      - db-volume:/webapp/db
+    ports:
+      - "8001:8000"
+    env_file:
+            - envs/env_ct
+
+volumes:
+  db-volume:
