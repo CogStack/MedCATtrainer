@@ -64,7 +64,7 @@ html, body {
 }
 
 .app-sidebar {
-  flex: 0 0 450px;
+  flex: 0 0 300px;
   overflow: auto;
 }
 

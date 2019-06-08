@@ -25,6 +25,7 @@ Vue.component('clinical-text', {
           spanText = `<span id="focusSpan" class="${taskHighlight}">${spanText}</span>`;
         }
         let precedingText = this.text.slice(start, this.allSpans[i].start_ind);
+        precedingText = precedingText.length !== 0 ? precedingText : ' ';
         start = this.allSpans[i].end_ind;
         formattedText += precedingText + spanText;
         if (i === this.allSpans.length -1 )
