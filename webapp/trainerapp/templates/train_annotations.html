@@ -9,6 +9,7 @@
 {% endblock %}
 
 {% block body %}
+
 	{% if not doc_html %}
         <div class='container-fluid'>
             <form method='POST' class='textbox'>
@@ -22,6 +23,8 @@
         </div>
 	{% else %}
         <div class='container-fluid train-annotations' id='train-annotations'>
+            <h6 v-show="elementVisible" class="posfed" v-text='msg'></h6>
+
             <form method='POST' style='display: inline-block'>
                 {% csrf_token %}
                 <button type="submit" class="btn btn-outline-success btn-sm btns-a"> Rerun the Annotator </button>

@@ -87,3 +87,23 @@ td.second{
   float: right;
   margin-right: 5px;
 }
+
+.posfed{
+  -webkit-animation: fadein 0.3s;
+  color: green;
+  float: right;
+  margin-right: 10px;
+  border-left: 4px solid black;
+  padding: 4px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  position: fixed;
+  top: 3px;
+  right: 3px;
+}
+
+/* Safari, Chrome and Opera > 12.1 */
+@-webkit-keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

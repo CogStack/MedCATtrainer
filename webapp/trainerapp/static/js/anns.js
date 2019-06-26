@@ -6,7 +6,9 @@ let info = new Vue({
   delimiters: ['[[', ']]'],
   data: {
     selected_concept: doc_json['entities'][0],
-    show: false
+    show: false,
+    elementVisible: false,
+    msg: ''
   },
   methods: {
     show_info: function(id) {
@@ -18,6 +20,12 @@ let info = new Vue({
       }
     },
     concept_feedback: function(neg) {
+      if(neg){
+        this.showmsg("Negative feedback recorded");
+      }
+      else{
+        this.showmsg("Positive feedback recorded");
+      }
       let d = {};
       d['cui'] = this.selected_concept['cui'];
       d['text'] = doc_json['text'];
@@ -47,6 +55,19 @@ let info = new Vue({
                }
       });
       this.show=false;
+      this.showmsg("New concept created");
+    },
+
+    showmsg: function(msg) {
+      this.msg = msg;
+      this.elementVisible = true;
+      let vm = this;
+      setTimeout(function () { vm.hidemsg() }, 4000);
+    },
+
+    hidemsg: function() {
+      this.elementVisible = false;
+      console.log("HERE");
     }
  
   }
