@@ -1,4 +1,4 @@
-This repo provides a simple Training interface and an API for MedCAT
+This repo provides a simple interface to inspect, improve and add concepts to biomedical NER+L model (e.g. MedCAT) and a further interface for research specific training data collection.
 
 ### How to use (e.g. for the CT example)
 1. Clone this repository
