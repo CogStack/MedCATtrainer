@@ -17,14 +17,18 @@ class CatWrap(object):
     # CHECK SHORT CONTEXT
     def __init__(self):
         vocab = Vocab()
-        vocab.load_dict(os.getenv('VOCAB_PATH', 'models/vocab.dat'))
+        vocab.load_dict(os.getenv('VOCAB_PATH', '/tmp/vocab.dat'))
         vocab.make_unigram_table()
 
         cdb = CDB()
-        cdb.load_dict(os.getenv('CDB_PATH', 'models/cdb.dat'))
+        try:
+            cdb.load_dict(os.getenv('CDB_PATH', '/tmp/cdb.dat'))
+        except Exception as e:
+            print(str(e))
+            # Makes a blank cdb
+            pass
 
         self.cat = CAT(cdb=cdb, vocab=vocab)
-        self.cat.spacy_cat.DEBUG = True
 
     def add_concepts(self, in_file):
         pass

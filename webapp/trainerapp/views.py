@@ -128,6 +128,18 @@ def add_cntx(request):
     print(data)
 
     cat_wrap.cat.add_concept_cntx(cui=cui, text=text, tkn_inds=tkn_inds, negative=negative)
+    return HttpResponse('')
+
+
+
+def save_cdb_model(request):
+    cat_wrap.cat.cdb.save_dict(os.getenv('CDB_PATH', '/tmp/cdb.dat'))
+    return HttpResponse('')
+
+
+def reset_cdb_model(request):
+    cat_wrap.cat.cdb.load_dict(os.getenv('CDB_PATH', '/tmp/cdb.dat'))
+    return HttpResponse('')
 
 
 def add_concept(request):
@@ -137,6 +149,8 @@ def add_concept(request):
     tkn_inds = data.get('tkn_inds', None)
 
     cat_wrap.cat.add_concept(concept, text, tkn_inds)
+    return HttpResponse('')
+
 
 
 def add_concept_manual(request):
@@ -151,7 +165,14 @@ def add_concept_manual(request):
             if len(tkn.text.strip()) > 1 and tkn.text.strip() in concept['source_value'].strip():
                 tkn_inds = [tkn.i]
                 break
+
     cat_wrap.cat.add_concept(concept, text, tkn_inds)
+
+    # Add synonyms if they exist
+    for synonym in concept['synonyms'].split(','):
+        if len(synonym) > 0:
+            concept['source_value'] = synonym
+            cat_wrap.cat.add_concept(concept, text, tkn_inds)
 
     return train_annotations(request)
 

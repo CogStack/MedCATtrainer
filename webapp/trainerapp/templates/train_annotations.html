@@ -31,12 +31,15 @@
                 <input type='hidden' name="text" value="{{text}}"></input>
             </form>
             <button type="button" v-on:click="show= !show" class="btn btn-outline-primary btn-sm btns-a-r"> Create a New Concept</button>
+            <button type="button" v-on:click="save_cdb_model()" class="btn btn-outline-danger btn-sm btns-a-r"> Save Model </button>
+            <button type="button" v-on:click="reset_cdb_model()" class="btn btn-outline-danger btn-sm btns-a-r"> Reset Model </button>
+
             <div class="row">
                 <div class='col-8 annotations'>
                     {{ doc_html|safe }}
                 </div>
                 <div class='col-4 concept-info' id='info'>
-                    <div id='cinfo' v-if="!show">
+                    <div id='cinfo' v-if="!show && selected_concept">
                         <div class='icons'>
                             <i v-on:click='concept_feedback(0)' class="far green fa-check-circle"></i>
                             <i v-on:click='concept_feedback(1)' class="far red fa-times-circle"></i>
@@ -90,13 +93,22 @@
                                         <input class='w100' ref='source_value' name='source_value'></input>
                                     </td>
                                 </tr>
+                                  <tr>
+                                    <td class='first'>
+                                        Synonyms
+                                    </td>
+                                    <td class='second'> 
+                                        <input class='w100' ref='synonyms' name='synonyms'></input>
+                                    </td>
+                                </tr>
+ 
                                  </tr>
                                   <tr>
                                     <td class='first'>
                                         Context 
                                     </td>
                                     <td class='second'> 
-                                        <textarea class='w100' ref="cntx_text" name="text" rows="8"></textarea>
+                                        <textarea class='w100' ref="cntx_text" name="text" rows="6"></textarea>
                                     </td>
                                 </tr>
                         </table>

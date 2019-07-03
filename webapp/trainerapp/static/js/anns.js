@@ -46,6 +46,7 @@ let info = new Vue({
       d['cui'] = this.$refs.cui.value;
       d['tui'] = this.$refs.tui.value;
       d['source_value'] = this.$refs.source_value.value;
+      d['synonyms'] = this.$refs.synonyms.value;
       d['text'] = this.$refs.cntx_text.value;
       d['ajaxRequest'] = true;
 
@@ -57,6 +58,30 @@ let info = new Vue({
       this.show=false;
       this.showmsg("New concept created");
     },
+
+    save_cdb_model: function() {
+      let d = {};
+      d['ajaxRequest'] = true;
+      this.$http.post('/save_cdb_model', d, {
+         headers: {
+                 'X-CSRFToken': Cookies.get('csrftoken')
+               }
+      });
+      this.showmsg("Model saved");
+    },
+
+    reset_cdb_model: function() {
+      let d = {};
+      d['ajaxRequest'] = true;
+
+      this.$http.post('/reset_cdb_model', d, {
+         headers: {
+                 'X-CSRFToken': Cookies.get('csrftoken')
+               }
+      });
+      this.showmsg("Model reset");
+    },
+
 
     showmsg: function(msg) {
       this.msg = msg;
