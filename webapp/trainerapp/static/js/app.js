@@ -248,7 +248,7 @@ let data = {
 
 if (trainData === undefined ||
     trainData.data === undefined ||
-    _.isEmpty(trainData.data)) {
+    trainData.data.entities === undefined) {
   data.errorModal = true;
 } else {
   data.tasks = _.pairs(trainData.tasks).map((task) => {
