@@ -11,9 +11,9 @@ RUN mkdir -p /webapp/data  && \
 # Copy everything
 COPY . /webapp
 
-# Copy the base model
-RUN wget "https://s3-eu-west-1.amazonaws.com/zkcl/vocab.dat" -O /webapp/models/vocab_base.dat
+# Set vocab_path
 ENV VOCAB_PATH=/webapp/models/vocab_base.dat
+ENV VOCAB_URL=https://s3-eu-west-1.amazonaws.com/zkcl/vocab.dat
 
 # Set the pythonpath
 WORKDIR /webapp

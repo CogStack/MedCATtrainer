@@ -7,7 +7,7 @@ services:
         context: ./webapp
     command: python /webapp/manage.py runserver 0.0.0.0:8000
     volumes:
-      - models-vol:/webapp/models
+      - ./webapp/models:/webapp/models
       - ./webapp/db:/webapp/db
       - ./webapp/data:/webapp/data
     ports:

@@ -1,23 +1,28 @@
 import os
 import json
-from medcat.preprocessing.tokenizers import spacy_split_all
-from medcat.preprocessing.cleaners import spacy_tag_punct
-from medcat.utils.spacy_pipe import SpacyPipe
+from urllib.request import urlretrieve
 import numpy as np
 from functools import partial
 
+from medcat.preprocessing.tokenizers import spacy_split_all
+from medcat.preprocessing.cleaners import spacy_tag_punct
+from medcat.utils.spacy_pipe import SpacyPipe
 from medcat.cat import CAT
 from medcat.utils.helpers import doc2html
 from medcat.utils.vocab import Vocab
 from medcat.cdb import CDB
 
-from spacy import displacy
-
 class CatWrap(object):
     # CHECK SHORT CONTEXT
     def __init__(self):
         vocab = Vocab()
-        vocab.load_dict(os.getenv('VOCAB_PATH', '/tmp/vocab.dat'))
+        vocab_path = os.getenv('VOCAB_PATH', '/tmp/vocab.dat')
+        # Get a vocab if it does not exist
+        if not os.path.exists(vocab_path):
+            vocab_url = os.getenv('VOCAB_URL')
+            urlretrieve(vocab_url, vocab_path)
+
+        vocab.load_dict(vocab_path)
         vocab.make_unigram_table()
 
         cdb = CDB()
@@ -35,8 +40,10 @@ class CatWrap(object):
 
 
     def get_html_and_json(self, text):
+        self.cat.spacy_cat.ACC_ALWAYS = True
         doc = self.cat(text)
         doc_json = self.cat.get_json(text)
+        self.cat.spacy_cat.ACC_ALWAYS = False
         return doc2html(doc), doc_json
 
 
