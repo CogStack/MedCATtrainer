@@ -85,6 +85,11 @@ html, body {
   cursor: ew-resize;
 }
 
+.handle-icon {
+  position: relative;
+  top: calc(50% - 12px)
+}
+
 .nav-bar, .task-bar {
   padding: 5px;
 }
