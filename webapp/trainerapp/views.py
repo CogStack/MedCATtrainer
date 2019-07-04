@@ -21,7 +21,7 @@ from .utils import training_to_file
 
 cat_wrap = CatWrap()
 
-DATA_DIR = os.getenv("DATA_DIR", "/Users/tom/phd/cattrainer/webapp/trainerapp/examples/")
+DATA_DIR = os.getenv("DATA_DIR", "/tmp/")
 
 _INPUT_DIR = 'input'
 _OUTPUT_DIR = 'output'
