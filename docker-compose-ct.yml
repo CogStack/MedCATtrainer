@@ -1,17 +1,19 @@
 version: '3.4'
 
 services:
-  MedCATweb:
+  medcatweb:
     build:
         network: host
         context: ./webapp
     command: python /webapp/manage.py runserver 0.0.0.0:8000
     volumes:
-      - db-volume:/webapp/db
+      - models-vol:/webapp/models
+      - ./webapp/db:/webapp/db
+      - ./webapp/data:/webapp/data
     ports:
       - "8001:8000"
     env_file:
-            - envs/env_ct
+            - ./envs/env_ct
 
 volumes:
-  db-volume:
+        models-vol:

@@ -31,6 +31,7 @@ let info = new Vue({
       d['text'] = doc_json['text'];
       d['negative'] = neg;
       d['tkn_inds'] = [this.selected_concept['start_tkn'], this.selected_concept['end_tkn']];
+      d['char_inds'] = [this.selected_concept['start_ind'], this.selected_concept['end_ind']];
       d['ajaxRequest'] = true;
 
       this.$http.post('/add_cntx', d, {
@@ -67,7 +68,7 @@ let info = new Vue({
                  'X-CSRFToken': Cookies.get('csrftoken')
                }
       });
-      this.showmsg("Model saved");
+      this.showmsg("New training data added and model saved");
     },
 
     reset_cdb_model: function() {
@@ -79,7 +80,7 @@ let info = new Vue({
                  'X-CSRFToken': Cookies.get('csrftoken')
                }
       });
-      this.showmsg("Model reset");
+      this.showmsg("Model reset to the last saved instance");
     },
 
 

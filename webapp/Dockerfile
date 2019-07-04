@@ -1,15 +1,19 @@
 FROM python:3.7
 
 # Create the required folders
-RUN mkdir -p /models && \
-    mkdir -p /data && \
-    mkdir -p /data/input && \
-    mkdir -p /data/output && \
-    mkdir -p /data/incomplete
+RUN mkdir -p /webapp/data  && \
+    mkdir -p /webapp/data/input && \
+    mkdir -p /webapp/data/output && \
+    mkdir -p /webapp/data/incomplete && \
+    mkdir -p /webapp/models
+
 
 # Copy everything
 COPY . /webapp
-COPY ./models /models
+
+# Copy the base model
+RUN wget "https://s3-eu-west-1.amazonaws.com/zkcl/vocab.dat" -O /webapp/models/vocab_base.dat
+ENV VOCAB_PATH=/webapp/models/vocab_base.dat
 
 # Set the pythonpath
 WORKDIR /webapp

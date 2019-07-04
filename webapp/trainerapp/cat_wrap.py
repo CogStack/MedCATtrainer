@@ -17,6 +17,7 @@ class CatWrap(object):
     # CHECK SHORT CONTEXT
     def __init__(self):
         vocab = Vocab()
+        print(os.environ)
         vocab.load_dict(os.getenv('VOCAB_PATH', '/tmp/vocab.dat'))
         vocab.make_unigram_table()
 

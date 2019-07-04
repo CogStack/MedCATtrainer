@@ -1,19 +1,19 @@
 version: '3.4'
 
 services:
-  cattrainer:
+  medcatweb:
     build:
         network: host
         context: ./webapp
     command: python /webapp/manage.py runserver 0.0.0.0:8000
     volumes:
-      - ./webapp/trainerapp:/webapp/trainerapp
-      - db-volume:/webapp/db
+      - models-vol:/webapp/models
+      - ./webapp/db:/webapp/db
+      - ./webapp/data:/webapp/data
     ports:
       - "8001:8000"
     env_file:
-            - .env
+            - ./envs/env_dev
 
 volumes:
-  db-volume:
-
+        models-vol:

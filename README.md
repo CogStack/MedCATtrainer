@@ -22,9 +22,9 @@ Request JSON: (you only need to set the 'text' field the rest can be left blank)
     "content": {
         "text": "",
         "metadata:": {},
-        "footer": {}
     },
-    "applicationParams": {}
+    "applicationParams": {},
+    "footer": {}
 }
 ```
 

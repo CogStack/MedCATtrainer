@@ -17,6 +17,7 @@ from django.views.decorators.csrf import csrf_exempt
 from spacy import displacy
 from .models import UseCase
 from .cat_wrap import CatWrap
+from .utils import training_to_file
 
 cat_wrap = CatWrap()
 
@@ -124,10 +125,19 @@ def add_cntx(request):
     tkn_inds = data['tkn_inds'] # [ind_first, ind_last] - Index of the first and last token
     text = data['text'] # Text of the document
     negative = data['negative'] # 0 or 1 
-    print("HERE")
-    print(data)
 
     cat_wrap.cat.add_concept_cntx(cui=cui, text=text, tkn_inds=tkn_inds, negative=negative)
+
+    # Add the training to file
+    tui = ''
+    name = cat_wrap.cat.cdb.cui2pretty_name.get(cui, None)
+    start_ind = data['char_inds'][0]
+    end_ind = data['char_inds'][1]
+    train_data_path = os.getenv('TRAIN_DATA', '/tmp/train_anns.csv')
+    if cui in cat_wrap.cat.cdb.cui2tui:
+        tui = cat_wrap.cat.cdb.cui2tui[cui]
+    training_to_file(cui, tui, name, text, start_ind, end_ind, not negative, train_data_path)
+
     return HttpResponse('')
 
 
@@ -148,15 +158,17 @@ def add_concept(request):
     text = data.get('text', None)
     tkn_inds = data.get('tkn_inds', None)
 
-    cat_wrap.cat.add_concept(concept, text, tkn_inds)
-    return HttpResponse('')
 
+    cat_wrap.cat.add_concept(concept, text, tkn_inds)
+
+    return HttpResponse('')
 
 
 def add_concept_manual(request):
     concept = json.loads(request.body)
     text = concept['text']
     tkn_inds = None
+    train_data_path = os.getenv('TRAIN_DATA', '/tmp/train_anns.csv')
 
     # This is a bit of a hack, the add_concept version should be used in the future
     if text is not None:
@@ -165,14 +177,20 @@ def add_concept_manual(request):
             if len(tkn.text.strip()) > 1 and tkn.text.strip() in concept['source_value'].strip():
                 tkn_inds = [tkn.i]
                 break
+    # Find char inds
+    start_ind = text.find(concept['source_value'])
+    end_ind = start_ind + len(concept['source_value'])
+    synonyms = [x for x in concept['synonyms'].split(',') if len(x) > 0]
 
     cat_wrap.cat.add_concept(concept, text, tkn_inds)
+    training_to_file(concept['cui'], concept['tui'], concept['name'], text, start_ind,
+                     end_ind, 1, train_data_path, "|".join(synonyms))
 
     # Add synonyms if they exist
-    for synonym in concept['synonyms'].split(','):
-        if len(synonym) > 0:
-            concept['source_value'] = synonym
-            cat_wrap.cat.add_concept(concept, text, tkn_inds)
+    for synonym in synonyms:
+        concept['source_value'] = synonym
+        cat_wrap.cat.add_concept(concept, text, tkn_inds)
+
 
     return train_annotations(request)
 
@@ -246,8 +264,8 @@ def api(request):
             "metadata": {},
             "success": True if not errors else False,
             "errors": errors,
-            "footer": {}
-        }
+        },
+        "footer": {}
     }
 
     return JsonResponse(res)
