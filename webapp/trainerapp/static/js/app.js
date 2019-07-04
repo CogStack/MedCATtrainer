@@ -12,6 +12,7 @@ Vue.component('clinical-text', {
       let formattedText = '';
       let start = 0;
 
+      this.text = this.text.replace('<', '\<').replace('>', '\>')
       for (let i = 0; i < this.allSpans.length; i++) {
         // highlight the span with default
         let highlightText = this.text.slice(this.allSpans[i].start_ind, this.allSpans[i].end_ind);

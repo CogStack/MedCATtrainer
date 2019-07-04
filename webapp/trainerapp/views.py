@@ -21,7 +21,7 @@ from .utils import training_to_file
 
 cat_wrap = CatWrap()
 
-DATA_DIR = os.getenv("DATA_DIR", "/tmp/")
+DATA_DIR = os.getenv("DATA_DIR", "/Users/tom/phd/cattrainer/webapp/trainerapp/examples/")
 
 _INPUT_DIR = 'input'
 _OUTPUT_DIR = 'output'
@@ -105,8 +105,6 @@ def train(request, id=0):
     # Create folders if they don't exist
     pathlib.Path(_out_path(usecase.folder)).mkdir(parents=True, exist_ok=True)
     pathlib.Path(_incomplete_path(usecase.folder)).mkdir(parents=True, exist_ok=True)
-
-
 
     return render(request, 'app.html', context)
 

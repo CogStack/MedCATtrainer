@@ -24,7 +24,9 @@
                :task-idx="current.taskIndex"
                :span-idx="current.spanIndex"
                :select-item="selectItem"></sidebar>
-      <div class="handle"></div>
+      <div class="handle">
+        <i class="fas fa-grip-lines-vertical"></i>
+      </div>
       <clinical-text :text="text" :span="current.span"
                      :task="tasks[current.taskIndex]"
                      :select-item="selectItem"
