@@ -32,6 +32,12 @@ Vue.component('clinical-text', {
         if (i === this.allSpans.length -1 )
           formattedText += this.text.slice(start, this.text.length - 1);
       }
+
+      let el = $( '<div></div>' );
+      el.html(formattedText);
+      // strip all plain text HTML that may be malformed and only leave the <span> els we've included.
+      $(":not(*[class^='highlight-task'])",  el).remove();
+      formattedText = el.html();
       return formattedText ;
     }
   },
