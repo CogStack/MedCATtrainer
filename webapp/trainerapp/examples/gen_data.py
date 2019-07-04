@@ -2,7 +2,6 @@ import json
 import pickle
 import re
 from glob import glob
-from itertools import chain
 from random import random
 
 import pandas as pd
@@ -10,14 +9,19 @@ from sklearn import pipeline
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import cohen_kappa_score, accuracy_score, f1_score
-from sklearn.model_selection import train_test_split, GridSearchCV, KFold
-from sklearn.svm import SVC
+from sklearn.model_selection import train_test_split, GridSearchCV
 
 """
-Script for generating example files from mimic3 data saved to disk. 
+Throw away script for:
+1) Generating example files to be hand labelled
+2) Outputting some metrics of hand labelled in comparison to another hand labelled dataset prefixed with 'r1' dir 
+3) Outputting Cohen's Kappa
+4) Cross validating and training a RandomForest model on 100 characters before/after
 The notes.csv file is the result of SQL: select * from NOTEEVENTS where category='Discharge summary' 
 """
+
 _note_events_csv = '/Users/tom/phd/tdy_ehr/mimic_tidy/data/notes.csv'
+
 
 _token = 'seizure|epilepsy|seizre|seizur'
 
@@ -85,9 +89,9 @@ def num_of_occurrences():
 
 def calc_cohens_kappa():
     r1_output_dir = '/Users/tom/phd/cattrainer/webapp/trainerapp/examples/output/train/*'
-    r2_output_dir = '/Users/tom/phd/cattrainer/webapp/trainerapp/examples/el_labs/output/train/*'
+    r2_output_dir = '/Users/tom/phd/cattrainer/webapp/trainerapp/examples/r1_labs/output/train/*'
 
-    r2_dir = '/Users/tom/phd/cattrainer/webapp/trainerapp/examples/el_labs/output/train/'
+    r2_dir = '/Users/tom/phd/cattrainer/webapp/trainerapp/examples/r1_labs/output/train/'
 
     complete_r1 = glob(r1_output_dir)
     complete_r2 = glob(r2_output_dir)
@@ -126,12 +130,11 @@ def calc_cohens_kappa():
     print(f'Kappa:{score}')
 
 
-
 def train_basic_classifier():
     r1_output_dir = '/Users/tom/phd/cattrainer/webapp/trainerapp/examples/output/train/*'
-    r2_output_dir = '/Users/tom/phd/cattrainer/webapp/trainerapp/examples/el_labs/output/train/*'
+    r2_output_dir = '/Users/tom/phd/cattrainer/webapp/trainerapp/examples/r1_labs/output/train/*'
 
-    r2_dir = '/Users/tom/phd/cattrainer/webapp/trainerapp/examples/el_labs/output/train/'
+    r2_dir = '/Users/tom/phd/cattrainer/webapp/trainerapp/examples/r1_labs/output/train/'
 
     complete_r1 = glob(r1_output_dir)
     complete_r2 = glob(r2_output_dir)
@@ -163,6 +166,7 @@ def train_basic_classifier():
                     labels.append(v['Temporality'])
 
     PUNC = r'[\[\.,\\/#!$%\^&\*;:{}=\-_`~()\]\'\"\|<>/\?\@\$\%\£\+]'
+
     def clean(txt):
         txt = txt.lower()
         txt = re.sub('\[\*\*.*?\*\*\]', '', txt)
@@ -215,7 +219,6 @@ def train_basic_classifier():
 
     pickle.dump(model, open('temp_model.pickle', 'wb'))
 
-    # RandomizedSearchCV()
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
 
