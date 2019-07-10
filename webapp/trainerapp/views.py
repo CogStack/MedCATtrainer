@@ -117,6 +117,29 @@ def _store_doc(request, id, out_path):
     return redirect('train', id)
 
 
+def search_concept(request):
+    #TODO: implement real cdb search
+    print(f'searching for: {request.GET.get("q")}')
+    example_results = [
+        {
+            'name': 'patient',
+            'cui': '1',
+            'tui': '2',
+            'source_value': '',
+            'synonyms': ['pt']
+        },
+        {
+            'name': 'physical therapy',
+            'cui': '3',
+            'tui': '4',
+            'source_value': '',
+            'synonyms': ['pt', 'phys thpy', 'P.T.']
+        }
+    ]
+    resp_payload = {'results': example_results}
+    return HttpResponse(json.dumps(resp_payload), content_type='application/json')
+
+
 def add_cntx(request):
     data = json.loads(request.body)
     cui = data['cui'] # ID of the annotation
@@ -135,19 +158,17 @@ def add_cntx(request):
     if cui in cat_wrap.cat.cdb.cui2tui:
         tui = cat_wrap.cat.cdb.cui2tui[cui]
     training_to_file(cui, tui, name, text, start_ind, end_ind, not negative, train_data_path)
-
-    return HttpResponse('')
-
+    return HttpResponse(status=200)
 
 
 def save_cdb_model(request):
     cat_wrap.cat.cdb.save_dict(os.getenv('CDB_PATH', '/tmp/cdb.dat'))
-    return HttpResponse('')
+    return HttpResponse(status=200)
 
 
 def reset_cdb_model(request):
     cat_wrap.cat.cdb.load_dict(os.getenv('CDB_PATH', '/tmp/cdb.dat'))
-    return HttpResponse('')
+    return HttpResponse(status=200)
 
 
 def add_concept(request):
@@ -188,7 +209,6 @@ def add_concept_manual(request):
     for synonym in synonyms:
         concept['source_value'] = synonym
         cat_wrap.cat.add_concept(concept, text, tkn_inds)
-
 
     return train_annotations(request)
 

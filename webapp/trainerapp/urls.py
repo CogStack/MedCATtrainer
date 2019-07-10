@@ -16,4 +16,5 @@ urlpatterns = [
     path('download/<int:id>', download, name='download'),
     path('reset_cdb_model', reset_cdb_model, name='reset_cdb_model'),
     path('save_cdb_model', save_cdb_model, name='save_cdb_model'),
+    path('search_concept', search_concept, name='search_concept')
 ]

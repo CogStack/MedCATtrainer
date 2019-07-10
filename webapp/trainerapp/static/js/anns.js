@@ -8,23 +8,30 @@ let info = new Vue({
     selected_concept: doc_json['entities'][0],
     show: false,
     elementVisible: false,
-    msg: ''
+    msg: '',
+    search_query: '',
+    search_results: []
+  },
+  watch: {
+    'search_query': function(newSearch, oldSearch) {
+      this.$data.search_results = [];
+      this.debounced_search_query();
+    }
+  },
+  created: function() {
+    this.debounced_search_query = _.debounce(this.search, 500)
   },
   methods: {
     show_info: function(id) {
-      for(i = 0; i <= doc_json['entities'].length; i++){
-        if(doc_json['entities'][i].id == id){
-          this.selected_concept = doc_json['entities'][i];
-          break;
-        }
-      }
+      this.selected_concept = doc_json.entities.filter((e) => Number(e.id) === id)[0];
     },
+
     concept_feedback: function(neg) {
       if(neg){
-        this.showmsg("Negative feedback recorded");
+        this.showMsg("Negative feedback recorded");
       }
       else{
-        this.showmsg("Positive feedback recorded");
+        this.showMsg("Positive feedback recorded");
       }
       let d = {};
       d['cui'] = this.selected_concept['cui'];
@@ -35,14 +42,34 @@ let info = new Vue({
       d['ajaxRequest'] = true;
 
       this.$http.post('/add_cntx', d, {
-         headers: {
-                 'X-CSRFToken': Cookies.get('csrftoken')
-               }
+        headers: {
+          'X-CSRFToken': Cookies.get('csrftoken')
+        }
       });
+    },
+
+    search: function() {
+      if (this.search_query.length > 0) {
+        this.$http.get(`/search_concept?q=${this.search_query}`, {
+          headers: {
+            'X-CSRFToken': Cookies.get('csrftoken')
+          }
+        }).then((resp) => {
+          console.log(resp);
+          this.$data.search_results = resp.body.results
+        }).catch((err) => {
+          this.showMsg('Failed to search for concepts');
+          console.error(err)
+        });
+      }
+    },
+    select_concept: function(concept) {
+      console.log(`clickled concept:${concept}`);
+      this.$data.search_results = [];
     },
     create_concept: function() {
       let d = {};
-      console.log(this.$refs)
+      console.log(this.$refs);
       d['name'] = this.$refs.cntx_name.value;
       d['cui'] = this.$refs.cui.value;
       d['tui'] = this.$refs.tui.value;
@@ -51,13 +78,18 @@ let info = new Vue({
       d['text'] = this.$refs.cntx_text.value;
       d['ajaxRequest'] = true;
 
+
       this.$http.post('/add_concept_manual', d, {
          headers: {
-                 'X-CSRFToken': Cookies.get('csrftoken')
-               }
+          'X-CSRFToken': Cookies.get('csrftoken')
+         }
+      }).then((resp) => {
+        this.showMsg("New concept created");
+        this.show=false;
+      }).catch((err) => {
+        this.showMsg('Failed to create new concept');
+        console.error(err)
       });
-      this.show=false;
-      this.showmsg("New concept created");
     },
 
     save_cdb_model: function() {
@@ -65,10 +97,15 @@ let info = new Vue({
       d['ajaxRequest'] = true;
       this.$http.post('/save_cdb_model', d, {
          headers: {
-                 'X-CSRFToken': Cookies.get('csrftoken')
-               }
+          'X-CSRFToken': Cookies.get('csrftoken')
+         }
+      }).then((resp) => {
+        this.showMsg('New training data added and model saved');
+        this.show=false;
+      }).catch((err) => {
+        this.showMsg('Failed to save changes');
+        console.error(err)
       });
-      this.showmsg("New training data added and model saved");
     },
 
     reset_cdb_model: function() {
@@ -76,25 +113,27 @@ let info = new Vue({
       d['ajaxRequest'] = true;
 
       this.$http.post('/reset_cdb_model', d, {
-         headers: {
-                 'X-CSRFToken': Cookies.get('csrftoken')
-               }
+        headers: {
+          'X-CSRFToken': Cookies.get('csrftoken')
+        }
+      }).then(() => {
+        this.showMsg('Model reset to the last saved instance');
+        this.show=false;
+      }).catch((err) => {
+        this.showMsg('Failed to save changes');
+        console.error(err)
       });
-      this.showmsg("Model reset to the last saved instance");
     },
 
-
-    showmsg: function(msg) {
+    showMsg: function(msg) {
       this.msg = msg;
       this.elementVisible = true;
       let vm = this;
-      setTimeout(function () { vm.hidemsg() }, 4000);
+      setTimeout(function () { vm.hideMsg() }, 4000);
     },
 
-    hidemsg: function() {
+    hideMsg: function() {
       this.elementVisible = false;
-      console.log("HERE");
     }
- 
   }
-})
+});

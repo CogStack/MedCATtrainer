@@ -62,55 +62,66 @@
                         <table class="table table-hover info">
                             <tbody>
                                 <tr>
+                                    <td></td>
+                                    <td>
+                                        <input class='w100' ref='search' placeholder="Search Existing Concepts..."
+                                               v-model="search_query">
+                                        <div class="search-result-panel" v-if="search_results.length > 0">
+                                          <div v-for="res of search_results" :key="res.cui">
+                                            <div @click="select_concept(res)" class="search-result-item">[[ res.name ]]</div>
+                                          </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td class='first'>
                                         Name
                                     </td>
-                                    <td class='second'> 
-                                        <input class='w100' ref='cntx_name' name='name'></input>
+                                    <td class='second'>
+                                        <input class='w100' ref='cntx_name' name='name'>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class='first'>
                                         CUI
                                     </td>
-                                    <td class='second'> 
-                                        <input class='w100' ref='cui' name='cui'></input>
+                                    <td class='second'>
+                                        <input class='w100' ref='cui' name='cui'>
                                     </td>
                                 </tr>
                                  <tr>
                                     <td class='first'>
                                         TUI
                                     </td>
-                                    <td class='second'> 
-                                        <input class='w100' ref='tui' name='tui'></input>
+                                    <td class='second'>
+                                        <input class='w100' ref='tui' name='tui'>
                                     </td>
                                 </tr>
                                   <tr>
                                     <td class='first'>
                                         Source Value 
                                     </td>
-                                    <td class='second'> 
-                                        <input class='w100' ref='source_value' name='source_value'></input>
+                                    <td class='second'>
+                                        <input class='w100' ref='source_value' name='source_value'>
                                     </td>
                                 </tr>
                                   <tr>
                                     <td class='first'>
                                         Synonyms
                                     </td>
-                                    <td class='second'> 
-                                        <input class='w100' ref='synonyms' name='synonyms'></input>
+                                    <td class='second'>
+                                        <input class='w100' ref='synonyms' name='synonyms'>
                                     </td>
                                 </tr>
- 
-                                 </tr>
-                                  <tr>
-                                    <td class='first'>
-                                        Context 
-                                    </td>
-                                    <td class='second'> 
-                                        <textarea class='w100' ref="cntx_text" name="text" rows="6"></textarea>
-                                    </td>
+                                <tr>
+                                  <td class='first'>
+                                      Context
+                                  </td>
+                                  <td class='second'>
+                                      <textarea class='w100' ref="cntx_text" name="text" rows="6"></textarea>
+                                  </td>
                                 </tr>
+                          </tbody>
                         </table>
                         <button v-on:click='show= !show' type='button' class='flt-right btn btn-danger'> Cancel </button>
                         <button v-on:click='create_concept()' type='button' class='flt-right btn btn-success'> Submit </button>
@@ -121,6 +132,7 @@
     {% endif %}
 <!-- external js -->
 <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
 <script type="text/javascript">

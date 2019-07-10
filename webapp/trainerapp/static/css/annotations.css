@@ -108,3 +108,16 @@ td.second{
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+
+
+.search-result-panel {
+  position: absolute;
+  border: 1px solid #FFF;
+  box-shadow: 0 5px 3px 3px #9476518a;
+  background: white;
+}
+
+.search-result-item {
+  margin: 10px
+
+}
