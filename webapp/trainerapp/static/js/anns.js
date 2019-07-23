@@ -9,13 +9,14 @@ let info = new Vue({
     show: false,
     elementVisible: false,
     msg: '',
-    search_query: '',
-    search_results: [],
+    searchQuery: '',
+    searchResults: [],
     searching: false,
+    noResults: false,
   },
   watch: {
-    'search_query': function(newSearch, oldSearch) {
-      this.$data.search_results = [];
+    'searchQuery': function(newSearch, oldSearch) {
+      this.$data.searchResults = [];
       this.debounced_search_query();
     }
   },
@@ -50,25 +51,28 @@ let info = new Vue({
     },
 
     search: function() {
-      if (this.search_query.length > 0) {
-        this.$http.get(`/search_concept?q=${this.search_query}`, {
+      if (this.searchQuery.length > 0) {
+        this.$http.get(`/search_concept?q=${this.searchQuery}`, {
           headers: {
             'X-CSRFToken': Cookies.get('csrftoken')
           }
         }).then((resp) => {
           console.log(resp);
           this.searching = false;
-          this.$data.search_results = resp.body.results
+          this.noResults = resp.body.results && resp.body.results.length === 0 ?
+              'No concepts found' : false;
+          this.$data.searchResults = resp.body.results;
+
         }).catch((err) => {
-          this.showMsg('Failed to search for concepts');
-          this.searching = false;
+          this.noResults = 'Search for concepts failed';
           console.error(err)
         });
         this.searching = true;
+        this.noResults = false;
       }
     },
     select_concept: function(concept) {
-      this.search_results = [];
+      this.searchResults = [];
       this.$refs.cui.value = concept.cui;
       this.$refs.cntx_name.value = concept.name;
       this.$refs.tui.value = concept.tui;

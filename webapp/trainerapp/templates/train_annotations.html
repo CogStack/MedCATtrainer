@@ -66,11 +66,12 @@
                                     <td>
                                         <div class="search-wrapper">
                                           <input class='search-input' ref='search' placeholder="Search Existing Concepts..."
-                                                    v-model="search_query">
+                                                    v-model="searchQuery">
                                           <span v-if='searching' class="search-spinner spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                          <small v-if='noResults' class="text-danger">[[noResults]]</small>
                                         </div>
-                                        <div class="search-result-panel" v-if="search_results.length > 0">
-                                          <div v-for="res of search_results">
+                                        <div class="search-result-panel" v-if="searchResults.length > 0">
+                                          <div v-for="res of searchResults">
                                             <div @click="select_concept(res)" class="search-result-item">
                                               [[res.cui]]: [[ res.name ]]
                                             </div>
