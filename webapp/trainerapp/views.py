@@ -120,23 +120,9 @@ def _store_doc(request, id, out_path):
 def search_concept(request):
     #TODO: implement real cdb search
     print(f'searching for: {request.GET.get("q")}')
-    example_results = [
-        {
-            'name': 'patient',
-            'cui': '1',
-            'tui': '2',
-            'source_value': '',
-            'synonyms': ['pt']
-        },
-        {
-            'name': 'physical therapy',
-            'cui': '3',
-            'tui': '4',
-            'source_value': '',
-            'synonyms': ['pt', 'phys thpy', 'P.T.']
-        }
-    ]
-    resp_payload = {'results': example_results}
+    query = request.GET.get('q')
+    results = cat_wrap.search_concepts(query)
+    resp_payload = {'results': results}
     return HttpResponse(json.dumps(resp_payload), content_type='application/json')
 
 
@@ -176,8 +162,6 @@ def add_concept(request):
     concept = data['concept']
     text = data.get('text', None)
     tkn_inds = data.get('tkn_inds', None)
-
-
     cat_wrap.cat.add_concept(concept, text, tkn_inds)
 
     return HttpResponse('')

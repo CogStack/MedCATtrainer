@@ -1,16 +1,18 @@
-import os
 import json
-from urllib.request import urlretrieve
-import numpy as np
-from functools import partial
+from itertools import chain
 
-from medcat.preprocessing.tokenizers import spacy_split_all
-from medcat.preprocessing.cleaners import spacy_tag_punct
-from medcat.utils.spacy_pipe import SpacyPipe
+import numpy as np
+import os
+import re
+from urllib.request import urlretrieve
+
 from medcat.cat import CAT
+from medcat.cdb import CDB
 from medcat.utils.helpers import doc2html
 from medcat.utils.vocab import Vocab
-from medcat.cdb import CDB
+
+from timeit import default_timer as timer
+
 
 class CatWrap(object):
     # CHECK SHORT CONTEXT
@@ -32,12 +34,41 @@ class CatWrap(object):
             print(str(e))
             # Makes a blank cdb
             pass
-
         self.cat = CAT(cdb=cdb, vocab=vocab)
+        self.cache_hash = None
+        self.refresh_cache()
 
     def add_concepts(self, in_file):
         pass
 
+    def search_concepts(self, query):
+        """
+        :param query: search for concepts in the current CDB via CUI, TUI, name, source_value or synonyms
+        :return: list of concepts in the CAT.cdb
+        """
+        concepts = []
+
+        q = re.compile(query.lower())
+        start = timer()
+
+        # check if cache needs updating.
+        self.refresh_cache()
+
+        res = np.char.find(self.name_cache[:, 0], query)
+        name_2_cui_res = self.name_cache[res == 0, :][0:100]
+
+        for name, cui in name_2_cui_res:
+            concepts.append({
+                'name': name,
+                'cui': cui,
+                'tui': self.cat.cdb.cui2tui.get(cui, ''),
+                'synonyms': list(self.cat.cdb.cui2names.get(cui, set())),
+                'source_value': '',
+                'context': ''
+            })
+        end = timer()
+        print(f'Took {end - start} seconds for lookup')
+        return concepts
 
     def get_html_and_json(self, text):
         self.cat.spacy_cat.ACC_ALWAYS = True
@@ -45,7 +76,6 @@ class CatWrap(object):
         doc_json = self.cat.get_json(text)
         self.cat.spacy_cat.ACC_ALWAYS = False
         return doc2html(doc), doc_json
-
 
     def get_doc(self, params, in_path, is_text=False):
         """
@@ -115,8 +145,6 @@ class CatWrap(object):
 
         return out_data
 
-
-
     def save_doc(self, data, in_path, out_path, del_cntx=True):
         """ Save the newly annotated document
 
@@ -151,3 +179,15 @@ class CatWrap(object):
             os.remove(os.path.join(in_path, f_name))
 
             json.dump(doc, f_out)
+
+    def refresh_cache(self):
+        names_hash = hash(frozenset(self.cat.cdb.name2cui))
+        if self.cache_hash is None or names_hash != self.cache_hash:
+            print('Refreshing names to cui cache')
+            flat_tuple_cache = chain.from_iterable([[(name, cui) for cui in cuis]
+                                                    for name, cuis in self.cat.cdb.name2cui.items()])
+            name_cache = np.asarray(list(flat_tuple_cache))
+            self.name_cache = name_cache
+            self.cache_hash = names_hash
+            print('Finished cache referesh')
+

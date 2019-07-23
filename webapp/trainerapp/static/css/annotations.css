@@ -115,9 +115,30 @@ td.second{
   border: 1px solid #FFF;
   box-shadow: 0 5px 3px 3px #9476518a;
   background: white;
+  max-height: 450px;
+  max-width: 300px;
+  overflow-y: auto;
 }
 
 .search-result-item {
-  margin: 10px
+  padding: 10px
+}
 
+.searh-wrapper {
+  display:inline-block;
+}
+
+.search-input {
+  width: 100%;
+}
+
+.search-spinner {
+  float: right;
+  margin-right: 6px;
+  margin-top: -24px;
+  position: relative;
+}
+
+.search-result-item:hover {
+  background-color: rgba(0, 0, 0, .075);
 }

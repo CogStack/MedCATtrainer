@@ -10,7 +10,8 @@ let info = new Vue({
     elementVisible: false,
     msg: '',
     search_query: '',
-    search_results: []
+    search_results: [],
+    searching: false,
   },
   watch: {
     'search_query': function(newSearch, oldSearch) {
@@ -19,7 +20,7 @@ let info = new Vue({
     }
   },
   created: function() {
-    this.debounced_search_query = _.debounce(this.search, 500)
+    this.debounced_search_query = _.debounce(this.search, 400)
   },
   methods: {
     show_info: function(id) {
@@ -56,16 +57,22 @@ let info = new Vue({
           }
         }).then((resp) => {
           console.log(resp);
+          this.searching = false;
           this.$data.search_results = resp.body.results
         }).catch((err) => {
           this.showMsg('Failed to search for concepts');
+          this.searching = false;
           console.error(err)
         });
+        this.searching = true;
       }
     },
     select_concept: function(concept) {
-      console.log(`clickled concept:${concept}`);
-      this.$data.search_results = [];
+      this.search_results = [];
+      this.$refs.cui.value = concept.cui;
+      this.$refs.cntx_name.value = concept.name;
+      this.$refs.tui.value = concept.tui;
+      this.$refs.synonyms.value = concept.synonyms.join(',');
     },
     create_concept: function() {
       let d = {};
