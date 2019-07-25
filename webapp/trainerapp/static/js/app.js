@@ -169,9 +169,9 @@ Vue.component('navBar', {
       <button :disabled="nextDisabled()"  @click="next" type="button" class="btn btn-warning mb-2">
         <i class="fas fa-forward"></i>
       </button>
-      <button :disabled="!tasksComplete" @click.prevent="submit" class="btn btn-primary mb-2" type="button" 
+      <button v-if="tasksComplete" @click.prevent="submit" class="btn btn-primary mb-2" type="button" 
       style="float: right">Submit</button>
-      <button @click.prevent="markIncomplete" class="btn btn-info mb-2 mr-1" style="float:right">Incomplete</button> 
+      <button v-if="!tasksComplete" @click.prevent="markIncomplete" class="btn btn-info mb-2 mr-1" style="float:right">Incomplete</button> 
     </div>
   `
 });
@@ -249,7 +249,7 @@ let data = {
   failModal: false,
   helpModal: false,
   errorModal: false,
-  tasksComplete: true,  // Is this needed?
+  tasksComplete: false,
   tasks: []
 };
 
@@ -289,7 +289,7 @@ let next = function() {
     data.current.taskIndex = 0;
     data.current.task = data.tasks[0];
   } else
-    console.error('Cannot proceed to next element that does not exist');
+    console.log('No more elements to next to.');
 };
 
 let back = function() {
@@ -302,7 +302,7 @@ let back = function() {
     data.current.spanIndex--;
     data.current.span = data.items[data.current.spanIndex];
   } else
-    console.log('Cannot proceed to next element.');
+    console.log('No more elements to go back to.');
 };
 
 let storeDoc = function(endpoint) {
@@ -337,7 +337,8 @@ let app = new Vue({
       app.$set(data.current.span.taskLabels, data.current.task.taskName, val);
       if (!(data.current.spanIndex === (data.items.length - 1)  &&
           data.current.taskIndex === (data.tasks.length - 1)))
-        next()
+        next();
+      this.isTaskComplete();
     },
     next: next,
     back: back,
@@ -347,10 +348,37 @@ let app = new Vue({
       data.current.taskIndex = 0;
       data.current.spanIndex = data.items.indexOf(item);
       data.current.span = item;
+    },
+    keyup: function(e) {
+      // 1-9 select a value
+      if (e.keyCode >= 49 && e.keyCode <= 57) {
+        let codeRange = _.range(10);
+        let keyRange = _.range(49, 58);
+        let selectIdx = _.object(keyRange, codeRange)[e.keyCode];
+        this.markItem(this.current.task.values[selectIdx][1]);
+      } else if (e.keyCode === 13) {
+        if (this.isTaskComplete())
+          this.submit();
+        else
+          this.incomplete();
+      } else if (e.keyCode === 37) {
+        this.next();
+      } else if (e.keyCode === 39) {
+        this.back();
+      }
+    },
+    isTaskComplete: function() {
+      let markedValsTotal = this.items
+          .map((i) => Object.keys(i.taskLabels).length)
+          .reduce((accu, val) => accu + val, 0);
+      let totalItems = this.items.length * this.tasks.length;
+      this.tasksComplete = markedValsTotal < totalItems;
+      return this.tasksComplete;
     }
   }
 });
 
+// side bar resize
 (function() {
   var minOffset = 200;
   var maxOffset = 600;
@@ -371,3 +399,9 @@ let app = new Vue({
   });
 }());
 
+//shortcut keys
+(function() {
+  window.addEventListener('keyup', (e) => {
+    app.keyup(e);
+  })
+})();
