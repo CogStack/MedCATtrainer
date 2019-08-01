@@ -1,15 +1,13 @@
 This repo provides a simple interface to inspect, improve and add concepts to biomedical NER+L model (e.g. MedCAT) and a further interface for research specific training data collection.
 
-### How to use (e.g. for the CT example)
+### How to use: the basic example with concepts from MedMentions
 1. Clone this repository
 
-2. Move the pretrained models into the `medcatweb/webapp/models/` Keep the model names in their original form (`vocab.dat` and `cdb.dat`)
+2. Build `docker-compose build `
 
-3. Build `docker-compose -f docker-compose-ct.yml build`
+3. Run `docker-compose up -d`
 
-4. Run `docker-compose -f docker-compose-ct.yml up -d`
-
-5. You are now able to access the web service on `<your_ip>:8001`
+4. You are now able to access the web service on `<your_ip>:8001`
 
 
 ### The API

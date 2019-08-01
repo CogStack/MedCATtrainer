@@ -15,6 +15,9 @@ COPY . /webapp
 ENV VOCAB_PATH=/webapp/models/vocab_base.dat
 ENV VOCAB_URL=https://s3-eu-west-1.amazonaws.com/zkcl/vocab.dat
 
+ENV CDB_PATH=/webapp/models/cdb_base.dat
+ENV CDB_URL=https://s3-eu-west-1.amazonaws.com/zkcl/cdb-medmen-trained.dat
+
 # Set the pythonpath
 WORKDIR /webapp
 

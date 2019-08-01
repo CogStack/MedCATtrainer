@@ -17,19 +17,29 @@ from timeit import default_timer as timer
 class CatWrap(object):
     # CHECK SHORT CONTEXT
     def __init__(self):
-        vocab = Vocab()
         vocab_path = os.getenv('VOCAB_PATH', '/tmp/vocab.dat')
         # Get a vocab if it does not exist
         if not os.path.exists(vocab_path):
-            vocab_url = os.getenv('VOCAB_URL')
-            urlretrieve(vocab_url, vocab_path)
-
+            try:
+                vocab_url = os.getenv('VOCAB_URL')
+                urlretrieve(vocab_url, vocab_path)
+            except Exception as e:
+                print(e)
+        vocab = Vocab()
         vocab.load_dict(vocab_path)
         vocab.make_unigram_table()
 
+        cdb_path = os.getenv('CDB_PATH', '/tmp/cdb.dat')
+        # Get the cdb if possible
+        if not os.path.exists(cdb_path):
+            try:
+                cdb_url = os.getenv('CDB_URL')
+                urlretrieve(cdb_url, cdb_path)
+            except Exception as e:
+                print(e)
         cdb = CDB()
         try:
-            cdb.load_dict(os.getenv('CDB_PATH', '/tmp/cdb.dat'))
+            cdb.load_dict(cdb_path)
         except Exception as e:
             print(str(e))
             # Makes a blank cdb
