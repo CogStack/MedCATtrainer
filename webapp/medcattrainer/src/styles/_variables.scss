@@ -1,0 +1,17 @@
+$task-color-0: #28a745, ;  /* bootstrap success, green */;
+$task-color-1: #dc3545;  /* bootstrap danger, red */
+$task-color-2: #ffc107;  /* bootstrap warning */
+$task-color-3: #17a2b8;  /* bootstrap info  */
+$task-color-4: #007bff;  /* bootstrap primary */
+$task-color-5: #868e96;  /* bootstrap secondary */
+
+$task-colors: (
+    "0": $task-color-0,
+    "1": $task-color-1,
+    "2": $task-color-2,
+    "3": $task-color-3,
+    "4": $task-color-4,
+    "5": $task-color-5
+);
+
+$loading-background-color: #6c757d;
