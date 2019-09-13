@@ -25,13 +25,19 @@
                       @select:addSynonym="addSynonym">
       </clinical-text>
       <div class="sidebar-container">
-        <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" class="concept-summary"></concept-summary>
-        <add-synonym v-if="conceptSynonymSelection" :selection="conceptSynonymSelection"
-                     @request:addSynonymComplete="conceptSynonymSelection = null" class="add-synonym"></add-synonym>
+        <transition name="slide-left">
+          <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" class="concept-summary"></concept-summary>
+        </transition>
+        <transition name="slide-left">
+          <add-synonym v-if="conceptSynonymSelection" :selection="conceptSynonymSelection"
+                       @request:addSynonymComplete="conceptSynonymSelection = null" class="add-synonym"></add-synonym>
+        </transition>
         <task-bar class="tasks" :currentTask="task" :tasks="[task]" :taskLocked="taskLocked" @select:taskValue="markEntity"></task-bar>
         <nav-bar class="nav" :tasks="[task]" :ents="ents" :currentEnt="currentEnt"
                  @select:next="next" @select:back="back" @submit="submitDoc"></nav-bar>
       </div>
+
+
     </div>
 
     <modal v-if="helpModal" class="help-modal">
@@ -131,9 +137,7 @@ export default {
   },
   methods: {
     fetchData: function() {
-      let headers = {'Authorization': `Token ${this.$cookie.get('api-token')}`};
-      this.$http.get(`/project-annotate-entities?id=${this.projectId}`,
-          {headers: headers}).then(resp => {
+      this.$http.get(`/project-annotate-entities?id=${this.projectId}`).then(resp => {
         if (resp.data.count === 0)
           this.errorModal = true;
         else {
@@ -144,11 +148,10 @@ export default {
       })
     },
     fetchDocuments: function() {
-      let headers = {'Authorization': `Token ${this.$cookie.get('api-token')}`};
       let params = this.nextDocSetUrl === null ? `?dataset=${this.projectId}`:
           this.nextDocSetUrl.split('/').slice(-1)[0];
 
-      this.$http.get(`/documents/${params}`, {headers: headers}).then(resp => {
+      this.$http.get(`/documents/${params}`).then(resp => {
         if (resp.data.results.length > 0) {
           this.docs = this.docs.concat(resp.data.results);
           if (this.currentDoc === null) {
@@ -172,11 +175,7 @@ export default {
         project_id: this.project.id,
           document_ids: [this.currentDoc.id]
       };
-      this.$http.post('/prepare-documents', payload, {
-        headers: {
-          'Authorization': `Token ${this.$cookie.get('api-token')}`
-        }
-      }).then(resp => {
+      this.$http.post('/prepare-documents', payload).then(resp => {
         // assuming a 200 is fine here.
         this.fetchEntities(0, 0);
       }).catch(err => {
@@ -187,9 +186,7 @@ export default {
       if (entsFetched < ENT_LIMIT) {
         let params = this.nextEntSetUrl === null ? `?project=${this.projectId}&document=${this.currentDoc.id}`:
             this.nextEntSetUrl.split('/').slice(-1)[0];
-        this.$http.get(`/annotated-entities${params}`, {
-          headers: {'Authorization': `Token ${this.$cookie.get('api-token')}`}
-        }).then(resp => {
+        this.$http.get(`/annotated-entities${params}`).then(resp => {
           if (resp.data.previous === null) {
             this.ents = resp.data.results;
             this.ents.map(e => {
@@ -223,12 +220,10 @@ export default {
       this.currentEnt.assignedValues[this.task.name] = taskValue[0];
       this.currentEnt[this.task.propName] = taskValue[1];
       this.taskLocked = true;
-      this.$http.put(`/annotated-entities/${this.currentEnt.id}/`, this.currentEnt, {
-        headers: {'Authorization': `Token ${this.$cookie.get('api-token')}`}
-      }).then(resp => {
-        this.taskLocked = false;
+      this.$http.put(`/annotated-entities/${this.currentEnt.id}/`, this.currentEnt).then(resp => {
         if (this.ents.slice(-1)[0].id !== this.currentEnt.id)
-          this.next()
+          this.next();
+        this.taskLocked = false
       })
     },
     addSynonym: function(selection) {
@@ -244,14 +239,10 @@ export default {
       this.docToSubmit = docId;
     },
     submitConfirmed: function() {
-      this.$http.get(`/project-annotate-entities/${this.projectId}/`, {
-        headers: {'Authorization': `Token ${this.$cookie.get('api-token')}`}
-      }).then(resp => {
+      this.$http.get(`/project-annotate-entities/${this.projectId}/`).then(resp => {
         const annoProj = resp.data;
         annoProj.validated_documents = annoProj.validated_documents.concat(this.currentDoc.id);
-        this.$http.put(`/project-annotate-entities/${this.projectId}/`, annoProj, {
-          headers: {'Authorization': `Token ${this.$cookie.get('api-token')}`}
-        }).then(resp => {
+        this.$http.put(`/project-annotate-entities/${this.projectId}/`, annoProj).then(resp => {
           this.docToSubmit = null;
         })
       })
@@ -314,5 +305,15 @@ export default {
   .add-synonym {
     flex: 1 1 auto;
   }
+}
+
+.slide-left-enter-active {
+  transition: all .5s ease;
+}
+
+
+.slide-left-enter, .slide-left-leave-to {
+  transform: translateX(50px);
+  opacity: 0;
 }
 </style>

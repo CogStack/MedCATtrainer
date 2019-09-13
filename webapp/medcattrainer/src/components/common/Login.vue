@@ -35,7 +35,8 @@ export default {
         username: this.uname,
         password: this.password
       }).then(resp => {
-        this.$cookie.set('api-token', resp.data.token, {expires: 1})
+        this.$cookie.set('api-token', resp.data.token, {expires: 1});
+        this.$http.defaults.headers.common['Authorization'] = `Token ${this.$cookie.get('api-token')}`;
         this.$emit('login:success')
       }).catch(err => {
         this.failed = true;

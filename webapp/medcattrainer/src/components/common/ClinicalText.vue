@@ -89,11 +89,19 @@ export default {
       formattedText = el.html();
 
       formattedText = `<div @contextmenu.prevent.stop="showCtxMenu($event)">${formattedText}</div>`;
-      return formattedText ;
+      return formattedText;
     }
   },
   updated: function() {
     this.$nextTick(function () {
+      this.scrollIntoView()
+    })
+  },
+  mounted: function() {
+    this.scrollIntoView()
+  },
+  methods: {
+    scrollIntoView: function() {
       let el = document.getElementsByClassName('highlight-task-selected');
       if (el[0]) {
         el[0].scrollIntoView({
@@ -101,9 +109,7 @@ export default {
           behavior: "smooth",
         });
       }
-    });
-  },
-  methods: {
+    },
     selectEnt: function(entIdx) {
       this.$emit('select:concept', entIdx)
     },

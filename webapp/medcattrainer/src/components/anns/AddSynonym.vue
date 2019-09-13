@@ -69,9 +69,7 @@ export default {
   methods: {
     searchCUI: _.debounce(function(term, loading) {
       loading(true);
-      this.$http.get(`/search-concepts?search=${term}`, {
-        headers: {'Authorization': `Token ${this.$cookie.get('api-token')}`}
-      }).then(resp => {
+      this.$http.get(`/search-concepts?search=${term}`).then(resp => {
         loading(false);
         this.searchResults = resp.data.results.map(r => {
           return {
@@ -92,9 +90,7 @@ export default {
         tui: this.tui,
         context: this.context
       };
-      this.$http.post('', payload, {
-        headers: {'Authorization': `Token ${this.$cookie.get('api-token')}`}
-      }).then(resp => {
+      this.$http.post('', payload).then(resp => {
         this.$emit('request:addSynonymComplete')
       })
     },

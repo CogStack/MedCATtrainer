@@ -2,13 +2,13 @@
   <div class="border-left border-bottom sidebar">
     <h4 class="title">Concept Summary</h4>
     <div class="ent-name">{{selectedEnt !== null ? selectedEnt.value : ''}}</div>
-    <table class="table table-hover info">
+    <table class="table table-hover">
       <tbody>
-        <tr v-for="nameValue of conceptSummary">
-          <td>{{nameValue[0]}}</td>
-          <td v-if="nameValue[0] === 'Description'" v-html="nameValue[1] || 'n/a'"></td>
-          <td v-if="nameValue[0] !== 'Description'">{{nameValue[1] || 'n/a'}}</td>
-        </tr>
+      <tr v-for="nameValue of conceptSummary">
+        <td>{{nameValue[0]}}</td>
+        <td v-if="nameValue[0] === 'Description'" v-html="nameValue[1] === 'nan' ? 'n/a' : nameValue[1] || 'n/a'"></td>
+        <td v-if="nameValue[0] !== 'Description'">{{nameValue[1] || 'n/a'}}</td>
+      </tr>
       </tbody>
     </table>
   </div>
@@ -26,11 +26,11 @@ const PROP_MAP = {
   'desc': 'Description',
   'tui': 'Term ID',
   'cui': 'Concept ID',
-  'pretty_name': 'Concept Name'
+  'pretty_name': 'Name'
 };
 
-const PROPS_ORDER = [
-  'Name', 'Description', 'Term ID', 'Concept ID', 'Term ID',
+const CONST_PROPS_ORDER = [
+  'Name', 'Description', 'Term ID', 'Concept ID',
 ];
 
 export default {
@@ -69,19 +69,17 @@ export default {
         }
 
         //order the keys to tuples.
-        for (let k of PROPS_ORDER) {
+        let props = CONST_PROPS_ORDER.concat(Object.keys(this.selectedEnt.assignedValues));
+        for (let k of props) {
           this.conceptSummary.push([k, ent[k]])
         }
       }
     },
     fetchDetail: function() {
-      const params = {
-        headers: {'Authorization': `Token ${this.$cookie.get('api-token')}`}
-      };
       if (this.selectedEnt !== null) {
-        this.$http.get(`/entities/${this.selectedEnt.entity}/`, params).then(resp => {
+        this.$http.get(`/entities/${this.selectedEnt.entity}/`).then(resp => {
           this.selectedEnt.cui = resp.data.label;
-          this.$http.get(`/concepts?cui=${this.selectedEnt.cui}`, params).then(resp => {
+          this.$http.get(`/concepts?cui=${this.selectedEnt.cui}`).then(resp => {
             this.selectedEnt.desc = resp.data.results[0].desc;
             this.selectedEnt.tui = resp.data.results[0].tui;
             this.selectedEnt.pretty_name = resp.data.results[0].pretty_name;

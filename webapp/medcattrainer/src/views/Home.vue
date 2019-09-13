@@ -56,16 +56,12 @@ export default {
   methods: {
     loggedIn: function() {
       if (this.$cookie.get('api-token'))
-        this.loginSuccessful = true
+        this.loginSuccessful = true;
       this.fetchProjects()
     },
     fetchProjects: function() {
       if (this.loginSuccessful) {
-        this.$http.get('/project-annotate-entities', {
-          headers: {
-            'Authorization': `Token ${this.$cookie.get('api-token')}`
-          }
-        }).then((resp) => {
+        this.$http.get('/project-annotate-entities').then((resp) => {
           this.projects = resp.data.results
         })
       }

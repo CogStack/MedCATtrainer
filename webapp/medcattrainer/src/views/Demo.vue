@@ -31,9 +31,7 @@ export default {
       // enrich entitites
       // then $router.push to new page.
 
-      this.$http.post('', {text: this.exampleText}, {
-        headers: {'Authorization': `Token ${this.$cookie.get('api-token')}`}
-      }).then(resp => {
+      this.$http.post('', {text: this.exampleText}).then(resp => {
 
         this.$router.push({
           name: 'train-annotations',
