@@ -35,8 +35,8 @@ export default {
     submitDisabled: function() {
       // all tasks complete for all ents
       if (this.ents !== null) {
-        return this.ents.every(e => {
-          return Object.keys(e.assignedValues).filter(k => !this.tasks.map(t => t.name).includes(k))
+        return !this.ents.every(e => {
+          return Object.values(e.assignedValues).every(e => e !== null)
         })
       }
       return true

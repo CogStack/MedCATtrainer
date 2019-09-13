@@ -223,6 +223,8 @@ export default {
       this.$http.put(`/annotated-entities/${this.currentEnt.id}/`, this.currentEnt).then(resp => {
         if (this.ents.slice(-1)[0].id !== this.currentEnt.id)
           this.next();
+        else
+          this.currentEnt = null;
         this.taskLocked = false
       })
     },
