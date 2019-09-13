@@ -1,15 +1,12 @@
 <template>
   <div class="border-top border-right border-bottom doc-summary">
     <div v-if="loadingDoc" class="loading-doc"></div>
+    <h4 class="title">Document List</h4>
     <table class="table table-hover">
-      <thead>
-        <tr>
-          <th>Documents</th>
-        </tr>
-      </thead>
       <tbody>
         <tr v-for="doc of docs" :key="doc.id" class="doc">
           <td :class="{'selected-doc': selectedDocId === doc.id}" class="clickable" @click="loadDoc(doc.id)">
+            <font-awesome-icon v-if="validatedDocIds.includes(doc.id)" class="validated-doc" icon="check"></font-awesome-icon>
             {{doc.id}} : {{doc.name}}
           </td>
         </tr>
@@ -31,6 +28,7 @@ export default {
     moreDocs: Boolean,
     selectedDocId: Number,
     loadingDoc: false,
+    validatedDocIds: Array,
   },
   methods: {
     loadMoreDocs: function() {
@@ -61,6 +59,10 @@ export default {
 <style scoped lang="scss">
 @import "bootstrap";
 
+.title {
+  padding: 5px;
+}
+
 .doc-summary {
   flex: 0 0 200px;
   padding: 5px;
@@ -74,6 +76,10 @@ export default {
 
 .selected-doc {
   border-left: 3px solid $primary;
+}
+
+.validated-doc {
+  color: $success
 }
 
 .clickable {

@@ -63,32 +63,10 @@ export default {
   font-size: 22px;
 }
 
-.task-btn-0 {
-  background-color: $task-color-0;
-  color: white;
-}
-
-.task-btn-1 {
-  background-color: $task-color-1;
-  color: white;
-}
-
-.task-btn-2 {
-  background-color: $task-color-2;
-  color: white;
-}
-
-.task-btn-3 {
-  background-color: $task-color-3;
-  color: white;
-}
-
-.task-btn-4 {
-  background-color: $task-color-4;
-  color: white;
-}
-
-.task-btn-5 {
-  background-color: $task-color-5;
+@each $i, $col in $task-colors {
+  .task-btn-#{$i} {
+    background-color: $col;
+    color: white;
+  }
 }
 </style>

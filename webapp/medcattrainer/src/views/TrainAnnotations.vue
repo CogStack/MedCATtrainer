@@ -15,16 +15,19 @@
 
     <div class="app-main">
       <document-summary :docs="docs" :moreDocs="nextDocSetUrl !== null"
-                        :selectedDocId="currentDoc !== null ? currentDoc.id : null"
-                        :loadingDoc="loadingDoc"
+                        :validatedDocIds="validatedDocuments"
+                        :selectedDocId="currentDoc !== null ? currentDoc.id : null" :loadingDoc="loadingDoc"
                         @request:nextDocSet="fetchDocuments()" @request:loadDoc="loadDoc"></document-summary>
       <div class="handle">
       </div>
       <clinical-text :loading="loadingDoc" :text="currentDoc !== null ? currentDoc.text : null"
-                     :currentEnt="currentEnt" :ents="ents" :task="task" @select:concept="selectEntity">
+                     :currentEnt="currentEnt" :ents="ents" :task="task" @select:concept="selectEntity"
+                      @select:addSynonym="addSynonym">
       </clinical-text>
       <div class="sidebar-container">
-        <concept-summary :selectedEnt="currentEnt" class="concept-summary"></concept-summary>
+        <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" class="concept-summary"></concept-summary>
+        <add-synonym v-if="conceptSynonymSelection" :selection="conceptSynonymSelection"
+                     @request:addSynonymComplete="conceptSynonymSelection = null" class="add-synonym"></add-synonym>
         <task-bar class="tasks" :currentTask="task" :tasks="[task]" :taskLocked="taskLocked" @select:taskValue="markEntity"></task-bar>
         <nav-bar class="nav" :tasks="[task]" :ents="ents" :currentEnt="currentEnt"
                  @select:next="next" @select:back="back" @submit="submitDoc"></nav-bar>
@@ -69,6 +72,7 @@ import Modal from '@/components/common/Modal.vue'
 import ClinicalText from '@/components/common/ClinicalText.vue'
 import NavBar from '@/components/common/NavBar.vue'
 import TaskBar from '@/components/common/TaskBar.vue'
+import AddSynonym from '@/components/anns/AddSynonym.vue'
 
 // Only retrieve 1000 entities at a time??
 const ENT_LIMIT = 1000;
@@ -91,6 +95,7 @@ export default {
     ClinicalText,
     NavBar,
     TaskBar,
+    AddSynonym,
   },
   props: {
     projectId: {
@@ -115,6 +120,7 @@ export default {
       helpModal: false,
       errorModal: false,
       docToSubmit: null,
+      conceptSynonymSelection: null,
     }
   },
   created: function() {
@@ -145,7 +151,6 @@ export default {
       this.$http.get(`/documents/${params}`, {headers: headers}).then(resp => {
         if (resp.data.results.length > 0) {
           this.docs = this.docs.concat(resp.data.results);
-          this.docs = this.docs.filter(d => !this.validatedDocuments.includes(d.id));
           if (this.currentDoc === null) {
             this.loadDoc(this.docs[0].id);
           }
@@ -226,6 +231,9 @@ export default {
           this.next()
       })
     },
+    addSynonym: function(selection) {
+      this.conceptSynonymSelection = selection
+    },
     next: function() {
       this.currentEnt = this.ents[this.ents.indexOf(this.currentEnt)+1]
     },
@@ -253,16 +261,6 @@ export default {
 </script>
 
 <style scoped lang="scss">
-
-.search-result-panel {
-  position: absolute;
-  border: 1px solid #FFF;
-  box-shadow: 0 5px 3px 3px #9476518a;
-  background: white;
-  max-height: 450px;
-  max-width: 300px;
-  overflow-y: auto;
-}
 
 .app-header, .app-footer {
   flex: 0 0 50px;
@@ -307,17 +305,14 @@ export default {
 .sidebar-container {
   display: flex;
   flex-direction: column;
+  width: 400px;
 
   .concept-summary {
-    flex: 1 1 auto
+    flex: 1 1 auto;
   }
 
-  .nav {
-    flex: 0 0 50px;
-  }
-
-  .tasks {
-    flex: 0 0 100px;
+  .add-synonym {
+    flex: 1 1 auto;
   }
 }
 </style>

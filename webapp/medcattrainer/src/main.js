@@ -8,6 +8,9 @@ import router from './router'
 import 'bootstrap'
 
 import 'bootstrap/dist/css/bootstrap.min.css'
+import 'vue-simple-context-menu/dist/vue-simple-context-menu.css'
+import 'vue-select/dist/vue-select.css'
+
 import '@/plugins/fontawesome'
 import '@/assets/main.css'
 

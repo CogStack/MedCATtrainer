@@ -10,17 +10,25 @@
     <div v-if="!loading" class="clinical-note">
       <v-runtime-template :template="formattedText"></v-runtime-template>
     </div>
+    <vue-simple-context-menu
+      :elementId="'ctxMenuId'"
+      :options="ctxMenuOptions"
+      ref="ctxMenu"
+      @option-clicked="ctxOptionClicked">
+    </vue-simple-context-menu>
   </div>
 </template>
 
 <script>
 import $ from 'jquery'
 import VRuntimeTemplate from 'v-runtime-template'
+import VueSimpleContextMenu from 'vue-simple-context-menu'
 
 export default {
   name: 'ClinicalText',
   components: {
     VRuntimeTemplate,
+    VueSimpleContextMenu,
   },
   props: {
     text: String,
@@ -28,6 +36,16 @@ export default {
     ents: Array,
     loading: true,
     currentEnt: Object,
+  },
+  data: function() {
+    return {
+      ctxMenuOptions: [
+        {
+          name: 'Add Synonym'
+        }
+      ],
+      selection: null,
+    }
   },
   computed: {
     formattedText: function() {
@@ -70,7 +88,7 @@ export default {
       $(":not(*[class^='highlight-task'])",  el).remove();
       formattedText = el.html();
 
-      formattedText = `<div>${formattedText}</div>`;
+      formattedText = `<div @contextmenu.prevent.stop="showCtxMenu($event)">${formattedText}</div>`;
       return formattedText ;
     }
   },
@@ -89,11 +107,45 @@ export default {
     selectEnt: function(entIdx) {
       this.$emit('select:concept', entIdx)
     },
+    showCtxMenu: function(event) {
+      let selection = window.getSelection();
+      let selStr = selection.toString();
+      // gather text around selection
+      let priorText = selection.anchorNode.data.slice(0, selection.anchorOffset);
+      let nextText = selection.extentNode.data.slice(selection.extentOffset);
+
+      let priorSibling = selection.anchorNode.previousSibling;
+      let nextSibling = selection.anchorNode.nextSibling;
+      for (let i of _.range(4)) {
+        if (priorSibling !== null) {
+          priorText = `${priorSibling.innerText || priorSibling.textContent} ${priorText}`;
+          priorSibling = priorSibling.previousSibling;
+        }
+        if (nextSibling !== null ) {
+          nextText += `${nextSibling.innerText || nextSibling.textContent}`;
+          nextSibling = nextSibling.nextSibling;
+        }
+      }
+
+      // take only 100 chars of either side?
+      nextText = nextText.length < 100 ? nextText : nextText.slice(0, 100);
+      priorText = priorText.length < 100 ? priorText : priorText.slice(0, 100);
+      this.selection = {
+        selStr: selStr,
+        priorText: priorText,
+        nextText: nextText,
+      };
+      this.$refs.ctxMenu.showMenu(event)
+    },
+    ctxOptionClicked: function(event) {
+      this.$emit('select:addSynonym', this.selection)
+    }
   },
 }
 </script>
 
 <style lang="scss">
+
 .note-container {
   overflow: scroll;
   flex: 1 1 auto;
@@ -147,36 +199,4 @@ export default {
     color: white;
   }
 }
-
-/*
-<!--.highlight-task-0 {-->
-  <!--box-shadow: 0 0 10px 5px $task-color-0;-->
-  <!--border-radius: 5px;-->
-<!--}-->
-
-<!--.highlight-task-1 {-->
-  <!--box-shadow: 0 0 10px 5px $task-color-1;-->
-  <!--border-radius: 5px;-->
-<!--}-->
-
-<!--.highlight-task-2 {-->
-  <!--box-shadow: 0 0 10px 5px $task-color-2;-->
-  <!--border-radius: 5px;-->
-<!--}-->
-
-<!--.highlight-task-3 {-->
-  <!--box-shadow: 0 0 10px 5px $task-color-3;-->
-  <!--border-radius: 5px;-->
-<!--}-->
-
-<!--.highlight-task-4 {-->
-  <!--box-shadow: 0 0 10px 5px $task-color-4;-->
-  <!--border-radius: 5px;-->
-<!--}-->
-
-<!--.highlight-task-5 {-->
-  <!--box-shadow: 0 0 10px 5px $task-color-5;-->
-  <!--border-radius: 5px;-->
-<!--}-->
-*/
 </style>

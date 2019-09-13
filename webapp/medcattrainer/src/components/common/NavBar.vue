@@ -1,6 +1,6 @@
 <template>
   <div class="nav-bar border-top border-left">
-    <div class="nav-buttons">
+    <div class="nav-buttons border-bottom">
       <button :disabled="backDisabled()" @click="back()" type="button" class="btn btn-warning mb-2">
         <font-awesome-icon icon="backward"></font-awesome-icon>
       </button>
@@ -8,7 +8,7 @@
         <font-awesome-icon icon="forward"></font-awesome-icon>
       </button>
     </div>
-    <div class="submit-container">
+    <div class="submit-container border-bottom">
       <button :disabled="submitDisabled()" @click="submit()" class="btn btn-primary mb-2 submit-btn" type="button">
         Submit
       </button>
@@ -72,19 +72,23 @@ export default {
 
 <style scoped lang="scss">
 .nav-bar {
-  width: 500px;
-  padding: 5px;
+  width: 100%;
 }
 
 .nav-buttons {
-  width: 50%;
-}
-
-.submit-container {
-  width: 50%;
+  text-align: center;
+  width: 100%;
+  padding: 5px 0;
 }
 
 .submit-btn {
-  float: right;
+  width: 80%;
+  max-width: 400px;
+  padding: 5px 0;
+}
+
+.submit-container {
+  width: 100%;
+  text-align: center;
 }
 </style>
