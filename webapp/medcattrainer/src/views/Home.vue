@@ -1,7 +1,7 @@
 <template>
   <div class="container usecase">
     <login v-if="!loginSuccessful" @login:success="loggedIn()"></login>
-    <h3> Welcome to MedAnno</h3>
+    <h3> Welcome to MedCAT</h3>
     <table class="table table-hover">
       <thead>
         <tr>

@@ -76,12 +76,16 @@ export default {
             name: r.pretty_name,
             cui: r.cui,
             desc: r.desc,
+            synonyms: r.synonyms,
           }
         })
       })
     }, 400),
-    selectedSynonymCUI: function() {
-      debugger;
+    selectedSynonymCUI: function(item) {
+      this.cui = item.cui;
+      this.tui = item.tui;
+      this.synonyms = item.synonyms;
+      this.searchResults = [];
     },
     submit: function() {
       const payload = {
