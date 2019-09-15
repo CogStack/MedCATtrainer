@@ -124,21 +124,21 @@ export default {
       let nextSibling = selection.anchorNode.nextSibling;
       for (let i of _.range(4)) {
         if (priorSibling !== null) {
-          priorText = `${priorSibling.innerText || priorSibling.textContent} ${priorText}`;
+          priorText = `${priorSibling.innerText || priorSibling.textContent}${priorText}`;
           priorSibling = priorSibling.previousSibling;
         }
         if (nextSibling !== null ) {
-          nextText += `${nextSibling.innerText || nextSibling.textContent}`;
+          nextText += (nextSibling.innerText || nextSibling.textContent);
           nextSibling = nextSibling.nextSibling;
         }
       }
 
       // take only 100 chars of either side?
       nextText = nextText.length < 100 ? nextText : nextText.slice(0, 100);
-      priorText = priorText.length < 100 ? priorText : priorText.slice(0, 100);
+      priorText = priorText.length < 100 ? priorText : priorText.slice(-100);
       this.selection = {
         selStr: selStr,
-        priorText: priorText,
+        prevText: priorText,
         nextText: nextText,
       };
       this.$refs.ctxMenu.showMenu(event)

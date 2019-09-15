@@ -17,7 +17,7 @@
           </tr>
           <tr>
             <td>Context</td>
-            <td>{{context}}</td>
+            <td class="context">{{this.prevText}}<span class="highlight">{{this.name}}</span>{{this.nextText}}</td>
           </tr>
           <tr>
             <td>Synonyms</td>
@@ -56,8 +56,9 @@ export default {
   data: function() {
     return {
       name: this.selection.selStr,
+      prevText: this.selection.prevText,
+      nextText: this.selection.nextText,
       CUI: '',
-      context: `${this.selection.priorText}${this.selection.selStr}${this.selection.nextText}`,
       synonyms: null,
       searchResults: [],
       selectedCUI: null,
@@ -92,7 +93,7 @@ export default {
         name: this.name,
         cui: this.cui,
         tui: this.tui,
-        context: this.context
+        context: `${this.selection.priorText}${this.selection.selStr}${this.selection.nextText}`,
       };
       this.$http.post('', payload).then(resp => {
         this.$emit('request:addSynonymComplete')
@@ -110,17 +111,23 @@ export default {
   padding: 5px;
 }
 
-.main-panel {
-  height: calc(100% - 50px);
-}
-
 .sidebar {
   width: 100%;
   overflow: auto;
 }
 
+.context {
+  white-space: pre-wrap;
+}
+
+.highlight {
+  background: lightgrey;
+  border: 3px solid lightgrey;
+  border-radius: 8px;
+}
+
+
 .action-buttons {
-  height: 50px;
   text-align: center;
 }
 </style>
