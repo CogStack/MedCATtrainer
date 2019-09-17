@@ -9,8 +9,9 @@
           <th>Title</th>
           <th>Description</th>
           <th>Create Time</th>
-          <th>CUIs</th>
-          <th>TUIs</th>
+          <th>UMLS Concepts</th>
+          <th>UMLS Terms</th>
+          <th>Annotate / Validate</th>
         </tr>
       </thead>
       <tbody>
@@ -21,6 +22,7 @@
           <td>{{(new Date(project.create_time)).toLocaleDateString()}}</td>
           <td>{{project.cuis}}</td>
           <td>{{project.tuis}}</td>
+          <td>{{project.require_entity_validation ? 'Yes' : 'No'}}</td>
         </tr>
       </tbody>
     </table>

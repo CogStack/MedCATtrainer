@@ -51,7 +51,8 @@ export default {
     vSelect,
   },
   props: {
-    selection: Object
+    selection: Object,
+    projectId: String,
   },
   data: function() {
     return {
@@ -70,14 +71,15 @@ export default {
   methods: {
     searchCUI: _.debounce(function(term, loading) {
       loading(true);
-      this.$http.get(`/search-concepts?search=${term}`).then(resp => {
+      this.$http.get(`/search-concepts?search=${term}&projectId=${this.projectId}`)
+        .then(resp => {
         loading(false);
         this.searchResults = resp.data.results.map(r => {
           return {
             name: r.pretty_name,
             cui: r.cui,
             desc: r.desc,
-            synonyms: r.synonyms,
+            synonyms: _.replace(r.synonyms, new RegExp(',', 'g'), ', ')
           }
         })
       })

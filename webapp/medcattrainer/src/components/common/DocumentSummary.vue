@@ -1,7 +1,6 @@
 <template>
   <div class="border-top border-right border-bottom doc-summary">
     <div v-if="loadingDoc" class="loading-doc"></div>
-    <h4 class="title">Document List</h4>
     <table class="table table-hover">
       <tbody>
         <tr v-for="doc of docs" :key="doc.id" class="doc">

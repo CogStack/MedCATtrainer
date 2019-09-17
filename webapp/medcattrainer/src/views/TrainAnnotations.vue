@@ -29,18 +29,16 @@
           <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" class="concept-summary"></concept-summary>
         </transition>
         <transition name="slide-left">
-          <add-synonym v-if="conceptSynonymSelection" :selection="conceptSynonymSelection"
+          <add-synonym v-if="conceptSynonymSelection" :selection="conceptSynonymSelection" :projectId="projectId"
                        @request:addSynonymComplete="conceptSynonymSelection = null" class="add-synonym"></add-synonym>
         </transition>
         <task-bar class="tasks" :currentTask="task" :tasks="[task]" :taskLocked="taskLocked" @select:taskValue="markEntity"></task-bar>
         <nav-bar class="nav" :tasks="[task]" :ents="ents" :currentEnt="currentEnt"
                  @select:next="next" @select:back="back" @submit="submitDoc"></nav-bar>
       </div>
-
-
     </div>
 
-    <modal v-if="helpModal" class="help-modal">
+    <modal v-if="helpModal" class="help-modal" @modal:close="helpModal = false">
       <h3 slot="header">{{ project.name }} Tagging Help</h3>
       <div slot="body" class="help-modal-body">
         <p>Provide feedback for each highlighted concept</p>
@@ -60,8 +58,10 @@
       </div>
     </modal>
 
-    <modal v-if="docToSubmit !== null">
+    <modal v-if="docToSubmit !== null" @modal:close="docToSubmit=null">
       <h3 slot="header">Submit Document</h3>
+      <div slot="body">Please confirm this doc should be submitted.</div>
+      <!-- TODO: Provide some sort of summary here?? -->
       <div slot="footer">
         <button class="btn btn-primary" @click="submitConfirmed()">Confirm</button>
       </div>
@@ -219,6 +219,7 @@ export default {
     markEntity: function(taskValue) {
       this.currentEnt.assignedValues[this.task.name] = taskValue[0];
       this.currentEnt[this.task.propName] = taskValue[1];
+      this.currentEnt.validated = 1;
       this.taskLocked = true;
       this.$http.put(`/annotated-entities/${this.currentEnt.id}/`, this.currentEnt).then(resp => {
         if (this.ents.slice(-1)[0].id !== this.currentEnt.id)
@@ -244,6 +245,7 @@ export default {
       this.$http.get(`/project-annotate-entities/${this.projectId}/`).then(resp => {
         const annoProj = resp.data;
         annoProj.validated_documents = annoProj.validated_documents.concat(this.currentDoc.id);
+        annoProj.require_entity_validation = annoProj.require_entity_validation ? 1 : 0;
         this.$http.put(`/project-annotate-entities/${this.projectId}/`, annoProj).then(resp => {
           this.docToSubmit = null;
         })

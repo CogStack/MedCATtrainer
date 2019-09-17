@@ -1,5 +1,5 @@
 <template>
-  <modal>
+  <modal >
     <h3 slot="header">Login</h3>
     <div slot="body">
       <form @submit.prevent class="form">

@@ -90,5 +90,6 @@ export default {
 .submit-container {
   width: 100%;
   text-align: center;
+  padding-top: 10px;
 }
 </style>
