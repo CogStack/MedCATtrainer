@@ -16,7 +16,7 @@ export default new Router({
       component: Home
     },
     {
-      path: '/train-annotations/:projectId',
+      path: '/train-annotations/:projectId/:docId?',
       name: 'train-annotations',
       // route level code-splitting
       // this generates a separate chunk (about.[hash].js) for this route

@@ -51,7 +51,7 @@ export default {
     formattedText: function() {
       if (this.loading || !this.text || !this.ents || this.ents.length === 0)
         return "";
-      // const taskValuesToTasks = Object.assign(...this.task.values.map(([key, val]) => ({[val]: key})));
+
       const taskValueNamesToButtonIndices = Object.assign(...this.task.values.map((val, i) =>  ({[val[0]]: i})));
       const taskHighlightDefault = 'highlight-task-default';
 
@@ -67,7 +67,7 @@ export default {
         let highlightText = this.text.slice(this.ents[i].start_ind, this.ents[i].end_ind);
         let styleClass = taskHighlightDefault;
 
-        if (this.ents[i].assignedValues[this.task.name]) {
+        if (this.ents[i].assignedValues[this.task.name] !== null) {
           let btnIndex = taskValueNamesToButtonIndices[this.ents[i].assignedValues[this.task.name]];
           styleClass = `highlight-task-${btnIndex}`;
         }

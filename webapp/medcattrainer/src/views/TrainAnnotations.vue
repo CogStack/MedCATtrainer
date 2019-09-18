@@ -48,7 +48,7 @@
       </div>
     </modal>
 
-    <modal v-if="errorModal">
+    <modal v-if="errorModal" @modal:close="errorModal = false">
       <h3 slot="header" class="text-danger">Failed To Load Project</h3>
       <div slot="body">
         <p>No project found for project ID: {{$route.params.projectId}}</p>
@@ -60,7 +60,7 @@
 
     <modal v-if="docToSubmit !== null" @modal:close="docToSubmit=null">
       <h3 slot="header">Submit Document</h3>
-      <div slot="body">Please confirm this doc should be submitted.</div>
+      <div slot="body">Please confirm this Document is ready for submission</div>
       <!-- TODO: Provide some sort of summary here?? -->
       <div slot="footer">
         <button class="btn btn-primary" @click="submitConfirmed()">Confirm</button>
@@ -87,9 +87,14 @@ const annotationTask =  {
   name: 'Concept Annotation',
   propName: 'correct',
   values: [
-    ['Correct', 0],
-    ['Incorrect', 1]
+    ['Correct', 1],
+    ['Incorrect', 0]
   ]
+};
+
+const taskValueToBackendValue = {
+  true: 'Correct',
+  false: 'Incorrect'
 };
 
 export default {
@@ -105,8 +110,10 @@ export default {
   },
   props: {
     projectId: {
-      type: String,
       required: true,
+    },
+    docId: {
+      required: false,
     }
   },
   data: function() {
@@ -142,7 +149,7 @@ export default {
           this.errorModal = true;
         else {
           this.project = resp.data.results[0];
-          this.validatedDocuments = resp.data.results[0].validated_documents;
+          this.validatedDocuments = this.project.validated_documents;
           this.fetchDocuments();
         }
       })
@@ -154,11 +161,45 @@ export default {
       this.$http.get(`/documents/${params}`).then(resp => {
         if (resp.data.results.length > 0) {
           this.docs = this.docs.concat(resp.data.results);
-          if (this.currentDoc === null) {
-            this.loadDoc(this.docs[0].id);
-          }
           this.totalDocs = resp.data.count;
-          this.nextDocSetUrl = resp.data.next
+          this.nextDocSetUrl = resp.data.next;
+
+          if (this.currentDoc === null) {
+            const docIdRoute = Number(this.$route.params.docId);
+
+            if (docIdRoute) {
+              // Ideally should only load this page and have load prev docs... meh
+              if (this.docs.map(d => d.id).includes(docIdRoute))
+                this.loadDoc(docIdRoute);
+              else
+                this.fetchDocuments()
+            } else {
+              // find first unvalidated doc.
+              const ids = _.difference(this.docs.map(d => d.id), this.validatedDocuments);
+              if (ids.length !== 0) {
+                this.$router.replace({
+                  name: this.$route.name,
+                  params: {
+                    projectId: this.$route.params.projectId,
+                    docId: ids[0]
+                  }
+                });
+                this.loadDoc(ids[0]);
+                // load next url worth of docs?
+              } else {
+                if (nextDocSetUrl !== null)
+                  this.fetchDocuments();
+                else // no unvalidated docs and no next doc URL. Go back to first doc.
+                  this.$router.replace({
+                    name: this.$route.name,
+                    params: {
+                      projectId: this.$route.params.projectId,
+                      docId: this.docs[0].id
+                    }
+                  });
+              }
+            }
+          }
         }
       }).catch(err => {
         console.error(err);
@@ -173,7 +214,7 @@ export default {
       this.loadingDoc = true;
       let payload = {
         project_id: this.project.id,
-          document_ids: [this.currentDoc.id]
+        document_ids: [this.currentDoc.id]
       };
       this.$http.post('/prepare-documents', payload).then(resp => {
         // assuming a 200 is fine here.
@@ -187,11 +228,15 @@ export default {
         let params = this.nextEntSetUrl === null ? `?project=${this.projectId}&document=${this.currentDoc.id}`:
             this.nextEntSetUrl.split('/').slice(-1)[0];
         this.$http.get(`/annotated-entities${params}`).then(resp => {
+          let useAssignedVal = !this.project.require_entity_validation ||
+            this.project.validated_documents.indexOf(this.currentDoc.id) !== -1;
+
           if (resp.data.previous === null) {
             this.ents = resp.data.results;
             this.ents.map(e => {
               e.assignedValues = {};
-              e.assignedValues[this.task.name] = null;
+              e.assignedValues[this.task.name] = useAssignedVal ?
+                taskValueToBackendValue[e[this.task.propName]] : null;
               return e
             });
             this.currentEnt = this.ents[0]
@@ -199,7 +244,8 @@ export default {
             const newEnts = resp.data.results;
             newEnts.map(e => {
               e.assignedValues = {};
-              e.assignedValues[this.task.name] = null;
+              e.assignedValues[this.task.name] = useAssignedVal ?
+                taskValueToBackendValue[e[this.task.propName]] : null;
               return e
             });
             this.ents = this.ents.concat(newEnts)
@@ -242,13 +288,11 @@ export default {
       this.docToSubmit = docId;
     },
     submitConfirmed: function() {
-      this.$http.get(`/project-annotate-entities/${this.projectId}/`).then(resp => {
-        const annoProj = resp.data;
-        annoProj.validated_documents = annoProj.validated_documents.concat(this.currentDoc.id);
-        annoProj.require_entity_validation = annoProj.require_entity_validation ? 1 : 0;
-        this.$http.put(`/project-annotate-entities/${this.projectId}/`, annoProj).then(resp => {
-          this.docToSubmit = null;
-        })
+      this.project.validated_documents = this.project.validated_documents.concat(this.currentDoc.id);
+      this.validatedDocuments = this.project.validated_documents;
+      this.project.require_entity_validation = this.project.require_entity_validation ? 1 : 0;
+      this.$http.put(`/project-annotate-entities/${this.projectId}/`, this.project).then(resp => {
+        this.docToSubmit = null;
       })
     }
   }

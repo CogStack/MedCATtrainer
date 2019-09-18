@@ -9,6 +9,8 @@
         <input v-model="password" class="form-control" type="password">
       </form>
       <span v-if="failed" class="text-danger">Username and/or password incorrect</span>
+    </div>
+    <div slot="footer">
       <button class="login-submit btn btn-primary" @click="login()">Login</button>
     </div>
   </modal>

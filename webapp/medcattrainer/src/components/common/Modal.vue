@@ -3,7 +3,7 @@
     <div class="modal-mask" @click="close">
       <div class="modal-wrapper">
         <div class="modal-container" @click.stop>
-          <font-awesome-icon icon="times" class="close" @click="close"></font-awesome-icon>
+          <font-awesome-icon v-if="closable" icon="times" class="close" @click="close"></font-awesome-icon>
           <div class="modal-header">
             <slot name="header">
             </slot>
@@ -28,6 +28,9 @@
 
 export default {
   name: 'Modal',
+  props: {
+    closable: Boolean
+  },
   methods: {
     close: function() {
       this.$emit('modal:close')
