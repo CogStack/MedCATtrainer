@@ -1,5 +1,5 @@
 <template>
-  <modal >
+  <modal :closable="closable" @modal:close="$emit('login:close')">
     <h3 slot="header">Login</h3>
     <div slot="body">
       <form @submit.prevent class="form">
@@ -21,6 +21,9 @@ import Modal from '@/components/common/Modal.vue'
 
 export default {
   name: 'Login',
+  props: {
+    closable: Boolean,
+  },
   components: {
     Modal,
   },

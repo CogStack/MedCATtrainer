@@ -1,21 +1,18 @@
 <template>
   <div class="border-top border-right border-bottom doc-summary">
     <div v-if="loadingDoc" class="loading-doc"></div>
-    <table class="table table-hover">
-      <tbody>
-        <tr v-for="doc of docs" :key="doc.id" class="doc">
-          <td :class="{'selected-doc': selectedDocId === doc.id}" class="clickable" @click="loadDoc(doc.id)">
-            <font-awesome-icon v-if="validatedDocIds.includes(doc.id)" class="validated-doc" icon="check"></font-awesome-icon>
-            {{doc.id}} : {{doc.name}}
-          </td>
-        </tr>
-        <tr class="clickable">
-          <td v-if="moreDocs" @click="loadMoreDocs">
-            + Load More Docs...
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div v-for="doc of docs" :key="doc.id" class="doc clickable"
+         :class="{'selected-doc': selectedDocId === doc.id}" @click="loadDoc(doc.id)">
+      <font-awesome-icon v-if="validatedDocIds.includes(doc.id)" class="validated-doc" icon="check"></font-awesome-icon>
+      <div class="note-summary">
+        {{doc.text}}
+      </div>
+    </div>
+    <div class="clickable">
+      <div v-if="moreDocs" @click="loadMoreDocs">
+        + Load More Docs...
+      </div>
+    </div>
   </div>
 </template>
 
@@ -63,14 +60,19 @@ export default {
 }
 
 .doc-summary {
-  flex: 0 0 200px;
+  flex: 0 0 300px;
   padding: 5px;
   overflow: auto;
   position: relative;
 }
 
 .doc {
-  padding: 3px;
+  padding: 5px 3px;
+  border-bottom: 1px solid #F0F0F0;
+
+  &:hover {
+    background: #f8f8f8;
+  }
 }
 
 .selected-doc {
@@ -78,6 +80,7 @@ export default {
 }
 
 .validated-doc {
+  float: right;
   color: $success
 }
 
@@ -91,6 +94,26 @@ export default {
   width: 100%;
   background: $loading-background-color;
   opacity: 0.3;
+}
+
+.note-summary {
+  white-space: pre-wrap;
+  /*padding: 5px;*/
+  font-size: 11px;
+  overflow: hidden;
+  position: relative;
+  height: 12em; /* 10 lines */
+
+  &:after {
+    content: "";
+    text-align: right;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 80%;
+    height: 1.2em;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1) 50%);
+  }
 }
 
 </style>

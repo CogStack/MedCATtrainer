@@ -1,12 +1,12 @@
 <template>
   <div class="container-fluid app-container">
     <div class="app-header border-bottom">
-      <h4>{{ project === null ? '' : project.name }}</h4><span class="heading-type"> - Train Annotations</span>
+      <span class="heading-type">Train Annotations : </span><h4>{{ project === null ? '' : project.name }}</h4>
 
-      <h5 class="file-name-heading" v-if="docs.length > 0">Reviewing File:
+      <h5 class="file-name-heading" v-if="docs.length > 0">Reviewing Document:
         <span class="file-name">{{ docs[0].name }}</span>
-        |
-        <span class="file-name">{{ totalDocs }} Docs Remaining</span>
+        <span class="divider">|</span>
+        <span class="file-name">{{ totalDocs - (project !== null ? project.validated_documents.length : 0)}} Remaining</span>
       </h5>
       <button class="help btn btn-default" @click="helpModal = true">
         <font-awesome-icon icon="question-circle"></font-awesome-icon>
@@ -18,8 +18,6 @@
                         :validatedDocIds="validatedDocuments"
                         :selectedDocId="currentDoc !== null ? currentDoc.id : null" :loadingDoc="loadingDoc"
                         @request:nextDocSet="fetchDocuments()" @request:loadDoc="loadDoc"></document-summary>
-      <div class="handle">
-      </div>
       <clinical-text :loading="loadingDoc" :text="currentDoc !== null ? currentDoc.text : null"
                      :currentEnt="currentEnt" :ents="ents" :task="task" @select:concept="selectEntity"
                       @select:addSynonym="addSynonym">
@@ -363,5 +361,9 @@ export default {
 .slide-left-enter, .slide-left-leave-to {
   transform: translateX(50px);
   opacity: 0;
+}
+.divider {
+  opacity: 0.5;
+  padding: 0 5px;
 }
 </style>

@@ -153,8 +153,9 @@ export default {
 <style lang="scss">
 
 .note-container {
-  overflow: scroll;
   flex: 1 1 auto;
+  background: #F0F0F0;
+  padding: 50px 50px 0 50px;
 }
 
 .loading {
@@ -180,6 +181,10 @@ export default {
 }
 
 .clinical-note {
+  background: white;
+  overflow: scroll;
+  height: 100%;
+  box-shadow: 0px -2px 3px 3px rgba(0,0,0,0.2);
   padding: 5px;
   white-space: pre-wrap;
 }
