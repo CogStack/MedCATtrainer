@@ -1,10 +1,9 @@
 <template>
-  <div class="border-left border-bottom sidebar">
-    <h4 class="title">Concept Summary</h4>
+  <div class="sidebar">
     <div class="ent-name">
       {{selectedEnt !== null ? selectedEnt.value : ''}}
     </div>
-    <table class="table">
+    <table class="concept-detail-table">
       <tbody>
       <tr>
         <td>Name</td>
@@ -159,10 +158,6 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.title {
-  padding: 5px;
-}
-
 .cui-btns {
   opacity: 0.7;
   float: right;
@@ -200,5 +195,18 @@ export default {
 .sidebar {
   flex: 0 0 300px;
   overflow: auto;
+  background: $background;
+  color: $text;
+}
+
+.concept-detail-table {
+  tbody > tr {
+
+    > td {
+      border-top: 1px solid $borders;
+      padding: 10px 15px;
+      vertical-align: top;
+    }
+  }
 }
 </style>

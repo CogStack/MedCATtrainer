@@ -1,9 +1,11 @@
 <template>
   <div class="container-fluid app-container">
-    <div class="app-header border-bottom">
-      <span class="heading-type">Train Annotations : </span><h4>{{ project === null ? '' : project.name }}</h4>
+    <div class="app-header">
+      <span>Train Annotations:
+        <h4 class="project-name">{{ project === null ? '' : project.name }}</h4>
+      </span>
 
-      <h5 class="file-name-heading" v-if="docs.length > 0">Reviewing Document:
+      <h5 class="file-name-heading" v-if="docs.length > 0">
         <span class="file-name">{{ docs[0].name }}</span>
         <span class="divider">|</span>
         <span class="file-name">{{ totalDocs - (project !== null ? project.validated_documents.length : 0)}} Remaining</span>
@@ -39,7 +41,32 @@
     <modal v-if="helpModal" class="help-modal" @modal:close="helpModal = false">
       <h3 slot="header">{{ project.name }} Tagging Help</h3>
       <div slot="body" class="help-modal-body">
-        <p>Provide feedback for each highlighted concept</p>
+        <p>Validate each highlighted concept</p>
+        <div>Keyboard Shortcuts</div>
+        <table class="table">
+          <thead>
+            <th>Shortcut Key</th>
+            <th>Description</th>
+          </thead>
+          <tbody>
+          <tr>
+            <td><font-awesome-icon icon="arrow-up"></font-awesome-icon></td>
+            <td>Previous Document</td>
+          </tr>
+          <tr>
+            <td><font-awesome-icon icon="arrow-down"></font-awesome-icon></td>
+            <td>Next Document</td>
+          </tr>
+          <tr>
+            <td><font-awesome-icon icon="arrow-left"></font-awesome-icon></td>
+            <td>Previous Concept</td>
+          </tr>
+          <tr>
+            <td><font-awesome-icon icon="arrow-right"></font-awesome-icon></td>
+            <td>Next Concept</td>
+          </tr>
+          </tbody>
+        </table>
       </div>
       <div slot="footer">
         <button class="btn btn-primary" @click="helpModal = false">Close</button>
@@ -299,8 +326,23 @@ export default {
 
 <style scoped lang="scss">
 
-.app-header, .app-footer {
-  flex: 0 0 50px;
+.app-header {
+  flex: 0 0 70px;
+  background-color: $background;
+  color: $color-4;
+  line-height: 70px;
+  font-size: 25px;
+  padding: 0 30px;
+}
+
+.project-name {
+  color: $text-highlight;
+}
+
+.help {
+  color: $text;
+  position: relative;
+  top: 10px;
 }
 
 .app-header h4 {
@@ -309,21 +351,11 @@ export default {
 
 .file-name-heading {
   display: inline-block;
-  padding-left: 50px;
-  font-size: 18px;
-}
-
-.heading-type {
-   font-size: 20px;
+  padding-left: 20px;
 }
 
 .file-name {
   font-size: 22px;
-  font-weight: bold;
-}
-
-.app-footer {
-  display: flex;
 }
 
 .app-container {

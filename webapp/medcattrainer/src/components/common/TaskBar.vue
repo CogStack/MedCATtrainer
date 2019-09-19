@@ -1,6 +1,6 @@
 <template>
-  <div class="task-bar border-top border-left">
-    <div class="task-bar-task border-bottom">
+  <div class="task-bar">
+    <div class="task-bar-task">
       Task: <span class="task-name">{{currentTask.name}}</span>
     </div>
     <div class="task-bar-choices">
@@ -52,6 +52,8 @@ export default {
   width: 100%;
   text-align: center;
   padding: 5px;
+  background-color: $background;
+  color: $text;
 }
 
 .task-bar-choices {
@@ -61,6 +63,7 @@ export default {
 .task-name {
   font-weight: bold;
   font-size: 22px;
+  color: $text-highlight;
 }
 
 @each $i, $col in $task-colors {

@@ -154,7 +154,7 @@ export default {
 
 .note-container {
   flex: 1 1 auto;
-  background: #F0F0F0;
+  background: $text;
   padding: 50px 50px 0 50px;
 }
 

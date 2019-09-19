@@ -1,5 +1,5 @@
 <template>
-  <div class="border-top border-right border-bottom doc-summary">
+  <div class="doc-summary">
     <div v-if="loadingDoc" class="loading-doc"></div>
     <div v-for="doc of docs" :key="doc.id" class="doc clickable"
          :class="{'selected-doc': selectedDocId === doc.id}" @click="loadDoc(doc.id)">
@@ -10,7 +10,7 @@
     </div>
     <div class="clickable">
       <div v-if="moreDocs" @click="loadMoreDocs">
-        + Load More Docs...
+        <font-awesome-icon icon="plus"></font-awesome-icon>More Docs
       </div>
     </div>
   </div>
@@ -64,19 +64,24 @@ export default {
   padding: 5px;
   overflow: auto;
   position: relative;
+  background: $color-2;
 }
 
 .doc {
   padding: 5px 3px;
-  border-bottom: 1px solid #F0F0F0;
+  border: 1px solid $borders;
+  border-radius: 5px;
+  color: $color-5;
+  margin: 15px 15px;
+  box-shadow: 2px 1px 4px 3px rgba(0,0,0,0.5);
 
   &:hover {
-    background: #f8f8f8;
+    cursor: pointer;
   }
 }
 
 .selected-doc {
-  border-left: 3px solid $primary;
+  border-left: 5px solid $primary;
 }
 
 .validated-doc {
@@ -98,7 +103,6 @@ export default {
 
 .note-summary {
   white-space: pre-wrap;
-  /*padding: 5px;*/
   font-size: 11px;
   overflow: hidden;
   position: relative;
@@ -112,7 +116,7 @@ export default {
     right: 0;
     width: 80%;
     height: 1.2em;
-    background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1) 50%);
+    /*background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1) 50%);*/
   }
 }
 
