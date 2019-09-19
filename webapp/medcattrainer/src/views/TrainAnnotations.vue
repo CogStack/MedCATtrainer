@@ -24,7 +24,7 @@
       </clinical-text>
       <div class="sidebar-container">
         <transition name="slide-left">
-          <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" class="concept-summary"></concept-summary>
+          <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" :tasks="[task]" class="concept-summary"></concept-summary>
         </transition>
         <transition name="slide-left">
           <add-synonym v-if="conceptSynonymSelection" :selection="conceptSynonymSelection" :projectId="projectId"

@@ -1,20 +1,44 @@
 <template>
   <div class="border-left border-bottom sidebar">
     <h4 class="title">Concept Summary</h4>
-    <div class="ent-name">{{selectedEnt !== null ? selectedEnt.value : ''}}</div>
-    <table class="table table-hover">
+    <div class="ent-name">
+      {{selectedEnt !== null ? selectedEnt.value : ''}}
+    </div>
+    <table class="table">
       <tbody>
-      <tr v-for="nameValue of conceptSummary">
-        <td>{{nameValue[0]}}</td>
-        <td v-if="nameValue[0] === 'Description'" v-html="nameValue[1] === 'nan' ? 'n/a' : nameValue[1] || 'n/a'"></td>
-        <td v-if="nameValue[0] !== 'Description'">{{nameValue[1] || 'n/a'}}</td>
+      <tr>
+        <td>Name</td>
+        <td>{{conceptSummary ? conceptSummary['Name'] : 'n/a'}}</td>
+      </tr>
+      <tr>
+        <td>Description</td>
+        <td v-html="conceptSummary.Description === 'nan' ? 'n/a' : conceptSummary.Description || 'n/a'"></td>
+      </tr>
+      <tr>
+        <td>Term ID</td>
+        <td>{{conceptSummary ? conceptSummary['Term ID'] : 'n/a'}}</td>
+      </tr>
+      <tr>
+        <td>Concept ID</td>
+        <td @keyup.stop>
+          <span v-if="!pickAltConcept">{{conceptSummary['Concept ID']}}</span>
+          <v-select class="picker" v-if="pickAltConcept" v-model="selectedCUI" label="name" @search="searchCUI" :options="searchResults"></v-select>
+          <font-awesome-icon class="edit" v-if="!pickAltConcept" icon="edit" @click="pickAltConcept = true"></font-awesome-icon>
+          <font-awesome-icon class="cancel" v-if="pickAltConcept" icon="times-circle" @click="cancelReassign"></font-awesome-icon>
+        </td>
+      </tr>
+      <tr v-for="taskKey of Object.keys(this.selectedEnt ? this.selectedEnt.assignedValues : {})">
+        <td>{{taskKey}}</td>
+        <td>{{conceptSummary[taskKey] || 'n/a'}}</td>
       </tr>
       </tbody>
+
     </table>
   </div>
 </template>
 
 <script>
+import vSelect from 'vue-select'
 
 const HIDDEN_PROPS = [
   'value', 'project', 'document', 'start_ind', 'end_ind',
@@ -35,13 +59,20 @@ const CONST_PROPS_ORDER = [
 
 export default {
   name: 'ConceptSummary',
+  components: {
+    vSelect,
+  },
   props: {
     selectedEnt: Object,
     tasks: Array
   },
   data: function() {
     return {
-      conceptSummary: []
+      conceptSummary: {},
+      priorSummary: null,
+      pickAltConcept: false,
+      searchResults: [],
+      selectedCUI: null,
     }
   },
   methods: {
@@ -71,7 +102,7 @@ export default {
         //order the keys to tuples.
         let props = CONST_PROPS_ORDER.concat(Object.keys(this.selectedEnt.assignedValues));
         for (let k of props) {
-          this.conceptSummary.push([k, ent[k]])
+          this.conceptSummary[k] =  ent[k]
         }
       }
     },
@@ -88,12 +119,41 @@ export default {
         })
       }
     },
+    searchCUI: _.debounce(function(term, loading) {
+      loading(true);
+      this.$http.get(`/search-concepts?search=${term}&projectId=${this.projectId}`)
+        .then(resp => {
+          loading(false);
+          this.searchResults = resp.data.results.map(r => {
+            return {
+              name: r.pretty_name,
+              cui: r.cui,
+              desc: r.desc,
+              synonyms: _.replace(r.synonyms, new RegExp(',', 'g'), ', ')
+            }
+          })
+        })
+    }, 400),
+    selectedCorrectCUI: function(item) {
+      if (item) {
+        let payload = {'label': item.cui};
+        this.$http.put(`/entities/${this.selectedEnt.entity}`, payload).then(resp => {
+          this.fetchDetail();
+        })
+      }
+    },
+    cancelReassign: function() {
+      this.pickAltConcept = false;
+      this.searchResults = [];
+      this.selectedCUI = null;
+    }
   },
   mounted: function() {
     this.fetchDetail();
   },
   watch: {
-    'selectedEnt': 'fetchDetail'
+    'selectedEnt': 'fetchDetail',
+    'selectedCUI': 'selectedCorrectCUI'
   }
 }
 </script>
@@ -101,6 +161,35 @@ export default {
 <style scoped lang="scss">
 .title {
   padding: 5px;
+}
+
+.cui-btns {
+  opacity: 0.7;
+  float: right;
+  position: relative;
+
+  &:hover {
+    opacity: 0.9;
+    cursor: pointer;
+  }
+}
+
+.edit {
+  @extend .cui-btns;
+  top: 7px;
+}
+
+.cancel {
+  @extend .cui-btns;
+  top: 10px;
+}
+
+.picker {
+   width: calc(100% - 30px);
+  display: inline-block;
+}
+.editing {
+  opacity: 0.9;
 }
 
 .ent-name {
