@@ -8,8 +8,9 @@
 data/
 tmp/
 *_tmp/
-static/
-media/
+
+/webapp/api/media/*
+/webapp/api/static/*
 
 # Keep folders with this
 !.keep
