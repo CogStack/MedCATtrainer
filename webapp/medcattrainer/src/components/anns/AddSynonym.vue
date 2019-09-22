@@ -1,9 +1,9 @@
 <template>
-  <div class="border border-left border-bottom">
+  <div>
     <div class="main-panel">
-      <h4 class="title">Add Concept Synonym</h4>
+      <h4 class="title">Add Synonym</h4>
       <div class="sidebar">
-        <table class="table">
+        <table class="add-synonym-table">
           <tbody>
           <tr>
             <td>New Synonym</td>
@@ -110,7 +110,9 @@ export default {
 
 <style scoped lang="scss">
 .title {
-  padding: 5px;
+  padding: 5px 15px;
+  font-size: 16pt;
+  box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
 }
 
 .sidebar {
@@ -128,8 +130,20 @@ export default {
   border-radius: 8px;
 }
 
-
 .action-buttons {
   text-align: center;
+}
+
+.add-synonym-table {
+  tbody > tr {
+    box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
+
+    > td {
+      //border-top: 1px solid $borders;
+      padding: 10px 15px;
+      vertical-align: top;
+      color: $text;
+    }
+  }
 }
 </style>

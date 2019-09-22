@@ -1,18 +1,22 @@
 <template>
   <div class="container-fluid app-container">
     <div class="app-header">
-      <span>Train Annotations:
-        <h4 class="project-name">{{ project === null ? '' : project.name }}</h4>
-      </span>
+      <div class="half-width">
+        <span>Train Annotations:
+          <h4 class="project-name">{{ project === null ? '' : project.name }}</h4>
+        </span>
+      </div>
 
-      <h5 class="file-name-heading" v-if="docs.length > 0">
-        <span class="file-name">{{ docs[0].name }}</span>
-        <span class="divider">|</span>
-        <span class="file-name">{{ totalDocs - (project !== null ? project.validated_documents.length : 0)}} Remaining</span>
-      </h5>
-      <button class="help btn btn-default" @click="helpModal = true">
-        <font-awesome-icon icon="question-circle"></font-awesome-icon>
-      </button>
+      <div class="half-width meta">
+        <h5 class="file-name-heading" v-if="docs.length > 0">
+          <span class="file-name">{{ currentDoc.name }}</span>
+          <span class="divider">|</span>
+          <span class="file-name">{{ totalDocs - (project !== null ? project.validated_documents.length : 0)}} Remaining</span>
+        </h5>
+        <button class="help btn btn-default" @click="helpModal = true">
+          <font-awesome-icon icon="question-circle"></font-awesome-icon>
+        </button>
+      </div>
     </div>
 
     <div class="app-main">
@@ -332,7 +336,7 @@ export default {
   color: $color-4;
   line-height: 70px;
   font-size: 25px;
-  padding: 0 30px;
+  padding: 0 15px;
 }
 
 .project-name {
@@ -349,6 +353,15 @@ export default {
   display: inline-block;
 }
 
+.half-width {
+  display: inline-block;
+  width: 50%;
+}
+
+.meta {
+  text-align: right;
+}
+
 .file-name-heading {
   display: inline-block;
   padding-left: 20px;
@@ -360,7 +373,7 @@ export default {
 
 .app-container {
   display: flex;
-  height: calc(100% - 56px);
+  height: calc(100% - 80px);
   flex-direction: column;
   padding: 5px;
 }
@@ -375,6 +388,7 @@ export default {
   display: flex;
   flex-direction: column;
   width: 400px;
+  padding: 5px;
 
   .concept-summary {
     flex: 1 1 auto;
@@ -388,7 +402,6 @@ export default {
 .slide-left-enter-active {
   transition: all .5s ease;
 }
-
 
 .slide-left-enter, .slide-left-leave-to {
   transform: translateX(50px);

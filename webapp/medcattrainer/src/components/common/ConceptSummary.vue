@@ -1,38 +1,40 @@
 <template>
   <div class="sidebar">
-    <div class="ent-name">
-      {{selectedEnt !== null ? selectedEnt.value : ''}}
+    <div class="title">Concept Summary</div>
+    <div class="summary">
+      <div class="ent-name">
+        {{selectedEnt !== null ? selectedEnt.value : ''}}
+      </div>
+      <table class="concept-detail-table">
+        <tbody>
+        <tr>
+          <td>Name</td>
+          <td>{{conceptSummary ? conceptSummary['Name'] : 'n/a'}}</td>
+        </tr>
+        <tr>
+          <td>Description</td>
+          <td v-html="conceptSummary.Description === 'nan' ? 'n/a' : conceptSummary.Description || 'n/a'"></td>
+        </tr>
+        <tr>
+          <td>Term ID</td>
+          <td>{{conceptSummary ? conceptSummary['Term ID'] : 'n/a'}}</td>
+        </tr>
+        <tr>
+          <td>Concept ID</td>
+          <td @keyup.stop>
+            <span v-if="!pickAltConcept">{{conceptSummary['Concept ID']}}</span>
+            <v-select class="picker" v-if="pickAltConcept" v-model="selectedCUI" label="name" @search="searchCUI" :options="searchResults"></v-select>
+            <font-awesome-icon class="edit" v-if="!pickAltConcept" icon="edit" @click="pickAltConcept = true"></font-awesome-icon>
+            <font-awesome-icon class="cancel" v-if="pickAltConcept" icon="times-circle" @click="cancelReassign"></font-awesome-icon>
+          </td>
+        </tr>
+        <tr v-for="taskKey of Object.keys(this.selectedEnt ? this.selectedEnt.assignedValues : {})">
+          <td>{{taskKey}}</td>
+          <td>{{conceptSummary[taskKey] || 'n/a'}}</td>
+        </tr>
+        </tbody>
+      </table>
     </div>
-    <table class="concept-detail-table">
-      <tbody>
-      <tr>
-        <td>Name</td>
-        <td>{{conceptSummary ? conceptSummary['Name'] : 'n/a'}}</td>
-      </tr>
-      <tr>
-        <td>Description</td>
-        <td v-html="conceptSummary.Description === 'nan' ? 'n/a' : conceptSummary.Description || 'n/a'"></td>
-      </tr>
-      <tr>
-        <td>Term ID</td>
-        <td>{{conceptSummary ? conceptSummary['Term ID'] : 'n/a'}}</td>
-      </tr>
-      <tr>
-        <td>Concept ID</td>
-        <td @keyup.stop>
-          <span v-if="!pickAltConcept">{{conceptSummary['Concept ID']}}</span>
-          <v-select class="picker" v-if="pickAltConcept" v-model="selectedCUI" label="name" @search="searchCUI" :options="searchResults"></v-select>
-          <font-awesome-icon class="edit" v-if="!pickAltConcept" icon="edit" @click="pickAltConcept = true"></font-awesome-icon>
-          <font-awesome-icon class="cancel" v-if="pickAltConcept" icon="times-circle" @click="cancelReassign"></font-awesome-icon>
-        </td>
-      </tr>
-      <tr v-for="taskKey of Object.keys(this.selectedEnt ? this.selectedEnt.assignedValues : {})">
-        <td>{{taskKey}}</td>
-        <td>{{conceptSummary[taskKey] || 'n/a'}}</td>
-      </tr>
-      </tbody>
-
-    </table>
   </div>
 </template>
 
@@ -158,6 +160,19 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.title {
+  padding: 5px 15px;
+  font-size: 16pt;
+  box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
+  color: black;
+}
+
+.summary {
+  height: calc(100% - 41px);
+  width: 400px;
+  overflow: auto
+}
+
 .cui-btns {
   opacity: 0.7;
   float: right;
@@ -189,7 +204,8 @@ export default {
 
 .ent-name {
   padding: 10px;
-  font-size: 22px;
+  font-size: 12pt;
+  box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
 }
 
 .sidebar {
@@ -201,9 +217,10 @@ export default {
 
 .concept-detail-table {
   tbody > tr {
+    box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
 
     > td {
-      border-top: 1px solid $borders;
+      //border-top: 1px solid $borders;
       padding: 10px 15px;
       vertical-align: top;
     }

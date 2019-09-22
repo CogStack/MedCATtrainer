@@ -1,5 +1,5 @@
 <template>
-  <div class="note-container border-bottom">
+  <div class="note-container">
     <transition name="fade">
       <div v-if="loading" class="loading">
         <div class="spinner">
@@ -21,6 +21,7 @@
 
 <script>
 import $ from 'jquery'
+import _ from 'lodash'
 import VRuntimeTemplate from 'v-runtime-template'
 import VueSimpleContextMenu from 'vue-simple-context-menu'
 
@@ -101,7 +102,7 @@ export default {
     this.scrollIntoView()
   },
   methods: {
-    scrollIntoView: function() {
+    scrollIntoView: _.debounce(function() {
       let el = document.getElementsByClassName('highlight-task-selected');
       if (el[0]) {
         el[0].scrollIntoView({
@@ -109,7 +110,7 @@ export default {
           behavior: "smooth",
         });
       }
-    },
+    }),
     selectEnt: function(entIdx) {
       this.$emit('select:concept', entIdx)
     },
@@ -154,8 +155,9 @@ export default {
 
 .note-container {
   flex: 1 1 auto;
-  background: $text;
-  padding: 50px 50px 0 50px;
+  background: rgba(0, 114, 206, .2);
+  padding: 75px 75px 0 75px;
+  border-radius: 10px;
 }
 
 .loading {
@@ -184,8 +186,8 @@ export default {
   background: white;
   overflow: scroll;
   height: 100%;
-  box-shadow: 0px -2px 3px 3px rgba(0,0,0,0.2);
-  padding: 5px;
+  box-shadow: 0px -2px 3px 2px rgba(0,0,0,0.2);
+  padding: 25px;
   white-space: pre-wrap;
 }
 

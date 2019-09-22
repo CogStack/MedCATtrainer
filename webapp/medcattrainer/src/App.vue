@@ -1,7 +1,7 @@
 <template>
   <div @login:success="loginSuccessful">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-      <router-link class="navbar-brand" to="/">Med<img class="icon" src="./assets/cat-logo.png" >AT</router-link>
+    <nav class="navbar">
+      <router-link class="navbar-brand app-name" to="/">Med<img class="icon" src="./assets/cat-logo.png" >AT</router-link>
       <!--<router-link class="navbar-brand" to="/demo">Test</router-link>-->
       <a class="navbar-brand ml-auto small" @click="loginModal = true">
         <span v-if="!uname">Login</span>
@@ -49,11 +49,23 @@ export default {
 
 .small {
   font-size: 14px;
+  color: #fff !important;
+}
+
+.navbar {
+   background-color: $navbar-bg;
+}
+
+.app-name {
+  padding: 5px 0;
+  font-size: 2.25rem;
+  color: #fff;
 }
 
 .icon {
-  height: 18px;
+  height: 30px;
   position: relative;
   bottom: 3px;
 }
+
 </style>

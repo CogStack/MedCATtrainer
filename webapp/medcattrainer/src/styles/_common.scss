@@ -21,14 +21,14 @@
 
 $blur-radius: 10px;
 
-// colour palette
-$color-1: #45503B;
-$color-2: #747572;
-$color-3: #B098A4;
-$color-4: #DBD9DB;
-$color-5: #E5EBEA;
+@each $i, $col in $task-colors {
+  .task-btn-#{$i} {
+    border-color: $col;
+    color: $col;
 
-$background: $color-2;
-$text: $color-4;
-$text-highlight: $color-5;
-$borders: $color-1;
+    &:hover {
+      background-color: $col;
+      color: white;
+    }
+  }
+}

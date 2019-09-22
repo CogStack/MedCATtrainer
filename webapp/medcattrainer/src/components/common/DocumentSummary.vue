@@ -1,16 +1,19 @@
 <template>
   <div class="doc-summary">
+    <div class="title">Clinical Notes</div>
     <div v-if="loadingDoc" class="loading-doc"></div>
-    <div v-for="doc of docs" :key="doc.id" class="doc clickable"
-         :class="{'selected-doc': selectedDocId === doc.id}" @click="loadDoc(doc.id)">
-      <font-awesome-icon v-if="validatedDocIds.includes(doc.id)" class="validated-doc" icon="check"></font-awesome-icon>
-      <div class="note-summary">
-        {{doc.text}}
+    <div class="doc-list">
+      <div v-for="doc of docs" :key="doc.id" class="doc clickable"
+           :class="{'selected-doc': selectedDocId === doc.id}" @click="loadDoc(doc.id)">
+        <font-awesome-icon v-if="validatedDocIds.includes(doc.id)" class="validated-doc" icon="check"></font-awesome-icon>
+        <div class="note-summary">
+          {{doc.text}}
+        </div>
       </div>
-    </div>
-    <div class="clickable">
-      <div v-if="moreDocs" @click="loadMoreDocs">
-        <font-awesome-icon icon="plus"></font-awesome-icon>More Docs
+      <div class="clickable">
+        <div v-if="moreDocs" @click="loadMoreDocs">
+          <font-awesome-icon icon="plus"></font-awesome-icon>More Docs
+        </div>
       </div>
     </div>
   </div>
@@ -56,24 +59,30 @@ export default {
 @import "bootstrap";
 
 .title {
-  padding: 5px;
+  padding: 5px 15px;
+  font-size: 16pt;
+  box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
 }
 
 .doc-summary {
   flex: 0 0 300px;
   padding: 5px;
-  overflow: auto;
   position: relative;
-  background: $color-2;
+  background: $background;
+}
+
+.doc-list {
+  overflow: auto;
+  height: calc(100% - 41px);
+  width: 300px;
 }
 
 .doc {
   padding: 5px 3px;
-  border: 1px solid $borders;
   border-radius: 5px;
   color: $color-5;
   margin: 15px 15px;
-  box-shadow: 2px 1px 4px 3px rgba(0,0,0,0.5);
+  box-shadow: 2px 1px 4px 3px rgba(0,0,0,0.2);
 
   &:hover {
     cursor: pointer;

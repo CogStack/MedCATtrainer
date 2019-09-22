@@ -1,19 +1,18 @@
 <template>
   <div class="nav-bar">
     <div class="nav-buttons">
-      <button :disabled="backDisabled()" @click="back()" type="button" class="btn btn-warning mb-2">
+      <button :disabled="backDisabled()" @click="back()" type="button" class="btn btn-outline-warning mb-2">
         <font-awesome-icon icon="backward"></font-awesome-icon>
       </button>
-      <button :disabled="nextDisabled()"  @click="next()" type="button" class="btn btn-warning mb-2">
+      <button :disabled="nextDisabled()"  @click="next()" type="button" class="btn btn-outline-warning mb-2">
         <font-awesome-icon icon="forward"></font-awesome-icon>
       </button>
     </div>
     <div class="submit-container">
-      <button :disabled="submitDisabled()" @click="submit()" class="btn btn-primary mb-2 submit-btn" type="button">
+      <button :disabled="submitDisabled()" @click="submit()" class="btn btn-outline-primary mb-2 submit-btn" type="button">
         Submit
       </button>
     </div>
-
   </div>
 </template>
 
@@ -75,13 +74,13 @@ export default {
   width: 100%;
   background: $background;
   color: $text;
-  border-top: 1px solid $borders;
 }
 
 .nav-buttons {
+  width: 50%;
+  display: inline-block;
   text-align: center;
-  width: 100%;
-  padding: 5px 0;
+  padding: 10px 0;
 }
 
 .submit-btn {
@@ -91,7 +90,8 @@ export default {
 }
 
 .submit-container {
-  width: 100%;
+  display: inline-block;
+  width: 50%;
   text-align: center;
   padding-top: 10px;
 }

@@ -65,11 +65,4 @@ export default {
   font-size: 22px;
   color: $text-highlight;
 }
-
-@each $i, $col in $task-colors {
-  .task-btn-#{$i} {
-    background-color: $col;
-    color: white;
-  }
-}
 </style>
