@@ -19,6 +19,8 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from rest_framework.authtoken import views as auth_views
 from rest_framework import routers
 import api.views
+from django.conf.urls.static import static
+from django.conf import settings
 
 router = routers.DefaultRouter()
 router.register(r'users', api.views.UserViewSet)
@@ -39,4 +41,4 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('test', api.views.test),
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

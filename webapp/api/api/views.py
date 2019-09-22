@@ -15,10 +15,12 @@ from .utils import get_medcat_models, add_annotations, remove_annotations
 import os
 
 # For local testing, put envs
+"""
 from environs import Env
 env = Env()
 env.read_env("/home/ubuntu/projects/MedAnno/MedAnno/env_umls", recurse=False)
 print(os.environ)
+"""
 
 from medcat.cat import CAT
 from medcat.utils.vocab import Vocab
