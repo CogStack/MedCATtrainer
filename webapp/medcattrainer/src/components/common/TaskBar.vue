@@ -1,7 +1,7 @@
 <template>
   <div class="task-bar">
     <div class="task-bar-task">
-      Task: <span class="task-name">{{currentTask.name}}</span>
+      <span class="task-name">{{currentTask.name}}</span>
     </div>
     <div class="task-bar-choices">
         <span v-for="(val, index) of currentTask.values">
@@ -60,8 +60,6 @@ export default {
 }
 
 .task-name {
-  font-weight: bold;
   font-size: 22px;
-  color: $text-highlight;
 }
 </style>
