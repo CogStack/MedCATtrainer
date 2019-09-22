@@ -4,7 +4,7 @@ import Home from './views/Home.vue'
 import TrainAnnotations from './views/TrainAnnotations.vue'
 import Demo from './views/Demo.vue'
 
-Vue.use(Router);
+Vue.use(Router)
 
 export default new Router({
   mode: 'history',
@@ -27,7 +27,7 @@ export default new Router({
     {
       path: '/demo',
       name: 'demo',
-      component: Demo,
+      component: Demo
     }
   ]
 })

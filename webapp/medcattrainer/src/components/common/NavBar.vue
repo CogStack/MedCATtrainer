@@ -22,16 +22,16 @@ export default {
   props: {
     tasks: Array,
     ents: Array,
-    currentEnt: Object,
+    currentEnt: Object
   },
   methods: {
-    nextDisabled: function() {
-      return this.ents === null ? true : this.ents[this.ents.length - 1] === this.currentEnt;
+    nextDisabled: function () {
+      return this.ents === null ? true : this.ents[this.ents.length - 1] === this.currentEnt
     },
-    backDisabled: function() {
-      return this.ents === null ? true : this.ents[0] === this.currentEnt;
+    backDisabled: function () {
+      return this.ents === null ? true : this.ents[0] === this.currentEnt
     },
-    submitDisabled: function() {
+    submitDisabled: function () {
       // all tasks complete for all ents
       if (this.ents !== null) {
         return !this.ents.every(e => {
@@ -40,30 +40,29 @@ export default {
       }
       return true
     },
-    next: function() {
+    next: function () {
       this.$emit('select:next')
     },
-    back: function() {
+    back: function () {
       this.$emit('select:back')
     },
-    submit: function() {
+    submit: function () {
       this.$emit('submit')
     },
-    keyup: function(e) {
+    keyup: function (e) {
       if (e.keyCode === 13) {
-        if (!this.submitDisabled())
-          this.submit();
+        if (!this.submitDisabled()) { this.submit() }
       } else if (e.keyCode === 37 && !this.backDisabled()) {
-        this.back();
+        this.back()
       } else if (e.keyCode === 39 && !this.nextDisabled()) {
-        this.next();
+        this.next()
       }
     }
   },
-  mounted: function() {
+  mounted: function () {
     window.addEventListener('keyup', this.keyup)
   },
-  beforeDestroy: function() {
+  beforeDestroy: function () {
     window.removeEventListener('keyup', this.keyup)
   }
 }

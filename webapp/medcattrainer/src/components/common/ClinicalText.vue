@@ -29,125 +29,123 @@ export default {
   name: 'ClinicalText',
   components: {
     VRuntimeTemplate,
-    VueSimpleContextMenu,
+    VueSimpleContextMenu
   },
   props: {
     text: String,
     task: Object,
     ents: Array,
     loading: true,
-    currentEnt: Object,
+    currentEnt: Object
   },
-  data: function() {
+  data: function () {
     return {
       ctxMenuOptions: [
         {
           name: 'Add Synonym'
         }
       ],
-      selection: null,
+      selection: null
     }
   },
   computed: {
-    formattedText: function() {
-      if (this.loading || !this.text || !this.ents || this.ents.length === 0)
-        return "";
+    formattedText: function () {
+      if (this.loading || !this.text || !this.ents || this.ents.length === 0) { return '' }
 
-      const taskValueNamesToButtonIndices = Object.assign(...this.task.values.map((val, i) =>  ({[val[0]]: i})));
-      const taskHighlightDefault = 'highlight-task-default';
+      const taskValueNamesToButtonIndices = Object.assign(...this.task.values.map((val, i) => ({ [val[0]]: i })))
+      const taskHighlightDefault = 'highlight-task-default'
 
-      let formattedText = '';
-      let start = 0;
+      let formattedText = ''
+      let start = 0
 
       this.text = this.text.replace('<', '\<')
         .replace('>', '\>')
         .replace('[', '\[')
-        .replace(']', '\]');
+        .replace(']', '\]')
       for (let i = 0; i < this.ents.length; i++) {
         // highlight the span with default
-        let highlightText = this.text.slice(this.ents[i].start_ind, this.ents[i].end_ind);
-        let styleClass = taskHighlightDefault;
+        let highlightText = this.text.slice(this.ents[i].start_ind, this.ents[i].end_ind)
+        let styleClass = taskHighlightDefault
 
         if (this.ents[i].assignedValues[this.task.name] !== null) {
-          let btnIndex = taskValueNamesToButtonIndices[this.ents[i].assignedValues[this.task.name]];
-          styleClass = `highlight-task-${btnIndex}`;
+          let btnIndex = taskValueNamesToButtonIndices[this.ents[i].assignedValues[this.task.name]]
+          styleClass = `highlight-task-${btnIndex}`
         }
 
         styleClass = this.ents[i] === this.currentEnt ? `${styleClass} highlight-task-selected` : styleClass
-        let spanText = `<span @click="selectEnt(${i})" class="${styleClass}">${highlightText}</span>`;
-        let precedingText = this.text.slice(start, this.ents[i].start_ind);
-        precedingText = precedingText.length !== 0 ? precedingText : ' ';
-        start = this.ents[i].end_ind;
-        formattedText += precedingText + spanText;
-        if (i === this.ents.length -1 )
-          formattedText += this.text.slice(start, this.text.length - 1);
+        let spanText = `<span @click="selectEnt(${i})" class="${styleClass}">${highlightText}</span>`
+        let precedingText = this.text.slice(start, this.ents[i].start_ind)
+        precedingText = precedingText.length !== 0 ? precedingText : ' '
+        start = this.ents[i].end_ind
+        formattedText += precedingText + spanText
+        if (i === this.ents.length - 1) { formattedText += this.text.slice(start, this.text.length - 1) }
       }
 
-      let el = $('<div></div>');
-      el.html(formattedText);
+      let el = $('<div></div>')
+      el.html(formattedText)
       // strip all plain text HTML that may be malformed and only leave the <span> els we've included.
-      $(":not(*[class^='highlight-task'])",  el).remove();
-      formattedText = el.html();
+      $(":not(*[class^='highlight-task'])", el).remove()
+      formattedText = el.html()
 
-      formattedText = `<div @contextmenu.prevent.stop="showCtxMenu($event)">${formattedText}</div>`;
-      return formattedText;
+      formattedText = `<div @contextmenu.prevent.stop="showCtxMenu($event)">${formattedText}</div>`
+      return formattedText
     }
   },
-  updated: function() {
+  updated: function () {
     this.$nextTick(function () {
       this.scrollIntoView()
     })
   },
-  mounted: function() {
+  mounted: function () {
     this.scrollIntoView()
   },
   methods: {
-    scrollIntoView: _.debounce(function() {
-      let el = document.getElementsByClassName('highlight-task-selected');
+    scrollIntoView: _.debounce(function () {
+      let el = document.getElementsByClassName('highlight-task-selected')
       if (el[0]) {
         el[0].scrollIntoView({
-          block: "center",
-          behavior: "smooth",
-        });
+          block: 'center',
+          behavior: 'smooth'
+        })
       }
     }),
-    selectEnt: function(entIdx) {
+    selectEnt: function (entIdx) {
       this.$emit('select:concept', entIdx)
     },
-    showCtxMenu: function(event) {
-      let selection = window.getSelection();
-      let selStr = selection.toString();
+    showCtxMenu: function (event) {
+      let selection = window.getSelection()
+      let selStr = selection.toString()
       // gather text around selection
-      let priorText = selection.anchorNode.data.slice(0, selection.anchorOffset);
-      let nextText = selection.extentNode.data.slice(selection.extentOffset);
+      let priorText = selection.anchorNode.data.slice(0, selection.anchorOffset)
+      let nextText = selection.extentNode.data.slice(selection.extentOffset)
 
-      let priorSibling = selection.anchorNode.previousSibling;
-      let nextSibling = selection.anchorNode.nextSibling;
+      let priorSibling = selection.anchorNode.previousSibling
+      let nextSibling = selection.anchorNode.nextSibling
       for (let i of _.range(4)) {
         if (priorSibling !== null) {
-          priorText = `${priorSibling.innerText || priorSibling.textContent}${priorText}`;
-          priorSibling = priorSibling.previousSibling;
+          priorText = `${priorSibling.innerText || priorSibling.textContent}${priorText}`
+          priorSibling = priorSibling.previousSibling
         }
-        if (nextSibling !== null ) {
-          nextText += (nextSibling.innerText || nextSibling.textContent);
-          nextSibling = nextSibling.nextSibling;
+        if (nextSibling !== null) {
+          nextText += (nextSibling.innerText || nextSibling.textContent)
+          nextSibling = nextSibling.nextSibling
         }
       }
 
       // take only 100 chars of either side?
-      nextText = nextText.length < 100 ? nextText : nextText.slice(0, 100);
-      priorText = priorText.length < 100 ? priorText : priorText.slice(-100);
+      nextText = nextText.length < 100 ? nextText : nextText.slice(0, 100)
+      priorText = priorText.length < 100 ? priorText : priorText.slice(-100)
       this.selection = {
         selStr: selStr,
         prevText: priorText,
-        nextText: nextText,
-      };
+        nextText: nextText
+      }
       this.$refs.ctxMenu.showMenu(event)
     },
-    ctxOptionClicked: function(event) {
+    ctxOptionClicked: function (event) {
       this.$emit('select:addSynonym', this.selection)
     }
-  },
+  }
 }
 </script>
 

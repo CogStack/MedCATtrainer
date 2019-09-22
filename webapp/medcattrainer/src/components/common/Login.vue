@@ -22,30 +22,30 @@ import Modal from '@/components/common/Modal.vue'
 export default {
   name: 'Login',
   props: {
-    closable: Boolean,
+    closable: Boolean
   },
   components: {
-    Modal,
+    Modal
   },
-  data: function() {
+  data: function () {
     return {
       uname: '',
       password: '',
-      failed: false,
+      failed: false
     }
   },
   methods: {
-    login: function() {
+    login: function () {
       this.$http.post('/api-token-auth/', {
         username: this.uname,
         password: this.password
       }).then(resp => {
-        this.$cookie.set('api-token', resp.data.token, {expires: 1});
-        this.$cookie.set  ('username', this.uname);
-        this.$http.defaults.headers.common['Authorization'] = `Token ${this.$cookie.get('api-token')}`;
+        this.$cookie.set('api-token', resp.data.token, { expires: 1 })
+        this.$cookie.set('username', this.uname)
+        this.$http.defaults.headers.common['Authorization'] = `Token ${this.$cookie.get('api-token')}`
         this.$emit('login:success')
       }).catch(err => {
-        this.failed = true;
+        this.failed = true
       })
     }
   }
@@ -57,4 +57,3 @@ export default {
   margin-top: 10px;
 }
 </style>
-

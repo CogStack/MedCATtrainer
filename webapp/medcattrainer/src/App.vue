@@ -20,22 +20,21 @@
 <script>
 import Login from '@/components/common/Login.vue'
 
-
 export default {
   name: 'App',
   components: {
     Login
   },
-  data: function() {
+  data: function () {
     return {
       loginModal: false,
       uname: this.$cookie.get('username') || null
     }
   },
   methods: {
-    loginSuccessful: function() {
-      this.login = false;
-      this.uname = this.$cookie('uname');
+    loginSuccessful: function () {
+      this.login = false
+      this.uname = this.$cookie('uname')
       location.reload()
     }
   }

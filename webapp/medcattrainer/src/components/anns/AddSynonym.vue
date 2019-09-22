@@ -48,13 +48,13 @@ import vSelect from 'vue-select'
 export default {
   name: 'AddSynoym',
   components: {
-    vSelect,
+    vSelect
   },
   props: {
     selection: Object,
-    projectId: String,
+    projectId: String
   },
-  data: function() {
+  data: function () {
     return {
       name: this.selection.selStr,
       prevText: this.selection.prevText,
@@ -62,46 +62,46 @@ export default {
       CUI: '',
       synonyms: null,
       searchResults: [],
-      selectedCUI: null,
+      selectedCUI: null
     }
   },
   watch: {
     'selectedCUI': 'selectedSynonymCUI'
   },
   methods: {
-    searchCUI: _.debounce(function(term, loading) {
-      loading(true);
+    searchCUI: _.debounce(function (term, loading) {
+      loading(true)
       this.$http.get(`/search-concepts?search=${term}&projectId=${this.projectId}`)
         .then(resp => {
-        loading(false);
-        this.searchResults = resp.data.results.map(r => {
-          return {
-            name: r.pretty_name,
-            cui: r.cui,
-            desc: r.desc,
-            synonyms: _.replace(r.synonyms, new RegExp(',', 'g'), ', ')
-          }
+          loading(false)
+          this.searchResults = resp.data.results.map(r => {
+            return {
+              name: r.pretty_name,
+              cui: r.cui,
+              desc: r.desc,
+              synonyms: _.replace(r.synonyms, new RegExp(',', 'g'), ', ')
+            }
+          })
         })
-      })
     }, 400),
-    selectedSynonymCUI: function(item) {
-      this.cui = item.cui;
-      this.tui = item.tui;
-      this.synonyms = item.synonyms;
-      this.searchResults = [];
+    selectedSynonymCUI: function (item) {
+      this.cui = item.cui
+      this.tui = item.tui
+      this.synonyms = item.synonyms
+      this.searchResults = []
     },
-    submit: function() {
+    submit: function () {
       const payload = {
         name: this.name,
         cui: this.cui,
         tui: this.tui,
-        context: `${this.selection.priorText}${this.selection.selStr}${this.selection.nextText}`,
-      };
+        context: `${this.selection.priorText}${this.selection.selStr}${this.selection.nextText}`
+      }
       this.$http.post('', payload).then(resp => {
         this.$emit('request:addSynonymComplete')
       })
     },
-    cancel: function() {
+    cancel: function () {
       this.$emit('request:addSynonymComplete')
     }
   }

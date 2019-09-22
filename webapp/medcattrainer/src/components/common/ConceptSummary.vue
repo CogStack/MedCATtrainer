@@ -43,8 +43,8 @@ import vSelect from 'vue-select'
 
 const HIDDEN_PROPS = [
   'value', 'project', 'document', 'start_ind', 'end_ind',
-  'entity', 'assignedValues', 'correct', 'id', 'user',
-];
+  'entity', 'assignedValues', 'correct', 'id', 'user'
+]
 
 const PROP_MAP = {
   'acc': 'Accuracy',
@@ -52,79 +52,78 @@ const PROP_MAP = {
   'tui': 'Term ID',
   'cui': 'Concept ID',
   'pretty_name': 'Name'
-};
+}
 
 const CONST_PROPS_ORDER = [
-  'Name', 'Description', 'Term ID', 'Concept ID',
-];
+  'Name', 'Description', 'Term ID', 'Concept ID'
+]
 
 export default {
   name: 'ConceptSummary',
   components: {
-    vSelect,
+    vSelect
   },
   props: {
     selectedEnt: Object,
     tasks: Array
   },
-  data: function() {
+  data: function () {
     return {
       conceptSummary: {},
       priorSummary: null,
       pickAltConcept: false,
       searchResults: [],
-      selectedCUI: null,
+      selectedCUI: null
     }
   },
   methods: {
-    cleanProps: function() {
-      this.conceptSummary = [];
+    cleanProps: function () {
+      this.conceptSummary = []
       if (this.selectedEnt !== null) {
         // remove props
         let ent = Object.keys(this.selectedEnt)
           .filter(k => !HIDDEN_PROPS.includes(k))
           .reduce((obj, key) => {
-            obj[key] = this.selectedEnt[key];
-            return obj;
-          }, {});
+            obj[key] = this.selectedEnt[key]
+            return obj
+          }, {})
 
-        //flatten task vals
+        // flatten task vals
         for (const [k, v] of Object.entries(this.selectedEnt.assignedValues)) {
-          ent[k] = v || 'n/a';
+          ent[k] = v || 'n/a'
         }
 
-        //pretty print props:
+        // pretty print props:
         for (const [prop, name] of Object.entries(PROP_MAP)) {
-          if (ent[prop])
-            ent[name] = ent[prop];
-            delete ent[prop]
+          if (ent[prop]) { ent[name] = ent[prop] }
+          delete ent[prop]
         }
 
-        //order the keys to tuples.
-        let props = CONST_PROPS_ORDER.concat(Object.keys(this.selectedEnt.assignedValues));
+        // order the keys to tuples.
+        let props = CONST_PROPS_ORDER.concat(Object.keys(this.selectedEnt.assignedValues))
         for (let k of props) {
-          this.conceptSummary[k] =  ent[k]
+          this.conceptSummary[k] = ent[k]
         }
       }
     },
-    fetchDetail: function() {
+    fetchDetail: function () {
       if (this.selectedEnt !== null) {
         this.$http.get(`/entities/${this.selectedEnt.entity}/`).then(resp => {
-          this.selectedEnt.cui = resp.data.label;
+          this.selectedEnt.cui = resp.data.label
           this.$http.get(`/concepts?cui=${this.selectedEnt.cui}`).then(resp => {
-            this.selectedEnt.desc = resp.data.results[0].desc;
-            this.selectedEnt.tui = resp.data.results[0].tui;
-            this.selectedEnt.pretty_name = resp.data.results[0].pretty_name;
+            this.selectedEnt.desc = resp.data.results[0].desc
+            this.selectedEnt.tui = resp.data.results[0].tui
+            this.selectedEnt.pretty_name = resp.data.results[0].pretty_name
             this.cleanProps()
           })
         })
       }
     },
-    searchCUI: _.debounce(function(term, loading) {
-      loading(true);
+    searchCUI: _.debounce(function (term, loading) {
+      loading(true)
       this.$http.get(`/search-concepts?search=${term}&projectId=${this.projectId}`)
         .then(resp => {
-          loading(false);
+          loading(false)
           this.searchResults = resp.data.results.map(r => {
             return {
               name: r.pretty_name,
@@ -135,22 +134,22 @@ export default {
           })
         })
     }, 400),
-    selectedCorrectCUI: function(item) {
+    selectedCorrectCUI: function (item) {
       if (item) {
-        let payload = {'label': item.cui};
+        let payload = { 'label': item.cui }
         this.$http.put(`/entities/${this.selectedEnt.entity}`, payload).then(resp => {
-          this.fetchDetail();
+          this.fetchDetail()
         })
       }
     },
-    cancelReassign: function() {
-      this.pickAltConcept = false;
-      this.searchResults = [];
-      this.selectedCUI = null;
+    cancelReassign: function () {
+      this.pickAltConcept = false
+      this.searchResults = []
+      this.selectedCUI = null
     }
   },
-  mounted: function() {
-    this.fetchDetail();
+  mounted: function () {
+    this.fetchDetail()
   },
   watch: {
     'selectedEnt': 'fetchDetail',

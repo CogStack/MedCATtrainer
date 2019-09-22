@@ -21,27 +21,26 @@ export default {
   props: {
     tasks: Array,
     taskLocked: Boolean,
-    currentTask: Object,
+    currentTask: Object
   },
   methods: {
-    select: function(val) {
+    select: function (val) {
       this.$emit('select:taskValue', val)
     },
-    keyup: function(e) {
+    keyup: function (e) {
       // 1-9 select a value
       if (e.keyCode >= 49 && e.keyCode <= 57 && !this.taskLocked) {
-        let codeRange = _.range(10);
-        let keyRange = _.range(49, 58);
-        let selectIdx = _.zipObject(keyRange, codeRange)[e.keyCode];
-        if (selectIdx <= this.currentTask.values.length)
-          this.$emit('select:taskValue', this.currentTask.values[selectIdx])
+        let codeRange = _.range(10)
+        let keyRange = _.range(49, 58)
+        let selectIdx = _.zipObject(keyRange, codeRange)[e.keyCode]
+        if (selectIdx <= this.currentTask.values.length) { this.$emit('select:taskValue', this.currentTask.values[selectIdx]) }
       }
-    },
+    }
   },
-  mounted: function() {
+  mounted: function () {
     window.addEventListener('keyup', this.keyup)
   },
-  beforeDestroy: function() {
+  beforeDestroy: function () {
     window.removeEventListener('keyup', this.keyup)
   }
 }

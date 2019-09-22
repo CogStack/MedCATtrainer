@@ -27,29 +27,29 @@ export default {
     moreDocs: Boolean,
     selectedDocId: Number,
     loadingDoc: false,
-    validatedDocIds: Array,
+    validatedDocIds: Array
   },
   methods: {
-    loadMoreDocs: function() {
+    loadMoreDocs: function () {
       this.$emit('request:nextDocSet')
     },
-    loadDoc: function(docId) {
+    loadDoc: function (docId) {
       this.$emit('request:loadDoc', docId)
     },
-    keyup: function(e) {
+    keyup: function (e) {
       if (e.keyCode === 40 && this.selectedDocId !== this.docs.slice(-1).id) {
-        //down
+        // down
         this.$emit('request:loadDoc', this.docs[this.docs.map(d => d.id).indexOf(this.selectedDocId) + 1].id)
       } else if (e.keyCode === 38 && this.selectedDocId !== this.docs[0].id) {
-        //up
+        // up
         this.$emit('request:loadDoc', this.docs[this.docs.map(d => d.id).indexOf(this.selectedDocId) - 1].id)
       }
     }
   },
-  mounted: function() {
+  mounted: function () {
     window.addEventListener('keyup', this.keyup)
   },
-  beforeDestroy: function() {
+  beforeDestroy: function () {
     window.removeEventListener('keyup', this.keyup)
   }
 }

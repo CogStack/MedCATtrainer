@@ -110,21 +110,21 @@ import TaskBar from '@/components/common/TaskBar.vue'
 import AddSynonym from '@/components/anns/AddSynonym.vue'
 
 // Only retrieve 1000 entities at a time??
-const ENT_LIMIT = 1000;
+const ENT_LIMIT = 1000
 
-const annotationTask =  {
+const annotationTask = {
   name: 'Concept Annotation',
   propName: 'correct',
   values: [
     ['Correct', 1],
     ['Incorrect', 0]
   ]
-};
+}
 
 const taskValueToBackendValue = {
   true: 'Correct',
   false: 'Incorrect'
-};
+}
 
 export default {
   name: 'TrainAnnotations',
@@ -135,17 +135,17 @@ export default {
     ClinicalText,
     NavBar,
     TaskBar,
-    AddSynonym,
+    AddSynonym
   },
   props: {
     projectId: {
-      required: true,
+      required: true
     },
     docId: {
-      required: false,
+      required: false
     }
   },
-  data: function() {
+  data: function () {
     return {
       docs: [],
       totalDocs: 0,
@@ -162,49 +162,44 @@ export default {
       helpModal: false,
       errorModal: false,
       docToSubmit: null,
-      conceptSynonymSelection: null,
+      conceptSynonymSelection: null
     }
   },
-  created: function() {
+  created: function () {
     this.fetchData()
   },
   watch: {
-    '$route': 'fetchData',
+    '$route': 'fetchData'
   },
   methods: {
-    fetchData: function() {
+    fetchData: function () {
       this.$http.get(`/project-annotate-entities?id=${this.projectId}`).then(resp => {
-        if (resp.data.count === 0)
-          this.errorModal = true;
-        else {
-          this.project = resp.data.results[0];
-          this.validatedDocuments = this.project.validated_documents;
-          this.fetchDocuments();
+        if (resp.data.count === 0) { this.errorModal = true } else {
+          this.project = resp.data.results[0]
+          this.validatedDocuments = this.project.validated_documents
+          this.fetchDocuments()
         }
       })
     },
-    fetchDocuments: function() {
-      let params = this.nextDocSetUrl === null ? `?dataset=${this.projectId}`:
-          this.nextDocSetUrl.split('/').slice(-1)[0];
+    fetchDocuments: function () {
+      let params = this.nextDocSetUrl === null ? `?dataset=${this.projectId}`
+        : this.nextDocSetUrl.split('/').slice(-1)[0]
 
       this.$http.get(`/documents/${params}`).then(resp => {
         if (resp.data.results.length > 0) {
-          this.docs = this.docs.concat(resp.data.results);
-          this.totalDocs = resp.data.count;
-          this.nextDocSetUrl = resp.data.next;
+          this.docs = this.docs.concat(resp.data.results)
+          this.totalDocs = resp.data.count
+          this.nextDocSetUrl = resp.data.next
 
           if (this.currentDoc === null) {
-            const docIdRoute = Number(this.$route.params.docId);
+            const docIdRoute = Number(this.$route.params.docId)
 
             if (docIdRoute) {
               // Ideally should only load this page and have load prev docs... meh
-              if (this.docs.map(d => d.id).includes(docIdRoute))
-                this.loadDoc(docIdRoute);
-              else
-                this.fetchDocuments()
+              if (this.docs.map(d => d.id).includes(docIdRoute)) { this.loadDoc(docIdRoute) } else { this.fetchDocuments() }
             } else {
               // find first unvalidated doc.
-              const ids = _.difference(this.docs.map(d => d.id), this.validatedDocuments);
+              const ids = _.difference(this.docs.map(d => d.id), this.validatedDocuments)
               if (ids.length !== 0) {
                 this.$router.replace({
                   name: this.$route.name,
@@ -212,74 +207,74 @@ export default {
                     projectId: this.$route.params.projectId,
                     docId: ids[0]
                   }
-                });
-                this.loadDoc(ids[0]);
+                })
+                this.loadDoc(ids[0])
                 // load next url worth of docs?
               } else {
-                if (nextDocSetUrl !== null)
-                  this.fetchDocuments();
-                else // no unvalidated docs and no next doc URL. Go back to first doc.
+                if (nextDocSetUrl !== null) { this.fetchDocuments() } else // no unvalidated docs and no next doc URL. Go back to first doc.
+                {
                   this.$router.replace({
                     name: this.$route.name,
                     params: {
                       projectId: this.$route.params.projectId,
                       docId: this.docs[0].id
                     }
-                  });
+                  })
+                }
               }
             }
           }
         }
       }).catch(err => {
-        console.error(err);
+        console.error(err)
         // use error modal to show errors?
-      });
+      })
     },
-    loadDoc: function(docId) {
-      this.currentDoc = _.find(this.docs, (d) => d.id === docId);
+    loadDoc: function (docId) {
+      this.currentDoc = _.find(this.docs, (d) => d.id === docId)
       this.prepareDoc()
     },
-    prepareDoc: function() {
-      this.loadingDoc = true;
+    prepareDoc: function () {
+      this.loadingDoc = true
       let payload = {
         project_id: this.project.id,
         document_ids: [this.currentDoc.id]
-      };
+      }
       this.$http.post('/prepare-documents', payload).then(resp => {
         // assuming a 200 is fine here.
-        this.fetchEntities(0, 0);
+        this.fetchEntities(0, 0)
       }).catch(err => {
         console.error(err)
-      });
+      })
     },
-    fetchEntities: function(entsFetched, pages) {
+    fetchEntities: function (entsFetched, pages) {
       if (entsFetched < ENT_LIMIT) {
-        let params = this.nextEntSetUrl === null ? `?project=${this.projectId}&document=${this.currentDoc.id}`:
-            this.nextEntSetUrl.split('/').slice(-1)[0];
+        let params = this.nextEntSetUrl === null ? `?project=${this.projectId}&document=${this.currentDoc.id}`
+          : this.nextEntSetUrl.split('/').slice(-1)[0]
         this.$http.get(`/annotated-entities${params}`).then(resp => {
           let useAssignedVal = !this.project.require_entity_validation ||
-            this.project.validated_documents.indexOf(this.currentDoc.id) !== -1;
+            this.project.validated_documents.indexOf(this.currentDoc.id) !== -1
 
           if (resp.data.previous === null) {
-            this.ents = resp.data.results;
+            this.ents = resp.data.results
             this.ents.map(e => {
-              e.assignedValues = {};
-              e.assignedValues[this.task.name] = useAssignedVal ?
-                taskValueToBackendValue[e[this.task.propName]] : null;
+              e.assignedValues = {}
+              e.assignedValues[this.task.name] = useAssignedVal
+                ? taskValueToBackendValue[e[this.task.propName]] : null
               return e
-            });
+            })
             this.currentEnt = this.ents[0]
           } else {
-            const newEnts = resp.data.results;
+            const newEnts = resp.data.results
             newEnts.map(e => {
-              e.assignedValues = {};
-              e.assignedValues[this.task.name] = useAssignedVal ?
-                taskValueToBackendValue[e[this.task.propName]] : null;
+              e.assignedValues = {}
+              e.assignedValues[this.task.name] = useAssignedVal
+                ? taskValueToBackendValue[e[this.task.propName]] : null
               return e
-            });
+            })
             this.ents = this.ents.concat(newEnts)
           }
-          this.nextEntSetUrl = resp.data.next;
+          this.nextEntSetUrl = resp.data.next
           if (this.nextEntSetUrl) {
             this.fetchEntities(resp.data.results.length * (pages + 1), pages + 1)
           } else {
@@ -288,40 +283,37 @@ export default {
         })
       }
     },
-    selectEntity: function(entIdx) {
-      this.currentEnt = this.ents[entIdx];
+    selectEntity: function (entIdx) {
+      this.currentEnt = this.ents[entIdx]
     },
-    markEntity: function(taskValue) {
-      this.currentEnt.assignedValues[this.task.name] = taskValue[0];
-      this.currentEnt[this.task.propName] = taskValue[1];
-      this.currentEnt.validated = 1;
-      this.taskLocked = true;
+    markEntity: function (taskValue) {
+      this.currentEnt.assignedValues[this.task.name] = taskValue[0]
+      this.currentEnt[this.task.propName] = taskValue[1]
+      this.currentEnt.validated = 1
+      this.taskLocked = true
       this.$http.put(`/annotated-entities/${this.currentEnt.id}/`, this.currentEnt).then(resp => {
-        if (this.ents.slice(-1)[0].id !== this.currentEnt.id)
-          this.next();
-        else
-          this.currentEnt = null;
+        if (this.ents.slice(-1)[0].id !== this.currentEnt.id) { this.next() } else { this.currentEnt = null }
         this.taskLocked = false
       })
     },
-    addSynonym: function(selection) {
+    addSynonym: function (selection) {
       this.conceptSynonymSelection = selection
     },
-    next: function() {
-      this.currentEnt = this.ents[this.ents.indexOf(this.currentEnt)+1]
+    next: function () {
+      this.currentEnt = this.ents[this.ents.indexOf(this.currentEnt) + 1]
     },
-    back: function() {
-      this.currentEnt = this.ents[this.ents.indexOf(this.currentEnt)-1]
+    back: function () {
+      this.currentEnt = this.ents[this.ents.indexOf(this.currentEnt) - 1]
     },
-    submitDoc: function(docId) {
-      this.docToSubmit = docId;
+    submitDoc: function (docId) {
+      this.docToSubmit = docId
     },
-    submitConfirmed: function() {
-      this.project.validated_documents = this.project.validated_documents.concat(this.currentDoc.id);
-      this.validatedDocuments = this.project.validated_documents;
-      this.project.require_entity_validation = this.project.require_entity_validation ? 1 : 0;
+    submitConfirmed: function () {
+      this.project.validated_documents = this.project.validated_documents.concat(this.currentDoc.id)
+      this.validatedDocuments = this.project.validated_documents
+      this.project.require_entity_validation = this.project.require_entity_validation ? 1 : 0
       this.$http.put(`/project-annotate-entities/${this.projectId}/`, this.project).then(resp => {
-        this.docToSubmit = null;
+        this.docToSubmit = null
       })
     }
   }

@@ -16,14 +16,14 @@ export default {
   components: {
 
   },
-  data: function() {
+  data: function () {
     return {
       doc_json: null,
-      exampleText: '',
+      exampleText: ''
     }
   },
   methods: {
-    annotate: function() {
+    annotate: function () {
       // create a 'TMP' project,
       // upload the document,
       // prepare document
@@ -31,11 +31,10 @@ export default {
       // enrich entitites
       // then $router.push to new page.
 
-      this.$http.post('', {text: this.exampleText}).then(resp => {
-
+      this.$http.post('', { text: this.exampleText }).then(resp => {
         this.$router.push({
           name: 'train-annotations',
-          params: {text: resp.data.text, entities: resp.data.entities}
+          params: { text: resp.data.text, entities: resp.data.entities }
         })
       })
     }

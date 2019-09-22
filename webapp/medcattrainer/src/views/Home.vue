@@ -38,46 +38,44 @@ export default {
   components: {
     Login
   },
-  data: function() {
+  data: function () {
     let data = {
       projects: [],
-      loginSuccessful: false,
-    };
+      loginSuccessful: false
+    }
 
     if (this.$cookie.apiToken) {
       data.loginSuccessful = true
     }
     return data
   },
-  created: function() {
+  created: function () {
     this.loggedIn()
   },
   watch: {
     '$route': 'loggedIn'
   },
   methods: {
-    loggedIn: function() {
-      if (this.$cookie.get('api-token'))
-        this.loginSuccessful = true;
+    loggedIn: function () {
+      if (this.$cookie.get('api-token')) { this.loginSuccessful = true }
       this.fetchProjects()
     },
-    fetchProjects: function() {
+    fetchProjects: function () {
       if (this.loginSuccessful) {
         this.$http.get('/project-annotate-entities').then((resp) => {
           this.projects = resp.data.results
         })
       }
     },
-    select: function(project) {
-      //train annotations for project,
+    select: function (project) {
+      // train annotations for project,
 
       this.$router.push({
         name: 'train-annotations',
         params: {
-          projectId: project.id,
+          projectId: project.id
         }
       })
-
     }
   }
 }
@@ -91,5 +89,3 @@ h3 {
   cursor: pointer;
 }
 </style>
-
-

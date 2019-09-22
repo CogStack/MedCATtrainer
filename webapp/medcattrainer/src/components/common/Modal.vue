@@ -32,7 +32,7 @@ export default {
     closable: Boolean
   },
   methods: {
-    close: function() {
+    close: function () {
       this.$emit('modal:close')
     }
   }

@@ -35,25 +35,25 @@ export default {
     tasks: Array,
     taskIdx: Number,
     spanIdx: Number,
-    selectItem: Function,
+    selectItem: Function
   },
   computed: {
-    taskValues: function() {
-      let mappedTasks = {};
-      for(let task of this.tasks) {
-        let mappedVals = {};
-        for(let val of task.values) {
+    taskValues: function () {
+      let mappedTasks = {}
+      for (let task of this.tasks) {
+        let mappedVals = {}
+        for (let val of task.values) {
           mappedVals[val[1]] = val[0]
         }
-        mappedTasks[task.taskName] = mappedVals;
+        mappedTasks[task.taskName] = mappedVals
       }
-      return mappedTasks;
-    },
+      return mappedTasks
+    }
   },
   methods: {
-    taskValue: function(task, item) {
-      let spanTaskVal = task.taskName in item.taskLabels ? item.taskLabels[task.taskName] : 'n/a';
-      return spanTaskVal !== 'n/a' ? this.taskValues[task.taskName][spanTaskVal] : 'n/a';
+    taskValue: function (task, item) {
+      let spanTaskVal = task.taskName in item.taskLabels ? item.taskLabels[task.taskName] : 'n/a'
+      return spanTaskVal !== 'n/a' ? this.taskValues[task.taskName][spanTaskVal] : 'n/a'
     }
   }
 }
