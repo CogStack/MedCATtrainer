@@ -33,13 +33,13 @@ router.register(r'documents', api.views.DocumentViewSet)
 
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('home/', api.views.home, name='home'), # Test
-    path('search-concepts', api.views.ConceptView.as_view()),
-    path('prepare-documents', api.views.prepare_documents),
-    path('name-to-cuis', api.views.name2cuis),
-    path('api-token-auth/', auth_views.obtain_auth_token),
+    path('api/', include(router.urls)),
+    path('', api.views.home, name='home'), # Test
+    path('api/search-concepts', api.views.ConceptView.as_view()),
+    path('api/prepare-documents', api.views.prepare_documents),
+    path('api/name-to-cuis', api.views.name2cuis),
+    path('api/api-token-auth/', auth_views.obtain_auth_token),
     path('admin/', admin.site.urls),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    path('test', api.views.test),
+    path('api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('api/test', api.views.test),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
