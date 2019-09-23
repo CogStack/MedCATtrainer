@@ -5,7 +5,18 @@ ADD . /home/
 RUN apt-get -y update && \
     apt-get -y upgrade
 
+# Get node and npm
+RUN apt-get install curl && \
+    curl -sL https://deb.nodesource.com/setup_11.x | bash - && \
+    apt-get install nodejs && \
+    npm install -g npm@latest
 
+# Build frontend
+WORKDIR /home/frontend
+RUN npm install && npm run build
+
+# Build backend
+WORKDIR /home/api
 RUN pip install pip --upgrade 
 RUN pip install -r /home/requirements.txt
 RUN pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.3/en_core_sci_md-0.2.3.tar.gz

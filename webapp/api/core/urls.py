@@ -34,6 +34,7 @@ router.register(r'documents', api.views.DocumentViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('home/', api.views.home, name='home'), # Test
     path('search-concepts', api.views.ConceptView.as_view()),
     path('prepare-documents', api.views.prepare_documents),
     path('name-to-cuis', api.views.name2cuis),

@@ -6,6 +6,8 @@ services:
         network: host
         context: ./webapp
     volumes:
+      - ./webapp/api/core:/home/api/core
+      - ./webapp/api/api:/home/api/api
       - api-media:/home/api/media
       - api-static:/home/api/static
       - api-db:/home/api/db

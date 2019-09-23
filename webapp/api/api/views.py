@@ -38,6 +38,8 @@ cdb = CDB()
 cat = CAT(cdb=cdb, vocab=vocab)
 cat.train = False
 
+def home(request):
+    return render(request, 'index.html')
 
 class UserViewSet(viewsets.ModelViewSet):
     """
