@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from rest_framework.authtoken import views as auth_views
 from rest_framework import routers
@@ -34,7 +34,6 @@ router.register(r'documents', api.views.DocumentViewSet)
 
 urlpatterns = [
     path('api/', include(router.urls)),
-    path('', api.views.home, name='home'), # Test
     path('api/search-concepts', api.views.ConceptView.as_view()),
     path('api/prepare-documents', api.views.prepare_documents),
     path('api/name-to-cuis', api.views.name2cuis),
@@ -42,4 +41,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('api/test', api.views.test),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    re_path('^.*$', api.views.home, name='home'), # Match everything else to home
+]
