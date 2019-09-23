@@ -173,7 +173,7 @@ export default {
   },
   methods: {
     fetchData: function () {
-      this.$http.get(`/project-annotate-entities?id=${this.projectId}`).then(resp => {
+      this.$http.get(`/api/project-annotate-entities?id=${this.projectId}`).then(resp => {
         if (resp.data.count === 0) { this.errorModal = true } else {
           this.project = resp.data.results[0]
           this.validatedDocuments = this.project.validated_documents
@@ -185,7 +185,7 @@ export default {
       let params = this.nextDocSetUrl === null ? `?dataset=${this.projectId}`
         : this.nextDocSetUrl.split('/').slice(-1)[0]
 
-      this.$http.get(`/documents/${params}`).then(resp => {
+      this.$http.get(`/api/documents/${params}`).then(resp => {
         if (resp.data.results.length > 0) {
           this.docs = this.docs.concat(resp.data.results)
           this.totalDocs = resp.data.count
@@ -240,7 +240,7 @@ export default {
         project_id: this.project.id,
         document_ids: [this.currentDoc.id]
       }
-      this.$http.post('/prepare-documents', payload).then(resp => {
+      this.$http.post('/api/prepare-documents', payload).then(resp => {
         // assuming a 200 is fine here.
         this.fetchEntities(0, 0)
       }).catch(err => {
@@ -251,7 +251,7 @@ export default {
       if (entsFetched < ENT_LIMIT) {
         let params = this.nextEntSetUrl === null ? `?project=${this.projectId}&document=${this.currentDoc.id}`
           : this.nextEntSetUrl.split('/').slice(-1)[0]
-        this.$http.get(`/annotated-entities${params}`).then(resp => {
+        this.$http.get(`/api/annotated-entities${params}`).then(resp => {
           let useAssignedVal = !this.project.require_entity_validation ||
             this.project.validated_documents.indexOf(this.currentDoc.id) !== -1
 
@@ -291,7 +291,7 @@ export default {
       this.currentEnt[this.task.propName] = taskValue[1]
       this.currentEnt.validated = 1
       this.taskLocked = true
-      this.$http.put(`/annotated-entities/${this.currentEnt.id}/`, this.currentEnt).then(resp => {
+      this.$http.put(`/api/annotated-entities/${this.currentEnt.id}/`, this.currentEnt).then(resp => {
         if (this.ents.slice(-1)[0].id !== this.currentEnt.id) { this.next() } else { this.currentEnt = null }
         this.taskLocked = false
       })
@@ -312,7 +312,7 @@ export default {
       this.project.validated_documents = this.project.validated_documents.concat(this.currentDoc.id)
       this.validatedDocuments = this.project.validated_documents
       this.project.require_entity_validation = this.project.require_entity_validation ? 1 : 0
-      this.$http.put(`/project-annotate-entities/${this.projectId}/`, this.project).then(resp => {
+      this.$http.put(`/api/project-annotate-entities/${this.projectId}/`, this.project).then(resp => {
         this.docToSubmit = null
       })
     }

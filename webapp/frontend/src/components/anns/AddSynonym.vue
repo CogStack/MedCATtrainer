@@ -71,7 +71,7 @@ export default {
   methods: {
     searchCUI: _.debounce(function (term, loading) {
       loading(true)
-      this.$http.get(`/search-concepts?search=${term}&projectId=${this.projectId}`)
+      this.$http.get(`/api/search-concepts?search=${term}&projectId=${this.projectId}`)
         .then(resp => {
           loading(false)
           this.searchResults = resp.data.results.map(r => {

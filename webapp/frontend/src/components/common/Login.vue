@@ -36,7 +36,7 @@ export default {
   },
   methods: {
     login: function () {
-      this.$http.post('/api-token-auth/', {
+      this.$http.post('/api/api-token-auth/', {
         username: this.uname,
         password: this.password
       }).then(resp => {

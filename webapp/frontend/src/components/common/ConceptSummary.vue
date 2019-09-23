@@ -108,9 +108,9 @@ export default {
     },
     fetchDetail: function () {
       if (this.selectedEnt !== null) {
-        this.$http.get(`/entities/${this.selectedEnt.entity}/`).then(resp => {
+        this.$http.get(`/api/entities/${this.selectedEnt.entity}/`).then(resp => {
           this.selectedEnt.cui = resp.data.label
-          this.$http.get(`/concepts?cui=${this.selectedEnt.cui}`).then(resp => {
+          this.$http.get(`/api/concepts?cui=${this.selectedEnt.cui}`).then(resp => {
             this.selectedEnt.desc = resp.data.results[0].desc
             this.selectedEnt.tui = resp.data.results[0].tui
             this.selectedEnt.pretty_name = resp.data.results[0].pretty_name
@@ -121,7 +121,7 @@ export default {
     },
     searchCUI: _.debounce(function (term, loading) {
       loading(true)
-      this.$http.get(`/search-concepts?search=${term}&projectId=${this.projectId}`)
+      this.$http.get(`/api/search-concepts?search=${term}&projectId=${this.projectId}`)
         .then(resp => {
           loading(false)
           this.searchResults = resp.data.results.map(r => {
@@ -137,7 +137,7 @@ export default {
     selectedCorrectCUI: function (item) {
       if (item) {
         let payload = { 'label': item.cui }
-        this.$http.put(`/entities/${this.selectedEnt.entity}`, payload).then(resp => {
+        this.$http.put(`/api/entities/${this.selectedEnt.entity}`, payload).then(resp => {
           this.fetchDetail()
         })
       }
