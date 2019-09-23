@@ -108,8 +108,8 @@ class AnnotatedEntity(models.Model):
     start_ind = models.IntegerField()
     end_ind = models.IntegerField()
     acc = models.FloatField()
-    correct = models.BooleanField(default=True, choices=BOOL_CHOICES)
-    validated = models.BooleanField(default=False, choices=BOOL_CHOICES)
+    correct = models.BooleanField(default=True)
+    validated = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.entity)
@@ -130,7 +130,7 @@ class MetaTask(models.Model):
 
 class ProjectAnnotateEntities(Project):
     medcat_models = models.ForeignKey('MedCATModel', on_delete=models.SET_NULL, blank=True, null=True)
-    require_entity_validation = models.BooleanField(default=False, choices=BOOL_CHOICES)
+    require_entity_validation = models.BooleanField(default=False)
 
 
 class ProjectMetaAnnotate(Project):
@@ -144,4 +144,4 @@ class MetaAnnotation(models.Model):
     meta_task = models.ForeignKey('MetaTask', on_delete=models.CASCADE)
     meta_task_value = models.ForeignKey('MetaTaskValue', on_delete=models.CASCADE)
     acc = models.FloatField()
-    validated = models.BooleanField(choices=STATUS_CHOICES)
+    validated = models.BooleanField()
