@@ -131,8 +131,8 @@ def prepare_documents(request):
         if len(anns) == 0 or update:
             # Based on the project id get the right medcat
             cdb, vocab = get_medcat_models(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
-            #TODO: To change : self
-            cat = CAT(cdb, vocab)
+            cat.cdb = cdb
+            cat.vocab = vocab
             cat.train = False
 
             print(len(cat.cdb.name2cui))
@@ -206,8 +206,8 @@ def test(request):
         if len(anns) == 0 or update:
             # Based on the project id get the right medcat
             cdb, vocab = get_medcat_models(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
-            # To change : self
-            cat = CAT(cdb, vocab)
+            cat.cdb = cdb
+            cat.vocab = vocab
             cat.train = False
 
             print(len(cat.cdb.name2cui))
