@@ -1,4 +1,11 @@
-FROM python:3.7
+FROM node:11.1.0-alpine as frontend
+ADD . /home/
+
+WORKDIR /home/frontend
+RUN npm install && npm run build
+
+
+FROM python:3.7 AS backend
 ADD . /home/
 
 # Update and upgrade everything
