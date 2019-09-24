@@ -8,7 +8,7 @@
       </div>
     </transition>
     <div v-if="!loading" class="clinical-note">
-      <v-runtime-template :template="formattedText"></v-runtime-template>
+      <v-runtime-template ref="clinicalText" :template="formattedText"></v-runtime-template>
     </div>
     <vue-simple-context-menu
       :elementId="'ctxMenuId'"
@@ -57,11 +57,7 @@ export default {
 
       let formattedText = ''
       let start = 0
-
-      // this.text = this.text.replace('<', '<')
-      //   .replace('>', '\\>')
-      //   .replace('[', '\\[')
-      //   .replace(']', '\\]')
+      let timeout = 0
       for (let i = 0; i < this.ents.length; i++) {
         // highlight the span with default
         let highlightText = this.text.slice(this.ents[i].start_ind, this.ents[i].end_ind)
@@ -73,12 +69,15 @@ export default {
         }
 
         styleClass = this.ents[i] === this.currentEnt ? `${styleClass} highlight-task-selected` : styleClass
+        timeout = this.ents[i] === this.currentEnt && i === 0 ? 500 : timeout
         let spanText = `<span @click="selectEnt(${i})" class="${styleClass}">${highlightText}</span>`
         let precedingText = this.text.slice(start, this.ents[i].start_ind)
         precedingText = precedingText.length !== 0 ? precedingText : ' '
         start = this.ents[i].end_ind
         formattedText += precedingText + spanText
-        if (i === this.ents.length - 1) { formattedText += this.text.slice(start, this.text.length - 1) }
+        if (i === this.ents.length - 1) {
+          formattedText += this.text.slice(start, this.text.length - 1)
+        }
       }
 
       let el = $('<div></div>')
@@ -88,27 +87,23 @@ export default {
       formattedText = el.html()
 
       formattedText = `<div @contextmenu.prevent.stop="showCtxMenu($event)">${formattedText}</div>`
+
+      this.scrollIntoView(timeout)
       return formattedText
     }
   },
-  updated: function () {
-    this.$nextTick(function () {
-      this.scrollIntoView()
-    })
-  },
-  mounted: function () {
-    this.scrollIntoView()
-  },
   methods: {
-    scrollIntoView: _.debounce(function () {
+    scrollIntoView: function (timeout) {
       let el = document.getElementsByClassName('highlight-task-selected')
-      if (el[0]) {
-        el[0].scrollIntoView({
-          block: 'center',
-          behavior: 'smooth'
-        })
-      }
-    }),
+      setTimeout(function () { // setTimeout to put this into event queue
+        if (el[0]) {
+          el[0].scrollIntoView({
+            block: 'center',
+            behavior: 'smooth'
+          })
+        }
+      }, timeout)
+    },
     selectEnt: function (entIdx) {
       this.$emit('select:concept', entIdx)
     },
