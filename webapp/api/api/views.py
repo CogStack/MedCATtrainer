@@ -131,18 +131,6 @@ def prepare_documents(request):
             # Based on the project id get the right medcat
             cat = get_medcat(cat, CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
 
-            if cat is None:
-                cat = CAT(cdb=cdb, vocab=vocab)
-                cat.train = False
-            else:
-                cat.cdb = cdb
-                cat.vocab = vocab
-                cat.train = False
-
-            print(len(cat.cdb.name2cui))
-            print(cat.spacy_cat.MIN_CUI_COUNT)
-            print(cat.spacy_cat.MIN_ACC)
-
             spacy_doc = cat(document.text)
             add_annotations(spacy_doc=spacy_doc,
                             user=user,
@@ -157,15 +145,13 @@ def prepare_documents(request):
 
 @api_view(http_method_names=['POST'])
 def name2cuis(request):
+    global cat
     print(request.data)
     text = request.data['text']
     p_id = request.data['project_id']
     project = ProjectAnnotateEntities.objects.get(id=p_id)
 
-    cdb, vocab = get_medcat_models(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
-    cat.cdb = cdb
-    cat.vocab = vocab
-    print("HERE")
+    cat = get_medcat(cat, CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
 
     name, _ = prepare_name(cat=cat, name=text)
     out = {'cuis': list(cat.cdb.name2cui.get(name, []))}
