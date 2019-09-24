@@ -65,7 +65,8 @@ class AnnotatedEntityViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = AnnotatedEntity.objects.all()
     serializer_class = AnnotatedEntitySerializer
-    filterset_fields = ['id', 'user', 'project', 'document', 'entity', 'correct']
+    filterset_fields = ['id', 'user', 'project', 'document', 'entity', 'validated',
+                        'deleted']
 
 
 class DocumentViewSet(viewsets.ModelViewSet):
@@ -119,7 +120,7 @@ def prepare_documents(request):
             # Remove all annotations if creation is forced
             remove_annotations(document, project, partial=False)
         elif update:
-            # Remove all annotations if creation is forced
+            # Remove annotations that are not verified if creation is update
             remove_annotations(document, project, partial=True)
 
         # Get annotated entities
