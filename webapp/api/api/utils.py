@@ -2,6 +2,7 @@ from .models import Entity, AnnotatedEntity, Concept
 from medcat.cdb import CDB
 from medcat.utils.vocab import Vocab
 from medcat.cat import CAT
+from medcat.utils.helpers import tkn_inds_from_doc, prepare_name
 
 def remove_annotations(document, project, partial=False):
     try:
@@ -64,6 +65,36 @@ def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
                 ann_ent.acc = ent._.acc
                 ann_ent.correct = True
                 ann_ent.save()
+
+
+def train_medcat(cat, project, document):
+    # Get all annotations
+    anns = AnnotatedEntity.objects.filter(project=project, document=document, validated=True)
+    text = document.text
+    doc = cat(text)
+
+    if len(anns) > 0 and text is not None and len(text) > 5:
+        for ann in anns:
+            name = prepare_name(ann.value())
+            cui = ann.entity.label
+
+            # Does the concept exist
+            if cui in cat.cdb.cui2names:
+                # If the name is not linked add the link 
+                text_inds = [ann.start_ind, ann.end_ind]
+                tkn_inds = tkn_inds_from_doc(spacy_doc=doc,
+                                             text_inds=text_inds,
+                                             source_val=name)
+
+                if cui not in cat.cdb.name2cui:
+                    cat.add_name(cui=cui,
+                                 source_val=source_val,
+                                 spacy_doc=doc,
+                                 tkn_inds=tkn_inds,
+                                 lr=0.2)
+                else:
+                    # Name is linked, just add training
+                    cat.add_concept_cntx(cui, text, tkn_inds, spacy_doc=doc, lr=0.05, anneal=False, negative=ann.deleted)
 
 
 def get_medcat(cat, CDB_MAP, VOCAB_MAP, project):

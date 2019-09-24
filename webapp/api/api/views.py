@@ -11,7 +11,7 @@ from rest_framework import generics
 from rest_framework import filters
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .utils import get_medcat, add_annotations, remove_annotations
+from .utils import get_medcat, add_annotations, remove_annotations, train_medcat
 import os
 
 # For local testing, put envs
@@ -186,6 +186,22 @@ def add_synonym(request):
     cat.add_name(cui=cui, source_val=source_val, text=text)
 
     return Response({'message': 'Synonym added successfully'})
+
+
+@api_view(http_method_names=['POST'])
+def submit_document(request):
+    # Get project id
+    p_id = request.data['project_id']
+    d_id = request.data['document_id']
+
+    # Get project and the right version of cat
+    project = ProjectAnnotateEntities.objects.get(id=p_id)
+    document = Document.objects.get(id=d_id)
+
+    cat = get_medcat(cat, CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
+    train_medcat(cat, project, document)
+
+    return Response({'message': 'Document submited successfully'})
 
 
 @api_view(http_method_names=['GET'])
