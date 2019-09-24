@@ -41,3 +41,6 @@ Response JSON:
     }
 }
 ```
+
+
+Video: [Medcat Trainer](https://youtu.be/lM914DQjvSo) 
