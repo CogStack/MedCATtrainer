@@ -34,12 +34,12 @@ router.register(r'documents', api.views.DocumentViewSet)
 
 urlpatterns = [
     path('api/', include(router.urls)),
-    path('api/search-concepts', api.views.ConceptView.as_view()),
-    path('api/prepare-documents', api.views.prepare_documents),
-    path('api/name-to-cuis', api.views.name2cuis),
+    path('api/search-concepts/', api.views.ConceptView.as_view()),
+    path('api/prepare-documents/', api.views.prepare_documents),
+    path('api/name-to-cuisi/', api.views.name2cuis),
     path('api/api-token-auth/', auth_views.obtain_auth_token),
     path('admin/', admin.site.urls),
     path('api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    path('api/test', api.views.test),
+    path('api/test/', api.views.test),
     re_path('^.*$', api.views.home, name='home'), # Match everything else to home
 ]
