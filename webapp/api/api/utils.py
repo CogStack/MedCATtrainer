@@ -75,26 +75,32 @@ def train_medcat(cat, project, document):
 
     if len(anns) > 0 and text is not None and len(text) > 5:
         for ann in anns:
-            name = prepare_name(ann.value())
+            name, _ = prepare_name(cat=cat, name=ann.value, version='clean')
             cui = ann.entity.label
 
             # Does the concept exist
             if cui in cat.cdb.cui2names:
-                # If the name is not linked add the link 
                 text_inds = [ann.start_ind, ann.end_ind]
                 tkn_inds = tkn_inds_from_doc(spacy_doc=doc,
                                              text_inds=text_inds,
                                              source_val=name)
 
-                if cui not in cat.cdb.name2cui:
+                if name not in cat.cdb.name2cui or cui not in cat.cdb.name2cui[name]:
+                    # If the name is not linked add the link 
                     cat.add_name(cui=cui,
-                                 source_val=source_val,
+                                 source_val=ann.value,
                                  spacy_doc=doc,
                                  tkn_inds=tkn_inds,
-                                 lr=0.2)
+                                 lr=0.1)
                 else:
+                    print("HERE")
+                    print(doc)
+                    print(tkn_inds)
+                    print(cui, tkn_inds, doc[tkn_inds[0]:tkn_inds[-1]])
+                    print("SDF")
                     # Name is linked, just add training
-                    cat.add_concept_cntx(cui, text, tkn_inds, spacy_doc=doc, lr=0.05, anneal=False, negative=ann.deleted)
+                    cat.add_concept_cntx(cui, text, tkn_inds, spacy_doc=doc,
+                                         lr=0.05, anneal=False, negative=ann.deleted)
 
 
 def get_medcat(cat, CDB_MAP, VOCAB_MAP, project):

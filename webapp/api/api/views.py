@@ -174,6 +174,7 @@ def name2cuis(request):
 
 @api_view(http_method_names=['POST'])
 def add_synonym(request):
+    global cat
     # Get project id
     p_id = request.data['project_id']
     text = request.data['context']
@@ -190,6 +191,7 @@ def add_synonym(request):
 
 @api_view(http_method_names=['POST'])
 def submit_document(request):
+    global cat
     # Get project id
     p_id = request.data['project_id']
     d_id = request.data['document_id']
