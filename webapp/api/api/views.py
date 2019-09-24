@@ -11,7 +11,7 @@ from rest_framework import generics
 from rest_framework import filters
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .utils import get_medcat_models, add_annotations, remove_annotations
+from .utils import get_medcat, add_annotations, remove_annotations
 import os
 
 # For local testing, put envs
@@ -35,7 +35,7 @@ VOCAB_MAP = {}
 # Get the basic version of MedCAT
 cat = None
 
-def home(request):
+def index(request):
     return render(request, 'index.html')
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -128,7 +128,8 @@ def prepare_documents(request):
         # If the document is not already annotated, annotate it
         if len(anns) == 0 or update:
             # Based on the project id get the right medcat
-            cdb, vocab = get_medcat_models(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
+            cat = get_medcat(cat, CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
+
             if cat is None:
                 cat = CAT(cdb=cdb, vocab=vocab)
                 cat.train = False
@@ -165,10 +166,26 @@ def name2cuis(request):
     cat.vocab = vocab
     print("HERE")
 
-    name = prepare_name(cat=cat, text=text)
+    name, _ = prepare_name(cat=cat, name=text)
     out = {'cuis': list(cat.cdb.name2cui.get(name, []))}
 
     return Response(out)
+
+
+@api_view(http_method_names=['POST'])
+def add_synonym(request):
+    # Get project id
+    p_id = request.data['project_id']
+    text = request.data['context']
+    source_val = request.data['synonym']
+    cui = request.data['cui']
+
+    # Get project and the right version of cat
+    project = ProjectAnnotateEntities.objects.get(id=p_id)
+    cat = get_medcat(cat, CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
+    cat.add_name(cui=cui, source_val=source_val, text=text)
+
+    return Response({'message': 'Synonym added successfully'})
 
 
 @api_view(http_method_names=['GET'])

@@ -1,6 +1,7 @@
 from .models import Entity, AnnotatedEntity, Concept
 from medcat.cdb import CDB
 from medcat.utils.vocab import Vocab
+from medcat.cat import CAT
 
 def remove_annotations(document, project, partial=False):
     try:
@@ -65,7 +66,7 @@ def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
                 ann_ent.save()
 
 
-def get_medcat_models(CDB_MAP, VOCAB_MAP, project):
+def get_medcat(cat, CDB_MAP, VOCAB_MAP, project):
     cdb_id = project.medcat_models.cdb.id
     vocab_id = project.medcat_models.vocab.id
 
@@ -85,4 +86,10 @@ def get_medcat_models(CDB_MAP, VOCAB_MAP, project):
         vocab.load_dict(vocab_path)
         VOCAB_MAP[vocab_id] = vocab
 
-    return cdb, vocab
+    if cat is None:
+        cat = CAT(cdb=cdb, vocab=vocab)
+    else:
+        cat.cdb = cdb
+        cat.vocab = vocab
+
+    return cat
