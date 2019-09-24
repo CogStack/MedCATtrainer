@@ -33,10 +33,7 @@ CDB_MAP = {}
 VOCAB_MAP = {}
 
 # Get the basic version of MedCAT
-vocab = Vocab()
-cdb = CDB()
-cat = CAT(cdb=cdb, vocab=vocab)
-cat.train = False
+cat = None
 
 def home(request):
     return render(request, 'index.html')
@@ -93,6 +90,7 @@ class EntityViewSet(viewsets.ModelViewSet):
 
 @api_view(http_method_names=['POST'])
 def prepare_documents(request):
+    global cat
     # Get the user
     user = request.user
     # Get doc ids
@@ -131,9 +129,13 @@ def prepare_documents(request):
         if len(anns) == 0 or update:
             # Based on the project id get the right medcat
             cdb, vocab = get_medcat_models(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
-            cat.cdb = cdb
-            cat.vocab = vocab
-            cat.train = False
+            if cat is None:
+                cat = CAT(cdb=cdb, vocab=vocab)
+                cat.train = False
+            else:
+                cat.cdb = cdb
+                cat.vocab = vocab
+                cat.train = False
 
             print(len(cat.cdb.name2cui))
             print(cat.spacy_cat.MIN_CUI_COUNT)
