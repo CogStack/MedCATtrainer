@@ -7,17 +7,17 @@
           <th>Text Span</th>
           <th>CUI</th>
           <th>Accuracy</th>
-          <th v-for="task in tasks">{{task.taskName}}</th>
+          <th v-for="(task, index) in tasks" :key="index">{{task.taskName}}</th>
         </tr>
         </thead>
         <tbody>
         <tr @click="selectItem(item)"
             :class="{'bg-primary': index === spanIdx, 'text-white': index === spanIdx}"
-            v-for="(item, index) in items">
+            v-for="(item, index) in items" :key="index">
           <td>{{text.slice(item.start_ind, item.end_ind)}}</td>
           <td>{{item.cui}}</td>
           <td>{{parseFloat(item.acc).toFixed(2)}}</td>
-          <td v-for="task in tasks">{{taskValue(task, item)}}</td>
+          <td v-for="(task, index) in tasks" :key="index">{{taskValue(task, item)}}</td>
         </tr>
         </tbody>
       </table>

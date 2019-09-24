@@ -173,7 +173,7 @@ export default {
   },
   methods: {
     fetchData: function () {
-      this.$http.get(`/api/project-annotate-entities?id=${this.projectId}`).then(resp => {
+      this.$http.get(`/api/project-annotate-entities/?id=${this.projectId}`).then(resp => {
         if (resp.data.count === 0) { this.errorModal = true } else {
           this.project = resp.data.results[0]
           this.validatedDocuments = this.project.validated_documents
@@ -211,8 +211,10 @@ export default {
                 this.loadDoc(ids[0])
                 // load next url worth of docs?
               } else {
-                if (nextDocSetUrl !== null) { this.fetchDocuments() } else // no unvalidated docs and no next doc URL. Go back to first doc.
-                {
+                if (this.nextDocSetUrl !== null) {
+                  this.fetchDocuments()
+                } else {
+                  // no unvalidated docs and no next doc URL. Go back to first doc.
                   this.$router.replace({
                     name: this.$route.name,
                     params: {
@@ -240,7 +242,7 @@ export default {
         project_id: this.project.id,
         document_ids: [this.currentDoc.id]
       }
-      this.$http.post('/api/prepare-documents', payload).then(resp => {
+      this.$http.post('/api/prepare-documents/', payload).then(resp => {
         // assuming a 200 is fine here.
         this.fetchEntities(0, 0)
       }).catch(err => {
@@ -251,7 +253,7 @@ export default {
       if (entsFetched < ENT_LIMIT) {
         let params = this.nextEntSetUrl === null ? `?project=${this.projectId}&document=${this.currentDoc.id}`
           : this.nextEntSetUrl.split('/').slice(-1)[0]
-        this.$http.get(`/api/annotated-entities${params}`).then(resp => {
+        this.$http.get(`/api/annotated-entities/${params}`).then(resp => {
           let useAssignedVal = !this.project.require_entity_validation ||
             this.project.validated_documents.indexOf(this.currentDoc.id) !== -1
 

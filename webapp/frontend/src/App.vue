@@ -59,6 +59,9 @@ export default {
   padding: 5px 0;
   font-size: 2.25rem;
   color: #fff;
+  &:hover {
+    color: #fff !important;
+  }
 }
 
 .icon {

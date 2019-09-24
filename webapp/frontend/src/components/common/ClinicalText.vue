@@ -35,7 +35,7 @@ export default {
     text: String,
     task: Object,
     ents: Array,
-    loading: true,
+    loading: Boolean,
     currentEnt: Object
   },
   data: function () {
@@ -58,10 +58,10 @@ export default {
       let formattedText = ''
       let start = 0
 
-      this.text = this.text.replace('<', '\<')
-        .replace('>', '\>')
-        .replace('[', '\[')
-        .replace(']', '\]')
+      // this.text = this.text.replace('<', '<')
+      //   .replace('>', '\\>')
+      //   .replace('[', '\\[')
+      //   .replace(']', '\\]')
       for (let i = 0; i < this.ents.length; i++) {
         // highlight the span with default
         let highlightText = this.text.slice(this.ents[i].start_ind, this.ents[i].end_ind)
@@ -121,7 +121,7 @@ export default {
 
       let priorSibling = selection.anchorNode.previousSibling
       let nextSibling = selection.anchorNode.nextSibling
-      for (let i of _.range(4)) {
+      _.range(3).forEach(function () {
         if (priorSibling !== null) {
           priorText = `${priorSibling.innerText || priorSibling.textContent}${priorText}`
           priorSibling = priorSibling.previousSibling
@@ -130,8 +130,7 @@ export default {
           nextText += (nextSibling.innerText || nextSibling.textContent)
           nextSibling = nextSibling.nextSibling
         }
-      }
-
+      })
       // take only 100 chars of either side?
       nextText = nextText.length < 100 ? nextText : nextText.slice(0, 100)
       priorText = priorText.length < 100 ? priorText : priorText.slice(-100)

@@ -26,7 +26,7 @@ export default {
     docs: Array,
     moreDocs: Boolean,
     selectedDocId: Number,
-    loadingDoc: false,
+    loadingDoc: Boolean,
     validatedDocIds: Array
   },
   methods: {

@@ -28,7 +28,7 @@
             <font-awesome-icon class="cancel" v-if="pickAltConcept" icon="times-circle" @click="cancelReassign"></font-awesome-icon>
           </td>
         </tr>
-        <tr v-for="taskKey of Object.keys(this.selectedEnt ? this.selectedEnt.assignedValues : {})">
+        <tr v-for="(taskKey, index) of Object.keys(this.selectedEnt ? this.selectedEnt.assignedValues : {})" :key="index">
           <td>{{taskKey}}</td>
           <td>{{conceptSummary[taskKey] || 'n/a'}}</td>
         </tr>
@@ -39,6 +39,7 @@
 </template>
 
 <script>
+import _ from 'lodash'
 import vSelect from 'vue-select'
 
 const HIDDEN_PROPS = [
@@ -110,7 +111,7 @@ export default {
       if (this.selectedEnt !== null) {
         this.$http.get(`/api/entities/${this.selectedEnt.entity}/`).then(resp => {
           this.selectedEnt.cui = resp.data.label
-          this.$http.get(`/api/concepts?cui=${this.selectedEnt.cui}`).then(resp => {
+          this.$http.get(`/api/concepts/?cui=${this.selectedEnt.cui}`).then(resp => {
             this.selectedEnt.desc = resp.data.results[0].desc
             this.selectedEnt.tui = resp.data.results[0].tui
             this.selectedEnt.pretty_name = resp.data.results[0].pretty_name
@@ -121,7 +122,7 @@ export default {
     },
     searchCUI: _.debounce(function (term, loading) {
       loading(true)
-      this.$http.get(`/api/search-concepts?search=${term}&projectId=${this.projectId}`)
+      this.$http.get(`/api/search-concepts/?search=${term}&projectId=${this.projectId}`)
         .then(resp => {
           loading(false)
           this.searchResults = resp.data.results.map(r => {
@@ -219,7 +220,6 @@ export default {
     box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
 
     > td {
-      //border-top: 1px solid $borders;
       padding: 10px 15px;
       vertical-align: top;
     }

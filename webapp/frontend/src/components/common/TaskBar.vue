@@ -4,7 +4,7 @@
       <span class="task-name">{{currentTask.name}}</span>
     </div>
     <div class="task-bar-choices">
-        <span v-for="(val, index) of currentTask.values">
+        <span v-for="(val, index) of currentTask.values" :key="index">
           <button :disabled="taskLocked" :class="'btn task-btn-' + index"
                    @click="select(val)"> {{ val[0] }}
           </button>

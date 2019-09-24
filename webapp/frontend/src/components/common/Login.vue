@@ -44,7 +44,7 @@ export default {
         this.$cookie.set('username', this.uname)
         this.$http.defaults.headers.common['Authorization'] = `Token ${this.$cookie.get('api-token')}`
         this.$emit('login:success')
-      }).catch(err => {
+      }).catch(() => {
         this.failed = true
       })
     }

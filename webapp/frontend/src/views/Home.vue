@@ -62,7 +62,7 @@ export default {
     },
     fetchProjects: function () {
       if (this.loginSuccessful) {
-        this.$http.get('/api/project-annotate-entities').then((resp) => {
+        this.$http.get('/api/project-annotate-entities/').then((resp) => {
           this.projects = resp.data.results
         })
       }

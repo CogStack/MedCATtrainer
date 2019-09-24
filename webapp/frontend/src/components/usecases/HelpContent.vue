@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-for="(info, taskName) in descriptions">
+    <div v-for="(info, taskName, index) in descriptions" :key="index">
       <h4>Task: {{taskName}}</h4>
       <p>{{info.description}}</p>
       <table class="table table-striped">
@@ -9,7 +9,7 @@
         <th>Description</th>
         </thead>
         <tbody>
-        <tr v-for="(valueHelp, value) in info.values">
+        <tr v-for="(valueHelp, value, index) of info.values" :key="index">
           <td>{{value}}</td>
           <td>{{valueHelp}}</td>
         </tr>
@@ -27,7 +27,3 @@ export default {
   }
 }
 </script>
-
-<style scoped lang="scss">
-
-</style>
