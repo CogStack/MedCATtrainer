@@ -33,8 +33,9 @@
           <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" class="concept-summary"></concept-summary>
         </transition>
         <transition name="slide-left">
-          <add-synonym v-if="conceptSynonymSelection" :selection="conceptSynonymSelection" :projectId="projectId"
-                       @request:addSynonymComplete="conceptSynonymSelection = null" class="add-synonym"></add-synonym>
+          <add-synonym v-if="conceptSynonymSelection" :selection="conceptSynonymSelection"
+                       :projectTUIs="project.tuis" :projectId="project.id" :documentId="currentDoc.id"
+                       @request:addAnnotationComplete="addAnnotationComplete" class="add-synonym"></add-synonym>
         </transition>
         <task-bar class="tasks" :taskLocked="taskLocked"
                   @select:remove="markRemove" @select:correct="markCorrect" @select:alternative="markAlternative"></task-bar>
@@ -308,14 +309,20 @@ export default {
       this.markEntity()
     },
     markAlternative: function (item) {
-      this.$http.put(`/api/entities/${this.currentEnt.entity}`, { label: item.cui })
+      this.$http.put(`/api/entities/${this.currentEnt.entity}/`, { label: item.cui })
       this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_ALTERNATIVE
+      this.currentEnt.cui = item.cui
       // maybe the confirm should be on the alt concept box in the task bar
       // put new alt concept... already added.
       // refresh don't, move to next...??
     },
-    addSynonymComplete: function () {
-      this.prepareDoc({ update: true })
+    addAnnotationComplete: function (item) {
+      this.conceptSynonymSelection = null
+      if (item) {
+        this.$http.get(`/api/annotated-entities/${item.id}`).then(resp => {
+
+        })
+      }
     },
     addSynonym: function (selection) {
       this.conceptSynonymSelection = selection

@@ -115,7 +115,7 @@ export default {
   },
   watch: {
     'selectedEnt': 'fetchDetail',
-    'selectedCUI': 'selectedCorrectCUI'
+    'selectEnt.cui': 'fetchDetail'
   }
 }
 </script>

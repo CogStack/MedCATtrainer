@@ -43,6 +43,9 @@ export default {
       selectedCUI: null
     }
   },
+  watch: {
+    'selectedCUI': 'selectedCorrectCUI'
+  },
   methods: {
     correct: function () {
       this.$emit('select:correct')
