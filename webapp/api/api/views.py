@@ -28,6 +28,8 @@ from medcat.cat import CAT
 from medcat.utils.vocab import Vocab
 from medcat.cdb import CDB
 from medcat.utils.helpers import prepare_name
+from medcat.utils.loggers import basic_logger
+log = basic_logger("cdb")
 
 
 # Maps between IDs and objects 
@@ -182,9 +184,13 @@ def add_annotation(request):
     # Get project id
     p_id = request.data['project_id']
     d_id = request.data['document_id']
-    right_context = request.data['right_context']
     source_val = request.data['source_value']
+    right_context = str(source_val) + str(request.data['right_context'])
     cui = request.data['cui']
+
+    log.debug("Annotation being added")
+    log.debug(str(request.data))
+    log.debug("Done")
 
     # Get project and the right version of cat
     user = request.user
