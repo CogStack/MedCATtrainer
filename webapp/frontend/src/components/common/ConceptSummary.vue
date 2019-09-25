@@ -21,12 +21,11 @@
         </tr>
         <tr>
           <td>Concept ID</td>
-          <td @keyup.stop>
-            <span v-if="!pickAltConcept">{{conceptSummary['Concept ID']}}</span>
-            <v-select class="picker" v-if="pickAltConcept" v-model="selectedCUI" label="name" @search="searchCUI" :options="searchResults"></v-select>
-            <font-awesome-icon class="edit" v-if="!pickAltConcept" icon="edit" @click="pickAltConcept = true"></font-awesome-icon>
-            <font-awesome-icon class="cancel" v-if="pickAltConcept" icon="times-circle" @click="cancelReassign"></font-awesome-icon>
-          </td>
+          <td >{{conceptSummary['Concept ID']}}</td>
+        </tr>
+        <tr>
+          <td>Accuracy</td>
+          <td >{{conceptSummary['Accuracy'] ?  conceptSummary['Accuracy'].toFixed(2) : 'n/a'}}</td>
         </tr>
         <tr v-for="(taskKey, index) of Object.keys(this.selectedEnt ? this.selectedEnt.assignedValues : {})" :key="index">
           <td>{{taskKey}}</td>
@@ -39,12 +38,9 @@
 </template>
 
 <script>
-import _ from 'lodash'
-import vSelect from 'vue-select'
-
 const HIDDEN_PROPS = [
   'value', 'project', 'document', 'start_ind', 'end_ind',
-  'entity', 'assignedValues', 'correct', 'id', 'user'
+  'entity', 'assignedValues', 'id', 'user', 'deleted'
 ]
 
 const PROP_MAP = {
@@ -56,25 +52,18 @@ const PROP_MAP = {
 }
 
 const CONST_PROPS_ORDER = [
-  'Name', 'Description', 'Term ID', 'Concept ID'
+  'Name', 'Description', 'Term ID', 'Concept ID', 'Accuracy'
 ]
 
 export default {
   name: 'ConceptSummary',
-  components: {
-    vSelect
-  },
   props: {
-    selectedEnt: Object,
-    tasks: Array
+    selectedEnt: Object
   },
   data: function () {
     return {
       conceptSummary: {},
-      priorSummary: null,
-      pickAltConcept: false,
-      searchResults: [],
-      selectedCUI: null
+      priorSummary: null
     }
   },
   methods: {
@@ -119,34 +108,6 @@ export default {
           })
         })
       }
-    },
-    searchCUI: _.debounce(function (term, loading) {
-      loading(true)
-      this.$http.get(`/api/search-concepts/?search=${term}&projectId=${this.projectId}`)
-        .then(resp => {
-          loading(false)
-          this.searchResults = resp.data.results.map(r => {
-            return {
-              name: r.pretty_name,
-              cui: r.cui,
-              desc: r.desc,
-              synonyms: _.replace(r.synonyms, new RegExp(',', 'g'), ', ')
-            }
-          })
-        })
-    }, 400),
-    selectedCorrectCUI: function (item) {
-      if (item) {
-        let payload = { 'label': item.cui }
-        this.$http.put(`/api/entities/${this.selectedEnt.entity}`, payload).then(resp => {
-          this.fetchDetail()
-        })
-      }
-    },
-    cancelReassign: function () {
-      this.pickAltConcept = false
-      this.searchResults = []
-      this.selectedCUI = null
     }
   },
   mounted: function () {
@@ -173,35 +134,6 @@ export default {
   overflow: auto
 }
 
-.cui-btns {
-  opacity: 0.7;
-  float: right;
-  position: relative;
-
-  &:hover {
-    opacity: 0.9;
-    cursor: pointer;
-  }
-}
-
-.edit {
-  @extend .cui-btns;
-  top: 7px;
-}
-
-.cancel {
-  @extend .cui-btns;
-  top: 10px;
-}
-
-.picker {
-   width: calc(100% - 30px);
-  display: inline-block;
-}
-.editing {
-  opacity: 0.9;
-}
-
 .ent-name {
   padding: 10px;
   font-size: 12pt;
@@ -216,6 +148,7 @@ export default {
 }
 
 .concept-detail-table {
+  width: 100%;
   tbody > tr {
     box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
 
@@ -225,4 +158,5 @@ export default {
     }
   }
 }
+
 </style>

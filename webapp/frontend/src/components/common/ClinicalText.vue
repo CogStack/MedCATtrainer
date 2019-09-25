@@ -33,6 +33,8 @@ export default {
   },
   props: {
     text: String,
+    taskName: String,
+    taskValues: Array,
     task: Object,
     ents: Array,
     loading: Boolean,
@@ -52,7 +54,6 @@ export default {
     formattedText: function () {
       if (this.loading || !this.text || !this.ents || this.ents.length === 0) { return '' }
 
-      const taskValueNamesToButtonIndices = Object.assign(...this.task.values.map((val, i) => ({ [val[0]]: i })))
       const taskHighlightDefault = 'highlight-task-default'
 
       let formattedText = ''
@@ -62,9 +63,8 @@ export default {
         // highlight the span with default
         let highlightText = this.text.slice(this.ents[i].start_ind, this.ents[i].end_ind)
         let styleClass = taskHighlightDefault
-
-        if (this.ents[i].assignedValues[this.task.name] !== null) {
-          let btnIndex = taskValueNamesToButtonIndices[this.ents[i].assignedValues[this.task.name]]
+        if (this.ents[i].assignedValues[this.taskName] !== null) {
+          let btnIndex = this.taskValues.indexOf(this.ents[i].assignedValues[this.taskName])
           styleClass = `highlight-task-${btnIndex}`
         }
 
@@ -127,8 +127,8 @@ export default {
         }
       })
       // take only 100 chars of either side?
-      nextText = nextText.length < 100 ? nextText : nextText.slice(0, 100)
-      priorText = priorText.length < 100 ? priorText : priorText.slice(-100)
+      nextText = nextText.length < 50 ? nextText : nextText.slice(0, 50)
+      priorText = priorText.length < 50 ? priorText : priorText.slice(-50)
       this.selection = {
         selStr: selStr,
         prevText: priorText,

@@ -20,7 +20,6 @@
 export default {
   name: 'NavBar',
   props: {
-    tasks: Array,
     ents: Array,
     currentEnt: Object
   },
@@ -32,7 +31,6 @@ export default {
       return this.ents === null ? true : this.ents[0] === this.currentEnt
     },
     submitDisabled: function () {
-      // all tasks complete for all ents
       if (this.ents !== null) {
         return !this.ents.every(e => {
           return Object.values(e.assignedValues).every(e => e !== null)

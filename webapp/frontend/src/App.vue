@@ -65,9 +65,9 @@ export default {
 }
 
 .icon {
-  height: 30px;
+  height: 38px;
   position: relative;
-  bottom: 3px;
+  bottom: 7px;
 }
 
 </style>
