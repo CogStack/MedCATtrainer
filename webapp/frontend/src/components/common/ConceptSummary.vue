@@ -2,18 +2,15 @@
   <div class="sidebar">
     <div class="title">Concept Summary</div>
     <div class="summary">
-      <div class="ent-name">
-        {{selectedEnt !== null ? selectedEnt.value : ''}}
-      </div>
       <table class="concept-detail-table">
         <tbody>
         <tr>
-          <td>Name</td>
-          <td>{{conceptSummary ? conceptSummary['Name'] : 'n/a'}}</td>
+          <td>Annotated Text</td>
+          <td class="ent-name">{{selectedEnt !== null ? selectedEnt.value : ''}}</td>
         </tr>
         <tr>
-          <td>Description</td>
-          <td v-html="conceptSummary.Description === 'nan' ? 'n/a' : conceptSummary.Description || 'n/a'"></td>
+          <td>Name</td>
+          <td>{{conceptSummary ? conceptSummary['Name'] : 'n/a'}}</td>
         </tr>
         <tr>
           <td>Term ID</td>
@@ -30,6 +27,10 @@
         <tr v-for="(taskKey, index) of Object.keys(this.selectedEnt ? this.selectedEnt.assignedValues : {})" :key="index">
           <td>{{taskKey}}</td>
           <td>{{conceptSummary[taskKey] || 'n/a'}}</td>
+        </tr>
+        <tr>
+          <td>Description</td>
+          <td v-html="conceptSummary.Description === 'nan' ? 'n/a' : conceptSummary.Description || 'n/a'"></td>
         </tr>
         </tbody>
       </table>
@@ -115,7 +116,7 @@ export default {
   },
   watch: {
     'selectedEnt': 'fetchDetail',
-    'selectEnt.cui': 'fetchDetail'
+    'selectedEnt.cui': 'fetchDetail'
   }
 }
 </script>

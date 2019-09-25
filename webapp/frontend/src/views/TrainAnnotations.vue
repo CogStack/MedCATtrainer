@@ -37,8 +37,8 @@
                        :projectTUIs="project.tuis" :projectId="project.id" :documentId="currentDoc.id"
                        @request:addAnnotationComplete="addAnnotationComplete" class="add-synonym"></add-synonym>
         </transition>
-        <task-bar class="tasks" :taskLocked="taskLocked"
-                  @select:remove="markRemove" @select:correct="markCorrect" @select:alternative="markAlternative"></task-bar>
+        <task-bar class="tasks" :taskLocked="taskLocked" @select:remove="markRemove" :projectTUIs="(project || {}).tuis"
+                  @select:correct="markCorrect" @select:alternative="markAlternative"></task-bar>
         <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt"
                  @select:next="next" @select:back="back" @submit="submitDoc"></nav-bar>
       </div>
@@ -312,15 +312,12 @@ export default {
       this.$http.put(`/api/entities/${this.currentEnt.entity}/`, { label: item.cui })
       this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_ALTERNATIVE
       this.currentEnt.cui = item.cui
-      // maybe the confirm should be on the alt concept box in the task bar
-      // put new alt concept... already added.
-      // refresh don't, move to next...??
     },
-    addAnnotationComplete: function (item) {
+    addAnnotationComplete: function (addedAnnotationId) {
       this.conceptSynonymSelection = null
-      if (item) {
-        this.$http.get(`/api/annotated-entities/${item.id}`).then(resp => {
-
+      if (addedAnnotationId) {
+        this.$http.get(`/api/annotated-entities/${addedAnnotationId}/`).then(resp => {
+          this.ents.push(resp.data)
         })
       }
     },
@@ -344,13 +341,14 @@ export default {
         this.docToSubmit = null
       })
 
-      // TODO: api/submit-document/, carry out all REST calls?? or just
       let payload = {
         project_id: this.project.id,
         document_id: this.currentDoc.id
       }
-      this.$http.post(`/api/submit-document/`, payload).then(resp => {
-        // go to next document OR if finished go to menu screen?
+      this.$http.post(`/api/submit-document/`, payload).then(() => {
+        if (this.currentDoc !== this.docs.slice(-1)[0]) {
+          this.currentDoc = this.docs[_.findIndex(this.docs, d => d === this.currentDoc.id) + 1]
+        }
       })
     }
   }

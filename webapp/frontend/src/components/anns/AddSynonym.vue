@@ -1,12 +1,12 @@
 <template>
   <div>
     <div class="main-panel">
-      <h4 class="title">Add Synonym</h4>
+      <h4 class="title">Add Annotation</h4>
       <div class="sidebar">
         <table class="add-synonym-table">
           <tbody>
           <tr>
-            <td>New Synonym</td>
+            <td>New Annotation</td>
             <td>{{name}}</td>
           </tr>
           <tr>
@@ -17,7 +17,7 @@
           </tr>
           <tr>
             <td>Context</td>
-            <td class="context"><span class="highlight">{{this.name}}</span>{{this.nextText}}</td>
+            <td class="context">{{this.prevText}}<span class="highlight">{{this.name}}</span>{{this.nextText}}</td>
           </tr>
           <tr>
             <td>Synonyms</td>
@@ -28,11 +28,11 @@
       </div>
     </div>
     <div class="action-buttons">
-      <button @click="submit()" class="btn btn-primary">
+      <button @click="submit()" class="btn task-btn-0">
         <font-awesome-icon icon="plus"></font-awesome-icon>
         Add Synonym
       </button>
-      <button @click="cancel()" class="btn btn-danger">
+      <button @click="cancel()" class="btn task-btn-1">
         <font-awesome-icon icon="times"></font-awesome-icon>
         Cancel
       </button>
@@ -53,8 +53,8 @@ export default {
   props: {
     selection: Object,
     projectTUIs: String,
-    projectId: String,
-    documentId: String
+    projectId: Number,
+    documentId: Number
   },
   data: function () {
     return {
@@ -73,7 +73,7 @@ export default {
   methods: {
     searchCUI: _.debounce(function (term, loading) {
       loading(true)
-      this.$http.get(`/api/search-concepts/?search=${term}&tui=${this.projectTUIs}`)
+      this.$http.get(`/api/search-concepts/?search=${term}&tui__in=${this.projectTUIs}`)
         .then(resp => {
           loading(false)
           this.searchResults = resp.data.results.map(r => {
@@ -95,13 +95,13 @@ export default {
     submit: function () {
       const payload = {
         source_value: this.selection.selStr,
-        document_id: this.document_id,
-        project_id: this.project_id,
+        document_id: this.documentId,
+        project_id: this.projectId,
         right_context: this.selection.nextText,
         cui: this.cui
       }
       this.$http.post('/api/add-annotation/', payload).then(resp => {
-        this.$emit('request:addAnnotationComplete', resp.data.results)
+        this.$emit('request:addAnnotationComplete', resp.data.id)
       })
     },
     cancel: function () {
@@ -138,11 +138,11 @@ export default {
 }
 
 .add-synonym-table {
+  width: 400px;
   tbody > tr {
     box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
 
     > td {
-      //border-top: 1px solid $borders;
       padding: 10px 15px;
       vertical-align: top;
       color: $text;

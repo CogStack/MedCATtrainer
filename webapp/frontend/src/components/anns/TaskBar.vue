@@ -17,10 +17,13 @@
           Alternative Concept</button>
       </span>
       <div class="alt-concept-picker" @keyup.stop>
-        <v-select class="picker" v-if="altSearch" v-model="selectedCUI" label="name" @search="searchCUI" :options="searchResults"></v-select>
+        <v-select class="picker" v-if="altSearch" v-model="selectedCUI"
+                  label="name" @search="searchCUI" :options="searchResults"
+                  :inputId="'pickerID'"></v-select>
         <font-awesome-icon class="cancel" v-if="altSearch" icon="times-circle" @click="cancelReassign"></font-awesome-icon>
       </div>
     </div>
+  </div>
   </div>
 </template>
 
@@ -34,7 +37,8 @@ export default {
     vSelect
   },
   props: {
-    taskLocked: Boolean
+    taskLocked: Boolean,
+    projectTUIs: String
   },
   data: function () {
     return {
@@ -58,7 +62,7 @@ export default {
     },
     searchCUI: _.debounce(function (term, loading) {
       loading(true)
-      this.$http.get(`/api/search-concepts/?search=${term}&projectId=${this.projectId}`)
+      this.$http.get(`/api/search-concepts/?search=${term}&tui__in=${this.projectTUIs}`)
         .then(resp => {
           loading(false)
           this.searchResults = resp.data.results.map(r => {
@@ -99,6 +103,9 @@ export default {
             break
           case 2:
             this.alternative()
+            this.$nextTick(function () {
+              document.getElementById('pickerID').focus()
+            })
             break
         }
       }
