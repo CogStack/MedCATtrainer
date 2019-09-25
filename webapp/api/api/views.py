@@ -7,6 +7,8 @@ from .data_utils import text_classification_csv_import
 from .permissions import *
 from .models import *
 from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import BaseInFilter
+from django_filters import rest_framework as drf
 from rest_framework import generics
 from rest_framework import filters
 from rest_framework.response import Response
@@ -76,11 +78,25 @@ class DocumentViewSet(viewsets.ModelViewSet):
     filterset_fields = ['dataset']
 
 
+class TextInFilter(drf.BaseInFilter, drf.CharFilter):
+    pass
+
+
+class ConceptFilter(drf.FilterSet):
+    tui__in = TextInFilter(field_name='tui', lookup_expr='in')
+    cui__in = TextInFilter(field_name='cui', lookup_expr='in')
+    class Meta:
+        model = Concept
+        fields = ['tui', 'cui']
+
+
 class ConceptView(generics.ListAPIView):
     queryset = Concept.objects.all()
     serializer_class = ConceptSerializer
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['pretty_name']
+    filterset_class = ConceptFilter
+    filterset_fields = ['tui', 'cui']
 
 
 class EntityViewSet(viewsets.ModelViewSet):
