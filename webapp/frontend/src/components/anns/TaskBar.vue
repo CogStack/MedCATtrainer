@@ -13,7 +13,7 @@
           Remove</button>
       </span>
       <span>
-        <button :disabled="taskLocked" class="btn task-btn-1" @click="alternative">
+        <button :disabled="taskLocked" class="btn task-btn-2" @click="alternative">
           Alternative Concept</button>
       </span>
       <div class="alt-concept-picker" @keyup.stop>
@@ -23,7 +23,6 @@
         <font-awesome-icon class="cancel" v-if="altSearch" icon="times-circle" @click="cancelReassign"></font-awesome-icon>
       </div>
     </div>
-  </div>
   </div>
 </template>
 

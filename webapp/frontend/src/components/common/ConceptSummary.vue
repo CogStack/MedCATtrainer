@@ -115,8 +115,10 @@ export default {
     this.fetchDetail()
   },
   watch: {
-    'selectedEnt': 'fetchDetail',
-    'selectedEnt.cui': 'fetchDetail'
+    'selectedEnt': {
+      handler: 'fetchDetail',
+      deep: true
+    }
   }
 }
 </script>

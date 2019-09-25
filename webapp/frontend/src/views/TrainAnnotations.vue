@@ -289,10 +289,12 @@ export default {
     selectEntity: function (entIdx) {
       this.currentEnt = this.ents[entIdx]
     },
-    markEntity: function () {
+    markEntity: function (noMove) {
       this.taskLocked = true
       this.$http.put(`/api/annotated-entities/${this.currentEnt.id}/`, this.currentEnt).then(resp => {
-        if (this.ents.slice(-1)[0].id !== this.currentEnt.id) { this.next() } else { this.currentEnt = null }
+        if (noMove !== false) {
+          if (this.ents.slice(-1)[0].id !== this.currentEnt.id) { this.next() } else { this.currentEnt = null }
+        }
         this.taskLocked = false
       })
     },
@@ -309,8 +311,15 @@ export default {
       this.markEntity()
     },
     markAlternative: function (item) {
-      this.$http.put(`/api/entities/${this.currentEnt.entity}/`, { label: item.cui })
-      this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_ALTERNATIVE
+      this.taskLocked = true
+      this.$http.post(`/api/get-create-entity/`, { label: item.cui }).then(resp => {
+        this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_ALTERNATIVE
+        this.currentEnt.entity = resp.data.entity_id
+        this.markEntity(false)
+        let i = this.ents.indexOf(this.currentEnt)
+        this.currentEnt = JSON.parse(JSON.stringify(this.currentEnt))
+        this.ents[i] = this.currentEnt
+      })
       this.currentEnt.cui = item.cui
     },
     addAnnotationComplete: function (addedAnnotationId) {
