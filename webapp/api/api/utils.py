@@ -63,8 +63,46 @@ def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
                 ann_ent.start_ind = ent.start_char
                 ann_ent.end_ind = ent.end_char
                 ann_ent.acc = ent._.acc
-                ann_ent.correct = True
                 ann_ent.save()
+
+
+def create_annotation(source_val, right_context, cui, user, project, document):
+    text = document.text
+    id = None
+
+    start = None
+    end = None
+    if right_context in text:
+        start = text.index(right_context)
+    elif source_val in text:
+        start = text.index(source_val)
+
+    if start is not None and len(source_val) > 0 and len(cui) > 0:
+        end = start + len(source_val)
+
+        cnt = Entity.objects.filter(label=cui).count()
+        if cnt == 0:
+            # Create the entity
+            entity = Entity()
+            entity.label = cui
+            entity.save()
+        else:
+            entity = Entity.objects.get(label=cui)
+
+        ann_ent = AnnotatedEntity()
+        ann_ent.user = user
+        ann_ent.project = project
+        ann_ent.document = document
+        ann_ent.entity = entity
+        ann_ent.value = source_val
+        ann_ent.start_ind = start
+        ann_ent.end_ind = end
+        ann_ent.acc = 1
+        ann_ent.validated = True
+        ann_ent.save()
+        id = ann_ent.id
+
+    return id
 
 
 def train_medcat(cat, project, document):

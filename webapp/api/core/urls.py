@@ -41,7 +41,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('api/test/', api.views.test),
-    path('api/add-synonym/', api.views.add_synonym),
+    path('api/add-annotation/', api.views.add_annotation),
     path('api/submit-document/', api.views.submit_document),
     re_path('^.*$', api.views.index, name='index'), # Match everything else to home
 ]

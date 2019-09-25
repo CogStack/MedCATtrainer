@@ -13,7 +13,7 @@ from rest_framework import generics
 from rest_framework import filters
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .utils import get_medcat, add_annotations, remove_annotations, train_medcat
+from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
 import os
 
 # For local testing, put envs
@@ -176,20 +176,22 @@ def name2cuis(request):
 
 
 @api_view(http_method_names=['POST'])
-def add_synonym(request):
-    global cat
+def add_annotation(request):
     # Get project id
     p_id = request.data['project_id']
-    text = request.data['context']
-    source_val = request.data['synonym']
+    d_id = request.data['document_id']
+    right_context = request.data['right_context']
+    source_val = request.data['source_value']
     cui = request.data['cui']
 
     # Get project and the right version of cat
+    user = request.user
     project = ProjectAnnotateEntities.objects.get(id=p_id)
-    cat = get_medcat(cat, CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
-    cat.add_name(cui=cui, source_val=source_val, text=text)
+    document = Document.objects.get(id=d_id)
 
-    return Response({'message': 'Synonym added successfully'})
+    id = create_annotation(source_val, right_context, cui, user, project, document)
+
+    return Response({'message': 'Annotation added successfully', 'id': id})
 
 
 @api_view(http_method_names=['POST'])
