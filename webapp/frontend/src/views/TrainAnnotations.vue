@@ -8,10 +8,10 @@
       </div>
 
       <div class="half-width meta">
-        <h5 class="file-name-heading" v-if="docs.length > 0">
+        <h5 class="file-name-heading" v-if="((docs || {}).length || 0) > 0">
           <span class="file-name">{{ currentDoc.name }}</span>
           <span class="divider">|</span>
-          <span class="file-name">{{ totalDocs - (project !== null ? project.validated_documents.length : 0)}} Remaining</span>
+          <span class="files-remaining">{{ totalDocs - (project !== null ? project.validated_documents.length : 0)}} Remaining</span>
         </h5>
         <button class="help btn btn-default" @click="helpModal = true">
           <font-awesome-icon icon="question-circle"></font-awesome-icon>
@@ -142,7 +142,7 @@ export default {
   },
   data: function () {
     return {
-      docs: [],
+      docs: null,
       totalDocs: 0,
       nextDocSetUrl: null,
       nextEntSetUrl: null,
@@ -150,7 +150,7 @@ export default {
       taskName: TASK_NAME,
       taskValues: TASK_VALUES,
       project: null,
-      validatedDocuments: [],
+      validatedDocuments: null,
       ents: null,
       currentDoc: null,
       currentEnt: null,
@@ -183,7 +183,7 @@ export default {
 
       this.$http.get(`/api/documents/${params}`).then(resp => {
         if (resp.data.results.length > 0) {
-          this.docs = this.docs.concat(resp.data.results)
+          this.docs = resp.data.previous === null ? resp.data.results : this.docs.concat(resp.data.results)
           this.totalDocs = resp.data.count
           this.nextDocSetUrl = resp.data.next
 
@@ -409,6 +409,17 @@ export default {
 }
 
 .file-name {
+  display: inline-block;
+  position: relative;
+  top: 5px;
+  font-size: 22px;
+  max-width: 500px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.files-remaining {
   font-size: 22px;
 }
 

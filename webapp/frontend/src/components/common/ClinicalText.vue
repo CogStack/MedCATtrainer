@@ -52,7 +52,10 @@ export default {
   },
   computed: {
     formattedText: function () {
-      if (this.loading || !this.text || !this.ents || this.ents.length === 0) { return '' }
+      if (this.loading || !this.text || !this.ents) { return '' }
+      if (this.ents.length === 0) {
+        return `<div>${this.text}</div>`
+      }
 
       const taskHighlightDefault = 'highlight-task-default'
       let formattedText = ''

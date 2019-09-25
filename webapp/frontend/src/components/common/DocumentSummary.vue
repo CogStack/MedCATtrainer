@@ -7,11 +7,11 @@
            :class="{'selected-doc': selectedDocId === doc.id}" @click="loadDoc(doc.id)">
         <font-awesome-icon v-if="validatedDocIds.includes(doc.id)" class="validated-doc" icon="check"></font-awesome-icon>
         <div class="note-summary">
-          {{doc.text}}
+          {{doc.text === 'nan' ? '' : (doc.text || '')}}
         </div>
       </div>
       <div class="clickable">
-        <div v-if="moreDocs" @click="loadMoreDocs">
+        <div v-if="moreDocs" @click="loadMoreDocs" class="more-docs">
           <font-awesome-icon icon="plus"></font-awesome-icon>More Docs
         </div>
       </div>
@@ -108,6 +108,11 @@ export default {
   width: 100%;
   background: $loading-background-color;
   opacity: 0.3;
+}
+
+.more-docs {
+  color: $primary;
+  text-align: center;
 }
 
 .note-summary {
