@@ -4,6 +4,7 @@ django-filter~=2.2
 django-filters~=0.2
 django-polymorphic~=2.1
 djangorestframework~=3.10
+django-background-tasks~=1.2
 numpy~=1.15
 pandas~=0.23
 medcat~=0.2

@@ -38,9 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'django_filters',
-    'api',
     'rest_framework.authtoken',
+    'django_filters',
+    'background_task',
+    'api',
 ]
 
 MIDDLEWARE = [
@@ -142,3 +143,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "..", "frontend", "dist", "static"),
 ]
+
+# BG TASKS
+MAX_RUN_TIME=60*60*10

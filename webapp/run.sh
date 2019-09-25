@@ -7,4 +7,5 @@ python /home/api/manage.py makemigrations api --noinput
 python /home/api/manage.py migrate --noinput
 python /home/api/manage.py migrate api --noinput
 
+python /home/api/manage.py process_tasks &
 uwsgi --http :8000 --master --chdir /home/api/ --module core.wsgi

@@ -84,7 +84,7 @@ class Project(PolymorphicModel):
     create_time = models.DateTimeField(auto_now_add=True)
     members = models.ManyToManyField(settings.AUTH_USER_MODEL)
     dataset = models.ForeignKey('Dataset', on_delete=models.CASCADE)
-    validated_documents = models.ManyToManyField(Document)
+    validated_documents = models.ManyToManyField(Document, default=None, blank=True)
     cuis = models.TextField(default=None, blank=True)
     tuis = models.TextField(default=None, blank=True)
 

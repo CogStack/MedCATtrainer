@@ -1,6 +1,7 @@
 from django.http import HttpResponse
 from io import StringIO
 import json
+from background_task import background
 
 from django.contrib import admin
 from .models import *
@@ -19,7 +20,6 @@ admin.site.register(MetaTaskValue)
 admin.site.register(MetaTask)
 admin.site.register(MetaAnnotation)
 admin.site.register(Vocabulary)
-admin.site.register(ConceptDB)
 
 
 def download(modeladmin, request, queryset):
@@ -60,13 +60,47 @@ def download(modeladmin, request, queryset):
     response['Content-Disposition'] = 'attachment; filename={}'.format(f_name)
     return response
 
+
 class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
     model = ProjectAnnotateEntities
     actions = [download]
 admin.site.register(ProjectAnnotateEntities, ProjectAnnotateEntitiesAdmin)
+
 
 class AnnotatedEntityAdmin(admin.ModelAdmin):
     list_display = ('user', 'project', 'document', 'entity', 'value', 'deleted', 'validated')
     list_filter = ('user', 'project', 'document', 'deleted', 'validated')
     model = AnnotatedEntity
 admin.site.register(AnnotatedEntity, AnnotatedEntityAdmin)
+
+@background(schedule=5)
+def _import_concepts(id):
+    from medcat.cdb import CDB
+    concept_db = ConceptDB.objects.get(id=id)
+    cdb = CDB()
+    cdb.load_dict(concept_db.cdb_file.path)
+
+    for cui in cdb.cui2pretty_name:
+        cnt = Concept.objects.filter(cui=cui).count()
+        if cnt == 0:
+            tui = cdb.cui2tui.get(cui, 'unk')
+            concept = Concept()
+            concept.pretty_name = cdb.cui2pretty_name.get(cui, '')
+            concept.cui = cui
+            concept.tui = tui
+            concept.semantic_type = cdb.tui2name.get(tui, '')
+            concept.desc = cdb.cui2desc.get(cui, '')
+            concept.synonyms = ",".join(cdb.cui2original_names.get(cui, []))
+            #concept.vocab = cdb.cui2ontos.get(cui, '')
+            concept.save()
+
+
+def import_concepts(modeladmin, request, queryset):
+    for concept_db in queryset:
+        _import_concepts(concept_db.id)
+
+class ConceptDBAdmin(admin.ModelAdmin):
+    model = ConceptDB
+    actions = [import_concepts]
+admin.site.register(ConceptDB, ConceptDBAdmin)
+

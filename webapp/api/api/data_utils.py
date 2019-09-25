@@ -4,7 +4,7 @@ import numpy as np
 
 
 def text_from_csv(dataset):
-    df = pandas.read_csv(dataset.original_file.path)
+    df = pandas.read_csv(dataset.original_file.path, escapechar='\\')
 
     if 'text' not in df.columns:
         # TODO: Fix me
