@@ -29,7 +29,7 @@ from medcat.utils.vocab import Vocab
 from medcat.cdb import CDB
 from medcat.utils.helpers import prepare_name
 from medcat.utils.loggers import basic_logger
-log = basic_logger("cdb")
+log = basic_logger("api.views")
 
 
 # Maps between IDs and objects 

@@ -3,6 +3,8 @@ from medcat.cdb import CDB
 from medcat.utils.vocab import Vocab
 from medcat.cat import CAT
 from medcat.utils.helpers import tkn_inds_from_doc, prepare_name
+from medcat.utils.loggers import basic_logger
+log = basic_logger("api.utils")
 
 def remove_annotations(document, project, partial=False):
     try:
@@ -66,6 +68,19 @@ def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
                 ann_ent.save()
 
 
+def _remove_overlap(project, document, start, end):
+    anns = AnnotatedEntity.objects.filter(project=project, document=document)
+
+    for ann in anns:
+        if ann.start_ind >= start and ann.start_ind <= end:
+            log.debug("Removed")
+            log.debug(str(ann))
+            ann.delete()
+        elif ann.end_ind >= start and ann.end_ind <= end:
+            ann.delete()
+            log.debug("Removed")
+            log.debug(str(ann))
+
 def create_annotation(source_val, right_context, cui, user, project, document):
     text = document.text
     id = None
@@ -78,7 +93,9 @@ def create_annotation(source_val, right_context, cui, user, project, document):
         start = text.index(source_val)
 
     if start is not None and len(source_val) > 0 and len(cui) > 0:
+        # Remove overlaps
         end = start + len(source_val)
+        _remove_overlap(project, document, start, end)
 
         cnt = Entity.objects.filter(label=cui).count()
         if cnt == 0:
