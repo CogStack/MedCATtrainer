@@ -25,19 +25,20 @@
                         :selectedDocId="currentDoc !== null ? currentDoc.id : null" :loadingDoc="loadingDoc"
                         @request:nextDocSet="fetchDocuments()" @request:loadDoc="loadDoc"></document-summary>
       <clinical-text :loading="loadingDoc" :text="currentDoc !== null ? currentDoc.text : null"
-                     :currentEnt="currentEnt" :ents="ents" :task="task" @select:concept="selectEntity"
-                      @select:addSynonym="addSynonym">
+                     :currentEnt="currentEnt" :ents="ents" :taskName="taskName" :taskValues="taskValues"
+                     @select:concept="selectEntity" @select:addSynonym="addSynonym">
       </clinical-text>
       <div class="sidebar-container">
         <transition name="slide-left">
-          <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" :tasks="[task]" class="concept-summary"></concept-summary>
+          <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" class="concept-summary"></concept-summary>
         </transition>
         <transition name="slide-left">
           <add-synonym v-if="conceptSynonymSelection" :selection="conceptSynonymSelection" :projectId="projectId"
                        @request:addSynonymComplete="conceptSynonymSelection = null" class="add-synonym"></add-synonym>
         </transition>
-        <task-bar class="tasks" :currentTask="task" :tasks="[task]" :taskLocked="taskLocked" @select:taskValue="markEntity"></task-bar>
-        <nav-bar class="nav" :tasks="[task]" :ents="ents" :currentEnt="currentEnt"
+        <task-bar class="tasks" :taskLocked="taskLocked"
+                  @select:remove="markRemove" @select:correct="markCorrect" @select:alternative="markAlternative"></task-bar>
+        <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt"
                  @select:next="next" @select:back="back" @submit="submitDoc"></nav-bar>
       </div>
     </div>
@@ -106,25 +107,18 @@ import DocumentSummary from '@/components/common/DocumentSummary.vue'
 import Modal from '@/components/common/Modal.vue'
 import ClinicalText from '@/components/common/ClinicalText.vue'
 import NavBar from '@/components/common/NavBar.vue'
-import TaskBar from '@/components/common/TaskBar.vue'
+import TaskBar from '@/components/anns/TaskBar.vue'
 import AddSynonym from '@/components/anns/AddSynonym.vue'
 
 // Only retrieve 1000 entities at a time??
 const ENT_LIMIT = 1000
 
-const annotationTask = {
-  name: 'Concept Annotation',
-  propName: 'correct',
-  values: [
-    ['Correct', 1],
-    ['Incorrect', 0]
-  ]
-}
+const TASK_NAME = 'Concept Annotation'
+const CONCEPT_CORRECT = 'Correct'
+const CONCEPT_REMOVED = 'Deleted'
+const CONCEPT_ALTERNATIVE = 'Alternative'
 
-const taskValueToBackendValue = {
-  true: 'Correct',
-  false: 'Incorrect'
-}
+const TASK_VALUES = [CONCEPT_CORRECT, CONCEPT_REMOVED, CONCEPT_ALTERNATIVE]
 
 export default {
   name: 'TrainAnnotations',
@@ -151,8 +145,9 @@ export default {
       totalDocs: 0,
       nextDocSetUrl: null,
       nextEntSetUrl: null,
-      task: annotationTask,
       taskLocked: false,
+      taskName: TASK_NAME,
+      taskValues: TASK_VALUES,
       project: null,
       validatedDocuments: [],
       ents: null,
@@ -182,7 +177,7 @@ export default {
       })
     },
     fetchDocuments: function () {
-      let params = this.nextDocSetUrl === null ? `?dataset=${this.projectId}`
+      let params = this.nextDocSetUrl === null ? `?dataset=${this.project.dataset}`
         : this.nextDocSetUrl.split('/').slice(-1)[0]
 
       this.$http.get(`/api/documents/${params}`).then(resp => {
@@ -236,11 +231,14 @@ export default {
       this.currentDoc = _.find(this.docs, (d) => d.id === docId)
       this.prepareDoc()
     },
-    prepareDoc: function () {
+    prepareDoc: function (params) {
       this.loadingDoc = true
       let payload = {
         project_id: this.project.id,
         document_ids: [this.currentDoc.id]
+      }
+      if (params) {
+        payload = Object.assign(payload, params)
       }
       this.$http.post('/api/prepare-documents/', payload).then(resp => {
         // assuming a 200 is fine here.
@@ -256,24 +254,26 @@ export default {
         this.$http.get(`/api/annotated-entities/${params}`).then(resp => {
           let useAssignedVal = !this.project.require_entity_validation ||
             this.project.validated_documents.indexOf(this.currentDoc.id) !== -1
+          // logic now is, if deleted, show as removed...
+          // if synonym added show as validated concept.
+          // have no way of storing state of added synonym or not...
+
+          let entMapper = e => {
+            e.assignedValues = {}
+            e.assignedValues[TASK_NAME] = null
+            if (useAssignedVal) {
+              e.assignedValues[TASK_NAME] = e.deleted ? CONCEPT_REMOVED : CONCEPT_CORRECT
+            }
+            return e
+          }
 
           if (resp.data.previous === null) {
             this.ents = resp.data.results
-            this.ents.map(e => {
-              e.assignedValues = {}
-              e.assignedValues[this.task.name] = useAssignedVal
-                ? taskValueToBackendValue[e[this.task.propName]] : null
-              return e
-            })
+            this.ents.map(entMapper)
             this.currentEnt = this.ents[0]
           } else {
             const newEnts = resp.data.results
-            newEnts.map(e => {
-              e.assignedValues = {}
-              e.assignedValues[this.task.name] = useAssignedVal
-                ? taskValueToBackendValue[e[this.task.propName]] : null
-              return e
-            })
+            newEnts.map(entMapper)
             this.ents = this.ents.concat(newEnts)
           }
           this.nextEntSetUrl = resp.data.next
@@ -288,15 +288,34 @@ export default {
     selectEntity: function (entIdx) {
       this.currentEnt = this.ents[entIdx]
     },
-    markEntity: function (taskValue) {
-      this.currentEnt.assignedValues[this.task.name] = taskValue[0]
-      this.currentEnt[this.task.propName] = taskValue[1]
-      this.currentEnt.validated = 1
+    markEntity: function () {
       this.taskLocked = true
       this.$http.put(`/api/annotated-entities/${this.currentEnt.id}/`, this.currentEnt).then(resp => {
         if (this.ents.slice(-1)[0].id !== this.currentEnt.id) { this.next() } else { this.currentEnt = null }
         this.taskLocked = false
       })
+    },
+    markCorrect: function () {
+      // note as correct..
+      this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_CORRECT
+      this.currentEnt.validated = 1 // correct is just validated so no need to set anything else
+      this.markEntity()
+    },
+    markRemove: function () {
+      this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_REMOVED
+      this.currentEnt.validated = 1
+      this.currentEnt.deleted = 1
+      this.markEntity()
+    },
+    markAlternative: function (item) {
+      this.$http.put(`/api/entities/${this.currentEnt.entity}`, { label: item.cui })
+      this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_ALTERNATIVE
+      // maybe the confirm should be on the alt concept box in the task bar
+      // put new alt concept... already added.
+      // refresh don't, move to next...??
+    },
+    addSynonymComplete: function () {
+      this.prepareDoc({ update: true })
     },
     addSynonym: function (selection) {
       this.conceptSynonymSelection = selection
@@ -316,6 +335,15 @@ export default {
       this.project.require_entity_validation = this.project.require_entity_validation ? 1 : 0
       this.$http.put(`/api/project-annotate-entities/${this.projectId}/`, this.project).then(resp => {
         this.docToSubmit = null
+      })
+
+      // TODO: api/submit-document/, carry out all REST calls?? or just
+      let payload = {
+        project_id: this.project.id,
+        document_id: this.currentDoc.id
+      }
+      this.$http.post(`/api/submit-document/`, payload).then(resp => {
+        // go to next document OR if finished go to menu screen?
       })
     }
   }

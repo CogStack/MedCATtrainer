@@ -97,7 +97,7 @@ export default {
         tui: this.tui,
         context: `${this.selection.priorText}${this.selection.selStr}${this.selection.nextText}`
       }
-      this.$http.post('', payload).then(resp => {
+      this.$http.post('/api/add-synonym', payload).then(resp => {
         this.$emit('request:addSynonymComplete')
       })
     },
