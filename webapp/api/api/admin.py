@@ -73,6 +73,7 @@ class AnnotatedEntityAdmin(admin.ModelAdmin):
     model = AnnotatedEntity
 admin.site.register(AnnotatedEntity, AnnotatedEntityAdmin)
 
+
 @background(schedule=5)
 def _import_concepts(id):
     from medcat.cdb import CDB

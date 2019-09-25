@@ -211,6 +211,19 @@ def submit_document(request):
     return Response({'message': 'Document submited successfully'})
 
 
+@api_view(http_method_names=['POST'])
+def save_models(request):
+    global cat
+    # Get project id
+    p_id = request.data['project_id']
+    project = ProjectAnnotateEntities.objects.get(id=p_id)
+    cat = get_medcat(cat, CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
+
+    cat.cdb.save_dict(project.medcat_models.cdb.cdb_file.path)
+
+    return Response({'message': 'Models saved'})
+
+
 @api_view(http_method_names=['GET'])
 def test(request):
     d_ids = [1003]
