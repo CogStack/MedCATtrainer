@@ -84,7 +84,7 @@ class ConceptView(generics.ListAPIView):
 
 
 class EntityViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated, IsReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
     queryset = Entity.objects.all()
     serializer_class = EntitySerializer
 
