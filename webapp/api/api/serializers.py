@@ -17,7 +17,7 @@ class ConceptSerializer(serializers.ModelSerializer):
 class EntitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Entity
-        fields = ['label']
+        fields = '__all__'
 
 
 class ProjectAnnotateEntitiesSerializer(serializers.ModelSerializer):
