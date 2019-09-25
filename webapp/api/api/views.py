@@ -91,6 +91,7 @@ class ConceptFilter(drf.FilterSet):
 
 
 class ConceptView(generics.ListAPIView):
+    http_method_names = ['get', 'post', 'head']
     queryset = Concept.objects.all()
     serializer_class = ConceptSerializer
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
@@ -101,6 +102,7 @@ class ConceptView(generics.ListAPIView):
 
 class EntityViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get', 'post', 'head']
     queryset = Entity.objects.all()
     serializer_class = EntitySerializer
 
