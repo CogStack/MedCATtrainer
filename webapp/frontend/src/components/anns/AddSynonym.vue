@@ -17,7 +17,7 @@
           </tr>
           <tr>
             <td>Context</td>
-            <td class="context">{{this.prevText}}<span class="highlight">{{this.name}}</span>{{this.nextText}}</td>
+            <td class="context"><span class="highlight">{{this.name}}</span>{{this.nextText}}</td>
           </tr>
           <tr>
             <td>Synonyms</td>
@@ -52,7 +52,9 @@ export default {
   },
   props: {
     selection: Object,
-    projectId: String
+    projectTUIs: String,
+    projectId: String,
+    documentId: String
   },
   data: function () {
     return {
@@ -71,7 +73,7 @@ export default {
   methods: {
     searchCUI: _.debounce(function (term, loading) {
       loading(true)
-      this.$http.get(`/api/search-concepts/?search=${term}&projectId=${this.projectId}`)
+      this.$http.get(`/api/search-concepts/?search=${term}&tui=${this.projectTUIs}`)
         .then(resp => {
           loading(false)
           this.searchResults = resp.data.results.map(r => {
@@ -92,17 +94,18 @@ export default {
     },
     submit: function () {
       const payload = {
-        name: this.name,
-        cui: this.cui,
-        tui: this.tui,
-        context: `${this.selection.priorText}${this.selection.selStr}${this.selection.nextText}`
+        source_value: this.selection.selStr,
+        document_id: this.document_id,
+        project_id: this.project_id,
+        right_context: this.selection.nextText,
+        cui: this.cui
       }
-      this.$http.post('/api/add-synonym', payload).then(resp => {
-        this.$emit('request:addSynonymComplete')
+      this.$http.post('/api/add-annotation/', payload).then(resp => {
+        this.$emit('request:addAnnotationComplete', resp.data.results)
       })
     },
     cancel: function () {
-      this.$emit('request:addSynonymComplete')
+      this.$emit('request:addAnnotationComplete')
     }
   }
 }
