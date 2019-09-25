@@ -111,8 +111,8 @@ import NavBar from '@/components/common/NavBar.vue'
 import TaskBar from '@/components/anns/TaskBar.vue'
 import AddSynonym from '@/components/anns/AddSynonym.vue'
 
-// Only retrieve 1000 entities at a time??
-const ENT_LIMIT = 1000
+// no limit...
+const ENT_LIMIT = Number.POSITIVE_INFINITY
 
 const TASK_NAME = 'Concept Annotation'
 const CONCEPT_CORRECT = 'Correct'
@@ -255,27 +255,20 @@ export default {
         this.$http.get(`/api/annotated-entities/${params}`).then(resp => {
           let useAssignedVal = !this.project.require_entity_validation ||
             this.project.validated_documents.indexOf(this.currentDoc.id) !== -1
-          // logic now is, if deleted, show as removed...
-          // if synonym added show as validated concept.
-          // have no way of storing state of added synonym or not...
 
-          let entMapper = e => {
+          const ents = _.orderBy(resp.data.results, ['start_ind'], ['asc']).map(e => {
             e.assignedValues = {}
             e.assignedValues[TASK_NAME] = null
             if (useAssignedVal) {
               e.assignedValues[TASK_NAME] = e.deleted ? CONCEPT_REMOVED : CONCEPT_CORRECT
             }
             return e
-          }
-
+          })
           if (resp.data.previous === null) {
-            this.ents = resp.data.results
-            this.ents.map(entMapper)
+            this.ents = ents
             this.currentEnt = this.ents[0]
           } else {
-            const newEnts = resp.data.results
-            newEnts.map(entMapper)
-            this.ents = this.ents.concat(newEnts)
+            this.ents = this.ents.concat(ents)
           }
           this.nextEntSetUrl = resp.data.next
           if (this.nextEntSetUrl) {
@@ -326,7 +319,19 @@ export default {
       this.conceptSynonymSelection = null
       if (addedAnnotationId) {
         this.$http.get(`/api/annotated-entities/${addedAnnotationId}/`).then(resp => {
-          this.ents.push(resp.data)
+          let newEnt = resp.data
+          newEnt.assignedValues = {}
+          newEnt.assignedValues[TASK_NAME] = CONCEPT_CORRECT
+          let orderedEnts = _.orderBy(this.ents, ['start_ind'], ['asc'])
+          let i = 0
+          while (i < orderedEnts.length) {
+            if (orderedEnts[i].start_ind > newEnt.start_ind) {
+              break
+            }
+            i++
+          }
+          this.ents.splice(i, 0, newEnt)
+          this.currentEnt = newEnt
         })
       }
     },

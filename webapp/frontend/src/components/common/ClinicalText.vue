@@ -55,29 +55,26 @@ export default {
       if (this.loading || !this.text || !this.ents || this.ents.length === 0) { return '' }
 
       const taskHighlightDefault = 'highlight-task-default'
-
-      let ents = _.orderBy(this.ents, ['start_ind'], ['asc'])
-
       let formattedText = ''
       let start = 0
       let timeout = 0
-      for (let i = 0; i < ents.length; i++) {
+      for (let i = 0; i < this.ents.length; i++) {
         // highlight the span with default
-        let highlightText = this.text.slice(ents[i].start_ind, ents[i].end_ind)
+        let highlightText = this.text.slice(this.ents[i].start_ind, this.ents[i].end_ind)
         let styleClass = taskHighlightDefault
-        if (ents[i].assignedValues[this.taskName] !== null) {
-          let btnIndex = this.taskValues.indexOf(ents[i].assignedValues[this.taskName])
+        if (this.ents[i].assignedValues[this.taskName] !== null) {
+          let btnIndex = this.taskValues.indexOf(this.ents[i].assignedValues[this.taskName])
           styleClass = `highlight-task-${btnIndex}`
         }
 
-        styleClass = ents[i] === this.currentEnt ? `${styleClass} highlight-task-selected` : styleClass
-        timeout = ents[i] === this.currentEnt && i === 0 ? 500 : timeout
+        styleClass = this.ents[i] === this.currentEnt ? `${styleClass} highlight-task-selected` : styleClass
+        timeout = this.ents[i] === this.currentEnt && i === 0 ? 500 : timeout
         let spanText = `<span @click="selectEnt(${i})" class="${styleClass}">${highlightText}</span>`
-        let precedingText = this.text.slice(start, ents[i].start_ind)
+        let precedingText = this.text.slice(start, this.ents[i].start_ind)
         precedingText = precedingText.length !== 0 ? precedingText : ' '
-        start = ents[i].end_ind
+        start = this.ents[i].end_ind
         formattedText += precedingText + spanText
-        if (i === ents.length - 1) {
+        if (i === this.ents.length - 1) {
           formattedText += this.text.slice(start, this.text.length - 1)
         }
       }
