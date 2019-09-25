@@ -226,6 +226,23 @@ def save_models(request):
     return Response({'message': 'Models saved'})
 
 
+@api_view(http_method_names=['POST'])
+def get_create_entity(request):
+    label = request.data['label']
+    cnt = Entity.objects.filter(label=label).count()
+    id = 0
+    if cnt == 0:
+        ent = Entity()
+        ent.label = label
+        ent.save()
+        id = ent.id
+    else:
+        ent = Entity.objects.get(label=label)
+        id = ent.id
+
+    return Response({'entity_id': id})
+
+
 @api_view(http_method_names=['GET'])
 def test(request):
     d_ids = [1003]

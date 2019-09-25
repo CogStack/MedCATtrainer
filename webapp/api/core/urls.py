@@ -44,5 +44,6 @@ urlpatterns = [
     path('api/add-annotation/', api.views.add_annotation),
     path('api/submit-document/', api.views.submit_document),
     path('api/save-models/', api.views.save_models),
+    path('api/get-create-entity/', api.views.get_create_entity),
     re_path('^.*$', api.views.index, name='index'), # Match everything else to home
 ]
