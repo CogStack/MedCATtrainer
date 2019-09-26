@@ -183,5 +183,6 @@ def get_medcat(cat, CDB_MAP, VOCAB_MAP, project):
     else:
         cat.cdb = cdb
         cat.vocab = vocab
+    cat.train = False
 
     return cat
