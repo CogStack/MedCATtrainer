@@ -105,6 +105,7 @@ export default {
               tui: r.tui,
               type: r.type,
               desc: r.desc,
+              semantic_type: r.semantic_type,
               synonyms: _.replace(r.synonyms, new RegExp(',', 'g'), ', ')
             }
           })

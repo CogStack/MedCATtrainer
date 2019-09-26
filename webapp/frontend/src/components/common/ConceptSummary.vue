@@ -130,6 +130,7 @@ export default {
             this.selectedEnt.desc = resp.data.results[0].desc
             this.selectedEnt.tui = resp.data.results[0].tui
             this.selectedEnt.pretty_name = resp.data.results[0].pretty_name
+            this.selectedEnt.semantic_type = resp.data.results[0].semantic_type
             this.cleanProps()
           })
         })
