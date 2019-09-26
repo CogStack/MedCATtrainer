@@ -26,19 +26,21 @@
                         @request:nextDocSet="fetchDocuments()" @request:loadDoc="loadDoc"></document-summary>
       <clinical-text :loading="loadingDoc" :text="currentDoc !== null ? currentDoc.text : null"
                      :currentEnt="currentEnt" :ents="ents" :taskName="taskName" :taskValues="taskValues"
-                     @select:concept="selectEntity" @select:addSynonym="addSynonym">
-      </clinical-text>
+                     @select:concept="selectEntity" @select:addSynonym="addSynonym"></clinical-text>
       <div class="sidebar-container">
         <transition name="slide-left">
-          <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" class="concept-summary"></concept-summary>
+          <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" :altSearch="altSearch"
+                           :projectTUIs="(project || {}).tuis" @select:altConcept="markAlternative"
+                           @select:alternative="toggleAltSearch"
+                           class="concept-summary"></concept-summary>
         </transition>
         <transition name="slide-left">
           <add-synonym v-if="conceptSynonymSelection" :selection="conceptSynonymSelection"
                        :projectTUIs="project.tuis" :projectId="project.id" :documentId="currentDoc.id"
                        @request:addAnnotationComplete="addAnnotationComplete" class="add-synonym"></add-synonym>
         </transition>
-        <task-bar class="tasks" :taskLocked="taskLocked" @select:remove="markRemove" :projectTUIs="(project || {}).tuis"
-                  @select:correct="markCorrect" @select:alternative="markAlternative"></task-bar>
+        <task-bar class="tasks" :taskLocked="taskLocked" @select:remove="markRemove"
+                  @select:correct="markCorrect" @select:alternative="toggleAltSearch"></task-bar>
         <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt"
                  @select:next="next" @select:back="back" @submit="submitDoc"></nav-bar>
       </div>
@@ -158,6 +160,7 @@ export default {
       helpModal: false,
       errorModal: false,
       docToSubmit: null,
+      altSearch: false,
       conceptSynonymSelection: null
     }
   },
@@ -305,7 +308,11 @@ export default {
       this.currentEnt.deleted = 1
       this.markEntity()
     },
+    toggleAltSearch: function (choice) {
+      this.altSearch = choice
+    },
     markAlternative: function (item) {
+      this.altSearch = false
       this.taskLocked = true
       this.$http.post(`/api/get-create-entity/`, { label: item.cui }).then(resp => {
         this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_ALTERNATIVE
