@@ -6,7 +6,7 @@
         <tbody>
         <tr>
           <td>Annotated Text</td>
-          <td class="ent-name">{{selectedEnt !== null ? selectedEnt.value : 'n/a'}}</td>
+          <td class="fit-content ent-name">{{selectedEnt !== null ? selectedEnt.value : 'n/a'}}</td>
         </tr>
         <tr>
           <td>Name</td>
@@ -22,11 +22,18 @@
         </tr>
         <tr>
           <td>Concept ID</td>
-          <td >{{conceptSummary['Concept ID'] || 'n/a'}}</td>
+          <td><span v-if="!altSearch">{{conceptSummary['Concept ID'] || 'n/a'}}</span>
+            <span v-if="altSearch" class="alt-concept-picker" @keyup.stop>
+              <v-select class="picker" v-model="selectedCUI"
+                        label="name" @search="searchCUI" :options="searchResults"
+                        :inputId="'pickerID'"></v-select>
+              <font-awesome-icon class="cancel" v-if="altSearch" icon="times-circle" @click="cancelReassign"></font-awesome-icon>
+            </span>
+          </td>
         </tr>
         <tr>
           <td>Accuracy</td>
-          <td >{{conceptSummary['Accuracy'] ?  conceptSummary['Accuracy'].toFixed(2) : 'n/a'}}</td>
+          <td>{{conceptSummary['Accuracy'] ?  conceptSummary['Accuracy'].toFixed(2) : 'n/a'}}</td>
         </tr>
         <tr v-for="(taskKey, index) of Object.keys(selectedEnt && selectedEnt.length ? selectedEnt.assignedValues : {})" :key="index">
           <td>{{taskKey}}</td>
@@ -34,7 +41,7 @@
         </tr>
         <tr>
           <td>Description</td>
-          <td v-html="conceptSummary.Description === 'nan' ? 'n/a' : conceptSummary.Description || 'n/a'"></td>
+          <td class="fit-content" v-html="conceptSummary.Description === 'nan' ? 'n/a' : conceptSummary.Description || 'n/a'"></td>
         </tr>
         </tbody>
       </table>
@@ -43,6 +50,8 @@
 </template>
 
 <script>
+import vSelect from 'vue-select'
+
 const HIDDEN_PROPS = [
   'value', 'project', 'document', 'start_ind', 'end_ind',
   'entity', 'assignedValues', 'id', 'user', 'deleted'
@@ -63,17 +72,24 @@ const CONST_PROPS_ORDER = [
 
 export default {
   name: 'ConceptSummary',
+  components: {
+    vSelect
+  },
   props: {
+    projectTUIs: String,
     selectedEnt: {
       type: Object,
       default: function () {
         return {}
       }
-    }
+    },
+    altSearch: Boolean
   },
   data: function () {
     return {
-      conceptSummary: {}
+      conceptSummary: {},
+      searchResults: [],
+      selectedCUI: null
     }
   },
   methods: {
@@ -114,12 +130,40 @@ export default {
             this.selectedEnt.desc = resp.data.results[0].desc
             this.selectedEnt.tui = resp.data.results[0].tui
             this.selectedEnt.pretty_name = resp.data.results[0].pretty_name
+            this.selectedEnt.semantic_type = resp.data.results[0].semantic_type
             this.cleanProps()
           })
         })
       } else {
         this.conceptSummary = {}
       }
+    },
+    searchCUI: _.debounce(function (term, loading) {
+      loading(true)
+      this.$http.get(`/api/search-concepts/?search=${term}&tui__in=${this.projectTUIs}`)
+        .then(resp => {
+          loading(false)
+          this.searchResults = resp.data.results.map(r => {
+            return {
+              name: r.pretty_name,
+              cui: r.cui,
+              desc: r.desc,
+              synonyms: _.replace(r.synonyms, new RegExp(',', 'g'), ', ')
+            }
+          })
+        })
+    }, 400),
+    selectedCorrectCUI: function (item) {
+      if (item) {
+        this.$emit('select:altConcept', item)
+        this.searchResults = []
+        this.selectedCUI = null
+      }
+    },
+    cancelReassign: function () {
+      this.$emit('select:alternative', false)
+      this.searchResults = []
+      this.selectedCUI = null
     }
   },
   mounted: function () {
@@ -129,7 +173,8 @@ export default {
     'selectedEnt': {
       handler: 'fetchDetail',
       deep: true
-    }
+    },
+    'selectedCUI': 'selectedCorrectCUI'
   }
 }
 </script>
@@ -169,8 +214,39 @@ export default {
     > td {
       padding: 10px 15px;
       vertical-align: top;
+
+      &.fit-content {
+        display: inline-block;
+        max-height: 150px;
+        overflow-y: auto;
+      }
     }
   }
 }
 
+.picker {
+  width: calc(100% - 30px);
+  display: inline-block;
+}
+
+.cui-btns {
+  opacity: 0.7;
+  float: right;
+  position: relative;
+
+  &:hover {
+    opacity: 0.9;
+    cursor: pointer;
+  }
+}
+
+.edit {
+  @extend .cui-btns;
+  top: 7px;
+}
+
+.cancel {
+  @extend .cui-btns;
+  top: 10px;
+}
 </style>
