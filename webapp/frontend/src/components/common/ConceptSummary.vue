@@ -6,7 +6,7 @@
         <tbody>
         <tr>
           <td>Annotated Text</td>
-          <td class="ent-name">{{selectedEnt !== null ? selectedEnt.value : ''}}</td>
+          <td class="ent-name">{{selectedEnt !== null ? selectedEnt.value : 'n/a'}}</td>
         </tr>
         <tr>
           <td>Name</td>
@@ -24,7 +24,7 @@
           <td>Accuracy</td>
           <td >{{conceptSummary['Accuracy'] ?  conceptSummary['Accuracy'].toFixed(2) : 'n/a'}}</td>
         </tr>
-        <tr v-for="(taskKey, index) of Object.keys(this.selectedEnt ? this.selectedEnt.assignedValues : {})" :key="index">
+        <tr v-for="(taskKey, index) of Object.keys(selectedEnt && selectedEnt.length ? selectedEnt.assignedValues : {})" :key="index">
           <td>{{taskKey}}</td>
           <td>{{conceptSummary[taskKey] || 'n/a'}}</td>
         </tr>
@@ -68,14 +68,13 @@ export default {
   },
   data: function () {
     return {
-      conceptSummary: {},
-      priorSummary: null
+      conceptSummary: {}
     }
   },
   methods: {
     cleanProps: function () {
       this.conceptSummary = {}
-      if (this.selectedEnt !== null) {
+      if (this.selectedEnt && this.selectedEnt.length) {
         // remove props
         let ent = Object.keys(this.selectedEnt)
           .filter(k => !HIDDEN_PROPS.includes(k))
@@ -103,7 +102,7 @@ export default {
       }
     },
     fetchDetail: function () {
-      if (this.selectedEnt) {
+      if (this.selectedEnt && this.selectedEnt.length) {
         this.$http.get(`/api/entities/${this.selectedEnt.entity}/`).then(resp => {
           this.selectedEnt.cui = resp.data.label
           this.$http.get(`/api/concepts/?cui=${this.selectedEnt.cui}`).then(resp => {

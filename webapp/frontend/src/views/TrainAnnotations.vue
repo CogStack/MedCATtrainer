@@ -197,13 +197,6 @@ export default {
               // find first unvalidated doc.
               const ids = _.difference(this.docs.map(d => d.id), this.validatedDocuments)
               if (ids.length !== 0) {
-                this.$router.replace({
-                  name: this.$route.name,
-                  params: {
-                    projectId: this.$route.params.projectId,
-                    docId: ids[0]
-                  }
-                })
                 this.loadDoc(ids[0])
                 // load next url worth of docs?
               } else {
@@ -211,13 +204,7 @@ export default {
                   this.fetchDocuments()
                 } else {
                   // no unvalidated docs and no next doc URL. Go back to first doc.
-                  this.$router.replace({
-                    name: this.$route.name,
-                    params: {
-                      projectId: this.$route.params.projectId,
-                      docId: this.docs[0].id
-                    }
-                  })
+                  this.loadDoc(this.docs[0].id)
                 }
               }
             }
@@ -230,6 +217,13 @@ export default {
     },
     loadDoc: function (docId) {
       this.currentDoc = _.find(this.docs, (d) => d.id === docId)
+      this.$router.replace({
+        name: this.$route.name,
+        params: {
+          projectId: this.$route.params.projectId,
+          docId: docId
+        }
+      })
       this.currentEnt = null
       this.prepareDoc()
     },
@@ -362,7 +356,7 @@ export default {
       }
       this.$http.post(`/api/submit-document/`, payload).then(() => {
         if (this.currentDoc !== this.docs.slice(-1)[0]) {
-          this.currentDoc = this.docs[_.findIndex(this.docs, d => d === this.currentDoc.id) + 1]
+          this.loadDoc([_.findIndex(this.docs, d => d === this.currentDoc.id) + 1])
         }
       })
     }
