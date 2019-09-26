@@ -19,6 +19,7 @@
 
 <script>
 import Login from '@/components/common/Login.vue'
+import EventBus from '@/event-bus'
 
 export default {
   name: 'App',
@@ -33,10 +34,18 @@ export default {
   },
   methods: {
     loginSuccessful: function () {
-      this.login = false
-      this.uname = this.$cookie('uname')
-      location.reload()
+      this.loginModal = false
+      this.uname = this.$cookie.get('uname')
+      if (this.$router.name !== 'home') {
+        this.$router.push({ name: 'home' })
+      }
     }
+  },
+  mounted: function () {
+    EventBus.$on('login:success', this.loginSuccessful)
+  },
+  beforeDestroy: function () {
+    EventBus.$off('login:success', this.loginSuccessful)
   }
 }
 </script>

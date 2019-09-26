@@ -32,6 +32,7 @@
 // is this screen even needed?
 // Maybe list the the projects that given user has access to ...
 import Login from '@/components/common/Login.vue'
+import EventBus from '@/event-bus'
 
 export default {
   name: 'Home',
@@ -55,10 +56,18 @@ export default {
   watch: {
     '$route': 'loggedIn'
   },
+  mounted: function () {
+    EventBus.$on('login:success', this.loggedIn)
+  },
+  beforeDestroy: function () {
+    EventBus.$off('login:success', this.loggedIn)
+  },
   methods: {
     loggedIn: function () {
-      if (this.$cookie.get('api-token')) { this.loginSuccessful = true }
-      this.fetchProjects()
+      if (this.$cookie.get('api-token')) {
+        this.loginSuccessful = true
+        this.fetchProjects()
+      }
     },
     fetchProjects: function () {
       if (this.loginSuccessful) {

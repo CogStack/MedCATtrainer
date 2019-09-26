@@ -18,6 +18,7 @@
 
 <script>
 import Modal from '@/components/common/Modal.vue'
+import EventBus from '@/event-bus'
 
 export default {
   name: 'Login',
@@ -43,7 +44,7 @@ export default {
         this.$cookie.set('api-token', resp.data.token, { expires: 1 })
         this.$cookie.set('username', this.uname)
         this.$http.defaults.headers.common['Authorization'] = `Token ${this.$cookie.get('api-token')}`
-        this.$emit('login:success')
+        EventBus.$emit('login:success')
       }).catch(() => {
         this.failed = true
       })
