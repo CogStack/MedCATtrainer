@@ -39,6 +39,15 @@ def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
             concept.desc = cdb.cui2desc.get(label, '')
             concept.synonyms = ",".join(cdb.cui2original_names.get(label, []))
             #concept.vocab = cdb.cui2ontos.get(label, '')
+            icd10 = ''
+            try:
+                for pair in cdb.cui2info[label]['icd10']:
+                    icd10 += pair['chapter'] + " - " + pair['name']
+                    icd10 += '\n'
+                icd10.strip()
+            except:
+                pass
+            concept.icd10 = icd10
             concept.save()
 
         if (not tuis or tui in tuis) and (not cuis or label in cuis):

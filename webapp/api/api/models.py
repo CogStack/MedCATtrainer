@@ -22,6 +22,7 @@ class Concept(models.Model):
     semantic_type = models.CharField(max_length=200, blank=True, null=True)
     vocab = models.CharField(max_length=100)
     synonyms = models.TextField(default='', blank=True)
+    icd10 = models.TextField(default='', blank=True)
 
 
     def __str__(self):
