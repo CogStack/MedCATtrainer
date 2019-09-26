@@ -7,7 +7,7 @@
           <tbody>
           <tr>
             <td>New Annotation</td>
-            <td>{{name}}</td>
+            <td class="fit-content">{{name}}</td>
           </tr>
           <tr @keyup.stop>
             <td>Concept Lookup</td>
@@ -17,7 +17,7 @@
           </tr>
           <tr>
             <td>Context</td>
-            <td class="context">{{this.prevText}}<span class="highlight">{{this.name}}</span>{{this.nextText.slice(0, 15)}}</td>
+            <td class="fit-content context">{{this.prevText}}<span class="highlight">{{this.name}}</span>{{this.nextText.slice(0, 15)}}</td>
           </tr>
           </tbody>
         </table>
@@ -41,11 +41,11 @@
           </tr>
           <tr>
             <td>Description</td>
-            <td v-html="selectedCUI.desc === 'nan' ? 'n/a' : selectedCUI.desc || 'n/a'"></td>
+            <td class="fit-content" v-html="selectedCUI.desc === 'nan' ? 'n/a' : selectedCUI.desc || 'n/a'"></td>
           </tr>
           <tr>
             <td>Synonyms</td>
-            <td>{{selectedCUI.synonyms || 'n/a'}}</td>
+            <td class="fit-content">{{selectedCUI.synonyms || 'n/a'}}</td>
           </tr>
           </tbody>
         </table>
@@ -167,8 +167,6 @@ ul.vs__dropdown-menu {
 }
 
 .add-synonym-table {
-  position: relative;
-  z-index: 0;
   width: 400px;
   tbody > tr {
     box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
@@ -177,6 +175,12 @@ ul.vs__dropdown-menu {
       padding: 10px 15px;
       vertical-align: top;
       color: $text;
+
+      &.fit-content {
+        display: inline-block;
+        max-height: 150px;
+        overflow-y: auto;
+      }
     }
   }
 }

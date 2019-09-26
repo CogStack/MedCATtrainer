@@ -6,7 +6,7 @@
         <tbody>
         <tr>
           <td>Annotated Text</td>
-          <td class="ent-name">{{selectedEnt !== null ? selectedEnt.value : 'n/a'}}</td>
+          <td class="fit-content ent-name">{{selectedEnt !== null ? selectedEnt.value : 'n/a'}}</td>
         </tr>
         <tr>
           <td>Name</td>
@@ -33,7 +33,7 @@
         </tr>
         <tr>
           <td>Accuracy</td>
-          <td >{{conceptSummary['Accuracy'] ?  conceptSummary['Accuracy'].toFixed(2) : 'n/a'}}</td>
+          <td>{{conceptSummary['Accuracy'] ?  conceptSummary['Accuracy'].toFixed(2) : 'n/a'}}</td>
         </tr>
         <tr v-for="(taskKey, index) of Object.keys(selectedEnt && selectedEnt.length ? selectedEnt.assignedValues : {})" :key="index">
           <td>{{taskKey}}</td>
@@ -41,7 +41,7 @@
         </tr>
         <tr>
           <td>Description</td>
-          <td v-html="conceptSummary.Description === 'nan' ? 'n/a' : conceptSummary.Description || 'n/a'"></td>
+          <td class="fit-content" v-html="conceptSummary.Description === 'nan' ? 'n/a' : conceptSummary.Description || 'n/a'"></td>
         </tr>
         </tbody>
       </table>
@@ -214,6 +214,12 @@ export default {
     > td {
       padding: 10px 15px;
       vertical-align: top;
+
+      &.fit-content {
+        display: inline-block;
+        max-height: 150px;
+        overflow-y: auto;
+      }
     }
   }
 }
