@@ -74,7 +74,7 @@ export default {
   methods: {
     cleanProps: function () {
       this.conceptSummary = {}
-      if (this.selectedEnt && this.selectedEnt.length) {
+      if (this.selectedEnt && Object.keys(this.selectedEnt).length) {
         // remove props
         let ent = Object.keys(this.selectedEnt)
           .filter(k => !HIDDEN_PROPS.includes(k))
@@ -102,7 +102,7 @@ export default {
       }
     },
     fetchDetail: function () {
-      if (this.selectedEnt && this.selectedEnt.length) {
+      if (this.selectedEnt && Object.keys(this.selectedEnt).length) {
         this.$http.get(`/api/entities/${this.selectedEnt.entity}/`).then(resp => {
           this.selectedEnt.cui = resp.data.label
           this.$http.get(`/api/concepts/?cui=${this.selectedEnt.cui}`).then(resp => {
