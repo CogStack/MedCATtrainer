@@ -91,7 +91,7 @@
 
     <modal v-if="docToSubmit !== null" @modal:close="docToSubmit=null">
       <h3 slot="header">Submit Document</h3>
-      <div slot="body">Please confirm this Document is ready for submission</div>
+      <div slot="body">Confirm document is ready for submission</div>
       <!-- TODO: Provide some sort of summary here?? -->
       <div slot="footer">
         <button class="btn btn-primary" @click="submitConfirmed()">Confirm</button>
@@ -230,6 +230,7 @@ export default {
     },
     loadDoc: function (docId) {
       this.currentDoc = _.find(this.docs, (d) => d.id === docId)
+      this.currentEnt = null
       this.prepareDoc()
     },
     prepareDoc: function (params) {

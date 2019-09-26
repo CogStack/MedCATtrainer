@@ -10,15 +10,15 @@
         </tr>
         <tr>
           <td>Name</td>
-          <td>{{conceptSummary ? conceptSummary['Name'] : 'n/a'}}</td>
+          <td>{{conceptSummary['Name'] || 'n/a'}}</td>
         </tr>
         <tr>
           <td>Term ID</td>
-          <td>{{conceptSummary ? conceptSummary['Term ID'] : 'n/a'}}</td>
+          <td>{{conceptSummary['Term ID'] || 'n/a'}}</td>
         </tr>
         <tr>
           <td>Concept ID</td>
-          <td >{{conceptSummary['Concept ID']}}</td>
+          <td >{{conceptSummary['Concept ID'] || 'n/a'}}</td>
         </tr>
         <tr>
           <td>Accuracy</td>
@@ -59,7 +59,12 @@ const CONST_PROPS_ORDER = [
 export default {
   name: 'ConceptSummary',
   props: {
-    selectedEnt: Object
+    selectedEnt: {
+      type: Object,
+      default: function () {
+        return {}
+      }
+    }
   },
   data: function () {
     return {
@@ -69,7 +74,7 @@ export default {
   },
   methods: {
     cleanProps: function () {
-      this.conceptSummary = []
+      this.conceptSummary = {}
       if (this.selectedEnt !== null) {
         // remove props
         let ent = Object.keys(this.selectedEnt)
@@ -98,7 +103,7 @@ export default {
       }
     },
     fetchDetail: function () {
-      if (this.selectedEnt !== null) {
+      if (this.selectedEnt) {
         this.$http.get(`/api/entities/${this.selectedEnt.entity}/`).then(resp => {
           this.selectedEnt.cui = resp.data.label
           this.$http.get(`/api/concepts/?cui=${this.selectedEnt.cui}`).then(resp => {
@@ -108,6 +113,8 @@ export default {
             this.cleanProps()
           })
         })
+      } else {
+        this.conceptSummary = {}
       }
     }
   },
