@@ -17,7 +17,7 @@
           </tr>
           <tr>
             <td>Context</td>
-            <td class="context">{{this.prevText}}<span class="highlight">{{this.name}}</span>{{this.nextText}}</td>
+            <td class="context">{{this.prevText}}<span class="highlight">{{this.name}}</span>{{this.nextText.slice(0, 15)}}</td>
           </tr>
           </tbody>
         </table>

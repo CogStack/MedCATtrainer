@@ -129,7 +129,7 @@ export default {
         }
       })
       // take only 100 chars of either side?
-      nextText = nextText.length < 15 ? nextText : nextText.slice(0, 15)
+      nextText = nextText.length < 100 ? nextText : nextText.slice(0, 100)
       priorText = priorText.length < 15 ? priorText : priorText.slice(-15)
       this.selection = {
         selStr: selStr,
