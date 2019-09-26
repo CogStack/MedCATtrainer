@@ -9,7 +9,7 @@
             <td>New Annotation</td>
             <td>{{name}}</td>
           </tr>
-          <tr>
+          <tr @keyup.stop>
             <td>Concept Lookup</td>
             <td>
               <v-select v-model="selectedCUI" label="name" @search="searchCUI" :options="searchResults"></v-select>
@@ -19,9 +19,33 @@
             <td>Context</td>
             <td class="context">{{this.prevText}}<span class="highlight">{{this.name}}</span>{{this.nextText}}</td>
           </tr>
+          </tbody>
+        </table>
+        <table class="add-synonym-table" v-if="selectedCUI">
+          <tbody>
+          <tr>
+            <td>Name</td>
+            <td>{{selectedCUI.name || 'n/a'}}</td>
+          </tr>
+          <tr>
+            <td>Term ID</td>
+            <td>{{selectedCUI.tui || 'n/a'}}</td>
+          </tr>
+          <tr>
+            <td>Semantic Type</td>
+            <td>{{selectedCUI.semantic_type || 'n/a'}}</td>
+          </tr>
+          <tr>
+            <td>Concept ID</td>
+            <td >{{selectedCUI.cui || 'n/a'}}</td>
+          </tr>
+          <tr>
+            <td>Description</td>
+            <td v-html="selectedCUI.desc === 'nan' ? 'n/a' : selectedCUI.desc || 'n/a'"></td>
+          </tr>
           <tr>
             <td>Synonyms</td>
-            <td>{{synonyms || 'n/a'}}</td>
+            <td>{{selectedCUI.synonyms || 'n/a'}}</td>
           </tr>
           </tbody>
         </table>
@@ -61,8 +85,6 @@ export default {
       name: this.selection.selStr,
       prevText: this.selection.prevText,
       nextText: this.selection.nextText,
-      CUI: '',
-      synonyms: null,
       searchResults: [],
       selectedCUI: null
     }
@@ -80,16 +102,15 @@ export default {
             return {
               name: r.pretty_name,
               cui: r.cui,
+              tui: r.tui,
+              type: r.type,
               desc: r.desc,
               synonyms: _.replace(r.synonyms, new RegExp(',', 'g'), ', ')
             }
           })
         })
     }, 400),
-    selectedSynonymCUI: function (item) {
-      this.cui = item.cui
-      this.tui = item.tui
-      this.synonyms = item.synonyms
+    selectedSynonymCUI: function () {
       this.searchResults = []
     },
     submit: function () {
@@ -98,10 +119,11 @@ export default {
         document_id: this.documentId,
         project_id: this.projectId,
         right_context: this.selection.nextText,
-        cui: this.cui
+        cui: this.selectedCUI.cui
       }
       this.$http.post('/api/add-annotation/', payload).then(resp => {
         this.$emit('request:addAnnotationComplete', resp.data.id)
+        this.selectedCUI = null
       })
     },
     cancel: function () {
@@ -134,10 +156,18 @@ export default {
 }
 
 .action-buttons {
+  padding-top: 20px;
   text-align: center;
 }
 
+ul.vs__dropdown-menu {
+  /*z-index: 100000000 !important;*/
+  /*position: absolute !important;*/
+}
+
 .add-synonym-table {
+  position: relative;
+  z-index: 0;
   width: 400px;
   tbody > tr {
     box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);

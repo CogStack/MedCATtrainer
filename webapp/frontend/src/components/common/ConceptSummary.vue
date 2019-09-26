@@ -17,6 +17,10 @@
           <td>{{conceptSummary['Term ID'] || 'n/a'}}</td>
         </tr>
         <tr>
+          <td>Semantic Type</td>
+          <td>{{conceptSummary['Type']  || 'n/a'}}</td>
+        </tr>
+        <tr>
           <td>Concept ID</td>
           <td >{{conceptSummary['Concept ID'] || 'n/a'}}</td>
         </tr>
@@ -48,12 +52,13 @@ const PROP_MAP = {
   'acc': 'Accuracy',
   'desc': 'Description',
   'tui': 'Term ID',
+  'semantic_type': 'Type',
   'cui': 'Concept ID',
   'pretty_name': 'Name'
 }
 
 const CONST_PROPS_ORDER = [
-  'Name', 'Description', 'Term ID', 'Concept ID', 'Accuracy'
+  'Name', 'Description', 'Type', 'Term ID', 'Concept ID', 'Accuracy'
 ]
 
 export default {

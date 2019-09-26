@@ -179,7 +179,7 @@ export default {
     },
     fetchDocuments: function () {
       let params = this.nextDocSetUrl === null ? `?dataset=${this.project.dataset}`
-        : this.nextDocSetUrl.split('/').slice(-1)[0]
+        : `?${this.nextDocSetUrl.split('?').slice(-1)[0]}`
 
       this.$http.get(`/api/documents/${params}`).then(resp => {
         if (resp.data.results.length > 0) {
@@ -243,10 +243,10 @@ export default {
         console.error(err)
       })
     },
-    fetchEntities: function (entsFetched, pages) {
+    fetchEntities: function (entsFetched, pages, selectedEntId) {
       if (entsFetched < ENT_LIMIT) {
         let params = this.nextEntSetUrl === null ? `?project=${this.projectId}&document=${this.currentDoc.id}`
-          : this.nextEntSetUrl.split('/').slice(-1)[0]
+          : `?${this.nextEntSetUrl.split('?').slice(-1)[0]}`
         this.$http.get(`/api/annotated-entities/${params}`).then(resp => {
           let useAssignedVal = !this.project.require_entity_validation ||
             this.project.validated_documents.indexOf(this.currentDoc.id) !== -1
@@ -254,21 +254,28 @@ export default {
           const ents = _.orderBy(resp.data.results, ['start_ind'], ['asc']).map(e => {
             e.assignedValues = {}
             e.assignedValues[TASK_NAME] = null
-            if (useAssignedVal) {
-              e.assignedValues[TASK_NAME] = e.deleted ? CONCEPT_REMOVED : CONCEPT_CORRECT
+            if (useAssignedVal || e.validated) {
+              let taskVal = CONCEPT_CORRECT
+              if (e.deleted) {
+                taskVal = CONCEPT_REMOVED
+              } else if (e.alternative) {
+                taskVal = CONCEPT_ALTERNATIVE
+              }
+              e.assignedValues[TASK_NAME] = taskVal
             }
             return e
           })
           if (resp.data.previous === null) {
             this.ents = ents
-            this.currentEnt = this.ents[0]
           } else {
             this.ents = this.ents.concat(ents)
           }
           this.nextEntSetUrl = resp.data.next
           if (this.nextEntSetUrl) {
-            this.fetchEntities(resp.data.results.length * (pages + 1), pages + 1)
+            this.fetchEntities(resp.data.results.length * (pages + 1), pages + 1, selectedEntId)
           } else {
+            this.currentEnt = selectedEntId ? this.ents[this.ents.map(e => e.id).indexOf(selectedEntId)]
+              : this.ents[0]
             this.loadingDoc = false
           }
         })
@@ -303,6 +310,8 @@ export default {
       this.$http.post(`/api/get-create-entity/`, { label: item.cui }).then(resp => {
         this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_ALTERNATIVE
         this.currentEnt.entity = resp.data.entity_id
+        this.currentEnt.validated = 1
+        this.currentEnt.alternative = 1
         this.markEntity(false)
         let i = this.ents.indexOf(this.currentEnt)
         this.currentEnt = JSON.parse(JSON.stringify(this.currentEnt))
@@ -317,16 +326,9 @@ export default {
           let newEnt = resp.data
           newEnt.assignedValues = {}
           newEnt.assignedValues[TASK_NAME] = CONCEPT_CORRECT
-          let orderedEnts = _.orderBy(this.ents, ['start_ind'], ['asc'])
-          let i = 0
-          while (i < orderedEnts.length) {
-            if (orderedEnts[i].start_ind > newEnt.start_ind) {
-              break
-            }
-            i++
-          }
-          this.ents.splice(i, 0, newEnt)
-          this.currentEnt = newEnt
+          this.ents = null
+          this.currentEnt = null
+          this.fetchEntities(0, 0, newEnt.id)
         })
       }
     },
@@ -356,7 +358,7 @@ export default {
       }
       this.$http.post(`/api/submit-document/`, payload).then(() => {
         if (this.currentDoc !== this.docs.slice(-1)[0]) {
-          this.loadDoc([_.findIndex(this.docs, d => d === this.currentDoc.id) + 1])
+          this.loadDoc(_.findIndex(this.docs, d => d === this.currentDoc.id) + 1)
         }
       })
     }
