@@ -42,7 +42,7 @@ def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
             icd10 = ''
             try:
                 for pair in cdb.cui2info[label]['icd10']:
-                    icd10 += pair['chapter'] + " - " + pair['name']
+                    icd10 += pair['chapter'] + " | " + pair['name']
                     icd10 += '\n'
                 icd10.strip()
             except:

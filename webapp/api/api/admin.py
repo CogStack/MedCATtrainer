@@ -92,6 +92,15 @@ def _import_concepts(id):
             concept.semantic_type = cdb.tui2name.get(tui, '')
             concept.desc = cdb.cui2desc.get(cui, '')
             concept.synonyms = ",".join(cdb.cui2original_names.get(cui, []))
+            icd10 = ''
+            try:
+                for pair in cdb.cui2info[cui]['icd10']:
+                    icd10 += pair['chapter'] + " | " + pair['name']
+                    icd10 += '\n'
+                icd10.strip()
+            except:
+                pass
+            concept.icd10 = icd10
             #concept.vocab = cdb.cui2ontos.get(cui, '')
             concept.save()
 
