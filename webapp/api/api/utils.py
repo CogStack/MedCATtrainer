@@ -21,9 +21,6 @@ def remove_annotations(document, project, partial=False):
         return "Something went wrong: " + str(e)
 
 def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
-    print(spacy_doc)
-    print(spacy_doc.ents)
-    print(spacy_doc._.ents)
     for ent in spacy_doc.ents:
         label = ent._.cui
         tui = ent._.tui
@@ -155,7 +152,7 @@ def train_medcat(cat, project, document):
                                  source_val=ann.value,
                                  spacy_doc=doc,
                                  tkn_inds=tkn_inds,
-                                 lr=0.1)
+                                 lr=0.3)
                 else:
                     print("HERE")
                     print(doc)
@@ -164,7 +161,7 @@ def train_medcat(cat, project, document):
                     print("SDF")
                     # Name is linked, just add training
                     cat.add_concept_cntx(cui, text, tkn_inds, spacy_doc=doc,
-                                         lr=0.05, anneal=False, negative=ann.deleted)
+                                         lr=0.2, anneal=False, negative=ann.deleted)
 
 
 def get_medcat(cat, CDB_MAP, VOCAB_MAP, project):
