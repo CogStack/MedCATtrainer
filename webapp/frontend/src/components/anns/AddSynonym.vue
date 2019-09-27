@@ -41,7 +41,7 @@
           </tr>
           <tr v-if="selectedCUI.icd10">
             <td>ICD-10</td>
-            <td >{{selectedCUI.icd10}}</td>
+            <td class="icd-10-desc">{{selectedCUI.icd10}}</td>
           </tr>
           <tr>
             <td>Description</td>
@@ -164,6 +164,10 @@ export default {
 .action-buttons {
   padding-top: 20px;
   text-align: center;
+}
+
+.icd-10-desc {
+  white-space: pre-wrap;
 }
 
 ul.vs__dropdown-menu {
