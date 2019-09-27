@@ -154,11 +154,6 @@ def train_medcat(cat, project, document):
                                  tkn_inds=tkn_inds,
                                  lr=0.3)
                 else:
-                    print("HERE")
-                    print(doc)
-                    print(tkn_inds)
-                    print(cui, tkn_inds, doc[tkn_inds[0]:tkn_inds[-1]])
-                    print("SDF")
                     # Name is linked, just add training
                     cat.add_concept_cntx(cui, text, tkn_inds, spacy_doc=doc,
                                          lr=0.2, anneal=False, negative=ann.deleted)
