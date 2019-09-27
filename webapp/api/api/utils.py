@@ -47,7 +47,7 @@ def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
             concept.icd10 = icd10
             concept.save()
 
-        if (not tuis or tui in tuis) and (not cuis or label in cuis):
+        if (not cuis and not tuis) or (tui in tuis) or (label in cuis):
             cnt = Entity.objects.filter(label=label).count()
             if cnt == 0:
                 # Create the entity
@@ -87,7 +87,7 @@ def _remove_overlap(project, document, start, end):
             log.debug("Removed")
             log.debug(str(ann))
 
-def create_annotation(source_val, right_context, cui, user, project, document):
+def create_annotation(source_val, right_context, cui, user, project, document, cat):
     text = document.text
     id = None
 
@@ -124,6 +124,15 @@ def create_annotation(source_val, right_context, cui, user, project, document):
         ann_ent.validated = True
         ann_ent.save()
         id = ann_ent.id
+
+        # Add this annotation to CUIs for this project
+        #if it is not already included
+        if project.cuis or project.tuis:
+            if cui not in project.cuis:
+                tui = cat.cdb.cui2tui.get(cui, 'unk')
+                if tui not in project.tuis:
+                    project.cuis = project.cuis + "," + str(cui)
+                    project.save()
 
     return id
 

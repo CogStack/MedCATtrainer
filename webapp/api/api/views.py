@@ -181,6 +181,7 @@ def name2cuis(request):
 
 @api_view(http_method_names=['POST'])
 def add_annotation(request):
+    global cat
     # Get project id
     p_id = request.data['project_id']
     d_id = request.data['document_id']
@@ -197,7 +198,14 @@ def add_annotation(request):
     project = ProjectAnnotateEntities.objects.get(id=p_id)
     document = Document.objects.get(id=d_id)
 
-    id = create_annotation(source_val, right_context, cui, user, project, document)
+    cat = get_medcat(cat, CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
+    id = create_annotation(source_val=source_val,
+            right_context=right_context,
+            cui=cui,
+            user=user,
+            project=project,
+            document=document,
+            cat=cat)
 
     return Response({'message': 'Annotation added successfully', 'id': id})
 
