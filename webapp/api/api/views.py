@@ -159,7 +159,6 @@ def prepare_documents(request):
                             cdb=cat.cdb,
                             tuis=tuis,
                             cuis=cuis)
-
     return Response({'message': 'Documents prepared successfully'})
 
 

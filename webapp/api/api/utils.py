@@ -22,6 +22,7 @@ def remove_annotations(document, project, partial=False):
 
 def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
     spacy_doc._.ents.sort(key=lambda x: len(x.text), reverse=True)
+
     tkns_in = []
     ents = []
     for ent in spacy_doc._.ents:
