@@ -23,6 +23,7 @@ Vue.use(VueCookie);
     .filter(s => s[0] === 'api-token')
   if (apiToken.length) {
     axios.defaults.headers.common['Authorization'] = `Token ${apiToken[0][1]}`
+    axios.defaults.timeout = 6000
   }
 })()
 
