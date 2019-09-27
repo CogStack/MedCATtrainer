@@ -172,7 +172,7 @@ ul.vs__dropdown-menu {
 }
 
 .add-synonym-table {
-  width: 400px;
+  @extend .detail-panel;
   tbody > tr {
     box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
 

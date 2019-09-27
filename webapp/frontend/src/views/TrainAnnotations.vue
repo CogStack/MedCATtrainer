@@ -441,9 +441,9 @@ export default {
 }
 
 .sidebar-container {
+  @extend .detail-panel;
   display: flex;
   flex-direction: column;
-  width: 400px;
   padding: 5px;
 
   .concept-summary {

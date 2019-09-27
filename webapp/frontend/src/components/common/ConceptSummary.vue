@@ -34,7 +34,7 @@
         </tr>
         <tr v-if="conceptSummary['ICD-10']">
           <td>ICD-10</td>
-          <td>{{conceptSummary['ICD-10']}}</td>
+          <td v-html="conceptSummary['ICD-10']"></td>
         </tr>
         <tr>
           <td>Accuracy</td>
@@ -201,8 +201,8 @@ export default {
 }
 
 .summary {
+  @extend .detail-panel;
   height: calc(100% - 41px);
-  width: 400px;
   overflow: auto
 }
 
