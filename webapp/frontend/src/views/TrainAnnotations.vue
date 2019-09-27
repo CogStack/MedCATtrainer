@@ -24,9 +24,17 @@
                         :validatedDocIds="validatedDocuments"
                         :selectedDocId="currentDoc !== null ? currentDoc.id : null" :loadingDoc="loadingDoc"
                         @request:nextDocSet="fetchDocuments()" @request:loadDoc="loadDoc"></document-summary>
-      <clinical-text :loading="loadingDoc" :text="currentDoc !== null ? currentDoc.text : null"
-                     :currentEnt="currentEnt" :ents="ents" :taskName="taskName" :taskValues="taskValues"
-                     @select:concept="selectEntity" @select:addSynonym="addSynonym"></clinical-text>
+      <div class="main-viewport">
+        <clinical-text :loading="loadingDoc" :text="currentDoc !== null ? currentDoc.text : null"
+                       :currentEnt="currentEnt" :ents="ents" :taskName="taskName" :taskValues="taskValues"
+                       @select:concept="selectEntity" @select:addSynonym="addSynonym"></clinical-text>
+        <div class="taskbar">
+          <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt" @select:next="next" @select:back="back"></nav-bar>
+          <task-bar class="tasks" :taskLocked="taskLocked" :ents="ents" :altSearch="altSearch"
+                    @select:remove="markRemove" @select:correct="markCorrect" @select:alternative="toggleAltSearch"
+                    @submit="submitDoc"></task-bar>
+        </div>
+      </div>
       <div class="sidebar-container">
         <transition name="slide-left">
           <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" :altSearch="altSearch"
@@ -39,10 +47,6 @@
                        :projectTUIs="project.tuis" :projectId="project.id" :documentId="currentDoc.id"
                        @request:addAnnotationComplete="addAnnotationComplete" class="add-synonym"></add-synonym>
         </transition>
-        <task-bar class="tasks" :taskLocked="taskLocked" @select:remove="markRemove" :altSearch="altSearch"
-                  @select:correct="markCorrect" @select:alternative="toggleAltSearch"></task-bar>
-        <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt"
-                 @select:next="next" @select:back="back" @submit="submitDoc"></nav-bar>
       </div>
     </div>
 
@@ -440,6 +444,26 @@ export default {
   display: flex;
   flex: 1 1 auto;
   overflow: hidden;
+}
+
+.main-viewport {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+
+.taskbar {
+  flex: 0 0 50px;
+}
+
+.nav {
+  width: 25%;
+  display: inline-block
+}
+
+.tasks {
+  width: 75%;
+  display: inline-block;
 }
 
 .sidebar-container {

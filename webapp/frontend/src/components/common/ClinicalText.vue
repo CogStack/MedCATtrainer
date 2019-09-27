@@ -149,6 +149,7 @@ export default {
 
 .note-container {
   flex: 1 1 auto;
+  overflow-y: auto;
   background: rgba(0, 114, 206, .2);
   padding: 75px 75px 0 75px;
   border-radius: 10px;

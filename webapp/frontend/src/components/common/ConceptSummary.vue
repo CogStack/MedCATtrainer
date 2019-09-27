@@ -203,7 +203,7 @@ export default {
 .summary {
   @extend .detail-panel;
   height: calc(100% - 41px);
-  overflow: auto
+  overflow-y: auto;
 }
 
 .ent-name {
@@ -213,8 +213,7 @@ export default {
 }
 
 .sidebar {
-  flex: 0 0 300px;
-  overflow: auto;
+  height: 100%;
   background: $background;
   color: $text;
 }
