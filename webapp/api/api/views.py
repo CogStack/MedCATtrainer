@@ -89,7 +89,7 @@ class ConceptFilter(drf.FilterSet):
     cui__in = TextInFilter(field_name='cui', lookup_expr='in')
     class Meta:
         model = Concept
-        fields = ['tui', 'cui']
+        fields = ['tui', 'cui', 'cdb']
 
 
 class ConceptView(generics.ListAPIView):
@@ -99,7 +99,7 @@ class ConceptView(generics.ListAPIView):
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['pretty_name']
     filterset_class = ConceptFilter
-    filterset_fields = ['tui', 'cui']
+    filterset_fields = ['tui', 'cui', 'cdb']
 
 
 class EntityViewSet(viewsets.ModelViewSet):

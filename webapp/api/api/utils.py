@@ -50,6 +50,7 @@ def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
             concept.semantic_type = cdb.tui2name.get(tui, '')
             concept.desc = cdb.cui2desc.get(label, '')
             concept.synonyms = ",".join(cdb.cui2original_names.get(label, []))
+            concept.cdb = project.medcat_models.cdb
             #concept.vocab = cdb.cui2ontos.get(label, '')
             icd10 = ''
             try:

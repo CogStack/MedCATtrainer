@@ -90,6 +90,7 @@ def _import_concepts(id):
             concept.semantic_type = cdb.tui2name.get(tui, '')
             concept.desc = cdb.cui2desc.get(cui, '')
             concept.synonyms = ",".join(cdb.cui2original_names.get(cui, []))
+            concept.cdb = concept_db
             icd10 = ''
             try:
                 for pair in cdb.cui2info[cui]['icd10']:

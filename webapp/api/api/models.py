@@ -23,6 +23,7 @@ class Concept(models.Model):
     vocab = models.CharField(max_length=100)
     synonyms = models.TextField(default='', blank=True)
     icd10 = models.TextField(default='', blank=True)
+    cdb = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=True, null=True)
 
 
     def __str__(self):
