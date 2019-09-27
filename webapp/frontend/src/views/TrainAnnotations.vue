@@ -39,7 +39,7 @@
                        :projectTUIs="project.tuis" :projectId="project.id" :documentId="currentDoc.id"
                        @request:addAnnotationComplete="addAnnotationComplete" class="add-synonym"></add-synonym>
         </transition>
-        <task-bar class="tasks" :taskLocked="taskLocked" @select:remove="markRemove"
+        <task-bar class="tasks" :taskLocked="taskLocked" @select:remove="markRemove" :altSearch="altSearch"
                   @select:correct="markCorrect" @select:alternative="toggleAltSearch"></task-bar>
         <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt"
                  @select:next="next" @select:back="back" @submit="submitDoc"></nav-bar>

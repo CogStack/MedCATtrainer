@@ -54,10 +54,6 @@ export default {
             break
           case 2:
             this.alternative()
-            this.$nextTick(function () {
-              document.getElementById('pickerID').focus()
-            })
-            break
         }
       }
     }
