@@ -287,26 +287,32 @@ export default {
     selectEntity: function (entIdx) {
       this.currentEnt = this.ents[entIdx]
     },
-    markEntity: function (noMove) {
-      this.taskLocked = true
-      this.$http.put(`/api/annotated-entities/${this.currentEnt.id}/`, this.currentEnt).then(resp => {
-        if (noMove !== false) {
-          if (this.ents.slice(-1)[0].id !== this.currentEnt.id) { this.next() } else { this.currentEnt = null }
-        }
-        this.taskLocked = false
-      })
-    },
     markCorrect: function () {
       // note as correct..
-      this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_CORRECT
-      this.currentEnt.validated = 1 // correct is just validated so no need to set anything else
-      this.markEntity()
+      if (this.currentEnt) {
+        this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_CORRECT
+        this.currentEnt.validated = 1 // correct is just validated so no need to set anything else
+        this.markEntity()
+      }
+    },
+    markEntity: function (noMove) {
+      if (this.currentEnt) {
+        this.taskLocked = true
+        this.$http.put(`/api/annotated-entities/${this.currentEnt.id}/`, this.currentEnt).then(resp => {
+          if (noMove !== false) {
+            if (this.ents.slice(-1)[0].id !== this.currentEnt.id) { this.next() } else { this.currentEnt = null }
+          }
+          this.taskLocked = false
+        })
+      }
     },
     markRemove: function () {
-      this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_REMOVED
-      this.currentEnt.validated = 1
-      this.currentEnt.deleted = 1
-      this.markEntity()
+      if (this.currentEnt) {
+        this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_REMOVED
+        this.currentEnt.validated = 1
+        this.currentEnt.deleted = 1
+        this.markEntity()
+      }
     },
     toggleAltSearch: function (choice) {
       this.altSearch = choice
