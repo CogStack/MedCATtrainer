@@ -180,7 +180,14 @@ export default {
       handler: 'fetchDetail',
       deep: true
     },
-    'selectedCUI': 'selectedCorrectCUI'
+    'selectedCUI': 'selectedCorrectCUI',
+    'altSearch': function (newVal) {
+      if (newVal) {
+        this.$nextTick(function () {
+          document.getElementById('pickerID').focus()
+        })
+      }
+    }
   }
 }
 </script>

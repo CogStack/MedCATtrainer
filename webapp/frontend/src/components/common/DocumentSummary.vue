@@ -12,7 +12,7 @@
       </div>
       <div class="clickable">
         <div v-if="moreDocs" @click="loadMoreDocs" class="more-docs">
-          <font-awesome-icon icon="plus"></font-awesome-icon>More Docs
+          <font-awesome-icon icon="plus" class="icon"></font-awesome-icon>More Docs
         </div>
       </div>
     </div>
@@ -113,6 +113,12 @@ export default {
 .more-docs {
   color: $primary;
   text-align: center;
+
+  .icon {
+    position: relative;
+    bottom: 2px;
+    padding-right: 3px;
+  }
 }
 
 .note-summary {
