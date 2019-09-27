@@ -1,8 +1,8 @@
 <template>
   <div class="task-bar">
-    <div class="task-bar-task">
-      <span class="task-name">Concept Annotation</span>
-    </div>
+    <!--<div class="task-bar-task">-->
+      <!--<span class="task-name">Concept Annotation</span>-->
+    <!--</div>-->
     <div class="task-bar-choices">
       <span>
         <button :disabled="taskLocked" class="btn task-btn-0" @click="correct">
@@ -17,6 +17,11 @@
           Alternative Concept</button>
       </span>
     </div>
+    <div class="submit">
+      <button :disabled="submitDisabled()" @click="submit()" class="btn btn-outline-primary mb-2 submit-btn" type="button">
+        Submit
+      </button>
+    </div>
   </div>
 </template>
 
@@ -26,6 +31,7 @@ import _ from 'lodash'
 export default {
   name: 'TaskBar',
   props: {
+    ents: Array,
     taskLocked: Boolean,
     altSearch: Boolean
   },
@@ -39,9 +45,23 @@ export default {
     alternative: function () {
       this.$emit('select:alternative', !this.altSearch)
     },
+    submit: function () {
+      this.$emit('submit')
+    },
+    submitDisabled: function () {
+      if (this.ents !== null) {
+        return !this.ents.every(e => {
+          return Object.values(e.assignedValues).every(e => e !== null)
+        })
+      }
+      return true
+    },
     keyup: function (e) {
-      // 1-3 select a value
-      if (e.keyCode >= 49 && e.keyCode <= 51 && !this.taskLocked) {
+      if (e.keyCode === 13) {
+        if (!this.submitDisabled()) {
+          this.submit()
+        }
+      } else if (e.keyCode >= 49 && e.keyCode <= 51 && !this.taskLocked) {
         let codeRange = _.range(3)
         let keyRange = _.range(49, 52)
         let selectIdx = _.zipObject(keyRange, codeRange)[e.keyCode]
@@ -70,18 +90,16 @@ export default {
 <style scoped lang="scss">
 .task-bar {
   width: 100%;
-  text-align: center;
-  padding-top: 5px;
-  padding-bottom: 30px;
+  padding: 5px 0;
   background-color: $background;
   color: $text;
-}
 
-.task-bar-choices {
-  padding: 5px;
-}
+  div {
+    display: inline-block;
+  }
 
-.task-name {
-  font-size: 22px;
+  .submit {
+    float: right;
+  }
 }
 </style>

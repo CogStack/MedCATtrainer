@@ -1,59 +1,57 @@
 <template>
-  <div>
+  <div class="sidebar">
+    <div class="title">Add Annotation</div>
     <div class="main-panel">
-      <h4 class="title">Add Annotation</h4>
-      <div class="sidebar">
-        <table class="add-synonym-table">
-          <tbody>
-          <tr>
-            <td>New Annotation</td>
-            <td class="fit-content">{{name}}</td>
-          </tr>
-          <tr @keyup.stop>
-            <td>Concept Lookup</td>
-            <td>
-              <v-select v-model="selectedCUI" label="name" @search="searchCUI" :options="searchResults"></v-select>
-            </td>
-          </tr>
-          <tr>
-            <td>Context</td>
-            <td class="fit-content context">{{this.prevText}}<span class="highlight">{{this.name}}</span>{{this.nextText.slice(0, 15)}}</td>
-          </tr>
-          </tbody>
-        </table>
-        <table class="add-synonym-table" v-if="selectedCUI">
-          <tbody>
-          <tr>
-            <td>Name</td>
-            <td>{{selectedCUI.name || 'n/a'}}</td>
-          </tr>
-          <tr>
-            <td>Term ID</td>
-            <td>{{selectedCUI.tui || 'n/a'}}</td>
-          </tr>
-          <tr>
-            <td>Semantic Type</td>
-            <td>{{selectedCUI.semantic_type || 'n/a'}}</td>
-          </tr>
-          <tr>
-            <td>Concept ID</td>
-            <td >{{selectedCUI.cui || 'n/a'}}</td>
-          </tr>
-          <tr v-if="selectedCUI.icd10">
-            <td>ICD-10</td>
-            <td class="icd-10-desc">{{selectedCUI.icd10}}</td>
-          </tr>
-          <tr>
-            <td>Description</td>
-            <td class="fit-content" v-html="selectedCUI.desc === 'nan' ? 'n/a' : selectedCUI.desc || 'n/a'"></td>
-          </tr>
-          <tr>
-            <td>Synonyms</td>
-            <td class="fit-content">{{selectedCUI.synonyms || 'n/a'}}</td>
-          </tr>
-          </tbody>
-        </table>
-      </div>
+      <table class="add-synonym-table">
+        <tbody>
+        <tr>
+          <td>New Annotation</td>
+          <td class="fit-content">{{name}}</td>
+        </tr>
+        <tr @keyup.stop>
+          <td>Concept Lookup</td>
+          <td>
+            <v-select v-model="selectedCUI" label="name" @search="searchCUI" :options="searchResults"></v-select>
+          </td>
+        </tr>
+        <tr>
+          <td>Context</td>
+          <td class="fit-content context">{{this.prevText}}<span class="highlight">{{this.name}}</span>{{this.nextText.slice(0, 15)}}</td>
+        </tr>
+        </tbody>
+      </table>
+      <table class="add-synonym-table" v-if="selectedCUI">
+        <tbody>
+        <tr>
+          <td>Name</td>
+          <td>{{selectedCUI.name || 'n/a'}}</td>
+        </tr>
+        <tr>
+          <td>Term ID</td>
+          <td>{{selectedCUI.tui || 'n/a'}}</td>
+        </tr>
+        <tr>
+          <td>Semantic Type</td>
+          <td>{{selectedCUI.semantic_type || 'n/a'}}</td>
+        </tr>
+        <tr>
+          <td>Concept ID</td>
+          <td >{{selectedCUI.cui || 'n/a'}}</td>
+        </tr>
+        <tr v-if="selectedCUI.icd10">
+          <td>ICD-10</td>
+          <td class="icd-10-desc">{{selectedCUI.icd10}}</td>
+        </tr>
+        <tr>
+          <td>Description</td>
+          <td class="fit-content" v-html="selectedCUI.desc === 'nan' ? 'n/a' : selectedCUI.desc || 'n/a'"></td>
+        </tr>
+        <tr>
+          <td>Synonyms</td>
+          <td class="fit-content">{{selectedCUI.synonyms || 'n/a'}}</td>
+        </tr>
+        </tbody>
+      </table>
     </div>
     <div class="action-buttons">
       <button @click="submit()" class="btn task-btn-0">
@@ -140,15 +138,26 @@ export default {
 </script>
 
 <style scoped lang="scss">
+
+$title-height: 41px;
+$button-height: 50px;
+
 .title {
   padding: 5px 15px;
   font-size: 16pt;
   box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
+  height: $title-height;
 }
 
 .sidebar {
   width: 100%;
-  overflow: auto;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.main-panel {
+  height: calc(100% - #{$title-height} - #{$button-height});
+  overflow-y: auto;
 }
 
 .context {
@@ -162,17 +171,12 @@ export default {
 }
 
 .action-buttons {
-  padding-top: 20px;
   text-align: center;
+  height: $button-height;
 }
 
 .icd-10-desc {
   white-space: pre-wrap;
-}
-
-ul.vs__dropdown-menu {
-  /*z-index: 100000000 !important;*/
-  /*position: absolute !important;*/
 }
 
 .add-synonym-table {
