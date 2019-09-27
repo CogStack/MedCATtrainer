@@ -34,7 +34,7 @@
         </tr>
         <tr v-if="conceptSummary['ICD-10']">
           <td>ICD-10</td>
-          <td v-html="conceptSummary['ICD-10']"></td>
+          <td class="icd-10-desc">{{conceptSummary['ICD-10']}}></td>
         </tr>
         <tr>
           <td>Accuracy</td>
@@ -217,6 +217,10 @@ export default {
   overflow: auto;
   background: $background;
   color: $text;
+}
+
+.icd-10-desc {
+  white-space: pre-wrap;
 }
 
 .concept-detail-table {
