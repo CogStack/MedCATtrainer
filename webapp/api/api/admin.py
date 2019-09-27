@@ -12,7 +12,6 @@ from .forms import *
 admin.site.register(Link)
 admin.site.register(MedCATModel)
 admin.site.register(Dataset)
-admin.site.register(Document)
 admin.site.register(Entity)
 admin.site.register(ProjectMetaAnnotate)
 admin.site.register(MetaTaskValue)
@@ -82,28 +81,30 @@ def _import_concepts(id):
     tuis = None
 
     for cui in cdb.cui2pretty_name:
-        cnt = Concept.objects.filter(cui=cui).count()
-        if cnt == 0:
-            tui = cdb.cui2tui.get(cui, 'unk')
-            if tuis is None or tui in tuis:
-                concept = Concept()
-                concept.pretty_name = cdb.cui2pretty_name.get(cui, '')
-                concept.cui = cui
-                concept.tui = tui
-                concept.semantic_type = cdb.tui2name.get(tui, '')
-                concept.desc = cdb.cui2desc.get(cui, '')
-                concept.synonyms = ",".join(cdb.cui2original_names.get(cui, []))
-                icd10 = ''
-                try:
-                    for pair in cdb.cui2info[cui]['icd10']:
-                        icd10 += pair['chapter'] + " | " + pair['name']
-                        icd10 += '\n'
-                    icd10.strip()
-                except:
-                    pass
-                concept.icd10 = icd10
-                #concept.vocab = cdb.cui2ontos.get(cui, '')
+        tui = cdb.cui2tui.get(cui, 'unk')
+        if tuis is None or tui in tuis:
+            concept = Concept()
+            concept.pretty_name = cdb.cui2pretty_name.get(cui, '')
+            concept.cui = cui
+            concept.tui = tui
+            concept.semantic_type = cdb.tui2name.get(tui, '')
+            concept.desc = cdb.cui2desc.get(cui, '')
+            concept.synonyms = ",".join(cdb.cui2original_names.get(cui, []))
+            icd10 = ''
+            try:
+                for pair in cdb.cui2info[cui]['icd10']:
+                    icd10 += pair['chapter'] + " | " + pair['name']
+                    icd10 += '\n'
+                icd10.strip()
+            except:
+                pass
+            concept.icd10 = icd10
+            #concept.vocab = cdb.cui2ontos.get(cui, '')
+
+            try:
                 concept.save()
+            except:
+                pass
 
 
 def import_concepts(modeladmin, request, queryset):
@@ -123,3 +124,12 @@ class ConceptAdmin(admin.ModelAdmin):
     model = Concept
     actions = [remove_all_concepts]
 admin.site.register(Concept, ConceptAdmin)
+
+
+def remove_all_documents(modeladmin, request, queryset):
+    Document.objects.all().delete()
+
+class DocumentAdmin(admin.ModelAdmin):
+    model = Document
+    actions = [remove_all_documents]
+admin.site.register(Document, DocumentAdmin)
