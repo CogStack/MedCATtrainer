@@ -21,7 +21,21 @@ def remove_annotations(document, project, partial=False):
         return "Something went wrong: " + str(e)
 
 def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
-    for ent in spacy_doc.ents:
+    spacy_doc._.ents.sort(key=lambda x: len(x.text), reverse=True)
+    tkns_in = []
+    ents = []
+    for ent in spacy_doc._.ents:
+        if (not cuis and not tuis) or (ent._.tui in tuis) or (ent._.cui in cuis):
+            to_add = True
+            for tkn in ent:
+                if tkn in tkns_in:
+                    to_add = False
+            if to_add:
+                for tkn in ent:
+                    tkns_in.append(tkn)
+                ents.append(ent)
+
+    for ent in ents:
         label = ent._.cui
         tui = ent._.tui
 
@@ -47,31 +61,30 @@ def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
             concept.icd10 = icd10
             concept.save()
 
-        if (not cuis and not tuis) or (tui in tuis) or (label in cuis):
-            cnt = Entity.objects.filter(label=label).count()
-            if cnt == 0:
-                # Create the entity
-                entity = Entity()
-                entity.label = label
-                entity.save()
-            else:
-                entity = Entity.objects.get(label=label)
+        cnt = Entity.objects.filter(label=label).count()
+        if cnt == 0:
+            # Create the entity
+            entity = Entity()
+            entity.label = label
+            entity.save()
+        else:
+            entity = Entity.objects.get(label=label)
 
-            if AnnotatedEntity.objects.filter(project=project,
-                                      document=document,
-                                      start_ind=ent.start_char,
-                                      end_ind=ent.end_char).count() == 0:
-                # If this entity doesn't exist already
-                ann_ent = AnnotatedEntity()
-                ann_ent.user = user
-                ann_ent.project = project
-                ann_ent.document = document
-                ann_ent.entity = entity
-                ann_ent.value = ent.text
-                ann_ent.start_ind = ent.start_char
-                ann_ent.end_ind = ent.end_char
-                ann_ent.acc = ent._.acc
-                ann_ent.save()
+        if AnnotatedEntity.objects.filter(project=project,
+                                  document=document,
+                                  start_ind=ent.start_char,
+                                  end_ind=ent.end_char).count() == 0:
+            # If this entity doesn't exist already
+            ann_ent = AnnotatedEntity()
+            ann_ent.user = user
+            ann_ent.project = project
+            ann_ent.document = document
+            ann_ent.entity = entity
+            ann_ent.value = ent.text
+            ann_ent.start_ind = ent.start_char
+            ann_ent.end_ind = ent.end_char
+            ann_ent.acc = ent._.acc
+            ann_ent.save()
 
 
 def _remove_overlap(project, document, start, end):
