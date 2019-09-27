@@ -10,7 +10,15 @@
         </tr>
         <tr>
           <td>Name</td>
-          <td>{{conceptSummary['Name'] || 'n/a'}}</td>
+          <td>
+            <span v-if="!altSearch">{{conceptSummary['Name'] || 'n/a'}}</span>
+            <span v-if="altSearch" class="alt-concept-picker" @keyup.stop>
+              <v-select class="picker" v-model="selectedCUI"
+                        label="name" @search="searchCUI" :options="searchResults"
+                        :inputId="'pickerID'"></v-select>
+              <font-awesome-icon class="cancel" v-if="altSearch" icon="times-circle" @click="cancelReassign"></font-awesome-icon>
+            </span>
+          </td>
         </tr>
         <tr>
           <td>Term ID</td>
@@ -22,14 +30,11 @@
         </tr>
         <tr>
           <td>Concept ID</td>
-          <td><span v-if="!altSearch">{{conceptSummary['Concept ID'] || 'n/a'}}</span>
-            <span v-if="altSearch" class="alt-concept-picker" @keyup.stop>
-              <v-select class="picker" v-model="selectedCUI"
-                        label="name" @search="searchCUI" :options="searchResults"
-                        :inputId="'pickerID'"></v-select>
-              <font-awesome-icon class="cancel" v-if="altSearch" icon="times-circle" @click="cancelReassign"></font-awesome-icon>
-            </span>
-          </td>
+          <td>{{conceptSummary['Concept ID'] || 'n/a'}}</td>
+        </tr>
+        <tr v-if="conceptSummary['ICD-10']">
+          <td>ICD-10</td>
+          <td>{{conceptSummary['ICD-10']}}</td>
         </tr>
         <tr>
           <td>Accuracy</td>
@@ -51,6 +56,7 @@
 
 <script>
 import vSelect from 'vue-select'
+import _ from 'lodash'
 
 const HIDDEN_PROPS = [
   'value', 'project', 'document', 'start_ind', 'end_ind',
@@ -63,11 +69,12 @@ const PROP_MAP = {
   'tui': 'Term ID',
   'semantic_type': 'Type',
   'cui': 'Concept ID',
+  'icd10': 'ICD-10',
   'pretty_name': 'Name'
 }
 
 const CONST_PROPS_ORDER = [
-  'Name', 'Description', 'Type', 'Term ID', 'Concept ID', 'Accuracy'
+  'Name', 'Description', 'Type', 'Term ID', 'Concept ID', 'ICD-10', 'Accuracy'
 ]
 
 export default {
@@ -131,6 +138,7 @@ export default {
             this.selectedEnt.tui = resp.data.results[0].tui
             this.selectedEnt.pretty_name = resp.data.results[0].pretty_name
             this.selectedEnt.semantic_type = resp.data.results[0].semantic_type
+            this.selectedEnt.icd10 = resp.data.results[0].icd10
             this.cleanProps()
           })
         })
@@ -146,9 +154,7 @@ export default {
           this.searchResults = resp.data.results.map(r => {
             return {
               name: r.pretty_name,
-              cui: r.cui,
-              desc: r.desc,
-              synonyms: _.replace(r.synonyms, new RegExp(',', 'g'), ', ')
+              cui: r.cui
             }
           })
         })

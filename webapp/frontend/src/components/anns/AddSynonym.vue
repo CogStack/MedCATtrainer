@@ -39,6 +39,10 @@
             <td>Concept ID</td>
             <td >{{selectedCUI.cui || 'n/a'}}</td>
           </tr>
+          <tr v-if="selectedCUI.icd10">
+            <td>ICD-10</td>
+            <td >{{selectedCUI.icd10}}</td>
+          </tr>
           <tr>
             <td>Description</td>
             <td class="fit-content" v-html="selectedCUI.desc === 'nan' ? 'n/a' : selectedCUI.desc || 'n/a'"></td>
@@ -105,6 +109,7 @@ export default {
               tui: r.tui,
               type: r.type,
               desc: r.desc,
+              icd10: r.icd10,
               semantic_type: r.semantic_type,
               synonyms: _.replace(r.synonyms, new RegExp(',', 'g'), ', ')
             }
