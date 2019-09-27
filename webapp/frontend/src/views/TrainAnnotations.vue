@@ -113,9 +113,6 @@ import NavBar from '@/components/common/NavBar.vue'
 import TaskBar from '@/components/anns/TaskBar.vue'
 import AddSynonym from '@/components/anns/AddSynonym.vue'
 
-// no limit...
-const ENT_LIMIT = Number.POSITIVE_INFINITY
-
 const TASK_NAME = 'Concept Annotation'
 const CONCEPT_CORRECT = 'Correct'
 const CONCEPT_REMOVED = 'Deleted'
@@ -241,48 +238,47 @@ export default {
       }
       this.$http.post('/api/prepare-documents/', payload).then(resp => {
         // assuming a 200 is fine here.
-        this.fetchEntities(0, 0)
+        this.fetchEntities()
       }).catch(err => {
         console.error(err)
       })
     },
-    fetchEntities: function (entsFetched, pages, selectedEntId) {
-      if (entsFetched < ENT_LIMIT) {
-        let params = this.nextEntSetUrl === null ? `?project=${this.projectId}&document=${this.currentDoc.id}`
-          : `?${this.nextEntSetUrl.split('?').slice(-1)[0]}`
-        this.$http.get(`/api/annotated-entities/${params}`).then(resp => {
-          let useAssignedVal = !this.project.require_entity_validation ||
-            this.project.validated_documents.indexOf(this.currentDoc.id) !== -1
+    fetchEntities: function (selectedEntId) {
+      let params = this.nextEntSetUrl === null ? `?project=${this.projectId}&document=${this.currentDoc.id}`
+        : `?${this.nextEntSetUrl.split('?').slice(-1)[0]}`
+      this.$http.get(`/api/annotated-entities/${params}`).then(resp => {
+        let useAssignedVal = !this.project.require_entity_validation ||
+          this.project.validated_documents.indexOf(this.currentDoc.id) !== -1
 
-          const ents = _.orderBy(resp.data.results, ['start_ind'], ['asc']).map(e => {
-            e.assignedValues = {}
-            e.assignedValues[TASK_NAME] = null
-            if (useAssignedVal || e.validated) {
-              let taskVal = CONCEPT_CORRECT
-              if (e.deleted) {
-                taskVal = CONCEPT_REMOVED
-              } else if (e.alternative) {
-                taskVal = CONCEPT_ALTERNATIVE
-              }
-              e.assignedValues[TASK_NAME] = taskVal
+        const ents = resp.data.results.map(e => {
+          e.assignedValues = {}
+          e.assignedValues[TASK_NAME] = null
+          if (useAssignedVal || e.validated) {
+            let taskVal = CONCEPT_CORRECT
+            if (e.deleted) {
+              taskVal = CONCEPT_REMOVED
+            } else if (e.alternative) {
+              taskVal = CONCEPT_ALTERNATIVE
             }
-            return e
-          })
-          if (resp.data.previous === null) {
-            this.ents = ents
-          } else {
-            this.ents = this.ents.concat(ents)
+            e.assignedValues[TASK_NAME] = taskVal
           }
-          this.nextEntSetUrl = resp.data.next
-          if (this.nextEntSetUrl) {
-            this.fetchEntities(resp.data.results.length * (pages + 1), pages + 1, selectedEntId)
-          } else {
-            this.currentEnt = selectedEntId ? this.ents[this.ents.map(e => e.id).indexOf(selectedEntId)]
-              : this.ents[0]
-            this.loadingDoc = false
-          }
+          return e
         })
-      }
+        if (resp.data.previous === null) {
+          this.ents = ents
+        } else {
+          this.ents = this.ents.concat(ents)
+        }
+        this.nextEntSetUrl = resp.data.next
+        if (this.nextEntSetUrl) {
+          this.fetchEntities(selectedEntId)
+        } else {
+          this.currentEnt = selectedEntId ? this.ents[this.ents.map(e => e.id).indexOf(selectedEntId)]
+            : this.ents[0]
+          this.ents = _.orderBy(this.ents, ['start_ind'], ['asc'])
+          this.loadingDoc = false
+        }
+      })
     },
     selectEntity: function (entIdx) {
       this.currentEnt = this.ents[entIdx]
@@ -341,7 +337,7 @@ export default {
           newEnt.assignedValues[TASK_NAME] = CONCEPT_CORRECT
           this.ents = null
           this.currentEnt = null
-          this.fetchEntities(0, 0, newEnt.id)
+          this.fetchEntities(newEnt.id)
         })
       }
     },
