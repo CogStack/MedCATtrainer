@@ -365,7 +365,7 @@ export default {
       }
       this.$http.post(`/api/submit-document/`, payload).then(() => {
         if (this.currentDoc !== this.docs.slice(-1)[0]) {
-          this.loadDoc(_.findIndex(this.docs, d => d === this.currentDoc.id) + 1)
+          this.loadDoc(_.findIndex(this.docs, d => d.id === this.currentDoc.id) + 1)
         }
       })
     }
