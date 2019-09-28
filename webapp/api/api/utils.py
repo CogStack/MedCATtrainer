@@ -174,7 +174,7 @@ def train_medcat(cat, project, document):
                          text=text,
                          spacy_doc=doc,
                          text_inds=text_inds,
-                         lr=0.3,
+                         lr=0.1,
                          negative=ann.deleted)
 
 
