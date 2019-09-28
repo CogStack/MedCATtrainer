@@ -112,6 +112,7 @@ class AnnotatedEntity(models.Model):
     acc = models.FloatField()
     validated = models.BooleanField(default=False)
     alternative = models.BooleanField(default=False)
+    manually_created = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
 
     def __str__(self):

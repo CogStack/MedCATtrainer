@@ -137,6 +137,7 @@ def create_annotation(source_val, right_context, cui, user, project, document, c
         ann_ent.end_ind = end
         ann_ent.acc = 1
         ann_ent.validated = True
+        ann_ent.manually_created = True
         ann_ent.save()
         id = ann_ent.id
 

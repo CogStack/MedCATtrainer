@@ -46,6 +46,8 @@ def download(modeladmin, request, queryset):
             out_ann['start'] = ann.start_ind
             out_ann['end'] = ann.end_ind
             out_ann['deleted'] = ann.deleted
+            out_ann['alternative'] = ann.alternative
+            out_ann['manually_created'] = ann.manually_created
             out_doc['annotations'].append(out_ann)
         out['documents'].append(out_doc)
 
