@@ -132,6 +132,12 @@ export default {
     },
     cancel: function () {
       this.$emit('request:addAnnotationComplete')
+    },
+    mounted: function () {
+      window.addEventListener('keyup', this.keyup)
+    },
+    beforeDestroy: function () {
+      window.removeEventListener('keyup', this.keyup)
     }
   }
 }
@@ -184,7 +190,16 @@ $button-height: 50px;
   tbody > tr {
     box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
 
+    td:first-child {
+      width: 100px;
+    }
+
     > td {
+
+      &:first-child {
+        width: 100px;
+      }
+
       padding: 10px 15px;
       vertical-align: top;
       color: $text;
