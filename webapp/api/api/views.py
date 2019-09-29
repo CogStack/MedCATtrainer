@@ -82,11 +82,14 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
 class TextInFilter(drf.BaseInFilter, drf.CharFilter):
     pass
-
+class NumInFilter(drf.BaseInFilter, drf.NumberFilter):
+    pass
 
 class ConceptFilter(drf.FilterSet):
     tui__in = TextInFilter(field_name='tui', lookup_expr='in')
     cui__in = TextInFilter(field_name='cui', lookup_expr='in')
+    cdb__in = NumInFilter(field_name='cdb', lookup_expr='in')
+
     class Meta:
         model = Concept
         fields = ['tui', 'cui', 'cdb']
