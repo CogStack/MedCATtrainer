@@ -11,7 +11,6 @@ from .forms import *
 # Register your models here.
 admin.site.register(Link)
 admin.site.register(MedCATModel)
-admin.site.register(Dataset)
 admin.site.register(Entity)
 admin.site.register(ProjectMetaAnnotate)
 admin.site.register(MetaTaskValue)
@@ -27,19 +26,25 @@ def download(modeladmin, request, queryset):
     project = queryset[0]
 
     out = {}
-    out['project'] = project.name
+    out['name'] = project.name
+    out['id'] = project.id
+    out['cuis'] = project.cuis
+    out['tuis'] = project.tuis
     out['documents'] = []
 
     for doc in project.validated_documents.all():
         out_doc = {}
+        out_doc['id'] = doc.id
         out_doc['name'] = doc.name
         out_doc['text'] = doc.text
+        out_doc['last_modified'] = str(doc.last_modified)
         out_doc['annotations'] = []
 
         anns = AnnotatedEntity.objects.filter(project=project, document=doc,
                                               validated=True)
         for ann in anns:
             out_ann = {}
+            out_ann['id'] = ann.id
             out_ann['user'] = ann.user.username
             out_ann['cui'] = ann.entity.label
             out_ann['value'] = ann.value
@@ -47,6 +52,7 @@ def download(modeladmin, request, queryset):
             out_ann['end'] = ann.end_ind
             out_ann['deleted'] = ann.deleted
             out_ann['alternative'] = ann.alternative
+            out_ann['last_modified'] = str(ann.last_modified)
             out_ann['manually_created'] = ann.manually_created
             out_doc['annotations'].append(out_ann)
         out['documents'].append(out_doc)
@@ -135,4 +141,6 @@ def remove_all_documents(modeladmin, request, queryset):
 class DocumentAdmin(admin.ModelAdmin):
     model = Document
     actions = [remove_all_documents]
+    list_display = ['name', 'create_time', 'dataset', 'last_modified']
+
 admin.site.register(Document, DocumentAdmin)

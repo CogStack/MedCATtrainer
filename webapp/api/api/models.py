@@ -73,6 +73,7 @@ class Dataset(models.Model):
 class Document(models.Model):
     name = models.CharField(max_length=150)
     create_time = models.DateTimeField(auto_now_add=True)
+    last_modified = models.DateTimeField(auto_now=True)
     text = models.TextField(default="", blank=True)
     dataset = models.ForeignKey('Dataset', on_delete=models.CASCADE)
 
@@ -114,6 +115,8 @@ class AnnotatedEntity(models.Model):
     alternative = models.BooleanField(default=False)
     manually_created = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
+    last_modified = models.DateTimeField(auto_now=True)
+
 
     def __str__(self):
         return str(self.entity)
