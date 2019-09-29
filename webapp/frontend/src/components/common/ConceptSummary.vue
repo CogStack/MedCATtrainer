@@ -209,7 +209,6 @@ export default {
 .ent-name {
   padding: 10px;
   font-size: 12pt;
-  box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
 }
 
 .sidebar {
@@ -230,6 +229,10 @@ export default {
     > td {
       padding: 10px 15px;
       vertical-align: top;
+
+      &:first-child {
+        width: 100px;
+      }
 
       &.fit-content {
         display: inline-block;

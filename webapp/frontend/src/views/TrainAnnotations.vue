@@ -95,7 +95,7 @@
       </div>
     </modal>
 
-    <modal v-if="docToSubmit !== null" @modal:close="docToSubmit=null">
+    <modal v-if="docToSubmit" @modal:close="docToSubmit=null">
       <h3 slot="header">Submit Document</h3>
       <div slot="body">Confirm document is ready for submission</div>
       <!-- TODO: Provide some sort of summary here?? -->
@@ -374,7 +374,18 @@ export default {
           this.loadDoc(_.findIndex(this.docs, d => d.id === this.currentDoc.id) + 1)
         }
       })
+    },
+    keydown: function (e) {
+      if (e.keyCode === 13 && this.docToSubmit) {
+        this.submitConfirmed()
+      }
     }
+  },
+  mounted: function () {
+    window.addEventListener('keydown', this.keydown)
+  },
+  beforeDestroy: function () {
+    window.removeEventListener('keydown', this.keydown)
   }
 }
 </script>

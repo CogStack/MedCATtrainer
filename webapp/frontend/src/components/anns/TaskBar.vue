@@ -46,7 +46,7 @@ export default {
       this.$emit('select:alternative', !this.altSearch)
     },
     submit: function () {
-      this.$emit('submit')
+      this.$emit('submit', true)
     },
     submitDisabled: function () {
       if (this.ents !== null) {
