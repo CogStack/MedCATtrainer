@@ -1,8 +1,8 @@
 <template>
-  <div class="container usecase">
+  <div class="container">
     <login v-if="!loginSuccessful" @login:success="loggedIn()"></login>
     <h3> Welcome to MedCAT</h3>
-    <table class="table table-hover">
+    <table class="table table-hover project-list">
       <thead>
         <tr>
           <th>Project ID</th>
@@ -12,6 +12,7 @@
           <th>UMLS Concepts</th>
           <th>UMLS Terms</th>
           <th>Annotate / Validate</th>
+          <th>Save Model</th>
         </tr>
       </thead>
       <tbody>
@@ -23,9 +24,13 @@
           <td>{{project.cuis}}</td>
           <td>{{project.tuis}}</td>
           <td>{{project.require_entity_validation ? 'Yes' : 'No'}}</td>
+          <td @click.stop><button class="btn btn-outline-primary" @click="saveModel(project.id)"><font-awesome-icon icon="save"></font-awesome-icon></button></td>
         </tr>
       </tbody>
     </table>
+    <transition name="alert"><div class="alert alert-info" v-if="saving" role="alert">Saving models</div></transition>
+    <transition name="alert"><div class="alert alert-primary" v-if="modelSaved" role="alert">Model Successfully saved</div></transition>
+    <transition name="alert"><div class="alert alert-danger" v-if="modelSavedError" role="alert">Error saving model</div></transition>
   </div>
 </template>
 <script>
@@ -42,7 +47,10 @@ export default {
   data: function () {
     let data = {
       projects: [],
-      loginSuccessful: false
+      loginSuccessful: false,
+      modelSaved: false,
+      modelSavedError: false,
+      saving: false
     }
 
     if (this.$cookie.apiToken) {
@@ -77,13 +85,30 @@ export default {
       }
     },
     select: function (project) {
-      // train annotations for project,
-
       this.$router.push({
         name: 'train-annotations',
         params: {
           projectId: project.id
         }
+      })
+    },
+    saveModel: function (projectId) {
+      let payload = {
+        project_id: projectId
+      }
+      this.saving = true
+      this.$http.post('/api/save-models/', payload).then(() => {
+        this.saving = false
+        this.modelSaved = true
+        setTimeout(() => {
+          this.modelSaved = false
+        }, 5000)
+      }).catch(() => {
+        this.saving = false
+        this.modelSavedError = true
+        setTimeout(function () {
+          this.modelSavedError = false
+        }, 5000)
       })
     }
   }
@@ -97,4 +122,17 @@ h3 {
 .table td {
   cursor: pointer;
 }
+
+.project-list {
+  max-height: 80%;
+}
+
+.alert-enter-active, alert-leave-active {
+  transition: opacity .5s;
+}
+
+.alert-enter, .alert-leave-to {
+  opacity: 0;
+}
+
 </style>

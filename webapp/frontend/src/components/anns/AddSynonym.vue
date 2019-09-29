@@ -78,8 +78,7 @@ export default {
   },
   props: {
     selection: Object,
-    projectTUIs: String,
-    projectId: Number,
+    project: Object,
     documentId: Number
   },
   data: function () {
@@ -97,7 +96,8 @@ export default {
   methods: {
     searchCUI: _.debounce(function (term, loading) {
       loading(true)
-      this.$http.get(`/api/search-concepts/?search=${term}&tui__in=${this.projectTUIs}`)
+      let queryParams = `search=${term}&tui__in=${this.project.tuis}&cdb__in=${this.project.cdb_search_filter.join(',')}`
+      this.$http.get(`/api/search-concepts/?${queryParams}`)
         .then(resp => {
           loading(false)
           this.searchResults = resp.data.results.map(r => {
@@ -121,7 +121,7 @@ export default {
       const payload = {
         source_value: this.selection.selStr,
         document_id: this.documentId,
-        project_id: this.projectId,
+        project_id: this.project.project_id,
         right_context: this.selection.nextText,
         cui: this.selectedCUI.cui
       }

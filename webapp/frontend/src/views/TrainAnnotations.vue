@@ -9,7 +9,7 @@
 
       <div class="half-width meta">
         <h5 class="file-name-heading" v-if="((docs || {}).length || 0) > 0">
-          <span class="file-name">{{ currentDoc.name }}</span>
+          <span class="file-name">{{(currentDoc || {}).name}}</span>
           <span class="divider">|</span>
           <span class="files-remaining">{{ totalDocs - (project !== null ? project.validated_documents.length : 0)}} Remaining</span>
         </h5>
@@ -38,13 +38,13 @@
       <div class="sidebar-container">
         <transition name="slide-left">
           <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" :altSearch="altSearch"
-                           :projectTUIs="(project || {}).tuis" @select:altConcept="markAlternative"
+                           :project="project" @select:altConcept="markAlternative"
                            @select:alternative="toggleAltSearch"
                            class="concept-summary"></concept-summary>
         </transition>
         <transition name="slide-left">
           <add-synonym v-if="conceptSynonymSelection" :selection="conceptSynonymSelection"
-                       :projectTUIs="project.tuis" :projectId="project.id" :documentId="currentDoc.id"
+                       :project="project" :documentId="currentDoc.id"
                        @request:addAnnotationComplete="addAnnotationComplete" class="add-synonym"></add-synonym>
         </transition>
       </div>
@@ -221,13 +221,15 @@ export default {
     },
     loadDoc: function (docId) {
       this.currentDoc = _.find(this.docs, (d) => d.id === docId)
-      this.$router.replace({
-        name: this.$route.name,
-        params: {
-          projectId: this.$route.params.projectId,
-          docId: docId
-        }
-      })
+      if (this.$route.params.docId !== docId) {
+        this.$router.replace({
+          name: this.$route.name,
+          params: {
+            projectId: this.$route.params.projectId,
+            docId: docId
+          }
+        })
+      }
       this.currentEnt = null
       this.prepareDoc()
     },

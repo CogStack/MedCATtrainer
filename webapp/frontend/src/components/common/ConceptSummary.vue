@@ -83,7 +83,7 @@ export default {
     vSelect
   },
   props: {
-    projectTUIs: String,
+    project: Object,
     selectedEnt: {
       type: Object,
       default: function () {
@@ -148,7 +148,8 @@ export default {
     },
     searchCUI: _.debounce(function (term, loading) {
       loading(true)
-      this.$http.get(`/api/search-concepts/?search=${term}&tui__in=${this.projectTUIs}`)
+      let queryParams = `search=${term}&tui__in=${this.project.tuis}&cdb__in=${this.project.cdb_search_filter.join(',')}`
+      this.$http.get(`/api/search-concepts/?${queryParams}`)
         .then(resp => {
           loading(false)
           this.searchResults = resp.data.results.map(r => {
