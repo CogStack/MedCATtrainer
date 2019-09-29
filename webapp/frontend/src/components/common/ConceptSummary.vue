@@ -171,10 +171,19 @@ export default {
       this.$emit('select:alternative', false)
       this.searchResults = []
       this.selectedCUI = null
+    },
+    keyup: function (e) {
+      if (this.altSearch && e.keyCode === 27) {
+        this.cancelReassign()
+      }
     }
   },
   mounted: function () {
     this.fetchDetail()
+    window.addEventListener('keyup', this.keyup)
+  },
+  beforeDestroy: function () {
+    window.removeEventListener('keyup', this.keyup)
   },
   watch: {
     'selectedEnt': {

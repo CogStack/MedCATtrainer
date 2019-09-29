@@ -133,12 +133,17 @@ export default {
     cancel: function () {
       this.$emit('request:addAnnotationComplete')
     },
-    mounted: function () {
-      window.addEventListener('keyup', this.keyup)
-    },
-    beforeDestroy: function () {
-      window.removeEventListener('keyup', this.keyup)
+    keyup: function (e) {
+      if (e.keyCode === 27) {
+        this.cancel()
+      }
     }
+  },
+  mounted: function () {
+    window.addEventListener('keyup', this.keyup)
+  },
+  beforeDestroy: function () {
+    window.removeEventListener('keyup', this.keyup)
   }
 }
 </script>

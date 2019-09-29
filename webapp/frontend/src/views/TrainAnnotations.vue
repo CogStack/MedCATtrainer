@@ -51,7 +51,7 @@
     </div>
 
     <modal v-if="helpModal" class="help-modal" @modal:close="helpModal = false">
-      <h3 slot="header">{{ project.name }} Tagging Help</h3>
+      <h3 slot="header">{{ project.name }} Annotation Help</h3>
       <div slot="body" class="help-modal-body">
         <p>Validate each highlighted concept</p>
         <div>Keyboard Shortcuts</div>
@@ -373,7 +373,7 @@ export default {
       }
       this.$http.post(`/api/submit-document/`, payload).then(() => {
         if (this.currentDoc !== this.docs.slice(-1)[0]) {
-          this.loadDoc(_.findIndex(this.docs, d => d.id === this.currentDoc.id) + 1)
+          this.loadDoc(this.docs[this.docs.indexOf(this.currentDoc) + 1].id)
         }
       })
     },
