@@ -48,6 +48,7 @@ def download_without_text(modeladmin, request, queryset):
             out_ann['alternative'] = ann.alternative
             out_ann['last_modified'] = str(ann.last_modified)
             out_ann['manually_created'] = ann.manually_created
+            out_ann['acc'] = ann.acc
             out_doc['annotations'].append(out_ann)
         out['documents'].append(out_doc)
 
@@ -96,6 +97,7 @@ def download(modeladmin, request, queryset):
             out_ann['alternative'] = ann.alternative
             out_ann['last_modified'] = str(ann.last_modified)
             out_ann['manually_created'] = ann.manually_created
+            out_ann['acc'] = ann.acc
             out_doc['annotations'].append(out_ann)
         out['documents'].append(out_doc)
 
