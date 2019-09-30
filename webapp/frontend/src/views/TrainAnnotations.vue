@@ -279,9 +279,9 @@ export default {
         if (this.nextEntSetUrl) {
           this.fetchEntities(selectedEntId)
         } else {
+          this.ents = _.orderBy(this.ents, ['start_ind'], ['asc'])
           this.currentEnt = selectedEntId ? this.ents[this.ents.map(e => e.id).indexOf(selectedEntId)]
             : this.ents[0]
-          this.ents = _.orderBy(this.ents, ['start_ind'], ['asc'])
           this.loadingDoc = false
         }
       })
