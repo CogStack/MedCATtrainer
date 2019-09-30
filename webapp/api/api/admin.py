@@ -20,6 +20,47 @@ admin.site.register(MetaAnnotation)
 admin.site.register(Vocabulary)
 
 
+def download_without_text(modeladmin, request, queryset):
+    if not request.user.is_staff:
+        raise PermissionDenied
+
+    project = queryset[0]
+
+    out = {}
+    out['name'] = project.name
+    out['id'] = project.id
+    out['tuis'] = project.tuis
+    out['documents'] = []
+
+    for doc in project.validated_documents.all():
+        out_doc = {}
+        out_doc['id'] = doc.id
+        out_doc['last_modified'] = str(doc.last_modified)
+        out_doc['annotations'] = []
+
+        anns = AnnotatedEntity.objects.filter(project=project, document=doc,
+                                              validated=True)
+        for ann in anns:
+            out_ann = {}
+            out_ann['id'] = ann.id
+            out_ann['user'] = ann.user.username
+            out_ann['deleted'] = ann.deleted
+            out_ann['alternative'] = ann.alternative
+            out_ann['last_modified'] = str(ann.last_modified)
+            out_ann['manually_created'] = ann.manually_created
+            out_doc['annotations'].append(out_ann)
+        out['documents'].append(out_doc)
+
+    sio = StringIO()
+    json.dump(out, sio)
+    sio.seek(0)
+
+    f_name = "{}.json".format(project.name)
+    response = HttpResponse(sio, content_type='text/json')
+    response['Content-Disposition'] = 'attachment; filename={}'.format(f_name)
+    return response
+
+
 def download(modeladmin, request, queryset):
     if not request.user.is_staff:
         raise PermissionDenied
@@ -70,7 +111,7 @@ def download(modeladmin, request, queryset):
 
 class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
     model = ProjectAnnotateEntities
-    actions = [download]
+    actions = [download, download_without_text]
 admin.site.register(ProjectAnnotateEntities, ProjectAnnotateEntitiesAdmin)
 
 
