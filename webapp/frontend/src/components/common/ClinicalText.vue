@@ -20,7 +20,6 @@
 </template>
 
 <script>
-import $ from 'jquery'
 import _ from 'lodash'
 import VRuntimeTemplate from 'v-runtime-template'
 import VueSimpleContextMenu from 'vue-simple-context-menu'
@@ -54,7 +53,8 @@ export default {
     formattedText: function () {
       if (this.loading || !this.text || !this.ents) { return '' }
       if (this.ents.length === 0) {
-        return `<div @contextmenu.prevent.stop="showCtxMenu($event)">${this.text === 'nan' ? '' : this.text}</div>`
+        let text = this.text.replace('&', '&amp').replace('<', '&gt').replace('>', '&gt')
+        return `<div @contextmenu.prevent.stop="showCtxMenu($event)">${text === 'nan' ? '' : text}</div>`
       }
 
       const taskHighlightDefault = 'highlight-task-default'
@@ -81,13 +81,11 @@ export default {
           formattedText += this.text.slice(start, this.text.length - 1)
         }
       }
-
-      let el = $('<div></div>')
-      el.html(formattedText)
-      // strip all plain text HTML that may be malformed and only leave the <span> els we've included.
-      $(":not(*[class^='highlight-task'])", el).remove()
-      formattedText = el.html()
-
+      formattedText = formattedText
+        .replace(/<(?!span)/g, '&lt')
+        .replace(/&lt(?=\/span>)/g, '<')
+        .replace(/(?<!")>/g, '&gt')
+        .replace(/(?<=<\/span)&gt/g, '>')
       formattedText = `<div @contextmenu.prevent.stop="showCtxMenu($event)">${formattedText}</div>`
 
       this.scrollIntoView(timeout)
