@@ -11,6 +11,7 @@ from .forms import *
 # Register your models here.
 admin.site.register(Link)
 admin.site.register(MedCATModel)
+admin.site.register(Dataset)
 admin.site.register(Entity)
 admin.site.register(ProjectMetaAnnotate)
 admin.site.register(MetaTaskValue)
