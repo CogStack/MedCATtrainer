@@ -1,3 +1,4 @@
+import os
 from .models import Entity, AnnotatedEntity, Concept
 from medcat.cdb import CDB
 from medcat.utils.vocab import Vocab
@@ -154,6 +155,9 @@ def create_annotation(source_val, right_context, cui, user, project, document, c
 
 
 def train_medcat(cat, project, document):
+    lr = float(os.getenv("LR", 1))
+    anneal = os.getenv("ANNEAL", 'false').lower() == 'true'
+
     # Just in case, disable unsupervised training
     cat.train = False
     # Get all annotations
@@ -174,7 +178,8 @@ def train_medcat(cat, project, document):
                          text=text,
                          spacy_doc=doc,
                          text_inds=text_inds,
-                         lr=0.1,
+                         lr=lr,
+                         anneal=anneal,
                          negative=ann.deleted)
 
 
