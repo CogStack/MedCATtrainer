@@ -121,7 +121,7 @@ export default {
       const payload = {
         source_value: this.selection.selStr,
         document_id: this.documentId,
-        project_id: this.project.project_id,
+        project_id: this.project.id,
         right_context: this.selection.nextText,
         cui: this.selectedCUI.cui
       }
