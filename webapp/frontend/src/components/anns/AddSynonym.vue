@@ -96,7 +96,7 @@ export default {
   methods: {
     searchCUI: _.debounce(function (term, loading) {
       loading(true)
-      let queryParams = `search=${term}&tui__in=${this.project.tuis}&cdb__in=${this.project.cdb_search_filter.join(',')}`
+      let queryParams = `search=${term}&cdb__in=${this.project.cdb_search_filter.join(',')}`
       this.$http.get(`/api/search-concepts/?${queryParams}`)
         .then(resp => {
           loading(false)
