@@ -65,6 +65,11 @@ class ProjectAnnotateEntitiesViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectAnnotateEntitiesSerializer
     filterset_fields = ['members', 'dataset', 'id']
 
+    def get_queryset(self):
+        user = self.request.user
+        projects = ProjectAnnotateEntities.objects.filter(members=user.id)
+
+        return projects
 
 class AnnotatedEntityViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
