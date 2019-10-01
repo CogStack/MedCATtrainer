@@ -183,31 +183,31 @@ def train_medcat(cat, project, document):
                          negative=ann.deleted)
 
 
-def get_medcat(cat, CDB_MAP, VOCAB_MAP, project):
+def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
     cdb_id = project.medcat_models.cdb.id
     vocab_id = project.medcat_models.vocab.id
+    cat_id = str(cdb_id) + "-" + str(vocab_id)
 
-    if cdb_id in CDB_MAP:
-        cdb = CDB_MAP[cdb_id]
+    if cat_id in CAT_MAP:
+        cat = CAT_MAP[cat_id]
     else:
-        cdb_path = project.medcat_models.cdb.cdb_file.path
-        cdb = CDB()
-        cdb.load_dict(cdb_path)
-        CDB_MAP[cdb_id] = cdb
+        if cdb_id in CDB_MAP:
+            cdb = CDB_MAP[cdb_id]
+        else:
+            cdb_path = project.medcat_models.cdb.cdb_file.path
+            cdb = CDB()
+            cdb.load_dict(cdb_path)
+            CDB_MAP[cdb_id] = cdb
 
-    if vocab_id in VOCAB_MAP:
-        vocab = VOCAB_MAP[vocab_id]
-    else:
-        vocab_path = project.medcat_models.vocab.vocab_file.path
-        vocab = Vocab()
-        vocab.load_dict(vocab_path)
-        VOCAB_MAP[vocab_id] = vocab
+        if vocab_id in VOCAB_MAP:
+            vocab = VOCAB_MAP[vocab_id]
+        else:
+            vocab_path = project.medcat_models.vocab.vocab_file.path
+            vocab = Vocab()
+            vocab.load_dict(vocab_path)
+            VOCAB_MAP[vocab_id] = vocab
 
-    if cat is None:
         cat = CAT(cdb=cdb, vocab=vocab)
-    else:
-        cat.cdb = cdb
-        cat.vocab = vocab
-    cat.train = False
-
+        cat.train = False
+        CAT_MAP[cat_id] = cat
     return cat

@@ -35,6 +35,7 @@ log = basic_logger("api.views")
 # Maps between IDs and objects 
 CDB_MAP = {}
 VOCAB_MAP = {}
+CAT_MAP = {}
 
 # Get the basic version of MedCAT
 cat = None
@@ -114,7 +115,6 @@ class EntityViewSet(viewsets.ModelViewSet):
 
 @api_view(http_method_names=['POST'])
 def prepare_documents(request):
-    global cat
     # Get the user
     user = request.user
     # Get doc ids
@@ -152,7 +152,8 @@ def prepare_documents(request):
         # If the document is not already annotated, annotate it
         if len(anns) == 0 or update:
             # Based on the project id get the right medcat
-            cat = get_medcat(cat, CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
+            cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
+                             CAT_MAP=CAT_MAP, project=project)
 
             spacy_doc = cat(document.text)
             add_annotations(spacy_doc=spacy_doc,
@@ -167,13 +168,13 @@ def prepare_documents(request):
 
 @api_view(http_method_names=['POST'])
 def name2cuis(request):
-    global cat
     print(request.data)
     text = request.data['text']
     p_id = request.data['project_id']
     project = ProjectAnnotateEntities.objects.get(id=p_id)
 
-    cat = get_medcat(cat, CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
+    cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
+                     CAT_MAP=CAT_MAP, project=project)
 
     name, _ = prepare_name(cat=cat, name=text)
     out = {'cuis': list(cat.cdb.name2cui.get(name, []))}
@@ -183,7 +184,6 @@ def name2cuis(request):
 
 @api_view(http_method_names=['POST'])
 def add_annotation(request):
-    global cat
     # Get project id
     p_id = request.data['project_id']
     d_id = request.data['document_id']
@@ -200,7 +200,8 @@ def add_annotation(request):
     project = ProjectAnnotateEntities.objects.get(id=p_id)
     document = Document.objects.get(id=d_id)
 
-    cat = get_medcat(cat, CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
+    cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
+                     CAT_MAP=CAT_MAP, project=project)
     id = create_annotation(source_val=source_val,
             right_context=right_context,
             cui=cui,
@@ -214,7 +215,6 @@ def add_annotation(request):
 
 @api_view(http_method_names=['POST'])
 def submit_document(request):
-    global cat
     # Get project id
     p_id = request.data['project_id']
     d_id = request.data['document_id']
@@ -223,7 +223,8 @@ def submit_document(request):
     project = ProjectAnnotateEntities.objects.get(id=p_id)
     document = Document.objects.get(id=d_id)
 
-    cat = get_medcat(cat, CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
+    cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
+                     CAT_MAP=CAT_MAP, project=project)
     train_medcat(cat, project, document)
 
     return Response({'message': 'Document submited successfully'})
@@ -231,11 +232,11 @@ def submit_document(request):
 
 @api_view(http_method_names=['POST'])
 def save_models(request):
-    global cat
     # Get project id
     p_id = request.data['project_id']
     project = ProjectAnnotateEntities.objects.get(id=p_id)
-    cat = get_medcat(cat, CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
+    cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
+                     CAT_MAP=CAT_MAP, project=project)
 
     cat.cdb.save_dict(project.medcat_models.cdb.cdb_file.path)
 
