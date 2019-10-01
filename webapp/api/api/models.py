@@ -38,6 +38,7 @@ class Link(models.Model):
 
 class ConceptDB(models.Model):
     cdb_file = models.FileField()
+    use_for_training = models.BooleanField(default=True)
 
     def __str__(self):
         return str(self.cdb_file.name)
@@ -137,7 +138,7 @@ class MetaTask(models.Model):
 
 class ProjectAnnotateEntities(Project):
     medcat_models = models.ForeignKey('MedCATModel', on_delete=models.SET_NULL, blank=True, null=True)
-    cdb_search_filter = models.ManyToManyField('ConceptDB', blank=True, null=True)
+    cdb_search_filter = models.ManyToManyField('ConceptDB', blank=True, default=None)
     require_entity_validation = models.BooleanField(default=False)
 
 

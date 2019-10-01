@@ -67,7 +67,10 @@ class ProjectAnnotateEntitiesViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        projects = ProjectAnnotateEntities.objects.filter(members=user.id)
+        if user.is_superuser:
+            projects = ProjectAnnotateEntities.objects.all()
+        else:
+            projects = ProjectAnnotateEntities.objects.filter(members=user.id)
 
         return projects
 
