@@ -164,9 +164,14 @@ def import_concepts(modeladmin, request, queryset):
     for concept_db in queryset:
         _import_concepts(concept_db.id)
 
+def delete_concepts_from_cdb(modeladmin, request, queryset):
+    for concept_db in queryset:
+        Concept.objects.filter(cdb=concept_db).delete()
+
+
 class ConceptDBAdmin(admin.ModelAdmin):
     model = ConceptDB
-    actions = [import_concepts]
+    actions = [import_concepts, delete_concepts_from_cdb]
 admin.site.register(ConceptDB, ConceptDBAdmin)
 
 
