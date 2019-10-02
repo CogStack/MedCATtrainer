@@ -37,11 +37,12 @@ class Link(models.Model):
 
 
 class ConceptDB(models.Model):
+    name = models.CharField(max_length=100, default='', blank=True)
     cdb_file = models.FileField()
     use_for_training = models.BooleanField(default=True)
 
     def __str__(self):
-        return str(self.cdb_file.name)
+        return self.name
 
 
 class Vocabulary(models.Model):
