@@ -10,7 +10,7 @@
       </span>
       <span>
         <button :disabled="taskLocked" class="btn task-btn-1" @click="remove">
-          Remove</button>
+          Wrong</button>
       </span>
       <span>
         <button :disabled="taskLocked" class="btn task-btn-2" @click="alternative">
