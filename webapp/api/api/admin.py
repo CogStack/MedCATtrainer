@@ -9,7 +9,6 @@ from .forms import *
 
 
 # Register your models here.
-admin.site.register(Link)
 admin.site.register(Dataset)
 admin.site.register(Entity)
 admin.site.register(MetaTaskValue)

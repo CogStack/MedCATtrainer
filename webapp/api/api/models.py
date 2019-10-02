@@ -30,12 +30,6 @@ class Concept(models.Model):
         return str(self.pretty_name)
 
 
-class Link(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    concept = models.ForeignKey('Concept', on_delete=models.CASCADE)
-    name = models.CharField(max_length=300)
-
-
 class ConceptDB(models.Model):
     name = models.CharField(max_length=100, default='', blank=True)
     cdb_file = models.FileField()
