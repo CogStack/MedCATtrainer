@@ -118,7 +118,7 @@ class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
         if db_field.name == "medcat_models":
             kwargs["queryset"] = MedCATModel.objects.filter(cdb__use_for_training=True)
         elif db_field.name == "cdb_search_filter":
-            kwargs["queryset"] = MedCATModel.objects.filter(cdb__use_for_training=False)
+            kwargs["queryset"] = ConceptDB.objects.filter(use_for_training=False)
 
         return super(ProjectAnnotateEntitiesAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
 admin.site.register(ProjectAnnotateEntities, ProjectAnnotateEntitiesAdmin)
