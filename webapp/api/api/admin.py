@@ -10,7 +10,6 @@ from .forms import *
 
 # Register your models here.
 admin.site.register(Link)
-admin.site.register(MedCATModel)
 admin.site.register(Dataset)
 admin.site.register(Entity)
 admin.site.register(MetaTaskValue)
@@ -113,10 +112,14 @@ def download(modeladmin, request, queryset):
 class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
     model = ProjectAnnotateEntities
     actions = [download, download_without_text]
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "concept_db":
+            kwargs["queryset"] = ConceptDB.objects.filter(use_for_training=True)
+        return super(ProjectAnnotateEntitiesAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
     def formfield_for_manytomany(self, db_field, request, **kwargs):
-        if db_field.name == "medcat_models":
-            kwargs["queryset"] = MedCATModel.objects.filter(cdb__use_for_training=True)
-        elif db_field.name == "cdb_search_filter":
+        if db_field.name == "cdb_search_filter":
             kwargs["queryset"] = ConceptDB.objects.filter(use_for_training=False)
 
         return super(ProjectAnnotateEntitiesAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)

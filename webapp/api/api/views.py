@@ -267,7 +267,7 @@ def save_models(request):
     cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
                      CAT_MAP=CAT_MAP, project=project)
 
-    cat.cdb.save_dict(project.medcat_models.cdb.cdb_file.path)
+    cat.cdb.save_dict(project.concept_db.cdb_file.path)
 
     return Response({'message': 'Models saved'})
 
@@ -325,7 +325,6 @@ def test(request):
         # If the document is not already annotated, annotate it
         if len(anns) == 0 or update:
             # Based on the project id get the right medcat
-            cdb, vocab = get_medcat_models(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP, project=project)
             cat.cdb = cdb
             cat.vocab = vocab
             cat.train = False

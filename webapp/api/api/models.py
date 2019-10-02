@@ -141,8 +141,10 @@ class MetaTask(models.Model):
 
 
 class ProjectAnnotateEntities(Project):
-    medcat_models = models.ForeignKey('MedCATModel', on_delete=models.SET_NULL, blank=True, null=True)
-    cdb_search_filter = models.ManyToManyField('ConceptDB', blank=True, default=None)
+    concept_db = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, null=True)
+    vocab = models.ForeignKey('Vocabulary', on_delete=models.SET_NULL, null=True)
+    cdb_search_filter = models.ManyToManyField('ConceptDB', blank=True, default=None,
+            related_name='concept_source')
     require_entity_validation = models.BooleanField(default=False)
     tasks = models.ManyToManyField(MetaTask, blank=True, default=None)
 

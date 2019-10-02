@@ -51,7 +51,7 @@ def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
             concept.semantic_type = cdb.tui2name.get(tui, '')
             concept.desc = cdb.cui2desc.get(label, '')
             concept.synonyms = ",".join(cdb.cui2original_names.get(label, []))
-            concept.cdb = project.medcat_models.cdb
+            concept.cdb = project.concept_db
             #concept.vocab = cdb.cui2ontos.get(label, '')
             icd10 = ''
             try:
@@ -184,8 +184,8 @@ def train_medcat(cat, project, document):
 
 
 def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
-    cdb_id = project.medcat_models.cdb.id
-    vocab_id = project.medcat_models.vocab.id
+    cdb_id = project.concept_db.id
+    vocab_id = project.vocab.id
     cat_id = str(cdb_id) + "-" + str(vocab_id)
 
     if cat_id in CAT_MAP:
@@ -194,7 +194,7 @@ def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
         if cdb_id in CDB_MAP:
             cdb = CDB_MAP[cdb_id]
         else:
-            cdb_path = project.medcat_models.cdb.cdb_file.path
+            cdb_path = project.concept_db.cdb_file.path
             cdb = CDB()
             cdb.load_dict(cdb_path)
             CDB_MAP[cdb_id] = cdb
@@ -202,7 +202,7 @@ def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
         if vocab_id in VOCAB_MAP:
             vocab = VOCAB_MAP[vocab_id]
         else:
-            vocab_path = project.medcat_models.vocab.vocab_file.path
+            vocab_path = project.vocab.vocab_file.path
             vocab = Vocab()
             vocab.load_dict(vocab_path)
             VOCAB_MAP[vocab_id] = vocab
