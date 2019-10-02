@@ -136,11 +136,15 @@ class MetaTask(models.Model):
     values = models.ManyToManyField(MetaTaskValue, related_name='values')
     description = models.TextField(default="", blank=True)
 
+    def __str__(self):
+        return str(self.name)
+
 
 class ProjectAnnotateEntities(Project):
     medcat_models = models.ForeignKey('MedCATModel', on_delete=models.SET_NULL, blank=True, null=True)
     cdb_search_filter = models.ManyToManyField('ConceptDB', blank=True, default=None)
     require_entity_validation = models.BooleanField(default=False)
+    tasks = models.ManyToManyField(MetaTask, blank=True, default=None)
 
 
 class ProjectMetaAnnotate(Project):
@@ -153,5 +157,11 @@ class MetaAnnotation(models.Model):
     annotated_entity = models.ForeignKey('AnnotatedEntity', on_delete=models.CASCADE)
     meta_task = models.ForeignKey('MetaTask', on_delete=models.CASCADE)
     meta_task_value = models.ForeignKey('MetaTaskValue', on_delete=models.CASCADE)
-    acc = models.FloatField()
-    validated = models.BooleanField()
+    acc = models.FloatField(default=1)
+    validated = models.BooleanField(default=False)
+
+    def __str__(self):
+        return str(self.annotated_entity)
+
+
+

@@ -82,10 +82,31 @@ class AnnotatedEntityViewSet(viewsets.ModelViewSet):
                         'deleted']
 
 
+class MetaTaskValueViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get', 'head']
+    queryset = MetaTaskValue.objects.all()
+    serializer_class = MetaTaskValueSerializer
+
+
+class MetaTaskViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get', 'head']
+    queryset = MetaTask.objects.all()
+    serializer_class = MetaTaskSerializer
+
+
+class MetaAnnotationViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = MetaAnnotation.objects.all()
+    serializer_class = MetaAnnotationSerializer
+    filterset_fields = ['id', 'annotated_entity','validated']
+
+
 class DocumentViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Document.objects.all()
-    serializer_class = DocumentSerializer 
+    serializer_class = DocumentSerializer
     filterset_fields = ['dataset']
 
 

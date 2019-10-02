@@ -34,3 +34,18 @@ class AnnotatedEntitySerializer(serializers.ModelSerializer):
     class Meta:
         model = AnnotatedEntity
         fields = '__all__'
+
+class MetaAnnotationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MetaAnnotation
+        fields = '__all__'
+
+class MetaTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MetaTask
+        fields = '__all__'
+
+class MetaTaskValueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MetaTaskValue
+        fields = '__all__'

@@ -27,9 +27,11 @@ router.register(r'users', api.views.UserViewSet)
 router.register(r'concepts', api.views.ConceptViewSet)
 router.register(r'entities', api.views.EntityViewSet)
 router.register(r'project-annotate-entities', api.views.ProjectAnnotateEntitiesViewSet)
-router.register(r'annotated-entities', api.views.AnnotatedEntityViewSet)
 router.register(r'documents', api.views.DocumentViewSet)
-
+router.register(r'annotated-entities', api.views.AnnotatedEntityViewSet)
+router.register(r'meta-annotations', api.views.MetaAnnotationViewSet)
+router.register(r'meta-tasks', api.views.MetaTaskViewSet)
+router.register(r'meta-task-values', api.views.MetaTaskValueViewSet)
 
 
 urlpatterns = [

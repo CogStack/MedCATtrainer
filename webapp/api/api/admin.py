@@ -13,7 +13,6 @@ admin.site.register(Link)
 admin.site.register(MedCATModel)
 admin.site.register(Dataset)
 admin.site.register(Entity)
-admin.site.register(ProjectMetaAnnotate)
 admin.site.register(MetaTaskValue)
 admin.site.register(MetaTask)
 admin.site.register(MetaAnnotation)
@@ -125,8 +124,8 @@ admin.site.register(ProjectAnnotateEntities, ProjectAnnotateEntitiesAdmin)
 
 
 class AnnotatedEntityAdmin(admin.ModelAdmin):
-    list_display = ('user', 'project', 'document', 'entity', 'value', 'deleted', 'validated')
-    list_filter = ('user', 'project', 'document', 'deleted', 'validated')
+    list_display = ('user', 'project', 'entity', 'value', 'deleted', 'validated')
+    list_filter = ('user', 'project', 'deleted', 'validated')
     model = AnnotatedEntity
 admin.site.register(AnnotatedEntity, AnnotatedEntityAdmin)
 
