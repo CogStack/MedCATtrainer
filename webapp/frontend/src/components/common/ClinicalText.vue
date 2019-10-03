@@ -81,6 +81,7 @@ export default {
           formattedText += this.text.slice(start, this.text.length - 1)
         }
       }
+      // escape '<' '>' that may be interpreted as start/end tags.
       formattedText = formattedText
         .replace(/<(?!span)/g, '&lt')
         .replace(/&lt(?=\/span>)/g, '<')
@@ -108,14 +109,30 @@ export default {
       this.$emit('select:concept', entIdx)
     },
     showCtxMenu: function (event) {
-      let selection = window.getSelection()
-      let selStr = selection.toString()
-      // gather text around selection
-      let priorText = selection.anchorNode.data.slice(0, selection.anchorOffset)
-      let nextText = selection.extentNode.data.slice(selection.extentOffset)
+      const selection = window.getSelection()
+      const selStr = selection.toString()
+      const anchor = selection.anchorNode
+      const focus = selection.focusNode
 
-      let priorSibling = selection.anchorNode.previousSibling
-      let nextSibling = selection.anchorNode.nextSibling
+      let nextText = focus.data.slice(selection.focusOffset)
+      let nextSibling = focus.nextSibling
+      let priorText = anchor.data.slice(0, selection.anchorOffset)
+      let priorSibling = anchor.previousSibling
+
+      let sameNode = anchor.compareDocumentPosition(focus) === 0
+      let focusProceedingAnchor = anchor.compareDocumentPosition(focus) === 2
+      if (!sameNode) {
+        if (focusProceedingAnchor) {
+          priorText = focus.data.slice(0, selection.focusOffset)
+          priorSibling = focus.previousSibling
+          nextText = anchor.data.slice(selection.anchorOffset)
+          nextSibling = anchor.nextSibling
+        }
+      } else if (selection.anchorOffset > selection.focusOffset) {
+        priorText = anchor.data.slice(0, selection.focusOffset)
+        nextText = anchor.data.slice(selection.anchorOffset)
+      }
+
       _.range(3).forEach(function () {
         if (priorSibling !== null) {
           priorText = `${priorSibling.innerText || priorSibling.textContent}${priorText}`
