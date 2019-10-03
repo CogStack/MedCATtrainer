@@ -115,25 +115,25 @@ export default {
       const focus = selection.focusNode
 
       let nextText = focus.data.slice(selection.focusOffset)
-      let nextSibling = focus.nextSibling
+      let nextSibling = focus.nextSibling || focus.parentElement.nextSibling
       let priorText = anchor.data.slice(0, selection.anchorOffset)
-      let priorSibling = anchor.previousSibling
+      let priorSibling = anchor.previousSibling || anchor.parentElement.previousSibling
 
       let sameNode = anchor.compareDocumentPosition(focus) === 0
       let focusProceedingAnchor = anchor.compareDocumentPosition(focus) === 2
       if (!sameNode) {
         if (focusProceedingAnchor) {
           priorText = focus.data.slice(0, selection.focusOffset)
-          priorSibling = focus.previousSibling
+          priorSibling = focus.previousSibling || focus.parentElement.previousSibling
           nextText = anchor.data.slice(selection.anchorOffset)
-          nextSibling = anchor.nextSibling
+          nextSibling = anchor.nextSibling || anchor.parentElement.nextSibling
         }
       } else if (selection.anchorOffset > selection.focusOffset) {
         priorText = anchor.data.slice(0, selection.focusOffset)
         nextText = anchor.data.slice(selection.anchorOffset)
       }
 
-      _.range(3).forEach(function () {
+      _.range(10).forEach(function () {
         if (priorSibling !== null) {
           priorText = `${priorSibling.innerText || priorSibling.textContent}${priorText}`
           priorSibling = priorSibling.previousSibling

@@ -113,10 +113,10 @@ export default {
 
       const that = this
       const searchByTerm = function () {
-        let queryParams = `search=${term}&cdb__in=${this.project.cdb_search_filter.join(',')}`
+        let queryParams = `search=${term}&cdb__in=${that.project.cdb_search_filter.join(',')}`
         that.$http.get(`/api/search-concepts/?${queryParams}`).then(resp => {
           loading(false)
-          this.searchResults = resp.data.results.map(mapResult)
+          that.searchResults = resp.data.results.map(mapResult)
         })
       }
 

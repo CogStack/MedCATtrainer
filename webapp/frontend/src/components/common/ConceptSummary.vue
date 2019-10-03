@@ -131,16 +131,19 @@ export default {
     },
     fetchDetail: function () {
       if (this.selectedEnt && Object.keys(this.selectedEnt).length) {
+        const queryEntId = this.selectedEnt.id
         this.$http.get(`/api/entities/${this.selectedEnt.entity}/`).then(resp => {
-          this.selectedEnt.cui = resp.data.label
-          this.$http.get(`/api/concepts/?cui=${this.selectedEnt.cui}`).then(resp => {
-            this.selectedEnt.desc = resp.data.results[0].desc
-            this.selectedEnt.tui = resp.data.results[0].tui
-            this.selectedEnt.pretty_name = resp.data.results[0].pretty_name
-            this.selectedEnt.semantic_type = resp.data.results[0].semantic_type
-            this.selectedEnt.icd10 = resp.data.results[0].icd10
-            this.cleanProps()
-          })
+          if (this.selectedEnt && queryEntId === this.selectedEnt.id) {
+            this.selectedEnt.cui = resp.data.label
+            this.$http.get(`/api/concepts/?cui=${this.selectedEnt.cui}`).then(resp => {
+              this.selectedEnt.desc = resp.data.results[0].desc
+              this.selectedEnt.tui = resp.data.results[0].tui
+              this.selectedEnt.pretty_name = resp.data.results[0].pretty_name
+              this.selectedEnt.semantic_type = resp.data.results[0].semantic_type
+              this.selectedEnt.icd10 = resp.data.results[0].icd10
+              this.cleanProps()
+            })
+          }
         })
       } else {
         this.conceptSummary = {}
