@@ -11,7 +11,8 @@
         <tr @keyup.stop>
           <td>Concept Lookup</td>
           <td>
-            <v-select v-model="selectedCUI" label="name" @search="searchCUI" :options="searchResults"></v-select>
+            <v-select v-model="selectedCUI" label="name" @search="searchCUI" :filterable="false"
+                      :options="searchResults"></v-select>
           </td>
         </tr>
         <tr>
@@ -96,23 +97,41 @@ export default {
   methods: {
     searchCUI: _.debounce(function (term, loading) {
       loading(true)
-      let queryParams = `search=${term}&cdb__in=${this.project.cdb_search_filter.join(',')}`
-      this.$http.get(`/api/search-concepts/?${queryParams}`)
-        .then(resp => {
+
+      const mapResult = function (r) {
+        return {
+          name: r.pretty_name,
+          cui: r.cui,
+          tui: r.tui,
+          type: r.type,
+          desc: r.desc,
+          icd10: r.icd10,
+          semantic_type: r.semantic_type,
+          synonyms: _.replace(r.synonyms, new RegExp(',', 'g'), ', ')
+        }
+      }
+
+      const that = this
+      const searchByTerm = function () {
+        let queryParams = `search=${term}&cdb__in=${this.project.cdb_search_filter.join(',')}`
+        that.$http.get(`/api/search-concepts/?${queryParams}`).then(resp => {
           loading(false)
-          this.searchResults = resp.data.results.map(r => {
-            return {
-              name: r.pretty_name,
-              cui: r.cui,
-              tui: r.tui,
-              type: r.type,
-              desc: r.desc,
-              icd10: r.icd10,
-              semantic_type: r.semantic_type,
-              synonyms: _.replace(r.synonyms, new RegExp(',', 'g'), ', ')
-            }
-          })
+          this.searchResults = resp.data.results.map(mapResult)
         })
+      }
+
+      if (term.toLowerCase().startsWith('c')) {
+        this.$http.get(`/api/concepts/?cui=${term}`).then(resp => {
+          if (resp.data.results.length > 0) {
+            loading(false)
+            this.searchResults = resp.data.results.map(mapResult)
+          } else {
+            searchByTerm()
+          }
+        })
+      } else {
+        searchByTerm()
+      }
     }, 400),
     selectedSynonymCUI: function () {
       this.searchResults = []

@@ -15,7 +15,7 @@
             <span v-if="altSearch" class="alt-concept-picker" @keyup.stop>
               <v-select class="picker" v-model="selectedCUI"
                         label="name" @search="searchCUI" :options="searchResults"
-                        :inputId="'pickerID'"></v-select>
+                        :filterable="false" :inputId="'pickerID'"></v-select>
               <font-awesome-icon class="cancel" v-if="altSearch" icon="times-circle" @click="cancelReassign"></font-awesome-icon>
             </span>
           </td>
@@ -148,17 +148,34 @@ export default {
     },
     searchCUI: _.debounce(function (term, loading) {
       loading(true)
-      let queryParams = `search=${term}&cdb__in=${this.project.cdb_search_filter.join(',')}`
-      this.$http.get(`/api/search-concepts/?${queryParams}`)
-        .then(resp => {
+      const that = this
+      const searchByTerm = function () {
+        let queryParams = `search=${term}&cdb__in=${that.project.cdb_search_filter.join(',')}`
+        that.$http.get(`/api/search-concepts/?${queryParams}`).then(resp => {
           loading(false)
-          this.searchResults = resp.data.results.map(r => {
+          that.searchResults = resp.data.results.map(r => {
             return {
               name: r.pretty_name,
               cui: r.cui
             }
           })
         })
+      }
+      if (term.toLowerCase().startsWith('c')) {
+        this.$http.get(`/api/concepts/?cui=${term}`).then(resp => {
+          if (resp.data.results.length > 0) {
+            loading(false)
+            this.searchResults = [{
+              name: resp.data.results[0].pretty_name,
+              cui: resp.data.results[0].cui
+            }]
+          } else {
+            searchByTerm()
+          }
+        })
+      } else {
+        searchByTerm()
+      }
     }, 400),
     selectedCorrectCUI: function (item) {
       if (item) {
