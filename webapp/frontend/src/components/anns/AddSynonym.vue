@@ -120,7 +120,7 @@ export default {
         })
       }
 
-      if (term.toLowerCase().startsWith('c')) {
+      if (term.match(/^(?:c)\d{7}|s-\d*/gmi)) {
         this.$http.get(`/api/concepts/?cui=${term}`).then(resp => {
           if (resp.data.results.length > 0) {
             loading(false)
