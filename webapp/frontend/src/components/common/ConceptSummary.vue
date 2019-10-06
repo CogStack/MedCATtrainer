@@ -223,13 +223,6 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.title {
-  padding: 5px 15px;
-  font-size: 16pt;
-  box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
-  color: black;
-}
-
 .summary {
   @extend .detail-panel;
   height: calc(100% - 41px);
@@ -261,7 +254,7 @@ export default {
       vertical-align: top;
 
       &:first-child {
-        width: 100px;
+        width: 150px;
       }
 
       &.fit-content {

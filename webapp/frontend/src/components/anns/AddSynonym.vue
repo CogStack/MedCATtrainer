@@ -168,16 +168,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
-
-$title-height: 41px;
 $button-height: 50px;
-
-.title {
-  padding: 5px 15px;
-  font-size: 16pt;
-  box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
-  height: $title-height;
-}
 
 .sidebar {
   width: 100%;

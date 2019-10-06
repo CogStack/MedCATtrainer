@@ -74,6 +74,7 @@ class ProjectAnnotateEntitiesViewSet(viewsets.ModelViewSet):
 
         return projects
 
+
 class AnnotatedEntityViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = AnnotatedEntity.objects.all()
@@ -98,6 +99,7 @@ class MetaTaskViewSet(viewsets.ModelViewSet):
 
 class MetaAnnotationViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get', 'head', 'post', 'put', 'delete']
     queryset = MetaAnnotation.objects.all()
     serializer_class = MetaAnnotationSerializer
     filterset_fields = ['id', 'annotated_entity','validated']

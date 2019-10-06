@@ -39,8 +39,7 @@ export default {
     login: function () {
       this.$cookie.delete('api-token')
       this.$cookie.delete('username')
-      this.$cookie.delete('xsrf-token')
-      this.$cookie.delete('csrf-token')
+      this.$cookie.delete('csrftoken')
       this.$http.post('/api/api-token-auth/', {
         username: this.uname,
         password: this.password

@@ -43,6 +43,10 @@
                            class="concept-summary"></concept-summary>
         </transition>
         <transition name="slide-left">
+          <meta-annotation-task-container v-if="metaAnnotate" :taskIDs="(project || {}).tasks || []"
+                                          :selectedEnt="currentEnt"></meta-annotation-task-container>
+        </transition>
+        <transition name="slide-left">
           <add-synonym v-if="conceptSynonymSelection" :selection="conceptSynonymSelection"
                        :project="project" :documentId="currentDoc.id"
                        @request:addAnnotationComplete="addAnnotationComplete" class="add-synonym"></add-synonym>
@@ -116,6 +120,7 @@ import ClinicalText from '@/components/common/ClinicalText.vue'
 import NavBar from '@/components/common/NavBar.vue'
 import TaskBar from '@/components/anns/TaskBar.vue'
 import AddSynonym from '@/components/anns/AddSynonym.vue'
+import MetaAnnotationTaskContainer from '@/components/usecases/MetaAnnotationTaskContainer.vue'
 
 const TASK_NAME = 'Concept Annotation'
 const CONCEPT_CORRECT = 'Correct'
@@ -133,7 +138,8 @@ export default {
     ClinicalText,
     NavBar,
     TaskBar,
-    AddSynonym
+    AddSynonym,
+    MetaAnnotationTaskContainer
   },
   props: {
     projectId: {
@@ -162,7 +168,8 @@ export default {
       errorModal: false,
       docToSubmit: null,
       altSearch: false,
-      conceptSynonymSelection: null
+      conceptSynonymSelection: null,
+      metaAnnotate: false
     }
   },
   created: function () {
@@ -282,19 +289,24 @@ export default {
           this.ents = _.orderBy(this.ents, ['start_ind'], ['asc'])
           this.currentEnt = selectedEntId ? this.ents[this.ents.map(e => e.id).indexOf(selectedEntId)]
             : this.ents[0]
+          this.metaAnnotate = this.currentEnt && (this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_ALTERNATIVE ||
+            this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_CORRECT)
           this.loadingDoc = false
         }
       })
     },
     selectEntity: function (entIdx) {
       this.currentEnt = this.ents[entIdx]
+      this.conceptSynonymSelection = null
+      this.metaAnnotate = this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_ALTERNATIVE ||
+        this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_CORRECT
     },
     markCorrect: function () {
-      // note as correct..
       if (this.currentEnt) {
         this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_CORRECT
         this.currentEnt.validated = 1 // correct is just validated so no need to set anything else
-        this.markEntity()
+        this.markEntity(true)
+        this.metaAnnotate = true
       }
     },
     markEntity: function (noMove) {
@@ -314,6 +326,7 @@ export default {
         this.currentEnt.validated = 1
         this.currentEnt.deleted = 1
         this.markEntity()
+        this.metaAnnotate = false
       }
     },
     toggleAltSearch: function (choice) {
@@ -328,6 +341,7 @@ export default {
         this.currentEnt.validated = 1
         this.currentEnt.alternative = 1
         this.markEntity(false)
+        this.metaAnnotate = true
         let i = this.ents.indexOf(this.currentEnt)
         this.currentEnt = JSON.parse(JSON.stringify(this.currentEnt))
         this.ents[i] = this.currentEnt
@@ -349,12 +363,13 @@ export default {
     },
     addSynonym: function (selection) {
       this.conceptSynonymSelection = selection
+      this.metaAnnotate = false
     },
     next: function () {
-      this.currentEnt = this.ents[this.ents.indexOf(this.currentEnt) + 1]
+      this.selectEntity(this.ents.indexOf(this.currentEnt) + 1)
     },
     back: function () {
-      this.currentEnt = this.ents[this.ents.indexOf(this.currentEnt) - 1]
+      this.selectEntity(this.ents.indexOf(this.currentEnt) - 1)
     },
     submitDoc: function (docId) {
       this.docToSubmit = docId
@@ -499,9 +514,12 @@ export default {
 }
 
 .slide-left-enter, .slide-left-leave-to {
+  position: relative;
   transform: translateX(50px);
+  transition: all .2s ease;
   opacity: 0;
 }
+
 .divider {
   opacity: 0.5;
   padding: 0 5px;
