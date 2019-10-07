@@ -8,6 +8,7 @@
 </template>
 
 <script>
+import _ from 'lodash'
 import MetaAnnotationTask from '@/components/usecases/MetaAnnotationTask.vue'
 
 export default {
@@ -35,7 +36,7 @@ export default {
         let tasks = resp.data.results.filter(r => {
           return this.taskIDs.includes(r.id)
         })
-        let values = tasks.map(t => t.values).flat()
+        let values = _.flatten(tasks.map(t => t.values))
         this.$http.get(`/api/meta-task-values/`).then(resp => {
           let taskValueObjs = resp.data.results.filter(r => values.includes(r.id))
           let taskValObjMap = {}

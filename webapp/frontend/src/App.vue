@@ -44,7 +44,6 @@ export default {
     logout: function () {
       this.$cookie.delete('username')
       this.$cookie.delete('api-token')
-      this.$cookie.delete('csrftoken')
       this.goHome()
     },
     goHome: function () {

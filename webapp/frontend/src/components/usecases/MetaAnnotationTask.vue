@@ -1,7 +1,6 @@
 <template>
   <div>
     <div class="task-name">{{task.name}}</div>
-    <span>:</span>
     <div class="task-description">{{task.description}}</div>
     <div class="task-values-container">
       <button class="btn btn-outline-primary task-value" :class="{'selected': task.value === option.id}"
@@ -30,12 +29,17 @@ export default {
   font-size: 16px;
   padding: 10px 15px 5px 15px;
   display: inline-block;
+  width: 125px;
 }
 
 .task-description {
   font-size: 12px;
   padding: 10px 15px 5px 15px;
   display: inline-block;
+  width: calc(100% - 125px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .selected {

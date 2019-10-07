@@ -305,15 +305,15 @@ export default {
       if (this.currentEnt) {
         this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_CORRECT
         this.currentEnt.validated = 1 // correct is just validated so no need to set anything else
-        this.markEntity(true)
-        this.metaAnnotate = true
+        this.markEntity(this.project.tasks.length === 0)
+        this.metaAnnotate = this.project.task.length > 0
       }
     },
-    markEntity: function (noMove) {
+    markEntity: function (moveToNext) {
       if (this.currentEnt) {
         this.taskLocked = true
         this.$http.put(`/api/annotated-entities/${this.currentEnt.id}/`, this.currentEnt).then(resp => {
-          if (noMove !== false) {
+          if (moveToNext) {
             if (this.ents.slice(-1)[0].id !== this.currentEnt.id) { this.next() } else { this.currentEnt = null }
           }
           this.taskLocked = false
@@ -325,7 +325,7 @@ export default {
         this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_REMOVED
         this.currentEnt.validated = 1
         this.currentEnt.deleted = 1
-        this.markEntity()
+        this.markEntity(true)
         this.metaAnnotate = false
       }
     },
@@ -340,8 +340,8 @@ export default {
         this.currentEnt.entity = resp.data.entity_id
         this.currentEnt.validated = 1
         this.currentEnt.alternative = 1
-        this.markEntity(false)
-        this.metaAnnotate = true
+        this.markEntity(this.project.tasks.length === 0)
+        this.metaAnnotate = this.project.task.length > 0
         let i = this.ents.indexOf(this.currentEnt)
         this.currentEnt = JSON.parse(JSON.stringify(this.currentEnt))
         this.ents[i] = this.currentEnt
