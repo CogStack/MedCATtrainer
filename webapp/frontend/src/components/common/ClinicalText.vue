@@ -194,7 +194,6 @@ export default {
 
 .clinical-note {
   background: white;
-  overflow: scroll;
   height: 100%;
   box-shadow: 0px -2px 3px 2px rgba(0,0,0,0.2);
   padding: 25px;

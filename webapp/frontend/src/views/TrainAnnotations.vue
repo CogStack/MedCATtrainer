@@ -306,7 +306,7 @@ export default {
         this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_CORRECT
         this.currentEnt.validated = 1 // correct is just validated so no need to set anything else
         this.markEntity(this.project.tasks.length === 0)
-        this.metaAnnotate = this.project.task.length > 0
+        this.metaAnnotate = this.project.tasks.length > 0
       }
     },
     markEntity: function (moveToNext) {
@@ -341,7 +341,7 @@ export default {
         this.currentEnt.validated = 1
         this.currentEnt.alternative = 1
         this.markEntity(this.project.tasks.length === 0)
-        this.metaAnnotate = this.project.task.length > 0
+        this.metaAnnotate = this.project.tasks.length > 0
         let i = this.ents.indexOf(this.currentEnt)
         this.currentEnt = JSON.parse(JSON.stringify(this.currentEnt))
         this.ents[i] = this.currentEnt
@@ -505,6 +505,7 @@ export default {
   }
 
   .add-synonym {
+    width: 500px;
     flex: 1 1 auto;
   }
 }
