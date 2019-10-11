@@ -111,6 +111,8 @@ class AnnotatedEntity(models.Model):
     alternative = models.BooleanField(default=False)
     manually_created = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
+    killed = models.BooleanField(default=False)
+
     last_modified = models.DateTimeField(auto_now=True)
 
 

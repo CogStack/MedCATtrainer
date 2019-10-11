@@ -161,7 +161,8 @@ def train_medcat(cat, project, document):
     # Just in case, disable unsupervised training
     cat.train = False
     # Get all annotations
-    anns = AnnotatedEntity.objects.filter(project=project, document=document, validated=True)
+    anns = AnnotatedEntity.objects.filter(project=project, document=document, validated=True,
+            killed=False)
     text = document.text
     doc = cat(text)
 
@@ -181,6 +182,13 @@ def train_medcat(cat, project, document):
                          lr=lr,
                          anneal=anneal,
                          negative=ann.deleted)
+
+    # Completely remove concept names that the user killed
+    killed_anns = AnnotatedEntity.objects.filter(project=project, document=document, killed=True)
+    for ann in killed_anns:
+        cui = ann.entity.label
+        name = ann.value
+        cat.unlink_concept_name(cui=cui, name=name)
 
 
 def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
