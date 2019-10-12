@@ -31,7 +31,8 @@
         <div class="taskbar">
           <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt" @select:next="next" @select:back="back"></nav-bar>
           <task-bar class="tasks" :taskLocked="taskLocked" :ents="ents" :altSearch="altSearch"
-                    @select:remove="markRemove" @select:correct="markCorrect" @select:alternative="toggleAltSearch"
+                    @select:remove="markRemove" @select:correct="markCorrect" @select:kill="markKill"
+                    @select:alternative="toggleAltSearch"
                     @submit="submitDoc"></task-bar>
         </div>
       </div>
@@ -125,9 +126,10 @@ import MetaAnnotationTaskContainer from '@/components/usecases/MetaAnnotationTas
 const TASK_NAME = 'Concept Annotation'
 const CONCEPT_CORRECT = 'Correct'
 const CONCEPT_REMOVED = 'Deleted'
+const CONCEPT_KILLED = 'Killed'
 const CONCEPT_ALTERNATIVE = 'Alternative'
 
-const TASK_VALUES = [CONCEPT_CORRECT, CONCEPT_REMOVED, CONCEPT_ALTERNATIVE]
+const TASK_VALUES = [CONCEPT_CORRECT, CONCEPT_REMOVED, CONCEPT_KILLED, CONCEPT_ALTERNATIVE]
 
 export default {
   name: 'TrainAnnotations',
@@ -270,6 +272,8 @@ export default {
             let taskVal = CONCEPT_CORRECT
             if (e.deleted) {
               taskVal = CONCEPT_REMOVED
+            } else if (e.killed) {
+              taskVal = CONCEPT_KILLED
             } else if (e.alternative) {
               taskVal = CONCEPT_ALTERNATIVE
             }
@@ -320,17 +324,24 @@ export default {
         })
       }
     },
-    markRemove: function () {
+    markRemove: function (kill) {
       if (this.currentEnt) {
-        this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_REMOVED
+        this.currentEnt.assignedValues[TASK_NAME] = kill ? CONCEPT_KILLED : CONCEPT_REMOVED
         this.currentEnt.validated = 1
-        this.currentEnt.deleted = 1
+        if (kill) {
+          this.currentEnt.killed = 1
+        } else {
+          this.currentEnt.deleted = 1
+        }
         this.markEntity(true)
         this.metaAnnotate = false
       }
     },
     toggleAltSearch: function (choice) {
       this.altSearch = choice
+    },
+    markKill: function () {
+      this.markRemove(true)
     },
     markAlternative: function (item) {
       this.altSearch = false

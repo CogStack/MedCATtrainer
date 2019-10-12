@@ -1,8 +1,5 @@
 <template>
   <div class="task-bar">
-    <!--<div class="task-bar-task">-->
-      <!--<span class="task-name">Concept Annotation</span>-->
-    <!--</div>-->
     <div class="task-bar-choices">
       <span>
         <button :disabled="taskLocked" class="btn task-btn-0" @click="correct">
@@ -10,11 +7,15 @@
       </span>
       <span>
         <button :disabled="taskLocked" class="btn task-btn-1" @click="remove">
-          Wrong</button>
+          Incorrect</button>
       </span>
       <span>
-        <button :disabled="taskLocked" class="btn task-btn-2" @click="alternative">
-          Alternative Concept</button>
+        <button :disabled="taskLocked" class="btn task-btn-2" @click="kill">
+          Kill</button>
+      </span>
+      <span>
+        <button :disabled="taskLocked" class="btn task-btn-3" @click="alternative">
+          Alternative</button>
       </span>
     </div>
     <div class="submit">
@@ -42,6 +43,9 @@ export default {
     remove: function () {
       this.$emit('select:remove')
     },
+    kill: function () {
+      this.$emit('select:kill')
+    },
     alternative: function () {
       this.$emit('select:alternative', !this.altSearch)
     },
@@ -61,9 +65,9 @@ export default {
         if (!this.submitDisabled()) {
           this.submit()
         }
-      } else if (e.keyCode >= 49 && e.keyCode <= 51 && !this.taskLocked) {
-        let codeRange = _.range(3)
-        let keyRange = _.range(49, 52)
+      } else if (e.keyCode >= 49 && e.keyCode < 53 && !this.taskLocked) {
+        let codeRange = _.range(4)
+        let keyRange = _.range(49, 53)
         let selectIdx = _.zipObject(keyRange, codeRange)[e.keyCode]
         switch (selectIdx) {
           case 0:
@@ -73,6 +77,9 @@ export default {
             this.remove()
             break
           case 2:
+            this.kill()
+            break
+          case 3:
             this.alternative()
         }
       }
