@@ -48,11 +48,9 @@ export default {
     },
     goHome: function () {
       if (this.$route.name !== 'home') {
-        this.$router.push({
-          name: 'home'
-        })
+        this.$router.push({ name: 'home' })
       } else {
-        location.reload()
+        this.$router.go()
       }
     }
   },
