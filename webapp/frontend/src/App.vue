@@ -39,20 +39,17 @@ export default {
     loginSuccessful: function () {
       this.loginModal = false
       this.uname = this.$cookie.get('username')
-      this.goHome()
+      if (this.$route.name !== 'home') {
+        this.$router.push({ name: 'home' })
+      }
     },
     logout: function () {
       this.$cookie.delete('username')
       this.$cookie.delete('api-token')
-      this.goHome()
-    },
-    goHome: function () {
       if (this.$route.name !== 'home') {
-        this.$router.push({
-          name: 'home'
-        })
+        this.$router.push({ name: 'home' })
       } else {
-        location.reload()
+        this.$router.go()
       }
     }
   },

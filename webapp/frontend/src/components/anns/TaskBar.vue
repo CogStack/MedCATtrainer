@@ -11,7 +11,7 @@
       </span>
       <span>
         <button :disabled="taskLocked" class="btn task-btn-2" @click="kill">
-          Kill</button>
+          Terminate</button>
       </span>
       <span>
         <button :disabled="taskLocked" class="btn task-btn-3" @click="alternative">
