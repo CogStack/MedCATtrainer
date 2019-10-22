@@ -180,8 +180,10 @@ def prepare_documents(request):
         # Get annotated entities
         anns = AnnotatedEntity.objects.filter(document=document).filter(project=project)
 
+        is_validated = document in project.validated_documents.all()
+
         # If the document is not already annotated, annotate it
-        if len(anns) == 0 or update:
+        if (len(anns) == 0 and not is_validated) or update:
             # Based on the project id get the right medcat
             cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
                              CAT_MAP=CAT_MAP, project=project)
