@@ -41,8 +41,7 @@ export default {
         username: this.uname,
         password: this.password
       }
-      let headers = {}
-      this.$http.post('/api/api-token-auth/', payload, { headers: headers }).then(resp => {
+      this.$http.post('/api/api-token-auth/', payload).then(resp => {
         this.$cookie.set('api-token', resp.data.token, { expires: 7 })
         this.$cookie.set('username', this.uname)
         this.$http.defaults.headers.common['Authorization'] = `Token ${this.$cookie.get('api-token')}`
