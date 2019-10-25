@@ -21,8 +21,8 @@
           <td>{{project.name}}</td>
           <td>{{project.description}}</td>
           <td>{{(new Date(project.create_time)).toLocaleDateString()}}</td>
-          <td>{{project.cuis}}</td>
-          <td>{{project.tuis}}</td>
+          <td><span class="term-list">{{project.cuis}}</span></td>
+          <td><span class="term-list">{{project.tuis}}</span></td>
           <td>{{project.require_entity_validation ? 'Yes' : 'No'}}</td>
           <td @click.stop><button class="btn btn-outline-primary" @click="saveModel(project.id)"><font-awesome-icon icon="save"></font-awesome-icon></button></td>
         </tr>
@@ -119,10 +119,25 @@ export default {
 h3 {
   margin: 10%
 }
-.table td {
-  cursor: pointer;
-}
+.table {
+  table-layout: fixed;
 
+  tbody {
+    td {
+      .term-list {
+        display: block;
+        max-width: 20vw;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+
+  td {
+    cursor: pointer;
+  }
+}
 .project-list {
   max-height: 80%;
 }
@@ -134,5 +149,4 @@ h3 {
 .alert-enter, .alert-leave-to {
   opacity: 0;
 }
-
 </style>
