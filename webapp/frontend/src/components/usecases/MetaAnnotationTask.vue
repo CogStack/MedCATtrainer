@@ -35,6 +35,7 @@ export default {
 .task-description {
   font-size: 12px;
   padding: 10px 15px 5px 15px;
+  vertical-align: middle;
   display: inline-block;
   width: calc(100% - 125px);
   white-space: nowrap;

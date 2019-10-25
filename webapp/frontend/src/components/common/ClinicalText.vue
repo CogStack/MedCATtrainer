@@ -1,12 +1,6 @@
 <template>
   <div class="note-container">
-    <transition name="fade">
-      <div v-if="loading" class="loading">
-        <div class="spinner">
-          <font-awesome-icon icon="spinner" size="1x" spin></font-awesome-icon>
-        </div>
-      </div>
-    </transition>
+    <loading-overlay :loading="loading"></loading-overlay>
     <div v-if="!loading" class="clinical-note">
       <v-runtime-template ref="clinicalText" :template="formattedText"></v-runtime-template>
     </div>
@@ -23,10 +17,12 @@
 import _ from 'lodash'
 import VRuntimeTemplate from 'v-runtime-template'
 import VueSimpleContextMenu from 'vue-simple-context-menu'
+import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 
 export default {
   name: 'ClinicalText',
   components: {
+    LoadingOverlay,
     VRuntimeTemplate,
     VueSimpleContextMenu
   },
@@ -166,30 +162,8 @@ export default {
   flex: 1 1 auto;
   overflow-y: auto;
   background: rgba(0, 114, 206, .2);
-  padding: 75px 75px 0 75px;
+  padding: 50px 50px 0 50px;
   border-radius: 10px;
-}
-
-.loading {
-  background: $loading-background-color;
-  opacity: 0.3;
-  height: 100%;
-  position: relative;
-
-  .spinner {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    font-size: 64px;
-  }
-}
-
-.fade-enter-active, .fade-leave-active {
-  transition: opacity .3s;
-}
-
-.fade-enter, .fade-leave-to {
-  opacity: 0;
 }
 
 .clinical-note {

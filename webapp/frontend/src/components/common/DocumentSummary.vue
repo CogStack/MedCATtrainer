@@ -37,10 +37,10 @@ export default {
       this.$emit('request:loadDoc', docId)
     },
     keyup: function (e) {
-      if (e.keyCode === 40 && this.selectedDocId !== this.docs.slice(-1).id) {
+      if (!this.loadingDoc && e.keyCode === 40 && this.selectedDocId !== this.docs.slice(-1).id) {
         // down
         this.$emit('request:loadDoc', this.docs[this.docs.map(d => d.id).indexOf(this.selectedDocId) + 1].id)
-      } else if (e.keyCode === 38 && this.selectedDocId !== this.docs[0].id) {
+      } else if (!this.loadingDoc && e.keyCode === 38 && this.selectedDocId !== this.docs[0].id && !this.loadingDoc) {
         // up
         this.$emit('request:loadDoc', this.docs[this.docs.map(d => d.id).indexOf(this.selectedDocId) - 1].id)
       }
@@ -136,7 +136,6 @@ export default {
     right: 0;
     width: 80%;
     height: 1.2em;
-    /*background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1) 50%);*/
   }
 }
 

@@ -1,28 +1,17 @@
 <template>
-  <div class="task-bar">
+  <div class="task-bar" >
     <div class="task-bar-choices">
-      <span>
-        <button :disabled="taskLocked" class="btn task-btn-0" @click="correct">
-          Correct</button>
-      </span>
-      <span>
-        <button :disabled="taskLocked" class="btn task-btn-1" @click="remove">
-          Incorrect</button>
-      </span>
-      <span>
-        <button :disabled="taskLocked" class="btn task-btn-2" @click="kill">
-          Terminate</button>
-      </span>
-      <span>
+      <button :disabled="taskLocked" class="btn task-btn-0" @click="correct">
+        Correct</button>
+      <button :disabled="taskLocked" class="btn task-btn-1" @click="remove">
+        Incorrect</button>
+      <button :disabled="taskLocked" class="btn task-btn-2" @click="kill">
+        Terminate</button>
         <button :disabled="taskLocked" class="btn task-btn-3" @click="alternative">
           Alternative</button>
-      </span>
     </div>
-    <div class="submit">
-      <button :disabled="submitDisabled()" @click="submit()" class="btn btn-outline-primary mb-2 submit-btn" type="button">
-        Submit
-      </button>
-    </div>
+    <button :disabled="submitDisabled()" @click="submit()" class="btn btn-outline-primary mb-2 submit-btn submit"
+              type="button">Submit</button>
   </div>
 </template>
 
@@ -34,6 +23,7 @@ export default {
   props: {
     ents: Array,
     taskLocked: Boolean,
+    submitLocked: Boolean,
     altSearch: Boolean
   },
   methods: {
@@ -53,7 +43,7 @@ export default {
       this.$emit('submit', true)
     },
     submitDisabled: function () {
-      if (this.ents !== null) {
+      if (this.ents !== null && !this.submitLocked) {
         return !this.ents.every(e => {
           return Object.values(e.assignedValues).every(e => e !== null)
         })
@@ -100,6 +90,11 @@ export default {
   padding: 5px 0;
   background-color: $background;
   color: $text;
+  text-align: center;
+
+  .task-bar-choices {
+    width: calc(100% - 100px);
+  }
 
   div {
     display: inline-block;
@@ -107,6 +102,7 @@ export default {
 
   .submit {
     float: right;
+    width: 100px
   }
 }
 </style>

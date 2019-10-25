@@ -31,9 +31,8 @@
         <div class="taskbar">
           <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt" @select:next="next" @select:back="back"></nav-bar>
           <task-bar class="tasks" :taskLocked="taskLocked" :ents="ents" :altSearch="altSearch"
-                    @select:remove="markRemove" @select:correct="markCorrect" @select:kill="markKill"
-                    @select:alternative="toggleAltSearch"
-                    @submit="submitDoc"></task-bar>
+                    :submitLocked="docToSubmit != null" @select:remove="markRemove" @select:correct="markCorrect"
+                    @select:kill="markKill" @select:alternative="toggleAltSearch" @submit="submitDoc"></task-bar>
         </div>
       </div>
       <div class="sidebar-container">
@@ -105,7 +104,12 @@
       <div slot="body">Confirm document is ready for submission</div>
       <!-- TODO: Provide some sort of summary here?? -->
       <div slot="footer">
-        <button class="btn btn-primary" @click="submitConfirmed()">Confirm</button>
+        <button class="btn btn-primary" :disabled="submitConfirmedLoading" @click="submitConfirmed()">
+          <span v-if="!submitConfirmedLoading">Confirm</span>
+          <span v-if="submitConfirmedLoading">
+            <font-awesome-icon icon="spinner" spin></font-awesome-icon>
+          </span>
+        </button>
       </div>
     </modal>
   </div>
@@ -169,6 +173,7 @@ export default {
       helpModal: false,
       errorModal: false,
       docToSubmit: null,
+      submitConfirmedLoading: false,
       altSearch: false,
       conceptSynonymSelection: null,
       metaAnnotate: false
@@ -383,28 +388,31 @@ export default {
       this.selectEntity(this.ents.indexOf(this.currentEnt) - 1)
     },
     submitDoc: function (docId) {
-      this.docToSubmit = docId
+      if (this.docToSubmit === null) {
+        this.docToSubmit = docId
+      }
     },
     submitConfirmed: function () {
+      this.submitConfirmedLoading = true
       this.project.validated_documents = this.project.validated_documents.concat(this.currentDoc.id)
       this.validatedDocuments = this.project.validated_documents
       this.project.require_entity_validation = this.project.require_entity_validation ? 1 : 0
-      this.$http.put(`/api/project-annotate-entities/${this.projectId}/`, this.project).then(resp => {
-        this.docToSubmit = null
-      })
-
-      let payload = {
-        project_id: this.project.id,
-        document_id: this.currentDoc.id
-      }
-      this.$http.post(`/api/submit-document/`, payload).then(() => {
-        if (this.currentDoc !== this.docs.slice(-1)[0]) {
-          this.loadDoc(this.docs[this.docs.indexOf(this.currentDoc) + 1].id)
+      this.$http.put(`/api/project-annotate-entities/${this.projectId}/`, this.project).then(() => {
+        let payload = {
+          project_id: this.project.id,
+          document_id: this.currentDoc.id
         }
+        this.$http.post(`/api/submit-document/`, payload).then(() => {
+          this.docToSubmit = null
+          this.submitConfirmedLoading = false
+          if (this.currentDoc !== this.docs.slice(-1)[0]) {
+            this.loadDoc(this.docs[this.docs.indexOf(this.currentDoc) + 1].id)
+          }
+        })
       })
     },
     keydown: function (e) {
-      if (e.keyCode === 13 && this.docToSubmit) {
+      if (e.keyCode === 13 && this.docToSubmit && !this.submitConfirmedLoading) {
         this.submitConfirmed()
       }
     }
@@ -422,8 +430,6 @@ export default {
 
 .app-header {
   flex: 0 0 70px;
-  background-color: $background;
-  color: $color-4;
   line-height: 70px;
   font-size: 25px;
   padding: 0 15px;
@@ -474,7 +480,7 @@ export default {
 
 .app-container {
   display: flex;
-  height: calc(100% - 80px);
+  height: calc(100% - 71px);
   flex-direction: column;
   padding: 5px;
 }
@@ -496,12 +502,12 @@ export default {
 }
 
 .nav {
-  width: 25%;
+  width: 150px;
   display: inline-block
 }
 
 .tasks {
-  width: 75%;
+  width: calc(100% - 150px);
   display: inline-block;
 }
 
@@ -516,7 +522,7 @@ export default {
   }
 
   .add-synonym {
-    width: 500px;
+    width: 400px;
     flex: 1 1 auto;
   }
 }

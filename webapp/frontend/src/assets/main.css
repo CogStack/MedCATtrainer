@@ -1,7 +1,8 @@
 html, body {
-   height: 100%;
-   overflow: hidden;
- }
+  height: 100%;
+  overflow: hidden;
+  font-size: 14px;
+}
 
 body > div {
   height: 100%;
@@ -9,4 +10,5 @@ body > div {
 
 body {
   font-family: inherit;
+  font-size: 1rem;
 }
