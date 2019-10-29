@@ -1,5 +1,6 @@
 This repo provides a simple interface to inspect, improve and add concepts to biomedical NER+L model (e.g. MedCAT) and a further interface for research specific training data collection.
 
+
 ### How to use: the basic example with concepts from MedMentions
 1. Clone this repository
 
@@ -41,6 +42,5 @@ Response JSON:
     }
 }
 ```
-
 
 Video: [Medcat Trainer](https://youtu.be/lM914DQjvSo) 

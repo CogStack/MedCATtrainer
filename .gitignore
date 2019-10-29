@@ -9,6 +9,10 @@ data/
 tmp/
 *_tmp/
 
+/webapp/frontend/dist/*
+/webapp/api/media/*
+/webapp/api/static/*
+
 # Keep folders with this
 !.keep
 
@@ -26,6 +30,7 @@ tmp_*
 *.lyx.emergency
 *.lyx#
 *~
+*.log
 *hidden*
 db.sqlite3
 nohup.out
