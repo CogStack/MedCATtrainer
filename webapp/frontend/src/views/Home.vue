@@ -2,7 +2,7 @@
   <div class="container">
     <login v-if="!loginSuccessful" @login:success="loggedIn()"></login>
     <h3> Welcome to MedCAT</h3>
-    <table class="table table-hover project-list">
+    <table class="table table-hover">
       <thead>
         <tr>
           <th>Project ID</th>
@@ -121,7 +121,6 @@ h3 {
 }
 .table {
   table-layout: fixed;
-
   tbody {
     td {
       .term-list {
@@ -137,9 +136,6 @@ h3 {
   td {
     cursor: pointer;
   }
-}
-.project-list {
-  max-height: 80%;
 }
 
 .alert-enter-active, alert-leave-active {
