@@ -22,10 +22,12 @@
     "v-runtime-template": "^1.10.0",
     "vue": "^2.6.10",
     "vue-cookie": "^1.1.4",
+    "vue-multipane": "^0.9.5",
     "vue-router": "^3.0.3",
     "vue-select": "^3.1.0",
     "vue-sidebar-menu": "^4.1.2",
-    "vue-simple-context-menu": "^3.1.5"
+    "vue-simple-context-menu": "^3.1.5",
+    "vue-splitpane": "^1.0.4"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.11.0",

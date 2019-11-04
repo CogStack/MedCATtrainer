@@ -147,7 +147,13 @@ export default {
         prevText: priorText,
         nextText: nextText
       }
-      this.$refs.ctxMenu.showMenu(event)
+      // event is 132 px too large.
+      // TODO: Fix hack, bug introduced with vue-multipane.
+      let ev = {
+        pageY: event.pageY - 132,
+        pageX: event.pageX
+      }
+      this.$refs.ctxMenu.showMenu(ev)
     },
     ctxOptionClicked: function (event) {
       this.$emit('select:addSynonym', this.selection)

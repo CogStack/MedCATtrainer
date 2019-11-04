@@ -224,7 +224,6 @@ export default {
 
 <style scoped lang="scss">
 .summary {
-  @extend .detail-panel;
   height: calc(100% - 41px);
   overflow-y: auto;
 }

@@ -19,40 +19,47 @@
       </div>
     </div>
 
-    <div class="app-main">
-      <document-summary :docs="docs" :moreDocs="nextDocSetUrl !== null"
-                        :validatedDocIds="validatedDocuments"
-                        :selectedDocId="currentDoc !== null ? currentDoc.id : null" :loadingDoc="loadingDoc"
-                        @request:nextDocSet="fetchDocuments()" @request:loadDoc="loadDoc"></document-summary>
-      <div class="main-viewport">
-        <clinical-text :loading="loadingDoc" :text="currentDoc !== null ? currentDoc.text : null"
-                       :currentEnt="currentEnt" :ents="ents" :taskName="taskName" :taskValues="taskValues"
-                       @select:concept="selectEntity" @select:addSynonym="addSynonym"></clinical-text>
-        <div class="taskbar">
-          <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt" @select:next="next" @select:back="back"></nav-bar>
-          <task-bar class="tasks" :taskLocked="taskLocked" :ents="ents" :altSearch="altSearch"
-                    :submitLocked="docToSubmit != null" @select:remove="markRemove" @select:correct="markCorrect"
-                    @select:kill="markKill" @select:alternative="toggleAltSearch" @submit="submitDoc"></task-bar>
+    <multipane class="full-height">
+      <div class="full-height">
+        <div class="app-main">
+          <document-summary :docs="docs" :moreDocs="nextDocSetUrl !== null"
+                            :validatedDocIds="validatedDocuments"
+                            :selectedDocId="currentDoc !== null ? currentDoc.id : null" :loadingDoc="loadingDoc"
+                            @request:nextDocSet="fetchDocuments()" @request:loadDoc="loadDoc"></document-summary>
+          <div class="main-viewport">
+            <clinical-text :loading="loadingDoc" :text="currentDoc !== null ? currentDoc.text : null"
+                           :currentEnt="currentEnt" :ents="ents" :taskName="taskName" :taskValues="taskValues"
+                           @select:concept="selectEntity" @select:addSynonym="addSynonym"></clinical-text>
+            <div class="taskbar">
+              <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt" @select:next="next" @select:back="back"></nav-bar>
+              <task-bar class="tasks" :taskLocked="taskLocked" :ents="ents" :altSearch="altSearch"
+                        :submitLocked="docToSubmit != null" @select:remove="markRemove" @select:correct="markCorrect"
+                        @select:kill="markKill" @select:alternative="toggleAltSearch" @submit="submitDoc"></task-bar>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="sidebar-container">
-        <transition name="slide-left">
-          <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" :altSearch="altSearch"
-                           :project="project" @select:altConcept="markAlternative"
-                           @select:alternative="toggleAltSearch"
-                           class="concept-summary"></concept-summary>
-        </transition>
-        <transition name="slide-left">
-          <meta-annotation-task-container v-if="metaAnnotate" :taskIDs="(project || {}).tasks || []"
-                                          :selectedEnt="currentEnt"></meta-annotation-task-container>
-        </transition>
-        <transition name="slide-left">
-          <add-synonym v-if="conceptSynonymSelection" :selection="conceptSynonymSelection"
-                       :project="project" :documentId="currentDoc.id"
-                       @request:addAnnotationComplete="addAnnotationComplete" class="add-synonym"></add-synonym>
-        </transition>
+      <multipane-resizer></multipane-resizer>
+      <div :style="{ flexGrow: 1, width: '300px', maxWidth: '500px' }">
+        <div class="sidebar-container">
+          <transition name="slide-left">
+            <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" :altSearch="altSearch"
+                             :project="project" @select:altConcept="markAlternative"
+                             @select:alternative="toggleAltSearch"
+                             class="concept-summary"></concept-summary>
+          </transition>
+          <transition name="slide-left">
+            <meta-annotation-task-container v-if="metaAnnotate" :taskIDs="(project || {}).tasks || []"
+                                            :selectedEnt="currentEnt"></meta-annotation-task-container>
+          </transition>
+          <transition name="slide-left">
+            <add-synonym v-if="conceptSynonymSelection" :selection="conceptSynonymSelection"
+                         :project="project" :documentId="currentDoc.id"
+                         @request:addAnnotationComplete="addAnnotationComplete" class="add-synonym"></add-synonym>
+          </transition>
+        </div>
       </div>
-    </div>
+    </multipane>
 
     <modal v-if="helpModal" class="help-modal" @modal:close="helpModal = false">
       <h3 slot="header">{{ project.name }} Annotation Help</h3>
@@ -126,6 +133,7 @@ import NavBar from '@/components/common/NavBar.vue'
 import TaskBar from '@/components/anns/TaskBar.vue'
 import AddSynonym from '@/components/anns/AddSynonym.vue'
 import MetaAnnotationTaskContainer from '@/components/usecases/MetaAnnotationTaskContainer.vue'
+import { Multipane, MultipaneResizer } from 'vue-multipane'
 
 const TASK_NAME = 'Concept Annotation'
 const CONCEPT_CORRECT = 'Correct'
@@ -145,7 +153,9 @@ export default {
     NavBar,
     TaskBar,
     AddSynonym,
-    MetaAnnotationTaskContainer
+    MetaAnnotationTaskContainer,
+    Multipane,
+    MultipaneResizer
   },
   props: {
     projectId: {
@@ -435,6 +445,10 @@ export default {
   padding: 0 15px;
 }
 
+.Pane {
+  position: static !important;
+}
+
 .project-name {
   color: $text-highlight;
 }
@@ -489,6 +503,7 @@ export default {
   display: flex;
   flex: 1 1 auto;
   overflow: hidden;
+  height: 100%;
 }
 
 .main-viewport {
@@ -512,7 +527,6 @@ export default {
 }
 
 .sidebar-container {
-  @extend .detail-panel;
   display: flex;
   flex-direction: column;
   padding: 5px;
@@ -541,5 +555,31 @@ export default {
 .divider {
   opacity: 0.5;
   padding: 0 5px;
+}
+
+.layout-v > .multipane-resizer {
+  margin: 0;
+  left: 0;
+  position: relative;
+
+  &:before {
+    display: block;
+    content: "";
+    width: 5px;
+    height: 50px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -20px;
+    margin-left: -1.5px;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+  }
+
+  &:hover {
+    &:before {
+      border-color: #999;
+    }
+  }
 }
 </style>
