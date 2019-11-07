@@ -78,7 +78,7 @@ Using the admin page, a configured superuser can create, edit and delete annotat
 4\. '+' next to fields allows the addition of those field types in pop out windows
 5\. Datasets can be uploaded in CSV format. Example:
 
-| name  | Text                   | 
+| name  | text                   | 
 |-------|------------------------|
 | Doc 1 | Example document text  |
 | Doc 2 | More example text      |
