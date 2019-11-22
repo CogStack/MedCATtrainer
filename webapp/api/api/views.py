@@ -15,6 +15,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
 import os
+from medcat.utils.helpers import filter_only_icd10
 
 # For local testing, put envs
 """
@@ -189,6 +190,10 @@ def prepare_documents(request):
                              CAT_MAP=CAT_MAP, project=project)
 
             spacy_doc = cat(document.text)
+
+            # Filter to only icd10 annotations
+            filter_only_icd10(spacy_doc, cat)
+
             add_annotations(spacy_doc=spacy_doc,
                             user=user,
                             project=project,
