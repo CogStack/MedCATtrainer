@@ -165,9 +165,9 @@ def prepare_documents(request):
     cuis = []
     tuis = []
     if project.tuis is not None and project.tuis:
-        tuis = project.tuis.split(",")
+        tuis = [str(tui).strip() for tui in project.tuis.split(",")]
     if project.cuis is not None and project.cuis:
-        cuis = project.cuis.split(",")
+        cuis = [str(cui).strip() for cui in project.cuis.split(",")]
 
     for d_id in d_ids:
         document = Document.objects.get(id=d_id)

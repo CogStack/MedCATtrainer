@@ -17,6 +17,19 @@ admin.site.register(MetaAnnotation)
 admin.site.register(Vocabulary)
 
 
+def reset_project(modeladmin, request, queryset):
+    if not request.user.is_staff:
+        raise PermissionDenied
+
+    project = queryset[0]
+
+    # Remove all annotations and cascade to metanns
+    anns = AnnotatedEntity.objects.filter(project=project).delete()
+
+    # Set all validated documents to none
+    project.validated_documents.clear()
+
+
 def download_without_text(modeladmin, request, queryset):
     if not request.user.is_staff:
         raise PermissionDenied
@@ -35,17 +48,30 @@ def download_without_text(modeladmin, request, queryset):
         out_doc['last_modified'] = str(doc.last_modified)
         out_doc['annotations'] = []
 
-        anns = AnnotatedEntity.objects.filter(project=project, document=doc,
-                                              validated=True)
+        anns = AnnotatedEntity.objects.filter(project=project, document=doc)
+
         for ann in anns:
             out_ann = {}
             out_ann['id'] = ann.id
             out_ann['user'] = ann.user.username
+            out_ann['validated'] = ann.validated
             out_ann['deleted'] = ann.deleted
             out_ann['alternative'] = ann.alternative
+            out_ann['killed'] = ann.killed
             out_ann['last_modified'] = str(ann.last_modified)
             out_ann['manually_created'] = ann.manually_created
             out_ann['acc'] = ann.acc
+            out_ann['meta_anns'] = []
+            # Get MetaAnnotations
+            meta_anns = MetaAnnotation.objects.filter(annotated_entity=ann)
+            for meta_ann in meta_anns:
+                o_meta_ann = {}
+                o_meta_ann['name'] = meta_ann.meta_task.name
+                o_meta_ann['value'] = meta_ann.meta_task_value.name
+                o_meta_ann['acc'] = meta_ann.acc
+                o_meta_ann['validated'] = meta_ann.validated
+                out_ann['meta_anns'].append(o_meta_ann)
+
             out_doc['annotations'].append(out_ann)
         out['documents'].append(out_doc)
 
@@ -80,8 +106,8 @@ def download(modeladmin, request, queryset):
         out_doc['last_modified'] = str(doc.last_modified)
         out_doc['annotations'] = []
 
-        anns = AnnotatedEntity.objects.filter(project=project, document=doc,
-                                              validated=True)
+        anns = AnnotatedEntity.objects.filter(project=project, document=doc)
+
         for ann in anns:
             out_ann = {}
             out_ann['id'] = ann.id
@@ -118,12 +144,13 @@ def download(modeladmin, request, queryset):
     f_name = "{}.json".format(project.name)
     response = HttpResponse(sio, content_type='text/json')
     response['Content-Disposition'] = 'attachment; filename={}'.format(f_name)
+
     return response
 
 
 class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
     model = ProjectAnnotateEntities
-    actions = [download, download_without_text]
+    actions = [download, download_without_text, reset_project]
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "concept_db":
