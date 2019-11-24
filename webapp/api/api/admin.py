@@ -90,11 +90,24 @@ def download(modeladmin, request, queryset):
             out_ann['value'] = ann.value
             out_ann['start'] = ann.start_ind
             out_ann['end'] = ann.end_ind
+            out_ann['validated'] = ann.validated
             out_ann['deleted'] = ann.deleted
             out_ann['alternative'] = ann.alternative
+            out_ann['killed'] = ann.killed
             out_ann['last_modified'] = str(ann.last_modified)
             out_ann['manually_created'] = ann.manually_created
             out_ann['acc'] = ann.acc
+            out_ann['meta_anns'] = []
+            # Get MetaAnnotations
+            meta_anns = MetaAnnotation.objects.filter(annotated_entity=ann)
+            for meta_ann in meta_anns:
+                o_meta_ann = {}
+                o_meta_ann['name'] = meta_ann.meta_task.name
+                o_meta_ann['value'] = meta_ann.meta_task_value.name
+                o_meta_ann['acc'] = meta_ann.acc
+                o_meta_ann['validated'] = meta_ann.validated
+                out_ann['meta_anns'].append(o_meta_ann)
+
             out_doc['annotations'].append(out_ann)
         out['documents'].append(out_doc)
 
