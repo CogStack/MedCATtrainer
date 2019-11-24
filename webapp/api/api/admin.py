@@ -55,6 +55,7 @@ def download_without_text(modeladmin, request, queryset):
             out_ann['id'] = ann.id
             out_ann['user'] = ann.user.username
             out_ann['validated'] = ann.validated
+            out_ann['correct'] = ann.correct
             out_ann['deleted'] = ann.deleted
             out_ann['alternative'] = ann.alternative
             out_ann['killed'] = ann.killed
@@ -117,6 +118,7 @@ def download(modeladmin, request, queryset):
             out_ann['start'] = ann.start_ind
             out_ann['end'] = ann.end_ind
             out_ann['validated'] = ann.validated
+            out_ann['correct'] = ann.correct
             out_ann['deleted'] = ann.deleted
             out_ann['alternative'] = ann.alternative
             out_ann['killed'] = ann.killed
