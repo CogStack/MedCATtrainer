@@ -171,6 +171,11 @@ def train_medcat(cat, project, document):
             cui = ann.entity.label
             # Indices for this annotation
             text_inds = [ann.start_ind, ann.end_ind]
+            # Tune learning rate for positive mentions
+            if not ann.deleted:
+                _lr = lr / 10
+            else:
+                _lr = lr
             # This will add the concept if it doesn't exist and if it 
             #does just link the new name to the concept, if the namee is
             #already linked then it will just train.
@@ -179,7 +184,7 @@ def train_medcat(cat, project, document):
                          text=text,
                          spacy_doc=doc,
                          text_inds=text_inds,
-                         lr=lr,
+                         lr=_lr,
                          anneal=anneal,
                          negative=ann.deleted)
 
