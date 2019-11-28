@@ -39,7 +39,7 @@ export default {
     return {
       ctxMenuOptions: [
         {
-          name: 'Add Synonym'
+          name: 'Add Annotation'
         }
       ],
       selection: null
