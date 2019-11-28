@@ -517,12 +517,12 @@ export default {
 }
 
 .nav {
-  width: 150px;
+  width: 95px;
   display: inline-block
 }
 
 .tasks {
-  width: calc(100% - 150px);
+  width: calc(100% - 95px);
   display: inline-block;
 }
 
