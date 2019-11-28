@@ -320,10 +320,18 @@ export default {
       this.metaAnnotate = this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_ALTERNATIVE ||
         this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_CORRECT
     },
+    setStatus: function (status) {
+      this.currentEnt.validated = 1
+      this.currentEnt.correct = 0
+      this.currentEnt.killed = 0
+      this.currentEnt.alternative = 0
+      this.currentEnt.deleted = 0
+      this.currentEnt[status] = 1
+    },
     markCorrect: function () {
       if (this.currentEnt) {
         this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_CORRECT
-        this.currentEnt.validated = 1 // correct is just validated so no need to set anything else
+        this.setStatus('correct')
         this.markEntity(this.project.tasks.length === 0)
         this.metaAnnotate = this.project.tasks.length > 0
       }
@@ -342,11 +350,10 @@ export default {
     markRemove: function (kill) {
       if (this.currentEnt) {
         this.currentEnt.assignedValues[TASK_NAME] = kill ? CONCEPT_KILLED : CONCEPT_REMOVED
-        this.currentEnt.validated = 1
         if (kill) {
-          this.currentEnt.killed = 1
+          this.setStatus('killed')
         } else {
-          this.currentEnt.deleted = 1
+          this.setStatus('deleted')
         }
         this.markEntity(true)
         this.metaAnnotate = false
@@ -364,8 +371,7 @@ export default {
       this.$http.post(`/api/get-create-entity/`, { label: item.cui }).then(resp => {
         this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_ALTERNATIVE
         this.currentEnt.entity = resp.data.entity_id
-        this.currentEnt.validated = 1
-        this.currentEnt.alternative = 1
+        this.setStatus('alternative')
         this.markEntity(this.project.tasks.length === 0)
         this.metaAnnotate = this.project.tasks.length > 0
         let i = this.ents.indexOf(this.currentEnt)
