@@ -7,7 +7,7 @@
            :class="{'selected-doc': selectedDocId === doc.id}" @click="loadDoc(doc.id)">
         <font-awesome-icon v-if="validatedDocIds.includes(doc.id)" class="validated-doc" icon="check"></font-awesome-icon>
         <div class="note-summary">
-          {{doc.text === 'nan' ? '' : (doc.text || '')}}
+          {{doc.text === 'nan' ? '' : (doc.text || '') | limitText }}
         </div>
       </div>
       <div class="clickable">
@@ -51,12 +51,23 @@ export default {
   },
   beforeDestroy: function () {
     window.removeEventListener('keyup', this.keyup)
+  },
+  filters: {
+    limitText: function (value) {
+      let splitText = value.split('\n')
+      if (splitText.length > 5) {
+        return splitText.slice(0, 5).join('\n')
+      }
+      return value
+    }
   }
 }
 </script>
 
 <style scoped lang="scss">
 @import "bootstrap";
+
+$width: 200px;
 
 .title {
   padding: 5px 15px;
@@ -65,7 +76,7 @@ export default {
 }
 
 .doc-summary {
-  flex: 0 0 300px;
+  flex: 0 0 $width;
   padding: 5px;
   position: relative;
   background: $background;
@@ -74,7 +85,7 @@ export default {
 .doc-list {
   overflow: auto;
   height: calc(100% - 41px);
-  width: 300px;
+  width: $width;
 }
 
 .doc {
@@ -126,7 +137,7 @@ export default {
   font-size: 11px;
   overflow: hidden;
   position: relative;
-  height: 12em; /* 10 lines */
+  height: 6em; /* 5 lines */
 
   &:after {
     content: "";
