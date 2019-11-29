@@ -21,6 +21,7 @@
         </tr>
         </tbody>
       </table>
+      <div class="spacer" v-if="!selectedCUI"></div>
       <table class="add-synonym-table" v-if="selectedCUI">
         <tbody>
         <tr>
@@ -176,6 +177,11 @@ $button-height: 50px;
   height: 100%;
 }
 
+.spacer {
+  width: 100%;
+  height: 350px;
+}
+
 .main-panel {
   height: calc(100% - #{$title-height} - #{$button-height});
   overflow-y: auto;
@@ -193,6 +199,7 @@ $button-height: 50px;
 
 .action-buttons {
   text-align: center;
+  paddind-top: 10px;
   height: $button-height;
 }
 
@@ -201,6 +208,8 @@ $button-height: 50px;
 }
 
 .add-synonym-table {
+  width: 100%;
+
   tbody > tr {
     box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
 

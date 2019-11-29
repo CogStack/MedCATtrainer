@@ -542,7 +542,7 @@ export default {
   }
 
   .add-synonym {
-    width: 400px;
+    width: 100%;
     flex: 1 1 auto;
   }
 }
