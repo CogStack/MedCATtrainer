@@ -73,9 +73,13 @@ http://localhost:8001/admin/.
 Using the admin page, a configured superuser can create, edit and delete annotation projects. 
 
 1\. On http://localhost:8001/admin/, choose 'Project annotate entities'.
+
 2\. 'Add Project Annotate Entities'
+
 3\. Complete the form as indicated
+
 4\. '+' next to fields allows the addition of those field types in pop out windows
+
 5\. Datasets can be uploaded in CSV format. Example:
 
 | name  | text                   | 
@@ -83,7 +87,7 @@ Using the admin page, a configured superuser can create, edit and delete annotat
 | Doc 1 | Example document text  |
 | Doc 2 | More example text      |
 
-The name column is optional.
+The name column is optional, and will be auto-generated for each document if not supplied in the upload.
 
 6\. CUIs (UMLS Concept Unique Identifiers) and TUIs (UMLS Term Unique Identifiers), allow projects to be
 configured to only display a subset of total UMLS concepts. They can be specified in a comma separated
