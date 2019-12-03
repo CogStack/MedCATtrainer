@@ -19,7 +19,7 @@ MAX_SKIP_TKN=2
 
 LR=1
 ANNEAL=True
-KEEP_PUNCT=:|.
+KEEP_PUNCT=\:\|\.
 
 SPACY_MODEL=en_core_sci_md
 
