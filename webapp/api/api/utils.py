@@ -44,8 +44,14 @@ def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
         # Add the concept info to the Concept table if it doesn't exist
         cnt = Concept.objects.filter(cui=label).count()
         if cnt == 0:
+            pretty_name = ""
+            if label in cdb.cui2pretty_name:
+                pretty_name = cdb.cui2pretty_name[label]
+            elif label in cdb.cui2original_names and len(cdb.cui2original_names[label]) > 0:
+                pretty_name = cdb.cui2original_names[label][0]
+
             concept = Concept()
-            concept.pretty_name = cdb.cui2pretty_name.get(label, '')
+            concept.pretty_name = pretty_name
             concept.cui = label
             concept.tui = tui
             concept.semantic_type = cdb.tui2name.get(tui, '')
