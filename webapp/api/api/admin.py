@@ -192,7 +192,7 @@ def _import_concepts(id):
             if cui in cdb.cui2pretty_name:
                 pretty_name = cdb.cui2pretty_name[cui]
             elif cui in cdb.cui2original_names and len(cdb.cui2original_names[cui]) > 0:
-                pretty_name = cdb.cui2original_names[cui][0]
+                pretty_name = next(iter(cdb.cui2original_names[cui]))[0]
 
             tui = cdb.cui2tui.get(cui, 'unk')
             if pretty_name is not None and (tuis is None or tui in tuis):
