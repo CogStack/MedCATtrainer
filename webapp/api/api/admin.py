@@ -183,10 +183,17 @@ def _import_concepts(id):
     tuis = None
 
     for cui in cdb.cui2pretty_name:
+        pretty_name = None
+
+        if cui in cdb.cui2pretty_name:
+            pretty_name = cdb.cui2pretty_name[cui]
+        elif cui in cdb.cui2original_names and len(cdb.cui2original_names[cui]) > 0:
+            pretty_name = cdb.cui2original_names[cui][0]
+
         tui = cdb.cui2tui.get(cui, 'unk')
-        if tuis is None or tui in tuis:
+        if pretty_name is not None and (tuis is None or tui in tuis):
             concept = Concept()
-            concept.pretty_name = cdb.cui2pretty_name.get(cui, '')
+            concept.pretty_name = pretty_name
             concept.cui = cui
             concept.tui = tui
             concept.semantic_type = cdb.tui2name.get(tui, '')
