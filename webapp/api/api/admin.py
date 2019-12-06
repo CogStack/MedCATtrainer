@@ -182,39 +182,43 @@ def _import_concepts(id):
     cdb.load_dict(concept_db.cdb_file.path)
     tuis = None
 
-    for cui in cdb.cui2pretty_name:
-        pretty_name = None
+    # Get all existing cuis
+    existing_cuis = set(Concept.objects.all().values_list('cui', flat=True))
 
-        if cui in cdb.cui2pretty_name:
-            pretty_name = cdb.cui2pretty_name[cui]
-        elif cui in cdb.cui2original_names and len(cdb.cui2original_names[cui]) > 0:
-            pretty_name = cdb.cui2original_names[cui][0]
+    for cui in cdb.cui2names:
+        if cui not in existing_cuis:
+            pretty_name = None
 
-        tui = cdb.cui2tui.get(cui, 'unk')
-        if pretty_name is not None and (tuis is None or tui in tuis):
-            concept = Concept()
-            concept.pretty_name = pretty_name
-            concept.cui = cui
-            concept.tui = tui
-            concept.semantic_type = cdb.tui2name.get(tui, '')
-            concept.desc = cdb.cui2desc.get(cui, '')
-            concept.synonyms = ",".join(cdb.cui2original_names.get(cui, []))
-            concept.cdb = concept_db
-            icd10 = ''
-            try:
-                for pair in cdb.cui2info[cui]['icd10']:
-                    icd10 += pair['chapter'] + " | " + pair['name']
-                    icd10 += '\n'
-                icd10.strip()
-            except:
-                pass
-            concept.icd10 = icd10
-            #concept.vocab = cdb.cui2ontos.get(cui, '')
+            if cui in cdb.cui2pretty_name:
+                pretty_name = cdb.cui2pretty_name[cui]
+            elif cui in cdb.cui2original_names and len(cdb.cui2original_names[cui]) > 0:
+                pretty_name = cdb.cui2original_names[cui][0]
 
-            try:
-                concept.save()
-            except:
-                pass
+            tui = cdb.cui2tui.get(cui, 'unk')
+            if pretty_name is not None and (tuis is None or tui in tuis):
+                concept = Concept()
+                concept.pretty_name = pretty_name
+                concept.cui = cui
+                concept.tui = tui
+                concept.semantic_type = cdb.tui2name.get(tui, '')
+                concept.desc = cdb.cui2desc.get(cui, '')
+                concept.synonyms = ",".join(cdb.cui2original_names.get(cui, []))
+                concept.cdb = concept_db
+                icd10 = ''
+                try:
+                    for pair in cdb.cui2info[cui]['icd10']:
+                        icd10 += pair['chapter'] + " | " + pair['name']
+                        icd10 += '\n'
+                    icd10.strip()
+                except:
+                    pass
+                concept.icd10 = icd10
+                #concept.vocab = cdb.cui2ontos.get(cui, '')
+
+                try:
+                    concept.save()
+                except:
+                    pass
 
 
 def import_concepts(modeladmin, request, queryset):
