@@ -185,7 +185,7 @@ def _import_concepts(id):
     # Get all existing cuis
     existing_cuis = set(Concept.objects.all().values_list('cui', flat=True))
 
-    for cui in cdb.cui2names:
+    for cui in cdb.cui2names.keys():
         if cui not in existing_cuis:
             pretty_name = None
 
