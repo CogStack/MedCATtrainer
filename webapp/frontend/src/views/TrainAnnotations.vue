@@ -1,13 +1,13 @@
 <template>
   <div class="container-fluid app-container">
     <div class="app-header">
-      <div class="half-width">
+      <div class="project-name">
         <span>Train Annotations:
-          <h4 class="project-name">{{ project === null ? '' : project.name }}</h4>
+          <h4>{{ project === null ? '' : project.name }}</h4>
         </span>
       </div>
 
-      <div class="half-width meta">
+      <div class="meta">
         <h5 class="file-name-heading" v-if="((docs || {}).length || 0) > 0">
           <span class="file-name">{{(currentDoc || {}).name}}</span>
           <span class="divider">|</span>
@@ -445,6 +445,8 @@ export default {
 <style scoped lang="scss">
 
 .app-header {
+  display: flex;
+  flex-direction: row;
   flex: 0 0 70px;
   line-height: 70px;
   font-size: 25px;
@@ -456,6 +458,7 @@ export default {
 }
 
 .project-name {
+  flex: 1 1 auto;
   color: $text-highlight;
 }
 
@@ -469,12 +472,8 @@ export default {
   display: inline-block;
 }
 
-.half-width {
-  display: inline-block;
-  width: 50%;
-}
-
 .meta {
+  flex: 1 1 auto;
   text-align: right;
 }
 
