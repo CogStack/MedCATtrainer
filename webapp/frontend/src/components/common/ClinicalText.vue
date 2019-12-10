@@ -110,50 +110,52 @@ export default {
       const anchor = selection.anchorNode
       const focus = selection.focusNode
 
-      let nextText = focus.data.slice(selection.focusOffset)
-      let nextSibling = focus.nextSibling || focus.parentElement.nextSibling
-      let priorText = anchor.data.slice(0, selection.anchorOffset)
-      let priorSibling = anchor.previousSibling || anchor.parentElement.previousSibling
+      if (focus !== null) {
+        let nextText = focus.data.slice(selection.focusOffset)
+        let nextSibling = focus.nextSibling || focus.parentElement.nextSibling
+        let priorText = anchor.data.slice(0, selection.anchorOffset)
+        let priorSibling = anchor.previousSibling || anchor.parentElement.previousSibling
 
-      let sameNode = anchor.compareDocumentPosition(focus) === 0
-      let focusProceedingAnchor = anchor.compareDocumentPosition(focus) === 2
-      if (!sameNode) {
-        if (focusProceedingAnchor) {
-          priorText = focus.data.slice(0, selection.focusOffset)
-          priorSibling = focus.previousSibling || focus.parentElement.previousSibling
+        let sameNode = anchor.compareDocumentPosition(focus) === 0
+        let focusProceedingAnchor = anchor.compareDocumentPosition(focus) === 2
+        if (!sameNode) {
+          if (focusProceedingAnchor) {
+            priorText = focus.data.slice(0, selection.focusOffset)
+            priorSibling = focus.previousSibling || focus.parentElement.previousSibling
+            nextText = anchor.data.slice(selection.anchorOffset)
+            nextSibling = anchor.nextSibling || anchor.parentElement.nextSibling
+          }
+        } else if (selection.anchorOffset > selection.focusOffset) {
+          priorText = anchor.data.slice(0, selection.focusOffset)
           nextText = anchor.data.slice(selection.anchorOffset)
-          nextSibling = anchor.nextSibling || anchor.parentElement.nextSibling
         }
-      } else if (selection.anchorOffset > selection.focusOffset) {
-        priorText = anchor.data.slice(0, selection.focusOffset)
-        nextText = anchor.data.slice(selection.anchorOffset)
-      }
 
-      _.range(10).forEach(function () {
-        if (priorSibling !== null) {
-          priorText = `${priorSibling.innerText || priorSibling.textContent}${priorText}`
-          priorSibling = priorSibling.previousSibling
+        _.range(10).forEach(function () {
+          if (priorSibling !== null) {
+            priorText = `${priorSibling.innerText || priorSibling.textContent}${priorText}`
+            priorSibling = priorSibling.previousSibling
+          }
+          if (nextSibling !== null) {
+            nextText += (nextSibling.innerText || nextSibling.textContent)
+            nextSibling = nextSibling.nextSibling
+          }
+        })
+        // take only 100 chars of either side?
+        nextText = nextText.length < 100 ? nextText : nextText.slice(0, 100)
+        priorText = priorText.length < 15 ? priorText : priorText.slice(-15)
+        this.selection = {
+          selStr: selStr,
+          prevText: priorText,
+          nextText: nextText
         }
-        if (nextSibling !== null) {
-          nextText += (nextSibling.innerText || nextSibling.textContent)
-          nextSibling = nextSibling.nextSibling
+        // event is 132 px too large.
+        // TODO: Fix hack, bug introduced with vue-multipane.
+        let ev = {
+          pageY: event.pageY - 132,
+          pageX: event.pageX
         }
-      })
-      // take only 100 chars of either side?
-      nextText = nextText.length < 100 ? nextText : nextText.slice(0, 100)
-      priorText = priorText.length < 15 ? priorText : priorText.slice(-15)
-      this.selection = {
-        selStr: selStr,
-        prevText: priorText,
-        nextText: nextText
+        this.$refs.ctxMenu.showMenu(ev)
       }
-      // event is 132 px too large.
-      // TODO: Fix hack, bug introduced with vue-multipane.
-      let ev = {
-        pageY: event.pageY - 132,
-        pageX: event.pageX
-      }
-      this.$refs.ctxMenu.showMenu(ev)
     },
     ctxOptionClicked: function (event) {
       this.$emit('select:addSynonym', this.selection)
