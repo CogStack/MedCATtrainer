@@ -1,9 +1,10 @@
 <template>
-  <div class="container">
+  <div class="container full-height">
     <login v-if="!loginSuccessful" @login:success="loggedIn()"></login>
-    <h3> Welcome to MedCAT</h3>
-    <table class="table table-hover">
-      <thead>
+    <h3>Welcome to MedCAT</h3>
+    <div class="table-container">
+      <table class="table table-hover">
+        <thead>
         <tr>
           <th>Project ID</th>
           <th>Title</th>
@@ -14,8 +15,8 @@
           <th>Annotate / Validate</th>
           <th>Save Model</th>
         </tr>
-      </thead>
-      <tbody>
+        </thead>
+        <tbody>
         <tr v-for="project of projects" :key="project.id" @click="select(project)">
           <td>{{project.id}}</td>
           <td>{{project.name}}</td>
@@ -26,8 +27,9 @@
           <td>{{project.require_entity_validation ? 'Yes' : 'No'}}</td>
           <td @click.stop><button class="btn btn-outline-primary" @click="saveModel(project.id)"><font-awesome-icon icon="save"></font-awesome-icon></button></td>
         </tr>
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
     <transition name="alert"><div class="alert alert-info" v-if="saving" role="alert">Saving models</div></transition>
     <transition name="alert"><div class="alert alert-primary" v-if="modelSaved" role="alert">Model Successfully saved</div></transition>
     <transition name="alert"><div class="alert alert-danger" v-if="modelSavedError" role="alert">Error saving model</div></transition>
@@ -119,6 +121,12 @@ export default {
 h3 {
   margin: 10%
 }
+
+.table-container {
+  height: calc(100% - 286px);
+  overflow-y: auto;
+}
+
 .table {
   table-layout: fixed;
   tbody {
