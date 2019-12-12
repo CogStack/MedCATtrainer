@@ -11,7 +11,9 @@
         <tr @keyup.stop>
           <td>Concept Lookup</td>
           <td>
-            <v-select v-model="selectedCUI" label="name" @search="searchCUI" :filterable="false"
+            <v-select v-model="selectedCUI" label="name" @search="searchCUI"
+                      :clearSearchOnSelect="false"
+                      :filterable="false"
                       :options="searchResults"></v-select>
           </td>
         </tr>
@@ -26,7 +28,7 @@
         <tbody>
         <tr>
           <td>Name</td>
-          <td>{{selectedCUI.name || 'n/a'}}</td>
+          <td>{{selectedCUI.name.split(':')[0] || 'n/a'}}</td>
         </tr>
         <tr>
           <td>Term ID</td>
@@ -92,16 +94,14 @@ export default {
       selectedCUI: null
     }
   },
-  watch: {
-    'selectedCUI': 'selectedSynonymCUI'
-  },
   methods: {
     searchCUI: _.debounce(function (term, loading) {
       loading(true)
 
-      const mapResult = function (r) {
+      const mapResult = function (r, allResults) {
+        const isDupName = allResults.filter(res => res.pretty_name === r.pretty_name).length > 1
         return {
-          name: r.pretty_name,
+          name: isDupName ? `${r.pretty_name} : ${r.cui}` : r.pretty_name,
           cui: r.cui,
           tui: r.tui,
           type: r.type,
@@ -117,7 +117,7 @@ export default {
         let queryParams = `search=${term}&cdb__in=${that.project.cdb_search_filter.join(',')}`
         that.$http.get(`/api/search-concepts/?${queryParams}`).then(resp => {
           loading(false)
-          that.searchResults = resp.data.results.map(mapResult)
+          that.searchResults = resp.data.results.map(res => mapResult(res, resp.data.results))
         })
       }
 
@@ -125,7 +125,7 @@ export default {
         this.$http.get(`/api/concepts/?cui=${term}`).then(resp => {
           if (resp.data.results.length > 0) {
             loading(false)
-            this.searchResults = resp.data.results.map(mapResult)
+            this.searchResults = resp.data.results.map(res => mapResult(res, resp.data.results))
           } else {
             searchByTerm()
           }
@@ -134,9 +134,6 @@ export default {
         searchByTerm()
       }
     }, 400),
-    selectedSynonymCUI: function () {
-      this.searchResults = []
-    },
     submit: function () {
       const payload = {
         source_value: this.selection.selStr,
