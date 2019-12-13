@@ -12,6 +12,7 @@
           <td>Concept Lookup</td>
           <td>
             <v-select v-model="selectedCUI" label="name" @search="searchCUI"
+                      :inputId="'searchBox'"
                       :clearSearchOnSelect="false"
                       :filterable="false"
                       :options="searchResults"></v-select>
@@ -93,6 +94,15 @@ export default {
       searchResults: [],
       selectedCUI: null
     }
+  },
+  created: function () {
+    let that = this
+    window.setTimeout(function () {
+      const el = document.getElementById('searchBox')
+      el.focus()
+      el.value = that.selection.selStr
+      that.searchCUI(that.selection.selStr, () => true)
+    }, 50)
   },
   methods: {
     searchCUI: _.debounce(function (term, loading) {

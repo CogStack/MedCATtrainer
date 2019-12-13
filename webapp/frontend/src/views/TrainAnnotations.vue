@@ -394,8 +394,12 @@ export default {
       }
     },
     addSynonym: function (selection) {
-      this.conceptSynonymSelection = selection
-      this.metaAnnotate = false
+      this.conceptSynonymSelection = null
+      let that = this
+      window.setTimeout(function () {
+        that.conceptSynonymSelection = selection
+        that.metaAnnotate = false
+      }, 50)
     },
     next: function () {
       this.selectEntity(this.ents.indexOf(this.currentEnt) + 1)
