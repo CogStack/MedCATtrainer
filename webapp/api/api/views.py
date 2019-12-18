@@ -256,7 +256,9 @@ def submit_document(request):
 
     cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
                      CAT_MAP=CAT_MAP, project=project)
-    train_medcat(cat, project, document)
+    
+    if project.train_model_on_submit:
+        train_medcat(cat, project, document)
 
     return Response({'message': 'Document submited successfully'})
 

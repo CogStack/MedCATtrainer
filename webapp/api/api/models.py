@@ -143,6 +143,7 @@ class ProjectAnnotateEntities(Project):
     cdb_search_filter = models.ManyToManyField('ConceptDB', blank=True, default=None,
             related_name='concept_source')
     require_entity_validation = models.BooleanField(default=False)
+    train_model_on_submit = models.BooleanField(default=True)
     tasks = models.ManyToManyField(MetaTask, blank=True, default=None)
 
 
