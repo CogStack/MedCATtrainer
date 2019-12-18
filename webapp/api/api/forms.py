@@ -1,8 +1,7 @@
-from django import forms
-from .models import *
-from .data_utils import *
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
+from .data_utils import *
 
 
 # Extract text from the uploaded dataset

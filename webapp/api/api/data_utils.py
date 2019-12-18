@@ -1,9 +1,11 @@
 import pandas
-from .models import * 
+import pandas as pd
+
+from .models import *
 import numpy as np
 
 
-def text_from_csv(dataset):
+def text_from_csv(dataset: Dataset):
     df = pandas.read_csv(dataset.original_file.path, escapechar='\\')
 
     if 'text' not in df.columns:

@@ -1,20 +1,21 @@
-from django.shortcuts import render
-from django.contrib.auth.models import User
-from .serializers import *
-from rest_framework import viewsets
-from rest_framework import permissions
-from .data_utils import text_classification_csv_import
-from .permissions import *
-from .models import *
-from django_filters.rest_framework import DjangoFilterBackend
-from django_filters.rest_framework import BaseInFilter
-from django_filters import rest_framework as drf
-from rest_framework import generics
-from rest_framework import filters
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
 import os
+from datetime import datetime
+
+import pandas as pd
+from django.core.files import File
+from django.shortcuts import render
+from django_filters import rest_framework as drf
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
+from rest_framework import generics
+from rest_framework import viewsets
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+from .models import *
+from .permissions import *
+from .serializers import *
+from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
 
 # For local testing, put envs
 """
@@ -24,9 +25,6 @@ env.read_env("/home/ubuntu/projects/MedAnno/MedAnno/env_umls", recurse=False)
 print(os.environ)
 """
 
-from medcat.cat import CAT
-from medcat.utils.vocab import Vocab
-from medcat.cdb import CDB
 from medcat.utils.helpers import prepare_name
 from medcat.utils.loggers import basic_logger
 log = basic_logger("api.views")
@@ -291,6 +289,22 @@ def get_create_entity(request):
         id = ent.id
 
     return Response({'entity_id': id})
+
+
+@api_view(http_method_names=['POST'])
+def create_datasets(request):
+    filename = f'{settings.MEDIA_ROOT}/{request.data["dataset_name"]}.csv'
+    log.debug(request.data['dataset'])
+    pd.DataFrame(request.data['dataset']).to_csv(filename, index=False)
+
+    ds = Dataset()
+    ds.original_file = File(open(filename))
+    ds.name = request.data['dataset_name']
+    log.debug(ds.original_file.path)
+    ds.description = request.data.get('description', 'n/a')
+    ds.save()
+    id = ds.id
+    return Response({'dataset_id': id})
 
 
 @api_view(http_method_names=['GET'])
