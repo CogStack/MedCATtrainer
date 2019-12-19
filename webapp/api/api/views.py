@@ -156,6 +156,13 @@ class VocabularyViewSet(viewsets.ModelViewSet):
     serializer_class = VocabularySerializer
 
 
+class DatasetViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get']
+    queryset = Dataset.objects.all()
+    serializer_class = DatasetSerializer
+
+
 @api_view(http_method_names=['POST'])
 def prepare_documents(request):
     # Get the user
@@ -316,9 +323,9 @@ def create_dataset(request):
     ds = Dataset()
     ds.original_file = File(open(filename))
     ds.name = request.data['dataset_name']
-    log.debug(ds.original_file.path)
     ds.description = request.data.get('description', 'n/a')
     ds.save()
+    log.debug(f'Saved new dataset:{ds.original_file.path}')
     id = ds.id
     return Response({'dataset_id': id})
 

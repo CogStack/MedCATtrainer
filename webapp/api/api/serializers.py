@@ -33,6 +33,12 @@ class VocabularySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class DatasetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Dataset
+        fields = '__all__'
+
+
 class ProjectAnnotateEntitiesSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectAnnotateEntities
