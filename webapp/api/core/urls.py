@@ -32,6 +32,8 @@ router.register(r'annotated-entities', api.views.AnnotatedEntityViewSet)
 router.register(r'meta-annotations', api.views.MetaAnnotationViewSet)
 router.register(r'meta-tasks', api.views.MetaTaskViewSet)
 router.register(r'meta-task-values', api.views.MetaTaskValueViewSet)
+router.register(r'concept-dbs', api.views.ConceptDBViewSet)
+router.register(r'vocabs', api.views.VocabularyViewSet)
 
 
 urlpatterns = [

@@ -25,7 +25,6 @@ class Concept(models.Model):
     icd10 = models.TextField(default='', blank=True)
     cdb = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=True, null=True)
 
-
     def __str__(self):
         return str(self.pretty_name)
 
@@ -116,7 +115,6 @@ class AnnotatedEntity(models.Model):
 
     last_modified = models.DateTimeField(auto_now=True)
 
-
     def __str__(self):
         return str(self.entity)
 
@@ -148,7 +146,7 @@ class ProjectAnnotateEntities(Project):
 
 
 class ProjectMetaAnnotate(Project):
-    # Takse documents and models from the annotate entities project
+    # Take documents and models from the annotate entities project
     project_annotate_entities = models.ForeignKey('ProjectAnnotateEntities', on_delete=models.CASCADE)
     tasks = models.ManyToManyField(MetaTask)
 

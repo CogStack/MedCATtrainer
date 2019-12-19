@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from .models import *
 from rest_framework import serializers
 
+
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
@@ -20,30 +21,47 @@ class EntitySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ConceptDBSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ConceptDB
+        fields = '__all__'
+
+
+class VocabularySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vocabulary
+        fields = '__all__'
+
+
 class ProjectAnnotateEntitiesSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectAnnotateEntities
         fields = '__all__'
+
 
 class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
         fields = '__all__'
 
+
 class AnnotatedEntitySerializer(serializers.ModelSerializer):
     class Meta:
         model = AnnotatedEntity
         fields = '__all__'
+
 
 class MetaAnnotationSerializer(serializers.ModelSerializer):
     class Meta:
         model = MetaAnnotation
         fields = '__all__'
 
+
 class MetaTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = MetaTask
         fields = '__all__'
+
 
 class MetaTaskValueSerializer(serializers.ModelSerializer):
     class Meta:

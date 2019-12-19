@@ -142,6 +142,20 @@ class EntityViewSet(viewsets.ModelViewSet):
     serializer_class = EntitySerializer
 
 
+class ConceptDBViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get']
+    queryset = ConceptDB.objects.all()
+    serializer_class = ConceptDBSerializer
+
+
+class VocabularyViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get']
+    queryset = Vocabulary.objects.all()
+    serializer_class = VocabularySerializer
+
+
 @api_view(http_method_names=['POST'])
 def prepare_documents(request):
     # Get the user
@@ -256,7 +270,7 @@ def submit_document(request):
 
     cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
                      CAT_MAP=CAT_MAP, project=project)
-    
+
     if project.train_model_on_submit:
         train_medcat(cat, project, document)
 
@@ -294,7 +308,7 @@ def get_create_entity(request):
 
 
 @api_view(http_method_names=['POST'])
-def create_datasets(request):
+def create_dataset(request):
     filename = f'{settings.MEDIA_ROOT}/{request.data["dataset_name"]}.csv'
     log.debug(request.data['dataset'])
     pd.DataFrame(request.data['dataset']).to_csv(filename, index=False)
