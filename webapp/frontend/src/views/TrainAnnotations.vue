@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <multipane class="full-height">
+    <multipane class="viewport-container">
       <div class="full-height">
         <div class="app-main">
           <document-summary :docs="docs" :moreDocs="nextDocSetUrl !== null"
@@ -513,6 +513,10 @@ export default {
   flex: 1 1 auto;
   overflow: hidden;
   height: 100%;
+}
+
+.viewport-container {
+  height: calc(100% - 70px);
 }
 
 .main-viewport {
