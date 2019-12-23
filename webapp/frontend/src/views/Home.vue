@@ -123,7 +123,7 @@ h3 {
 }
 
 .table-container {
-  height: calc(100% - 286px);
+  height: calc(100% - 400px);
   overflow-y: auto;
 }
 
