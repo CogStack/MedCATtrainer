@@ -40,7 +40,7 @@
         </div>
       </div>
       <multipane-resizer></multipane-resizer>
-      <div :style="{ flexGrow: 1, width: '300px', maxWidth: '500px' }">
+      <div :style="{ flexGrow: 1, width: '300px', maxWidth: '1000px' }">
         <div class="sidebar-container">
           <transition name="slide-left">
             <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" :altSearch="altSearch"
@@ -425,8 +425,8 @@ export default {
         this.$http.post(`/api/submit-document/`, payload).then(() => {
           this.docToSubmit = null
           this.submitConfirmedLoading = false
-          if (this.currentDoc !== this.docs.slice(-1)[0]) {
-            this.loadDoc(this.docs[this.docs.indexOf(this.currentDoc) + 1].id)
+          if (this.currentDoc.id !== this.docs.slice(-1)[0].id) {
+            this.loadDoc(this.docs[this.docs.map(d => d.id).indexOf(this.currentDoc.id) + 1].id)
           }
         })
       })
