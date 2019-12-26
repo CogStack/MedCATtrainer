@@ -30,7 +30,7 @@
         </tbody>
       </table>
     </div>
-    <nav-bar :useEnts="false" :nextBtnDisabled="next == null" :backBtnDisabled="previous == null" @select:next="fetchNext" @select:back="fetchPrevious"></nav-bar>
+    <nav-bar v-if="next != null || previous != null" :useEnts="false" :nextBtnDisabled="next == null" :backBtnDisabled="previous == null" @select:next="fetchNext" @select:back="fetchPrevious"></nav-bar>
     <transition name="alert"><div class="alert alert-info" v-if="saving" role="alert">Saving models</div></transition>
     <transition name="alert"><div class="alert alert-primary" v-if="modelSaved" role="alert">Model Successfully saved</div></transition>
     <transition name="alert"><div class="alert alert-danger" v-if="modelSavedError" role="alert">Error saving model</div></transition>
