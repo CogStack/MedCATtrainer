@@ -30,6 +30,7 @@
         </tbody>
       </table>
     </div>
+    <nav-bar :useEnts="false" :nextBtnDisabled="next == null" :backBtnDisabled="previous == null" @select:next="fetchNext" @select:back="fetchPrevious"></nav-bar>
     <transition name="alert"><div class="alert alert-info" v-if="saving" role="alert">Saving models</div></transition>
     <transition name="alert"><div class="alert alert-primary" v-if="modelSaved" role="alert">Model Successfully saved</div></transition>
     <transition name="alert"><div class="alert alert-danger" v-if="modelSavedError" role="alert">Error saving model</div></transition>
@@ -40,15 +41,19 @@
 // Maybe list the the projects that given user has access to ...
 import Login from '@/components/common/Login.vue'
 import EventBus from '@/event-bus'
+import NavBar from '@/components/common/NavBar'
 
 export default {
   name: 'Home',
   components: {
+    NavBar,
     Login
   },
   data: function () {
     let data = {
       projects: [],
+      next: null,
+      previous: null,
       loginSuccessful: false,
       modelSaved: false,
       modelSavedError: false,
@@ -81,9 +86,27 @@ export default {
     },
     fetchProjects: function () {
       if (this.loginSuccessful) {
-        this.$http.get('/api/project-annotate-entities/').then((resp) => {
+        this.$http.get('/api/project-annotate-entities/').then(resp => {
           this.projects = resp.data.results
+          this.next = resp.data.next
         })
+      }
+    },
+    fetchPage: function (pageUrl) {
+      this.$http.get('/' + pageUrl.split('/').slice(-3).join('/')).then(resp => {
+        this.projects = resp.data.results
+        this.next = resp.data.next
+        this.previous = resp.data.previous
+      })
+    },
+    fetchNext: function () {
+      if (this.next) {
+        this.fetchPage(this.next)
+      }
+    },
+    fetchPrevious: function () {
+      if (this.previous) {
+        this.fetchPage(this.previous)
       }
     },
     select: function (project) {

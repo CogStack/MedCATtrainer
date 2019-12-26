@@ -16,14 +16,28 @@ export default {
   name: 'NavBar',
   props: {
     currentEnt: Object,
-    ents: Array
+    ents: Array,
+    useEnts: {
+      default: function () {
+        return true
+      },
+      type: Boolean
+    },
+    nextBtnDisabled: Boolean,
+    backBtnDisabled: Boolean
   },
   methods: {
     nextDisabled: function () {
-      return this.ents === null ? true : this.ents[this.ents.length - 1] === this.currentEnt
+      if (this.useEnts) {
+        return this.ents === null ? true : this.ents[this.ents.length - 1] === this.currentEnt
+      }
+      return this.nextBtnDisabled
     },
     backDisabled: function () {
-      return this.ents === null ? true : this.ents[0] === this.currentEnt
+      if (this.useEnts) {
+        return this.ents === null ? true : this.ents[0] === this.currentEnt
+      }
+      return this.backBtnDisabled
     },
     next: function () {
       this.$emit('select:next')
