@@ -33,7 +33,7 @@
             <div class="taskbar">
               <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt" @select:next="next" @select:back="back"></nav-bar>
               <task-bar class="tasks" :taskLocked="taskLocked" :ents="ents" :altSearch="altSearch"
-                        :submitLocked="docToSubmit != null" @select:remove="markRemove" @select:correct="markCorrect"
+                        :submitLocked="docToSubmit !== null" @select:remove="markRemove" @select:correct="markCorrect"
                         @select:kill="markKill" @select:alternative="toggleAltSearch" @submit="submitDoc"></task-bar>
             </div>
           </div>
@@ -414,6 +414,7 @@ export default {
     },
     submitConfirmed: function () {
       this.submitConfirmedLoading = true
+      this.docToSubmit = null
       this.project.validated_documents = this.project.validated_documents.concat(this.currentDoc.id)
       this.validatedDocuments = this.project.validated_documents
       this.project.require_entity_validation = this.project.require_entity_validation ? 1 : 0
@@ -423,7 +424,6 @@ export default {
           document_id: this.currentDoc.id
         }
         this.$http.post(`/api/submit-document/`, payload).then(() => {
-          this.docToSubmit = null
           this.submitConfirmedLoading = false
           if (this.currentDoc.id !== this.docs.slice(-1)[0].id) {
             this.loadDoc(this.docs[this.docs.map(d => d.id).indexOf(this.currentDoc.id) + 1].id)
