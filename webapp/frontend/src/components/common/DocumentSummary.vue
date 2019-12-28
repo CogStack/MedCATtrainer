@@ -29,7 +29,19 @@ export default {
     loadingDoc: Boolean,
     validatedDocIds: Array
   },
+  watch: {
+    'selectedDocId': 'scrollSelectedDocId'
+  },
   methods: {
+    scrollSelectedDocId: function () {
+      const el = document.getElementsByClassName('selected-doc')
+      if (el.length > 0) {
+        el[0].scrollIntoView({
+          block: 'center',
+          behavior: 'smooth'
+        })
+      }
+    },
     loadMoreDocs: function () {
       this.$emit('request:nextDocSet')
     },
