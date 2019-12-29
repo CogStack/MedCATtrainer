@@ -26,6 +26,15 @@ export default {
     submitLocked: Boolean,
     altSearch: Boolean
   },
+  watch: {
+    'submitLocked': function (oldVal, newVal) {
+      if (newVal) {
+        this.listenSubmit()
+      } else {
+        this.ignoreSubmit()
+      }
+    }
+  },
   methods: {
     correct: function () {
       this.$emit('select:correct')
@@ -53,6 +62,7 @@ export default {
     keyup: function (e) {
       if (e.keyCode === 13) {
         if (!this.submitDisabled()) {
+          this.ignoreSubmit()
           this.submit()
         }
       } else if (e.keyCode >= 49 && e.keyCode < 53 && !this.taskLocked) {
@@ -73,13 +83,19 @@ export default {
             this.alternative()
         }
       }
+    },
+    listenSubmit: function () {
+      window.addEventListener('keyup', this.keyup)
+    },
+    ignoreSubmit: function () {
+      window.removeEventListener('keyup', this.keyup)
     }
   },
   mounted: function () {
-    window.addEventListener('keyup', this.keyup)
+    this.listenSubmit()
   },
   beforeDestroy: function () {
-    window.removeEventListener('keyup', this.keyup)
+    this.ignoreSubmit()
   }
 }
 </script>

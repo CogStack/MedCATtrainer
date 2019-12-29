@@ -409,10 +409,12 @@ export default {
     },
     submitDoc: function (docId) {
       if (this.docToSubmit === null) {
+        this.confirmSubmitListenerAdd()
         this.docToSubmit = docId
       }
     },
     submitConfirmed: function () {
+      this.confirmSubmitListenerRemove()
       this.submitConfirmedLoading = true
       this.docToSubmit = null
       this.project.validated_documents = this.project.validated_documents.concat(this.currentDoc.id)
@@ -431,17 +433,20 @@ export default {
         })
       })
     },
-    keydown: function (e) {
+    keyup: function (e) {
       if (e.keyCode === 13 && this.docToSubmit && !this.submitConfirmedLoading) {
         this.submitConfirmed()
       }
+    },
+    confirmSubmitListenerRemove: function () {
+      window.removeEventListener('keyup', this.keyup)
+    },
+    confirmSubmitListenerAdd: function () {
+      window.addEventListener('keyup', this.keyup)
     }
   },
-  mounted: function () {
-    window.addEventListener('keydown', this.keydown)
-  },
   beforeDestroy: function () {
-    window.removeEventListener('keydown', this.keydown)
+    this.confirmSubmitListenerRemove()
   }
 }
 </script>
