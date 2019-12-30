@@ -44,8 +44,8 @@
         <div class="sidebar-container">
           <transition name="slide-left">
             <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" :altSearch="altSearch"
-                             :project="project" @select:altConcept="markAlternative"
-                             @select:alternative="toggleAltSearch"
+                             :project="project" :class="{'half-height': metaAnnotate}"
+                             @select:altConcept="markAlternative" @select:alternative="toggleAltSearch"
                              class="concept-summary"></concept-summary>
           </transition>
           <transition name="slide-left">
@@ -545,12 +545,13 @@ export default {
 }
 
 .sidebar-container {
-  display: flex;
+  height: 100%;
+  display: flex   ;
   flex-direction: column;
   padding: 5px;
 
-  .concept-summary {
-    flex: 1 1 auto;
+  .half-height {
+    height: 500px;
   }
 
   .add-synonym {
