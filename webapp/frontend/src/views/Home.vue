@@ -3,7 +3,10 @@
     <login v-if="!loginSuccessful" @login:success="loggedIn()"></login>
     <h3>Welcome to MedCAT</h3>
     <div class="table-container">
-      <table class="table table-hover">
+      <loading-overlay :loading="loadingProjects">
+        <p slot="message">Loading Projects...</p>
+      </loading-overlay>
+      <table class="table table-hover" v-if="!loadingProjects">
         <thead>
         <tr>
           <th>Project ID</th>
@@ -30,7 +33,6 @@
         </tbody>
       </table>
     </div>
-    <nav-bar v-if="next != null || previous != null" :useEnts="false" :nextBtnDisabled="next == null" :backBtnDisabled="previous == null" @select:next="fetchNext" @select:back="fetchPrevious"></nav-bar>
     <transition name="alert"><div class="alert alert-info" v-if="saving" role="alert">Saving models</div></transition>
     <transition name="alert"><div class="alert alert-primary" v-if="modelSaved" role="alert">Model Successfully saved</div></transition>
     <transition name="alert"><div class="alert alert-danger" v-if="modelSavedError" role="alert">Error saving model</div></transition>
@@ -41,12 +43,12 @@
 // Maybe list the the projects that given user has access to ...
 import Login from '@/components/common/Login.vue'
 import EventBus from '@/event-bus'
-import NavBar from '@/components/common/NavBar'
+import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 
 export default {
   name: 'Home',
   components: {
-    NavBar,
+    LoadingOverlay,
     Login
   },
   data: function () {
@@ -55,6 +57,7 @@ export default {
       next: null,
       previous: null,
       loginSuccessful: false,
+      loadingProjects: false,
       modelSaved: false,
       modelSavedError: false,
       saving: false
@@ -85,29 +88,27 @@ export default {
       }
     },
     fetchProjects: function () {
+      this.loadingProjects = true
       if (this.loginSuccessful) {
         this.$http.get('/api/project-annotate-entities/').then(resp => {
           this.projects = resp.data.results
-          this.next = resp.data.next
+          if (resp.data.next) {
+            this.fetchPage(resp.data.next)
+          } else {
+            this.loadingProjects = false
+          }
         })
       }
     },
     fetchPage: function (pageUrl) {
       this.$http.get('/' + pageUrl.split('/').slice(-3).join('/')).then(resp => {
-        this.projects = resp.data.results
-        this.next = resp.data.next
-        this.previous = resp.data.previous
+        this.projects = this.projects.concat(resp.data.results)
+        if (resp.data.next) {
+          this.fetchPage(resp.data.next)
+        } else {
+          this.loadingProjects = false
+        }
       })
-    },
-    fetchNext: function () {
-      if (this.next) {
-        this.fetchPage(this.next)
-      }
-    },
-    fetchPrevious: function () {
-      if (this.previous) {
-        this.fetchPage(this.previous)
-      }
     },
     select: function (project) {
       this.$router.push({
@@ -125,14 +126,16 @@ export default {
       this.$http.post('/api/save-models/', payload).then(() => {
         this.saving = false
         this.modelSaved = true
+        const that = this
         setTimeout(() => {
-          this.modelSaved = false
+          that.modelSaved = false
         }, 5000)
       }).catch(() => {
         this.saving = false
         this.modelSavedError = true
+        const that = this
         setTimeout(function () {
-          this.modelSavedError = false
+          that.modelSavedError = false
         }, 5000)
       })
     }

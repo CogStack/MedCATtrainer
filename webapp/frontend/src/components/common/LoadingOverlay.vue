@@ -1,6 +1,10 @@
 <template>
   <transition name="fade">
     <div v-if="loading" class="loading">
+      <h3 class="loading-message">
+        <slot name="message">
+        </slot>
+      </h3>
       <div class="spinner">
         <font-awesome-icon icon="spinner" size="1x" spin></font-awesome-icon>
       </div>
@@ -20,15 +24,22 @@ export default {
 <style scoped lang="scss">
 .loading {
   background: $loading-background-color;
-  opacity: 0.3;
   height: 100%;
   position: relative;
+
+  .loading-message {
+    position: absolute;
+    top: 40%;
+    left: 45%;
+    opacity: 0.25;
+  }
 
   .spinner {
     position: absolute;
     top: 50%;
     left: 50%;
     font-size: 64px;
+    opacity: 0.25;
   }
 }
 
