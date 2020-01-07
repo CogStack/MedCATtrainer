@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.http import HttpResponse
 from io import StringIO
 import json
@@ -34,53 +36,57 @@ def download_without_text(modeladmin, request, queryset):
     if not request.user.is_staff:
         raise PermissionDenied
 
-    project = queryset[0]
+    projects = queryset
 
-    out = {}
-    out['name'] = project.name
-    out['id'] = project.id
-    out['tuis'] = project.tuis
-    out['documents'] = []
+    all_projects_out = {'projects': []}
 
-    for doc in project.validated_documents.all():
-        out_doc = {}
-        out_doc['id'] = doc.id
-        out_doc['last_modified'] = str(doc.last_modified)
-        out_doc['annotations'] = []
+    for project in projects:
+        out = {}
+        out['name'] = project.name
+        out['id'] = project.id
+        out['tuis'] = project.tuis
+        out['documents'] = []
 
-        anns = AnnotatedEntity.objects.filter(project=project, document=doc)
+        for doc in project.validated_documents.all():
+            out_doc = {}
+            out_doc['id'] = doc.id
+            out_doc['last_modified'] = str(doc.last_modified)
+            out_doc['annotations'] = []
 
-        for ann in anns:
-            out_ann = {}
-            out_ann['id'] = ann.id
-            out_ann['user'] = ann.user.username
-            out_ann['validated'] = ann.validated
-            out_ann['correct'] = ann.correct
-            out_ann['deleted'] = ann.deleted
-            out_ann['alternative'] = ann.alternative
-            out_ann['killed'] = ann.killed
-            out_ann['last_modified'] = str(ann.last_modified)
-            out_ann['manually_created'] = ann.manually_created
-            out_ann['acc'] = ann.acc
-            out_ann['meta_anns'] = []
-            # Get MetaAnnotations
-            meta_anns = MetaAnnotation.objects.filter(annotated_entity=ann)
-            for meta_ann in meta_anns:
-                o_meta_ann = {}
-                o_meta_ann['name'] = meta_ann.meta_task.name
-                o_meta_ann['value'] = meta_ann.meta_task_value.name
-                o_meta_ann['acc'] = meta_ann.acc
-                o_meta_ann['validated'] = meta_ann.validated
-                out_ann['meta_anns'].append(o_meta_ann)
+            anns = AnnotatedEntity.objects.filter(project=project, document=doc)
 
-            out_doc['annotations'].append(out_ann)
-        out['documents'].append(out_doc)
+            for ann in anns:
+                out_ann = {}
+                out_ann['id'] = ann.id
+                out_ann['user'] = ann.user.username
+                out_ann['validated'] = ann.validated
+                out_ann['correct'] = ann.correct
+                out_ann['deleted'] = ann.deleted
+                out_ann['alternative'] = ann.alternative
+                out_ann['killed'] = ann.killed
+                out_ann['last_modified'] = str(ann.last_modified)
+                out_ann['manually_created'] = ann.manually_created
+                out_ann['acc'] = ann.acc
+                out_ann['meta_anns'] = []
+                # Get MetaAnnotations
+                meta_anns = MetaAnnotation.objects.filter(annotated_entity=ann)
+                for meta_ann in meta_anns:
+                    o_meta_ann = {}
+                    o_meta_ann['name'] = meta_ann.meta_task.name
+                    o_meta_ann['value'] = meta_ann.meta_task_value.name
+                    o_meta_ann['acc'] = meta_ann.acc
+                    o_meta_ann['validated'] = meta_ann.validated
+                    out_ann['meta_anns'].append(o_meta_ann)
+
+                out_doc['annotations'].append(out_ann)
+            out['documents'].append(out_doc)
+        all_projects_out['projects'].append(out)
 
     sio = StringIO()
-    json.dump(out, sio)
+    json.dump(all_projects_out, sio)
     sio.seek(0)
 
-    f_name = "{}.json".format(project.name)
+    f_name = "MedCAT_Export_No_Text_{}.json".format(datetime.now().strftime('%Y-%m-%d:%H:%M:%S'))
     response = HttpResponse(sio, content_type='text/json')
     response['Content-Disposition'] = 'attachment; filename={}'.format(f_name)
     return response
@@ -90,60 +96,63 @@ def download(modeladmin, request, queryset):
     if not request.user.is_staff:
         raise PermissionDenied
 
-    project = queryset[0]
+    projects = queryset
+    all_projects_out = {'projects': []}
 
-    out = {}
-    out['name'] = project.name
-    out['id'] = project.id
-    out['cuis'] = project.cuis
-    out['tuis'] = project.tuis
-    out['documents'] = []
+    for project in projects:
+        out = {}
+        out['name'] = project.name
+        out['id'] = project.id
+        out['cuis'] = project.cuis
+        out['tuis'] = project.tuis
+        out['documents'] = []
 
-    for doc in project.validated_documents.all():
-        out_doc = {}
-        out_doc['id'] = doc.id
-        out_doc['name'] = doc.name
-        out_doc['text'] = doc.text
-        out_doc['last_modified'] = str(doc.last_modified)
-        out_doc['annotations'] = []
+        for doc in project.validated_documents.all():
+            out_doc = {}
+            out_doc['id'] = doc.id
+            out_doc['name'] = doc.name
+            out_doc['text'] = doc.text
+            out_doc['last_modified'] = str(doc.last_modified)
+            out_doc['annotations'] = []
 
-        anns = AnnotatedEntity.objects.filter(project=project, document=doc)
+            anns = AnnotatedEntity.objects.filter(project=project, document=doc)
 
-        for ann in anns:
-            out_ann = {}
-            out_ann['id'] = ann.id
-            out_ann['user'] = ann.user.username
-            out_ann['cui'] = ann.entity.label
-            out_ann['value'] = ann.value
-            out_ann['start'] = ann.start_ind
-            out_ann['end'] = ann.end_ind
-            out_ann['validated'] = ann.validated
-            out_ann['correct'] = ann.correct
-            out_ann['deleted'] = ann.deleted
-            out_ann['alternative'] = ann.alternative
-            out_ann['killed'] = ann.killed
-            out_ann['last_modified'] = str(ann.last_modified)
-            out_ann['manually_created'] = ann.manually_created
-            out_ann['acc'] = ann.acc
-            out_ann['meta_anns'] = []
-            # Get MetaAnnotations
-            meta_anns = MetaAnnotation.objects.filter(annotated_entity=ann)
-            for meta_ann in meta_anns:
-                o_meta_ann = {}
-                o_meta_ann['name'] = meta_ann.meta_task.name
-                o_meta_ann['value'] = meta_ann.meta_task_value.name
-                o_meta_ann['acc'] = meta_ann.acc
-                o_meta_ann['validated'] = meta_ann.validated
-                out_ann['meta_anns'].append(o_meta_ann)
+            for ann in anns:
+                out_ann = {}
+                out_ann['id'] = ann.id
+                out_ann['user'] = ann.user.username
+                out_ann['cui'] = ann.entity.label
+                out_ann['value'] = ann.value
+                out_ann['start'] = ann.start_ind
+                out_ann['end'] = ann.end_ind
+                out_ann['validated'] = ann.validated
+                out_ann['correct'] = ann.correct
+                out_ann['deleted'] = ann.deleted
+                out_ann['alternative'] = ann.alternative
+                out_ann['killed'] = ann.killed
+                out_ann['last_modified'] = str(ann.last_modified)
+                out_ann['manually_created'] = ann.manually_created
+                out_ann['acc'] = ann.acc
+                out_ann['meta_anns'] = []
+                # Get MetaAnnotations
+                meta_anns = MetaAnnotation.objects.filter(annotated_entity=ann)
+                for meta_ann in meta_anns:
+                    o_meta_ann = {}
+                    o_meta_ann['name'] = meta_ann.meta_task.name
+                    o_meta_ann['value'] = meta_ann.meta_task_value.name
+                    o_meta_ann['acc'] = meta_ann.acc
+                    o_meta_ann['validated'] = meta_ann.validated
+                    out_ann['meta_anns'].append(o_meta_ann)
 
-            out_doc['annotations'].append(out_ann)
-        out['documents'].append(out_doc)
+                out_doc['annotations'].append(out_ann)
+            out['documents'].append(out_doc)
+        all_projects_out['projects'].append(out)
 
     sio = StringIO()
-    json.dump(out, sio)
+    json.dump(all_projects_out, sio)
     sio.seek(0)
 
-    f_name = "{}.json".format(project.name)
+    f_name = "MedCAT_Export_With_Text_{}.json".format(datetime.now().strftime('%Y-%m-%d:%H:%M:%S'))
     response = HttpResponse(sio, content_type='text/json')
     response['Content-Disposition'] = 'attachment; filename={}'.format(f_name)
 
