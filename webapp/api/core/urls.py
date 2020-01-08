@@ -51,5 +51,6 @@ urlpatterns = [
     path('api/save-models/', api.views.save_models),
     path('api/get-create-entity/', api.views.get_create_entity),
     path('api/create-dataset/', api.views.create_dataset),
+    path('api/complete-projects/', api.views.finished_projects),
     re_path('^.*$', api.views.index, name='index'), # Match everything else to home
 ]

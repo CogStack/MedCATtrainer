@@ -3,6 +3,7 @@ from datetime import datetime
 
 import pandas as pd
 from django.core.files import File
+from django.http import HttpResponseBadRequest
 from django.shortcuts import render
 from django_filters import rest_framework as drf
 from django_filters.rest_framework import DjangoFilterBackend
@@ -328,6 +329,22 @@ def create_dataset(request):
     log.debug(f'Saved new dataset:{ds.original_file.path}')
     id = ds.id
     return Response({'dataset_id': id})
+
+
+@api_view(http_method_names=['GET'])
+def finished_projects(request):
+    project_ids = request.GET.get('projects')
+    if project_ids is None:
+        return HttpResponseBadRequest('projects param required')
+    projects = ProjectAnnotateEntities.objects.filter(id__in=project_ids.split(','))
+
+    validated_projects = {}
+    for project in projects:
+        validated = project.validated_documents.all().values_list('id', flat=True)
+        all_documents = Document.objects.filter(dataset=project.dataset.id).values_list('id', flat=True)
+        validated_projects[project.id] = len(set(all_documents) - set(validated)) == 0
+
+    return Response({'validated_projects': validated_projects})
 
 
 @api_view(http_method_names=['GET'])

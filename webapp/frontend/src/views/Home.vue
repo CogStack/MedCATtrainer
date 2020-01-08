@@ -9,14 +9,15 @@
       <table class="table table-hover" v-if="!loadingProjects">
         <thead>
         <tr>
-          <th>Project ID</th>
+          <th>ID</th>
           <th>Title</th>
           <th>Description</th>
           <th>Create Time</th>
-          <th>UMLS Concepts</th>
-          <th>UMLS Terms</th>
+          <th>Concepts</th>
+          <th>Terms</th>
           <th>Annotate / Validate</th>
           <th>Save Model</th>
+          <th>Complete</th>
         </tr>
         </thead>
         <tbody>
@@ -25,10 +26,13 @@
           <td>{{project.name}}</td>
           <td>{{project.description}}</td>
           <td>{{(new Date(project.create_time)).toLocaleDateString()}}</td>
-          <td><span class="term-list">{{project.cuis}}</span></td>
-          <td><span class="term-list">{{project.tuis}}</span></td>
-          <td>{{project.require_entity_validation ? 'Yes' : 'No'}}</td>
+          <td><span class="term-list">{{project.cuis || 'All'}}</span></td>
+          <td><span class="term-list">{{project.tuis || 'All'}}</span></td>
+          <td>{{project.require_entity_validation ? 'Annotate' : 'Validate'}}</td>
           <td @click.stop><button class="btn btn-outline-primary" @click="saveModel(project.id)"><font-awesome-icon icon="save"></font-awesome-icon></button></td>
+          <td>
+            <font-awesome-icon v-if="project.complete" class="complete-project" icon="check"></font-awesome-icon>
+          </td>
         </tr>
         </tbody>
       </table>
@@ -95,6 +99,7 @@ export default {
           if (resp.data.next) {
             this.fetchPage(resp.data.next)
           } else {
+            this.fetchCompletionStatus()
             this.loadingProjects = false
           }
         })
@@ -106,9 +111,19 @@ export default {
         if (resp.data.next) {
           this.fetchPage(resp.data.next)
         } else {
-          this.loadingProjects = false
+          this.fetchCompletionStatus()
         }
       })
+    },
+    fetchCompletionStatus: function () {
+      this.$http.get(`/api/complete-projects/?projects=${this.projects.map(p => p.id)}`)
+        .then(resp => {
+          Object.entries(resp.data.validated_projects).forEach((entry) => {
+            this.$set(_.first(this.projects, proj => proj.id === entry[0]), 'complete', entry[1])
+          })
+
+          this.loadingProjects = false
+        })
     },
     select: function (project) {
       this.$router.push({
@@ -170,6 +185,10 @@ h3 {
   td {
     cursor: pointer;
   }
+}
+
+.complete-project {
+  color: $success;
 }
 
 .alert-enter-active, alert-leave-active {
