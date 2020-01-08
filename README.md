@@ -2,8 +2,8 @@
  
 MedCATTrainer is an interface for building, improving and customising a given Named Entity Recognition and Linking (NER+L) model for biomedical domain text
 
-MedCATTrainer will be presented at EMNLP/IJCNLP 2019, pre-print 
-[here](https://arxiv.org/abs/1907.07322) 
+MedCATTrainer was presented at EMNLP/IJCNLP 2019 :tada:
+[here](https://www.aclweb.org/anthology/D19-3024.pdf) 
 
 ## Developer Guide
  
@@ -18,7 +18,7 @@ MedCATTrainer will be presented at EMNLP/IJCNLP 2019, pre-print
 `$ docker-compose build`
 
 If the build fails with an error code 137, the virtual machine running the docker 
-daemon does not enough have enough memory
+daemon does not have enough memory. Adjust in docker daemon settings CLI or associated docker GUI.
 
 `$ docker-compose up`
 
