@@ -116,10 +116,10 @@ export default {
       })
     },
     fetchCompletionStatus: function () {
-      this.$http.get(`/api/complete-projects/?projects=${this.projects.map(p => p.id)}`)
+      this.$http.get(`/api/complete-projects/?projects=${this.projects.map(p => p.id).join(',')}`)
         .then(resp => {
           Object.entries(resp.data.validated_projects).forEach((entry) => {
-            this.$set(_.first(this.projects, proj => proj.id === entry[0]), 'complete', entry[1])
+            this.$set(_.find(this.projects, proj => proj.id === Number(entry[0])), 'complete', entry[1])
           })
 
           this.loadingProjects = false
