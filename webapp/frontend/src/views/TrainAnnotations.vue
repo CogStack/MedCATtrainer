@@ -417,19 +417,34 @@ export default {
       this.confirmSubmitListenerRemove()
       this.submitConfirmedLoading = true
       this.docToSubmit = null
-      this.project.validated_documents = this.project.validated_documents.concat(this.currentDoc.id)
-      this.validatedDocuments = this.project.validated_documents
-      this.project.require_entity_validation = this.project.require_entity_validation ? 1 : 0
-      this.$http.put(`/api/project-annotate-entities/${this.projectId}/`, this.project).then(() => {
-        let payload = {
-          project_id: this.project.id,
-          document_id: this.currentDoc.id
+      this.$http.get(`/api/project-annotate-entities/?id=${this.projectId}`).then(resp => {
+        // refresh project validated documents as multiple users may be submitting. Mitigates but
+        // does not solve a potential inconsistent validated_documents state seen.
+        this.project.validated_documents = resp.data.results[0].validated_documents
+
+        if (this.project.validated_documents.indexOf(this.currentDoc.id) === -1) {
+          this.project.validated_documents = this.project.validated_documents.concat(this.currentDoc.id)
         }
-        this.$http.post(`/api/submit-document/`, payload).then(() => {
-          this.submitConfirmedLoading = false
-          if (this.currentDoc.id !== this.docs.slice(-1)[0].id) {
-            this.loadDoc(this.docs[this.docs.map(d => d.id).indexOf(this.currentDoc.id) + 1].id)
+        this.validatedDocuments = this.project.validated_documents
+        this.project.require_entity_validation = this.project.require_entity_validation ? 1 : 0
+        this.$http.put(`/api/project-annotate-entities/${this.projectId}/`, this.project).then(() => {
+          let payload = {
+            project_id: this.project.id,
+            document_id: this.currentDoc.id
           }
+          this.$http.post(`/api/submit-document/`, payload).then(() => {
+            this.submitConfirmedLoading = false
+            if (this.currentDoc.id !== this.docs.slice(-1)[0].id ||
+              this.validatedDocuments.length !== this.docs.length) {
+              let docIds = this.docs.map(d => d.id)
+              console.log(this.validatedDocuments)
+              let newDocId = this.docs[docIds.indexOf(this.currentDoc.id) + 1].id
+              while (this.validatedDocuments.indexOf(newDocId) > -1) {
+                newDocId = this.docs[docIds.indexOf(newDocId) + 1].id
+              }
+              this.loadDoc(this.docs[docIds.indexOf(newDocId)].id)
+            }
+          })
         })
       })
     },
