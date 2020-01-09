@@ -43,8 +43,8 @@
   </div>
 </template>
 <script>
-// is this screen even needed?
-// Maybe list the the projects that given user has access to ...
+import _ from 'lodash'
+
 import Login from '@/components/common/Login.vue'
 import EventBus from '@/event-bus'
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
@@ -191,7 +191,7 @@ h3 {
   color: $success;
 }
 
-.alert-enter-active, alert-leave-active {
+.alert-enter-active, .alert-leave-active {
   transition: opacity .5s;
 }
 
