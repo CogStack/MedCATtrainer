@@ -21,7 +21,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="project of projects" :key="project.id" @click="select(project)">
+        <tr v-for="project of projects" :key="project.id" @click="select(project)" :class="{'focus': project.focus || false}">
           <td>{{project.id}}</td>
           <td>{{project.name}}</td>
           <td>{{project.description}}</td>
@@ -121,8 +121,22 @@ export default {
           Object.entries(resp.data.validated_projects).forEach((entry) => {
             this.$set(_.find(this.projects, proj => proj.id === Number(entry[0])), 'complete', entry[1])
           })
-
+          let focusProject = _.findLastIndex(this.projects, proj => proj.complete)
+          if (focusProject !== this.projects.length - 1) {
+            focusProject += 1
+          }
+          this.$set(this.projects[focusProject], 'focus', true)
           this.loadingProjects = false
+
+          this.$nextTick(function () {
+            const el = document.getElementsByClassName('focus')
+            if (el.length > 0) {
+              el[0].scrollIntoView({
+                block: 'nearest',
+                behavior: 'auto'
+              })
+            }
+          })
         })
     },
     select: function (project) {
