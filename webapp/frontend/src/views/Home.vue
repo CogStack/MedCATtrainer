@@ -1,7 +1,7 @@
 <template>
   <div class="container full-height">
     <login v-if="!loginSuccessful" @login:success="loggedIn()"></login>
-    <h3>Welcome to MedCAT</h3>
+    <div class="home-title">Available Projects:</div>
     <div class="table-container">
       <loading-overlay :loading="loadingProjects">
         <p slot="message">Loading Projects...</p>
@@ -178,7 +178,7 @@ h3 {
 }
 
 .table-container {
-  height: calc(100% - 400px);
+  height: calc(100% - 200px);
   overflow-y: auto;
 }
 
@@ -199,6 +199,11 @@ h3 {
   td {
     cursor: pointer;
   }
+}
+
+.home-title {
+  font-size: 23px;
+  padding: 30px 0;
 }
 
 .complete-project {
