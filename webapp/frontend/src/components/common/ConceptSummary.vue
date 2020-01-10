@@ -136,11 +136,13 @@ export default {
           if (this.selectedEnt && queryEntId === this.selectedEnt.id) {
             this.selectedEnt.cui = resp.data.label
             this.$http.get(`/api/concepts/?cui=${this.selectedEnt.cui}`).then(resp => {
-              this.selectedEnt.desc = resp.data.results[0].desc
-              this.selectedEnt.tui = resp.data.results[0].tui
-              this.selectedEnt.pretty_name = resp.data.results[0].pretty_name
-              this.selectedEnt.semantic_type = resp.data.results[0].semantic_type
-              this.selectedEnt.icd10 = resp.data.results[0].icd10
+              if (this.selecteEnt) {
+                this.selectedEnt.desc = resp.data.results[0].desc
+                this.selectedEnt.tui = resp.data.results[0].tui
+                this.selectedEnt.pretty_name = resp.data.results[0].pretty_name
+                this.selectedEnt.semantic_type = resp.data.results[0].semantic_type
+                this.selectedEnt.icd10 = resp.data.results[0].icd10
+              }
               this.cleanProps()
             })
           }

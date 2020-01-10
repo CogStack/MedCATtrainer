@@ -437,7 +437,6 @@ export default {
             if (this.currentDoc.id !== this.docs.slice(-1)[0].id ||
               this.validatedDocuments.length !== this.docs.length) {
               let docIds = this.docs.map(d => d.id)
-              console.log(this.validatedDocuments)
               let newDocId = this.docs[docIds.indexOf(this.currentDoc.id) + 1].id
               while (this.validatedDocuments.indexOf(newDocId) > -1) {
                 newDocId = this.docs[docIds.indexOf(newDocId) + 1].id
