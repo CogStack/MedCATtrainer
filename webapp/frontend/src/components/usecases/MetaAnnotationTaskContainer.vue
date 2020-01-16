@@ -9,14 +9,15 @@
 </template>
 
 <script>
-import _ from 'lodash'
 import MetaAnnotationTask from '@/components/usecases/MetaAnnotationTask.vue'
+import MetaAnnotationService from '@/mixins/MetaAnnotationService.js'
 
 export default {
   name: 'MetaAnnotationTaskContainer',
   components: {
     MetaAnnotationTask
   },
+  mixins: [MetaAnnotationService],
   props: {
     taskIDs: Array,
     selectedEnt: {
@@ -32,44 +33,6 @@ export default {
     }
   },
   methods: {
-    fetchMetaTasks: function () {
-      this.$http.get(`/api/meta-tasks/`).then(resp => {
-        let tasks = resp.data.results.filter(r => {
-          return this.taskIDs.includes(r.id)
-        })
-        let values = _.flatten(tasks.map(t => t.values))
-        this.$http.get(`/api/meta-task-values/`).then(resp => {
-          let taskValueObjs = resp.data.results.filter(r => values.includes(r.id))
-          let taskValObjMap = {}
-          for (const valId of values) {
-            taskValObjMap[valId] = taskValueObjs.filter(o => o.id === valId)[0]
-          }
-          tasks = tasks.map(t => {
-            t.options = t.values.map(val => taskValObjMap[val])
-            t.value = null
-            delete t['values']
-            return t
-          })
-          this.tasks = tasks
-          this.fetchMetaAnnotations()
-        })
-      })
-    },
-    fetchMetaAnnotations: function () {
-      if (this.tasks && this.selectedEnt !== null) {
-        for (let t of this.tasks) {
-          t.value = null
-        }
-        this.$http.get(`/api/meta-annotations/?annotated_entity=${this.selectedEnt.id}`).then(resp => {
-          // map current state tasks to these entities - to delete as needed.
-          for (let r of resp.data.results) {
-            let task = this.tasks.filter(t => t.id === r.meta_task)[0]
-            task.value = r.meta_task_value
-            task.annotation_id = r.id
-          }
-        })
-      }
-    },
     selectedTaskAnno: function (task, option) {
       if (task.value === option.id) {
         // remove annotation
@@ -104,7 +67,12 @@ export default {
     }
   },
   created: function () {
-    this.fetchMetaTasks()
+    const that = this
+    this.fetchMetaTasks(this.taskIDs, () => {
+      if (that.selectedEnt) {
+        that.fetchMetaAnnotations(that.selectedEnt)
+      }
+    })
   },
   watch: {
     'taskIDs': 'fetchMetaTasks',

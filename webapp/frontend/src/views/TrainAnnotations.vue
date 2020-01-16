@@ -50,7 +50,8 @@
           </transition>
           <transition name="slide-left">
             <meta-annotation-task-container v-if="metaAnnotate" :taskIDs="(project || {}).tasks || []"
-                                            :selectedEnt="currentEnt"></meta-annotation-task-container>
+                                            :selectedEnt="currentEnt">
+            </meta-annotation-task-container>
           </transition>
           <transition name="slide-left">
             <add-synonym v-if="conceptSynonymSelection" :selection="conceptSynonymSelection"
@@ -106,10 +107,12 @@
       </div>
     </modal>
 
-    <modal v-if="docToSubmit" @modal:close="docToSubmit=null">
+    <modal v-if="docToSubmit" @modal:close="docToSubmit=null" class="submit-modal">
       <h3 slot="header">Submit Document</h3>
-      <div slot="body">Confirm document is ready for submission</div>
-      <!-- TODO: Provide some sort of summary here?? -->
+      <div slot="body">
+        <annotation-summary :annos="ents" :currentDoc="currentDoc" :taskIDs="(project || {}).tasks || []"
+                            @select:AnnoSummaryConcept="selectEntityFromSummary"></annotation-summary>
+      </div>
       <div slot="footer">
         <button class="btn btn-primary" :disabled="submitConfirmedLoading" @click="submitConfirmed()">
           <span v-if="!submitConfirmedLoading">Confirm</span>
@@ -133,6 +136,7 @@ import NavBar from '@/components/common/NavBar.vue'
 import TaskBar from '@/components/anns/TaskBar.vue'
 import AddSynonym from '@/components/anns/AddSynonym.vue'
 import MetaAnnotationTaskContainer from '@/components/usecases/MetaAnnotationTaskContainer.vue'
+import AnnotationSummary from '@/components/common/AnnotationSummary.vue'
 import { Multipane, MultipaneResizer } from 'vue-multipane'
 
 const TASK_NAME = 'Concept Annotation'
@@ -154,6 +158,7 @@ export default {
     TaskBar,
     AddSynonym,
     MetaAnnotationTaskContainer,
+    AnnotationSummary,
     Multipane,
     MultipaneResizer
   },
@@ -181,6 +186,7 @@ export default {
       currentEnt: null,
       loadingDoc: false,
       helpModal: false,
+      hModal: false,
       errorModal: false,
       docToSubmit: null,
       submitConfirmedLoading: false,
@@ -313,6 +319,10 @@ export default {
           this.loadingDoc = false
         }
       })
+    },
+    selectEntityFromSummary: function (entIdx) {
+      this.docToSubmit = null
+      this.selectEntity(entIdx)
     },
     selectEntity: function (entIdx) {
       this.currentEnt = this.ents[entIdx]
@@ -489,6 +499,12 @@ export default {
   color: $text;
   position: relative;
   top: 10px;
+}
+
+.submit-modal {
+  .modal-container {
+    width: 80%;
+  }
 }
 
 .app-header h4 {

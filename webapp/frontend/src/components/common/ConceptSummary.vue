@@ -58,6 +58,8 @@
 import vSelect from 'vue-select'
 import _ from 'lodash'
 
+import ConceptDetailService from '@/mixins/ConceptDetailService.js'
+
 const HIDDEN_PROPS = [
   'value', 'project', 'document', 'start_ind', 'end_ind',
   'entity', 'assignedValues', 'id', 'user', 'deleted'
@@ -92,6 +94,7 @@ export default {
     },
     altSearch: Boolean
   },
+  mixins: [ConceptDetailService],
   data: function () {
     return {
       conceptSummary: {},
@@ -201,7 +204,10 @@ export default {
     }
   },
   mounted: function () {
-    this.fetchDetail()
+    const that = this
+    this.fetchDetail(this.selectedEnt, () => {
+      that.cleanProps()
+    })
     window.addEventListener('keyup', this.keyup)
   },
   beforeDestroy: function () {
@@ -209,7 +215,12 @@ export default {
   },
   watch: {
     'selectedEnt': {
-      handler: 'fetchDetail',
+      handler: function (newVal) {
+        const that = this
+        that.fetchDetail(newVal, () => {
+          that.cleanProps()
+        })
+      },
       deep: true
     },
     'selectedCUI': 'selectedCorrectCUI',

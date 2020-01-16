@@ -194,14 +194,4 @@ export default {
   font-size: 20px;
   font-weight: bold;
 }
-
-@each $i, $col in $task-colors {
-  .highlight-task-#{$i} {
-    background-color: $col;
-    border-radius: 8px;
-    cursor: pointer;
-    border: 3px solid $col;
-    color: white;
-  }
-}
 </style>
