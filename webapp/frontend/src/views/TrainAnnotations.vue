@@ -110,6 +110,7 @@
     <modal v-if="docToSubmit" @modal:close="docToSubmit=null" class="submit-modal">
       <h3 slot="header">Submit Document</h3>
       <div slot="body">
+        <div class="summary-title">Review identified concepts and confirm document submission:</div>
         <annotation-summary :annos="ents" :currentDoc="currentDoc" :taskIDs="(project || {}).tasks || []"
                             @select:AnnoSummaryConcept="selectEntityFromSummary"></annotation-summary>
       </div>
@@ -501,12 +502,6 @@ export default {
   top: 10px;
 }
 
-.submit-modal {
-  .modal-container {
-    width: 80%;
-  }
-}
-
 .app-header h4 {
   display: inline-block;
 }
@@ -631,4 +626,10 @@ export default {
     }
   }
 }
+
+.summary-title {
+  padding-bottom: 10px;
+  font-size: 17px;
+}
+
 </style>

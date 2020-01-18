@@ -28,7 +28,9 @@ export default {
             return t
           })
           this.tasks = tasks
-          callback()
+          if (typeof (callback) === 'function') {
+            callback()
+          }
         })
       })
     },
@@ -39,13 +41,15 @@ export default {
         }
         this.$http.get(`/api/meta-annotations/?annotated_entity=${selectedEnt.id}`).then(resp => {
           // map current state tasks to these entities - to delete as needed.
+          let taskValues = []
           for (let r of resp.data.results) {
             let task = this.tasks.filter(t => t.id === r.meta_task)[0]
             task.value = r.meta_task_value
             task.annotation_id = r.id
-            if (callback) {
-              callback()
-            }
+            taskValues.push(task)
+          }
+          if (typeof (callback) === 'function') {
+            callback(_.cloneDeep(taskValues))
           }
         })
       }

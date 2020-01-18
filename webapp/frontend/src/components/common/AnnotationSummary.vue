@@ -1,6 +1,6 @@
 <template>
   <div class="summary">
-    <table class="table table-condensed table-striped table-hover">
+    <table class="table table-condensed   table-hover">
       <thead>
         <th>Annotated Text</th>
         <th>Concept ID</th>
@@ -21,8 +21,7 @@
           <td>{{concept.pretty_name}}</td>
           <td>{{concept.icd10 || ''}}</td>
           <td v-for="task in metaAnnos[concept.id]" :key="task.id">
-            <span v-if="concept.correct">{{taskMaps[task.id][task.value]}}</span>
-            <span v-if="!concept.correct">n/a</span>
+            <span>{{taskMaps[task.id][task.value]}}</span>
           </td>
         </tr>
       </tbody>
@@ -45,24 +44,16 @@ export default {
   mixins: [ConceptDetailService, MetaAnnotationService],
   data () {
     return {
-      metaAnnos: {
-        default () {
-          return {}
-        },
-        type: Object
-      },
+      metaAnnos: Object,
       taskMaps: Object
     }
-  },
-  watch: {
-    'tasksIDs': 'fetchMetaTasks'
   },
   created () {
     this.enrichSummary()
   },
 
   methods: {
-    enrichSummary() {
+    enrichSummary () {
       const that = this
 
       this.annos.forEach(anno => {
@@ -86,11 +77,12 @@ export default {
     },
     enrichMetaAnnos () {
       const that = this
-      this.annos.forEach(ent => {
-        this.fetchMetaAnnotations(ent, () => {
-          this.metaAnnos[ent.id] = _.cloneDeep(that.tasks)
+      this.metaAnnos = {}
+      for (let ent of this.annos) {
+        this.fetchMetaAnnotations(ent, tasks => {
+          that.$set(that.metaAnnos, ent.id, tasks)
         })
-      })
+      }
     },
     selectConcept (concept) {
       this.$emit('select:AnnoSummaryConcept', this.annos.indexOf(concept))
@@ -117,10 +109,8 @@ export default {
 
 <style scoped lang="scss">
 
-.summary-header {
-}
-
-.summary-body {
-
+.summary {
+  height: 650px;
+  overflow-y: auto;
 }
 </style>
