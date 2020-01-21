@@ -62,7 +62,7 @@
       </div>
     </multipane>
 
-    <modal v-if="helpModal" class="help-modal" @modal:close="helpModal = false">
+    <modal v-if="helpModal" class="help-modal" :closable="true" @modal:close="helpModal = false">
       <h3 slot="header">{{ project.name }} Annotation Help</h3>
       <div slot="body" class="help-modal-body">
         <p>Validate each highlighted concept</p>
@@ -107,7 +107,7 @@
       </div>
     </modal>
 
-    <modal v-if="docToSubmit" @modal:close="docToSubmit=null" class="submit-modal">
+    <modal v-if="docToSubmit" :closable="true" @modal:close="docToSubmit=null" class="submit-modal">
       <h3 slot="header">Submit Document</h3>
       <div slot="body">
         <div class="summary-title">Review identified concepts and confirm document submission:</div>
