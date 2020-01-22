@@ -4,9 +4,9 @@
     <div slot="body">
       <form @submit.prevent class="form">
         <label>Username:</label>
-        <input v-model="uname" class="form-control">
+        <input v-model="uname" class="form-control" id="uname">
         <label>Password:</label>
-        <input v-model="password" class="form-control" type="password">
+        <input v-model="password" class="form-control" type="password" id="password">
       </form>
       <span v-if="failed" class="text-danger">Username and/or password incorrect</span>
     </div>
@@ -45,11 +45,23 @@ export default {
         this.$cookie.set('api-token', resp.data.token, { expires: 7 })
         this.$cookie.set('username', this.uname)
         this.$http.defaults.headers.common['Authorization'] = `Token ${this.$cookie.get('api-token')}`
+        window.removeEventListener('keyup', this.keyup)
         EventBus.$emit('login:success')
       }).catch(() => {
         this.failed = true
       })
+    },
+    keyup (e) {
+      if (e.keyCode === 13 && this.uname.length > 0 && this.password.length > 0) {
+        this.login()
+      }
     }
+  },
+  created () {
+    window.addEventListener('keyup', this.keyup)
+    this.$nextTick(function () {
+      document.getElementById('uname').focus()
+    })
   }
 }
 </script>
