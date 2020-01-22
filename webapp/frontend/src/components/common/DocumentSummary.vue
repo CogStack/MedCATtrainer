@@ -33,7 +33,7 @@ export default {
     'selectedDocId': 'scrollSelectedDocId'
   },
   methods: {
-    scrollSelectedDocId: function () {
+    scrollSelectedDocId () {
       const el = document.getElementsByClassName('selected-doc')
       if (el.length > 0) {
         el[0].scrollIntoView({
@@ -42,13 +42,13 @@ export default {
         })
       }
     },
-    loadMoreDocs: function () {
+    loadMoreDocs () {
       this.$emit('request:nextDocSet')
     },
-    loadDoc: function (docId) {
+    loadDoc (docId) {
       this.$emit('request:loadDoc', docId)
     },
-    keyup: function (e) {
+    keyup (e) {
       if (!this.loadingDoc && e.keyCode === 40 && this.selectedDocId !== this.docs.slice(-1).id) {
         // down
         this.$emit('request:loadDoc', this.docs[this.docs.map(d => d.id).indexOf(this.selectedDocId) + 1].id)
@@ -58,14 +58,14 @@ export default {
       }
     }
   },
-  mounted: function () {
+  mounted () {
     window.addEventListener('keyup', this.keyup)
   },
-  beforeDestroy: function () {
+  beforeDestroy () {
     window.removeEventListener('keyup', this.keyup)
   },
   filters: {
-    limitText: function (value) {
+    limitText (value) {
       let splitText = value.split('\n')
       if (splitText.length > 5) {
         return splitText.slice(0, 5).join('\n')

@@ -86,7 +86,7 @@ export default {
     project: Object,
     documentId: Number
   },
-  data: function () {
+  data () {
     return {
       name: this.selection.selStr,
       prevText: this.selection.prevText,
@@ -95,7 +95,7 @@ export default {
       selectedCUI: null
     }
   },
-  created: function () {
+  created () {
     let that = this
     window.setTimeout(function () {
       const el = document.getElementById('searchBox')
@@ -144,7 +144,7 @@ export default {
         searchByTerm()
       }
     }, 400),
-    submit: function () {
+    submit () {
       const payload = {
         source_value: this.selection.selStr,
         document_id: this.documentId,
@@ -157,19 +157,19 @@ export default {
         this.selectedCUI = null
       })
     },
-    cancel: function () {
+    cancel () {
       this.$emit('request:addAnnotationComplete')
     },
-    keyup: function (e) {
+    keyup (e) {
       if (e.keyCode === 27) {
         this.cancel()
       }
     }
   },
-  mounted: function () {
+  mounted () {
     window.addEventListener('keyup', this.keyup)
   },
-  beforeDestroy: function () {
+  beforeDestroy () {
     window.removeEventListener('keyup', this.keyup)
   }
 }

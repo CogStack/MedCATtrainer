@@ -16,14 +16,14 @@ export default {
   components: {
 
   },
-  data: function () {
+  data () {
     return {
       doc_json: null,
       exampleText: ''
     }
   },
   methods: {
-    annotate: function () {
+    annotate () {
       // create a 'TMP' project,
       // upload the document,
       // prepare document

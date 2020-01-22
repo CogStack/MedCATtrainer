@@ -28,7 +28,7 @@ export default {
   components: {
     Modal
   },
-  data: function () {
+  data () {
     return {
       uname: '',
       password: '',
@@ -36,7 +36,7 @@ export default {
     }
   },
   methods: {
-    login: function () {
+    login () {
       let payload = {
         username: this.uname,
         password: this.password

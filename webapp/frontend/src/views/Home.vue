@@ -55,7 +55,7 @@ export default {
     LoadingOverlay,
     Login
   },
-  data: function () {
+  data () {
     let data = {
       projects: [],
       next: null,
@@ -72,26 +72,26 @@ export default {
     }
     return data
   },
-  created: function () {
+  created () {
     this.loggedIn()
   },
   watch: {
     '$route': 'loggedIn'
   },
-  mounted: function () {
+  mounted () {
     EventBus.$on('login:success', this.loggedIn)
   },
-  beforeDestroy: function () {
+  beforeDestroy () {
     EventBus.$off('login:success', this.loggedIn)
   },
   methods: {
-    loggedIn: function () {
+    loggedIn () {
       if (this.$cookie.get('api-token')) {
         this.loginSuccessful = true
         this.fetchProjects()
       }
     },
-    fetchProjects: function () {
+    fetchProjects () {
       this.loadingProjects = true
       if (this.loginSuccessful) {
         this.$http.get('/api/project-annotate-entities/').then(resp => {
@@ -105,7 +105,7 @@ export default {
         })
       }
     },
-    fetchPage: function (pageUrl) {
+    fetchPage (pageUrl) {
       this.$http.get('/' + pageUrl.split('/').slice(-3).join('/')).then(resp => {
         this.projects = this.projects.concat(resp.data.results)
         if (resp.data.next) {
@@ -115,7 +115,7 @@ export default {
         }
       })
     },
-    fetchCompletionStatus: function () {
+    fetchCompletionStatus () {
       this.$http.get(`/api/complete-projects/?projects=${this.projects.map(p => p.id).join(',')}`)
         .then(resp => {
           Object.entries(resp.data.validated_projects).forEach((entry) => {
@@ -139,7 +139,7 @@ export default {
           })
         })
     },
-    select: function (project) {
+    select (project) {
       this.$router.push({
         name: 'train-annotations',
         params: {
@@ -147,7 +147,7 @@ export default {
         }
       })
     },
-    saveModel: function (projectId) {
+    saveModel (projectId) {
       let payload = {
         project_id: projectId
       }

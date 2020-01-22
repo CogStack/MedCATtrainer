@@ -35,7 +35,7 @@ export default {
     loading: Boolean,
     currentEnt: Object
   },
-  data: function () {
+  data () {
     return {
       ctxMenuOptions: [
         {
@@ -46,7 +46,7 @@ export default {
     }
   },
   computed: {
-    formattedText: function () {
+    formattedText () {
       if (this.loading || !this.text || !this.ents) { return '' }
       if (this.ents.length === 0) {
         let text = this.text.replace('&', '&amp').replace('<', '&gt').replace('>', '&gt')
@@ -90,7 +90,7 @@ export default {
     }
   },
   methods: {
-    scrollIntoView: function (timeout) {
+    scrollIntoView  (timeout) {
       let el = document.getElementsByClassName('highlight-task-selected')
       setTimeout(function () { // setTimeout to put this into event queue
         if (el[0]) {
@@ -101,10 +101,10 @@ export default {
         }
       }, timeout)
     },
-    selectEnt: function (entIdx) {
+    selectEnt  (entIdx) {
       this.$emit('select:concept', entIdx)
     },
-    showCtxMenu: function (event) {
+    showCtxMenu  (event) {
       const selection = window.getSelection()
       const selStr = selection.toString()
       const anchor = selection.anchorNode
@@ -157,7 +157,7 @@ export default {
         this.$refs.ctxMenu.showMenu(ev)
       }
     },
-    ctxOptionClicked: function (event) {
+    ctxOptionClicked  (event) {
       this.$emit('select:addSynonym', this.selection)
     }
   }

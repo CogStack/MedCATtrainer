@@ -27,7 +27,7 @@ export default {
     altSearch: Boolean
   },
   watch: {
-    'submitLocked': function (oldVal, newVal) {
+    'submitLocked' (oldVal, newVal) {
       if (newVal) {
         this.listenSubmit()
       } else {
@@ -36,22 +36,22 @@ export default {
     }
   },
   methods: {
-    correct: function () {
+    correct () {
       this.$emit('select:correct')
     },
-    remove: function () {
+    remove () {
       this.$emit('select:remove')
     },
-    kill: function () {
+    kill () {
       this.$emit('select:kill')
     },
-    alternative: function () {
+    alternative () {
       this.$emit('select:alternative', !this.altSearch)
     },
-    submit: function () {
+    submit () {
       this.$emit('submit', true)
     },
-    submitDisabled: function () {
+    submitDisabled () {
       if (this.ents !== null && !this.submitLocked) {
         return !this.ents.every(e => {
           return Object.values(e.assignedValues).every(e => e !== null)
@@ -59,7 +59,7 @@ export default {
       }
       return true
     },
-    keyup: function (e) {
+    keyup  (e) {
       if (e.keyCode === 13) {
         if (!this.submitDisabled()) {
           this.ignoreSubmit()
@@ -84,17 +84,17 @@ export default {
         }
       }
     },
-    listenSubmit: function () {
+    listenSubmit () {
       window.addEventListener('keyup', this.keyup)
     },
-    ignoreSubmit: function () {
+    ignoreSubmit () {
       window.removeEventListener('keyup', this.keyup)
     }
   },
-  mounted: function () {
+  mounted () {
     this.listenSubmit()
   },
-  beforeDestroy: function () {
+  beforeDestroy () {
     this.ignoreSubmit()
   }
 }

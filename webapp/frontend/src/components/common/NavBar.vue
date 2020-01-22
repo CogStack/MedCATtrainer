@@ -18,7 +18,7 @@ export default {
     currentEnt: Object,
     ents: Array,
     useEnts: {
-      default: function () {
+      default () {
         return true
       },
       type: Boolean
@@ -27,25 +27,25 @@ export default {
     backBtnDisabled: Boolean
   },
   methods: {
-    nextDisabled: function () {
+    nextDisabled () {
       if (this.useEnts) {
         return this.ents === null ? true : this.ents[this.ents.length - 1] === this.currentEnt
       }
       return this.nextBtnDisabled
     },
-    backDisabled: function () {
+    backDisabled () {
       if (this.useEnts) {
         return this.ents === null ? true : this.ents[0] === this.currentEnt
       }
       return this.backBtnDisabled
     },
-    next: function () {
+    next () {
       this.$emit('select:next')
     },
-    back: function () {
+    back () {
       this.$emit('select:back')
     },
-    keyup: function (e) {
+    keyup (e) {
       if (e.keyCode === 37 && !this.backDisabled()) {
         this.back()
       } else if (e.keyCode === 39 && !this.nextDisabled()) {
@@ -53,10 +53,10 @@ export default {
       }
     }
   },
-  mounted: function () {
+  mounted () {
     window.addEventListener('keyup', this.keyup)
   },
-  beforeDestroy: function () {
+  beforeDestroy () {
     window.removeEventListener('keyup', this.keyup)
   }
 }

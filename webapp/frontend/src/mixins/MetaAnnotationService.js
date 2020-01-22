@@ -3,13 +3,13 @@ import _ from 'lodash'
 
 export default {
   name: 'MetaAnnotationService',
-  data: function () {
+  data () {
     return {
       tasks: Array
     }
   },
   methods: {
-    fetchMetaTasks: function (taskIDs, callback) {
+    fetchMetaTasks (taskIDs, callback) {
       this.$http.get(`/api/meta-tasks/`).then(resp => {
         let tasks = resp.data.results.filter(r => {
           return taskIDs.includes(r.id)
@@ -34,7 +34,7 @@ export default {
         })
       })
     },
-    fetchMetaAnnotations: function (selectedEnt, callback) {
+    fetchMetaAnnotations (selectedEnt, callback) {
       if (this.tasks && selectedEnt !== null) {
         for (let t of this.tasks) {
           t.value = null

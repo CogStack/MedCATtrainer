@@ -17,7 +17,7 @@ export default {
     task: Object
   },
   methods: {
-    selectTaskValue: function (option) {
+    selectTaskValue (option) {
       this.$emit('select:metaAnno', this.task, option)
     }
   }

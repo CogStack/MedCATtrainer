@@ -22,18 +22,18 @@ export default {
     taskIDs: Array,
     selectedEnt: {
       type: Object,
-      default: function () {
+      default () {
         return {}
       }
     }
   },
-  data: function () {
+  data () {
     return {
       tasks: Array
     }
   },
   methods: {
-    selectedTaskAnno: function (task, option) {
+    selectedTaskAnno (task, option) {
       if (task.value === option.id) {
         // remove annotation
         this.$http.delete(`/api/meta-annotations/${task.annotation_id}/`).then(() => {
@@ -66,7 +66,7 @@ export default {
       }
     }
   },
-  created: function () {
+  created () {
     const that = this
     this.fetchMetaTasks(this.taskIDs, () => {
       if (that.selectedEnt) {

@@ -69,8 +69,10 @@
         <div>Keyboard Shortcuts</div>
         <table class="table">
           <thead>
-            <th>Shortcut Key</th>
-            <th>Description</th>
+            <tr>
+              <th>Shortcut Key</th>
+              <th>Description</th>
+            </tr>
           </thead>
           <tbody>
           <tr>
@@ -171,7 +173,7 @@ export default {
       required: false
     }
   },
-  data: function () {
+  data () {
     return {
       docs: null,
       totalDocs: 0,
@@ -196,14 +198,14 @@ export default {
       metaAnnotate: false
     }
   },
-  created: function () {
+  created () {
     this.fetchData()
   },
   watch: {
     '$route': 'fetchData'
   },
   methods: {
-    fetchData: function () {
+    fetchData () {
       this.$http.get(`/api/project-annotate-entities/?id=${this.projectId}`).then(resp => {
         if (resp.data.count === 0) { this.errorModal = true } else {
           this.project = resp.data.results[0]
@@ -212,7 +214,7 @@ export default {
         }
       })
     },
-    fetchDocuments: function () {
+    fetchDocuments () {
       let params = this.nextDocSetUrl === null ? `?dataset=${this.project.dataset}`
         : `?${this.nextDocSetUrl.split('?').slice(-1)[0]}`
 
@@ -250,7 +252,7 @@ export default {
         // use error modal to show errors?
       })
     },
-    loadDoc: function (docId) {
+    loadDoc (docId) {
       this.currentDoc = _.find(this.docs, (d) => d.id === docId)
       if (this.$route.params.docId !== docId) {
         this.$router.replace({
@@ -264,7 +266,7 @@ export default {
       this.currentEnt = null
       this.prepareDoc()
     },
-    prepareDoc: function (params) {
+    prepareDoc (params) {
       this.loadingDoc = true
       let payload = {
         project_id: this.project.id,
@@ -280,7 +282,7 @@ export default {
         console.error(err)
       })
     },
-    fetchEntities: function (selectedEntId) {
+    fetchEntities (selectedEntId) {
       let params = this.nextEntSetUrl === null ? `?project=${this.projectId}&document=${this.currentDoc.id}`
         : `?${this.nextEntSetUrl.split('?').slice(-1)[0]}`
       this.$http.get(`/api/annotated-entities/${params}`).then(resp => {
@@ -321,17 +323,17 @@ export default {
         }
       })
     },
-    selectEntityFromSummary: function (entIdx) {
+    selectEntityFromSummary (entIdx) {
       this.docToSubmit = null
       this.selectEntity(entIdx)
     },
-    selectEntity: function (entIdx) {
+    selectEntity (entIdx) {
       this.currentEnt = this.ents[entIdx]
       this.conceptSynonymSelection = null
       this.metaAnnotate = this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_ALTERNATIVE ||
         this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_CORRECT
     },
-    setStatus: function (status) {
+    setStatus (status) {
       this.currentEnt.validated = 1
       this.currentEnt.correct = 0
       this.currentEnt.killed = 0
@@ -339,7 +341,7 @@ export default {
       this.currentEnt.deleted = 0
       this.currentEnt[status] = 1
     },
-    markCorrect: function () {
+    markCorrect () {
       if (this.currentEnt) {
         this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_CORRECT
         this.setStatus('correct')
@@ -347,7 +349,7 @@ export default {
         this.metaAnnotate = this.project.tasks.length > 0
       }
     },
-    markEntity: function (moveToNext) {
+    markEntity (moveToNext) {
       if (this.currentEnt) {
         this.taskLocked = true
         this.$http.put(`/api/annotated-entities/${this.currentEnt.id}/`, this.currentEnt).then(resp => {
@@ -358,7 +360,7 @@ export default {
         })
       }
     },
-    markRemove: function (kill) {
+    markRemove (kill) {
       if (this.currentEnt) {
         this.currentEnt.assignedValues[TASK_NAME] = kill ? CONCEPT_KILLED : CONCEPT_REMOVED
         if (kill) {
@@ -370,13 +372,13 @@ export default {
         this.metaAnnotate = false
       }
     },
-    toggleAltSearch: function (choice) {
+    toggleAltSearch (choice) {
       this.altSearch = choice
     },
-    markKill: function () {
+    markKill () {
       this.markRemove(true)
     },
-    markAlternative: function (item) {
+    markAlternative (item) {
       this.altSearch = false
       this.taskLocked = true
       this.$http.post(`/api/get-create-entity/`, { label: item.cui }).then(resp => {
@@ -391,7 +393,7 @@ export default {
       })
       this.currentEnt.cui = item.cui
     },
-    addAnnotationComplete: function (addedAnnotationId) {
+    addAnnotationComplete (addedAnnotationId) {
       this.conceptSynonymSelection = null
       if (addedAnnotationId) {
         this.$http.get(`/api/annotated-entities/${addedAnnotationId}/`).then(resp => {
@@ -404,7 +406,7 @@ export default {
         })
       }
     },
-    addSynonym: function (selection) {
+    addSynonym (selection) {
       this.conceptSynonymSelection = null
       let that = this
       window.setTimeout(function () {
@@ -412,19 +414,19 @@ export default {
         that.metaAnnotate = false
       }, 50)
     },
-    next: function () {
+    next () {
       this.selectEntity(this.ents.indexOf(this.currentEnt) + 1)
     },
-    back: function () {
+    back () {
       this.selectEntity(this.ents.indexOf(this.currentEnt) - 1)
     },
-    submitDoc: function (docId) {
+    submitDoc (docId) {
       if (this.docToSubmit === null) {
         this.confirmSubmitListenerAdd()
         this.docToSubmit = docId
       }
     },
-    submitConfirmed: function () {
+    submitConfirmed () {
       this.confirmSubmitListenerRemove()
       this.submitConfirmedLoading = true
       this.docToSubmit = null
@@ -458,19 +460,19 @@ export default {
         })
       })
     },
-    keyup: function (e) {
+    keyup (e) {
       if (e.keyCode === 13 && this.docToSubmit && !this.submitConfirmedLoading) {
         this.submitConfirmed()
       }
     },
-    confirmSubmitListenerRemove: function () {
+    confirmSubmitListenerRemove () {
       window.removeEventListener('keyup', this.keyup)
     },
-    confirmSubmitListenerAdd: function () {
+    confirmSubmitListenerAdd () {
       window.addEventListener('keyup', this.keyup)
     }
   },
-  beforeDestroy: function () {
+  beforeDestroy () {
     this.confirmSubmitListenerRemove()
   }
 }

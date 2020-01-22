@@ -29,21 +29,21 @@ export default {
   components: {
     Login
   },
-  data: function () {
+  data () {
     return {
       loginModal: false,
       uname: this.$cookie.get('username') || null
     }
   },
   methods: {
-    loginSuccessful: function () {
+    loginSuccessful () {
       this.loginModal = false
       this.uname = this.$cookie.get('username')
       if (this.$route.name !== 'home') {
         this.$router.push({ name: 'home' })
       }
     },
-    logout: function () {
+    logout () {
       this.$cookie.delete('username')
       this.$cookie.delete('api-token')
       if (this.$route.name !== 'home') {
@@ -53,10 +53,10 @@ export default {
       }
     }
   },
-  mounted: function () {
+  mounted () {
     EventBus.$on('login:success', this.loginSuccessful)
   },
-  beforeDestroy: function () {
+  beforeDestroy () {
     EventBus.$off('login:success', this.loginSuccessful)
   }
 }

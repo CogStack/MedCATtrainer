@@ -88,14 +88,14 @@ export default {
     project: Object,
     selectedEnt: {
       type: Object,
-      default: function () {
+      default () {
         return {}
       }
     },
     altSearch: Boolean
   },
   mixins: [ConceptDetailService],
-  data: function () {
+  data () {
     return {
       conceptSummary: {},
       searchResults: [],
@@ -103,7 +103,7 @@ export default {
     }
   },
   methods: {
-    cleanProps: function () {
+    cleanProps () {
       this.conceptSummary = {}
       if (this.selectedEnt && Object.keys(this.selectedEnt).length) {
         // remove props
@@ -132,7 +132,7 @@ export default {
         }
       }
     },
-    fetchDetail: function () {
+    fetchDetail  () {
       if (this.selectedEnt && Object.keys(this.selectedEnt).length) {
         const queryEntId = this.selectedEnt.id
         this.$http.get(`/api/entities/${this.selectedEnt.entity}/`).then(resp => {
@@ -185,37 +185,37 @@ export default {
         searchByTerm()
       }
     }, 400),
-    selectedCorrectCUI: function (item) {
+    selectedCorrectCUI (item) {
       if (item) {
         this.$emit('select:altConcept', item)
         this.searchResults = []
         this.selectedCUI = null
       }
     },
-    cancelReassign: function () {
+    cancelReassign () {
       this.$emit('select:alternative', false)
       this.searchResults = []
       this.selectedCUI = null
     },
-    keyup: function (e) {
+    keyup (e) {
       if (this.altSearch && e.keyCode === 27) {
         this.cancelReassign()
       }
     }
   },
-  mounted: function () {
+  mounted () {
     const that = this
     this.fetchDetail(this.selectedEnt, () => {
       that.cleanProps()
     })
     window.addEventListener('keyup', this.keyup)
   },
-  beforeDestroy: function () {
+  beforeDestroy () {
     window.removeEventListener('keyup', this.keyup)
   },
   watch: {
     'selectedEnt': {
-      handler: function (newVal) {
+      handler (newVal) {
         const that = this
         that.fetchDetail(newVal, () => {
           that.cleanProps()
@@ -224,7 +224,7 @@ export default {
       deep: true
     },
     'selectedCUI': 'selectedCorrectCUI',
-    'altSearch': function (newVal) {
+    'altSearch' (newVal) {
       if (newVal) {
         this.$nextTick(function () {
           document.getElementById('pickerID').focus()
