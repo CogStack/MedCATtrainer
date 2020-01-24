@@ -34,6 +34,15 @@ export default {
         })
       })
     },
+    newMetaAnnotation (task, optionId, callback) {
+      const payload = {
+        validated: !this.selectedEnt.deleted && !this.selectedEnt.alternative,
+        annotated_entity: this.selectedEnt.id,
+        meta_task: task.id,
+        meta_task_value: optionId
+      }
+      return this.$http.post(`/api/meta-annotations/`, payload)
+    },
     fetchMetaAnnotations (selectedEnt, callback) {
       if (this.tasks && selectedEnt !== null) {
         for (let t of this.tasks) {
@@ -42,14 +51,37 @@ export default {
         this.$http.get(`/api/meta-annotations/?annotated_entity=${selectedEnt.id}`).then(resp => {
           // map current state tasks to these entities - to delete as needed.
           let taskValues = []
-          for (let r of resp.data.results) {
-            let task = this.tasks.filter(t => t.id === r.meta_task)[0]
-            task.value = r.meta_task_value
-            task.annotation_id = r.id
-            taskValues.push(task)
+          let newAnnoPromises = []
+          for (let task of this.tasks) {
+            let savedTask = resp.data.results.filter(t => t.meta_task === task.id)
+            if (savedTask.length > 0) {
+              let r = savedTask[0]
+              task.value = r.meta_task_value
+              task.annotation_id = r.id
+              taskValues.push(task)
+            } else if (task.default) {
+              // no annotation exists, should be validated and set as default value
+              newAnnoPromises.push(this.newMetaAnnotation(task, task.default))
+              taskValues.push(task)
+            }
           }
-          if (typeof (callback) === 'function') {
-            callback(_.cloneDeep(taskValues))
+          let callCallback = function () {
+            if (typeof (callback) === 'function') {
+              callback(_.cloneDeep(taskValues))
+            }
+          }
+
+          if (newAnnoPromises.length) {
+            Promise.all(newAnnoPromises).then(values => {
+              for (let resp of values) {
+                let task = taskValues.filter(t => t.id === resp.data.meta_task)[0]
+                task.annotation_id = resp.data.id
+                task.value = resp.data.meta_task_value
+              }
+              callCallback()
+            })
+          } else {
+            callCallback()
           }
         })
       }

@@ -53,16 +53,7 @@ export default {
         })
       } else {
         // create new
-        const payload = {
-          validated: !this.selectedEnt.deleted && !this.selectedEnt.alternative,
-          annotated_entity: this.selectedEnt.id,
-          meta_task: task.id,
-          meta_task_value: option.id
-        }
-        this.$http.post(`/api/meta-annotations/`, payload).then((resp) => {
-          task.annotation_id = resp.data.id
-          task.value = resp.data.meta_task_value
-        })
+        this.newMetaAnnotation(task, option.id)
       }
     }
   },
