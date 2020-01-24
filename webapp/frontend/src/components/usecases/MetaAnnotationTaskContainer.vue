@@ -53,7 +53,10 @@ export default {
         })
       } else {
         // create new
-        this.newMetaAnnotation(task, option.id)
+        this.newMetaAnnotation(task, option.id).then(resp => {
+          task.annotation_id = resp.data.id
+          task.value = resp.data.meta_task_value
+        })
       }
     }
   },
