@@ -29,9 +29,6 @@ export default {
     loadingDoc: Boolean,
     validatedDocIds: Array
   },
-  watch: {
-    'selectedDocId': 'scrollSelectedDocId'
-  },
   methods: {
     scrollSelectedDocId () {
       const el = document.getElementsByClassName('selected-doc')
@@ -52,9 +49,11 @@ export default {
       if (!this.loadingDoc && e.keyCode === 40 && this.selectedDocId !== this.docs.slice(-1).id) {
         // down
         this.$emit('request:loadDoc', this.docs[this.docs.map(d => d.id).indexOf(this.selectedDocId) + 1].id)
+        this.$nextTick(this.scrollSelectedDocId)
       } else if (!this.loadingDoc && e.keyCode === 38 && this.selectedDocId !== this.docs[0].id && !this.loadingDoc) {
         // up
         this.$emit('request:loadDoc', this.docs[this.docs.map(d => d.id).indexOf(this.selectedDocId) - 1].id)
+        this.$nextTick(this.scrollSelectedDocId)
       }
     }
   },
