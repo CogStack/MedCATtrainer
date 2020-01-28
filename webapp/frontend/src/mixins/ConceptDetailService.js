@@ -15,6 +15,7 @@ export default {
                 selectedEnt.pretty_name = resp.data.results[0].pretty_name
                 selectedEnt.semantic_type = resp.data.results[0].semantic_type
                 selectedEnt.icd10 = resp.data.results[0].icd10
+                selectedEnt.opcs4 = resp.data.results[0].opcs4
               }
               if (callback) {
                 callback()

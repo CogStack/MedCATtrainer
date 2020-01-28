@@ -34,7 +34,11 @@
         </tr>
         <tr v-if="conceptSummary['ICD-10']">
           <td>ICD-10</td>
-          <td class="icd-10-desc">{{conceptSummary['ICD-10']}}></td>
+          <td class="cui-mappingns">{{conceptSummary['ICD-10']}}></td>
+        </tr>
+        <tr v-if="conceptSummary['OPCS-4']">
+          <td>OPCS-4</td>
+          <td class="cui-mappings">{{conceptSummary['OPCS-4']}}></td>
         </tr>
         <tr>
           <td>Accuracy</td>
@@ -72,11 +76,12 @@ const PROP_MAP = {
   'semantic_type': 'Type',
   'cui': 'Concept ID',
   'icd10': 'ICD-10',
+  'opcs4': 'OPCS-4',
   'pretty_name': 'Name'
 }
 
 const CONST_PROPS_ORDER = [
-  'Name', 'Description', 'Type', 'Term ID', 'Concept ID', 'ICD-10', 'Accuracy'
+  'Name', 'Description', 'Type', 'Term ID', 'Concept ID', 'ICD-10', 'OPCS-4', 'Accuracy'
 ]
 
 export default {
@@ -130,28 +135,6 @@ export default {
         for (let k of props) {
           this.conceptSummary[k] = ent[k]
         }
-      }
-    },
-    fetchDetail  () {
-      if (this.selectedEnt && Object.keys(this.selectedEnt).length) {
-        const queryEntId = this.selectedEnt.id
-        this.$http.get(`/api/entities/${this.selectedEnt.entity}/`).then(resp => {
-          if (this.selectedEnt && queryEntId === this.selectedEnt.id) {
-            this.selectedEnt.cui = resp.data.label
-            this.$http.get(`/api/concepts/?cui=${this.selectedEnt.cui}`).then(resp => {
-              if (this.selectedEnt) {
-                this.selectedEnt.desc = resp.data.results[0].desc
-                this.selectedEnt.tui = resp.data.results[0].tui
-                this.selectedEnt.pretty_name = resp.data.results[0].pretty_name
-                this.selectedEnt.semantic_type = resp.data.results[0].semantic_type
-                this.selectedEnt.icd10 = resp.data.results[0].icd10
-              }
-              this.cleanProps()
-            })
-          }
-        })
-      } else {
-        this.conceptSummary = {}
       }
     },
     searchCUI: _.debounce(function (term, loading) {
@@ -252,7 +235,7 @@ export default {
   color: $text;
 }
 
-.icd-10-desc {
+.cui-mappings {
   white-space: pre-wrap;
 }
 

@@ -213,17 +213,12 @@ def _import_concepts(id):
                 concept.desc = cdb.cui2desc.get(cui, '')
                 concept.synonyms = ",".join(cdb.cui2original_names.get(cui, []))
                 concept.cdb = concept_db
-                icd10 = ''
-                try:
-                    for pair in cdb.cui2info[cui]['icd10']:
-                        icd10 += pair['chapter'] + " | " + pair['name']
-                        icd10 += '\n'
-                    icd10.strip()
-                except:
-                    pass
+                icd10 = '\n'.join([f'{icd_code["chapter"]}|{icd_code["name"]}'
+                                   for icd_code in cdb.cui2info[cui].get('icd10', [])]).strip()
                 concept.icd10 = icd10
-                #concept.vocab = cdb.cui2ontos.get(cui, '')
-
+                opcs4 = '\n'.join([f'{opcs_code["code"]}|{opcs_code["name"]}'
+                                   for opcs_code in cdb.cui2info[cui].get('opcs4', [])]).strip()
+                concept.opcs4 = opcs4
                 try:
                     concept.save()
                 except:

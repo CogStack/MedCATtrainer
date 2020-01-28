@@ -45,7 +45,11 @@
         </tr>
         <tr v-if="selectedCUI.icd10">
           <td>ICD-10</td>
-          <td class="icd-10-desc">{{selectedCUI.icd10}}</td>
+          <td class="cui-mappings">{{selectedCUI.icd10}}</td>
+        </tr>
+        <tr v-if="selectedCUI.opcs4">
+          <td>OPCS-4</td>
+          <td class="cui-mappings">{{selectedCUI.opcs4}}</td>
         </tr>
         <tr>
           <td>Description</td>
@@ -210,7 +214,7 @@ $button-height: 50px;
   height: $button-height;
 }
 
-.icd-10-desc {
+.cui-mappings {
   white-space: pre-wrap;
 }
 

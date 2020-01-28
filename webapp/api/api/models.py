@@ -23,6 +23,7 @@ class Concept(models.Model):
     vocab = models.CharField(max_length=100)
     synonyms = models.TextField(default='', blank=True)
     icd10 = models.TextField(default='', blank=True)
+    opcs4 = models.TextField(default='', blank=True)
     cdb = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=True, null=True)
 
     def __str__(self):
@@ -43,7 +44,6 @@ class Vocabulary(models.Model):
 
     def __str__(self):
         return str(self.vocab_file.name)
-
 
 
 class MedCATModel(models.Model):

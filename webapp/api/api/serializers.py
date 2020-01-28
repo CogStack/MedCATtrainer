@@ -12,7 +12,8 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 class ConceptSerializer(serializers.ModelSerializer):
     class Meta:
         model = Concept
-        fields = ['pretty_name', 'cui', 'desc', 'tui', 'synonyms', 'semantic_type', 'icd10', 'id', 'cdb']
+        fields = ['pretty_name', 'cui', 'desc', 'tui', 'synonyms', 'semantic_type',
+                  'icd10', 'opcs4', 'id', 'cdb']
 
 
 class EntitySerializer(serializers.ModelSerializer):

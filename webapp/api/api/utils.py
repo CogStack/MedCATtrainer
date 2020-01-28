@@ -58,16 +58,13 @@ def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
             concept.desc = cdb.cui2desc.get(label, '')
             concept.synonyms = ",".join(cdb.cui2original_names.get(label, []))
             concept.cdb = project.concept_db
-            #concept.vocab = cdb.cui2ontos.get(label, '')
-            icd10 = ''
-            try:
-                for pair in cdb.cui2info[label]['icd10']:
-                    icd10 += pair['chapter'] + " | " + pair['name']
-                    icd10 += '\n'
-                icd10.strip()
-            except:
-                pass
+            icd10 = '\n'.join([f'{icd_code["chapter"]}| {icd_code["name"]}'
+                               for icd_code in cdb.cui2info[label].get('icd10', [])]).strip()
             concept.icd10 = icd10
+            opcs4 = '\n'.join([f'{opcs_code["code"]}| {opcs_code["name"]}'
+                               for opcs_code in cdb.cui2info[label].get('opcs4', [])]).strip()
+            log.debug(f'OPCS:{opcs4}')
+            concept.opcs4 = opcs4
             concept.save()
 
         cnt = Entity.objects.filter(label=label).count()
