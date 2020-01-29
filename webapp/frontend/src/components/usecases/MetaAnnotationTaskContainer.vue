@@ -43,7 +43,7 @@ export default {
       } else if (task.value && task.value !== option.id) {
         // update
         let payload = {
-          validated: !this.selectedEnt.deleted && !this.selectedEnt.alternative,
+          validated: true, // meta annotations are always valid.
           annotated_entity: this.selectedEnt.id,
           meta_task: task.id,
           meta_task_value: option.id
@@ -53,7 +53,7 @@ export default {
         })
       } else {
         // create new
-        this.newMetaAnnotation(task, option.id).then(resp => {
+        this.newMetaAnnotation(this.selectedEnt, task, option.id).then(resp => {
           task.annotation_id = resp.data.id
           task.value = resp.data.meta_task_value
         })

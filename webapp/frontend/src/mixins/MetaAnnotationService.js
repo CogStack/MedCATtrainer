@@ -34,16 +34,19 @@ export default {
         })
       })
     },
-    newMetaAnnotation (task, optionId, callback) {
+    newMetaAnnotation (selectedEnt, task, optionId, callback) {
       const payload = {
-        validated: !this.selectedEnt.deleted && !this.selectedEnt.alternative,
-        annotated_entity: this.selectedEnt.id,
+        validated: true, // meta annotations are always valid.
+        annotated_entity: selectedEnt.id,
         meta_task: task.id,
         meta_task_value: optionId
       }
       return this.$http.post(`/api/meta-annotations/`, payload)
     },
-    fetchMetaAnnotations (selectedEnt, callback) {
+    fetchMetaAnnotations (selectedEnt, callback, useDefault) {
+      if (useDefault === undefined) {
+        useDefault = true
+      }
       if (this.tasks && selectedEnt !== null) {
         for (let t of this.tasks) {
           t.value = null
@@ -59,9 +62,9 @@ export default {
               task.value = r.meta_task_value
               task.annotation_id = r.id
               taskValues.push(task)
-            } else if (task.default) {
+            } else if (useDefault && task.default) {
               // no annotation exists, should be validated and set as default value
-              newAnnoPromises.push(this.newMetaAnnotation(task, task.default))
+              newAnnoPromises.push(this.newMetaAnnotation(selectedEnt, task, task.default))
               taskValues.push(task)
             }
           }
