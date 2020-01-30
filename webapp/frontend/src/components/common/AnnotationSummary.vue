@@ -115,7 +115,7 @@ export default {
 <style scoped lang="scss">
 
 .summary {
-  height: 650px;
+  height: 550px;
   overflow-y: auto;
 }
 
