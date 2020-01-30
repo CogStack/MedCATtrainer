@@ -92,8 +92,8 @@
             <td>Previous Concept</td>
           </tr>
           <tr>
-            <td><font-awesome-icon icon="arrow-right"></font-awesome-icon></td>
-            <td>Right Arrow</td>
+            <td><font-awesome-icon icon="arrow-right"></font-awesome-icon> or space</td>
+            <td>Right Arrow or Space bar</td>
             <td>Next Concept</td>
           </tr>
           <tr>

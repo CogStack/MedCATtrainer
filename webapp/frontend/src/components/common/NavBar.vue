@@ -48,7 +48,7 @@ export default {
     keyup (e) {
       if (e.keyCode === 37 && !this.backDisabled()) {
         this.back()
-      } else if (e.keyCode === 39 && !this.nextDisabled()) {
+      } else if (!this.nextDisabled() && (e.keyCode === 39 || e.keyCode === 32)) {
         this.next()
       }
     }
