@@ -71,25 +71,55 @@
           <thead>
             <tr>
               <th>Shortcut Key</th>
+              <th>Key Name</th>
               <th>Description</th>
             </tr>
           </thead>
           <tbody>
           <tr>
             <td><font-awesome-icon icon="arrow-up"></font-awesome-icon></td>
+            <td>Up Arrow</td>
             <td>Previous Document</td>
           </tr>
           <tr>
             <td><font-awesome-icon icon="arrow-down"></font-awesome-icon></td>
+            <td>Down Arrow</td>
             <td>Next Document</td>
           </tr>
           <tr>
             <td><font-awesome-icon icon="arrow-left"></font-awesome-icon></td>
+            <td>Left Arrow</td>
             <td>Previous Concept</td>
           </tr>
           <tr>
             <td><font-awesome-icon icon="arrow-right"></font-awesome-icon></td>
+            <td>Right Arrow</td>
             <td>Next Concept</td>
+          </tr>
+          <tr>
+            <td><font-awesome-icon icon="level-down-alt" :transform="{ rotate: 90 }"></font-awesome-icon></td>
+            <td>Enter Key</td>
+            <td>Submit / Submit Confirm (on submit summary)</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>1 Key</td>
+            <td>Correct</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>2 Key</td>
+            <td>Incorrect</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>3 Key</td>
+            <td>Terminate</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>4 Key</td>
+            <td>Alternative</td>
           </tr>
           </tbody>
         </table>
