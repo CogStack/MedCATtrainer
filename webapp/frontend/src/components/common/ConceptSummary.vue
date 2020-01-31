@@ -34,11 +34,11 @@
         </tr>
         <tr v-if="conceptSummary['ICD-10']">
           <td>ICD-10</td>
-          <td class="cui-mappings">{{conceptSummary['ICD-10']}}></td>
+          <td class="cui-mappings fit-content">{{conceptSummary['ICD-10']}}></td>
         </tr>
         <tr v-if="conceptSummary['OPCS-4']">
           <td>OPCS-4</td>
-          <td class="cui-mappings">{{conceptSummary['OPCS-4']}}></td>
+          <td class="cui-mappings fit-content">{{conceptSummary['OPCS-4']}}></td>
         </tr>
         <tr>
           <td>Accuracy</td>
