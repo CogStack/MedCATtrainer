@@ -13,11 +13,11 @@
           <span class="divider">|</span>
           <span class="files-remaining">{{ totalDocs - (project !== null ? project.validated_documents.length : 0)}} Remaining</span>
         </h5>
-        <button class="summary btn btn-default" @click="summaryModal = true">
-          <font-awesome-icon icon="list-alt"></font-awesome-icon>
+        <button class="btn btn-default" @click="summaryModal = true">
+          <font-awesome-icon icon="list-alt" class="summary-icon"></font-awesome-icon>
         </button>
-        <button class="help btn btn-default" @click="helpModal = true">
-          <font-awesome-icon icon="question-circle"></font-awesome-icon>
+        <button class="btn btn-default" @click="helpModal = true">
+          <font-awesome-icon icon="question-circle" class="help-icon"></font-awesome-icon>
         </button>
       </div>
     </div>
@@ -540,7 +540,7 @@ export default {
   color: $text-highlight;
 }
 
-.help, .summary {
+.help-icon, .summary-icon {
   color: $text;
   font-size: 22px;
 }
