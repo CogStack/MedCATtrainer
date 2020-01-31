@@ -34,7 +34,7 @@
         </tr>
         <tr v-if="conceptSummary['ICD-10']">
           <td>ICD-10</td>
-          <td class="cui-mappingns">{{conceptSummary['ICD-10']}}></td>
+          <td class="cui-mappings">{{conceptSummary['ICD-10']}}></td>
         </tr>
         <tr v-if="conceptSummary['OPCS-4']">
           <td>OPCS-4</td>
