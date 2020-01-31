@@ -13,6 +13,9 @@
           <span class="divider">|</span>
           <span class="files-remaining">{{ totalDocs - (project !== null ? project.validated_documents.length : 0)}} Remaining</span>
         </h5>
+        <button class="summary btn btn-default" @click="summaryModal = true">
+          <font-awesome-icon icon="list-alt"></font-awesome-icon>
+        </button>
         <button class="help btn btn-default" @click="helpModal = true">
           <font-awesome-icon icon="question-circle"></font-awesome-icon>
         </button>
@@ -139,7 +142,7 @@
       </div>
     </modal>
 
-    <modal v-if="docToSubmit" :closable="true" @modal:close="docToSubmit=null" class="submit-modal">
+    <modal v-if="docToSubmit" :closable="true" @modal:close="docToSubmit=null" class="summary-modal">
       <h3 slot="header">Submit Document</h3>
       <div slot="body">
         <div class="summary-title">Review identified concepts and confirm document submission:</div>
@@ -153,6 +156,15 @@
             <font-awesome-icon icon="spinner" spin></font-awesome-icon>
           </span>
         </button>
+      </div>
+    </modal>
+
+    <modal v-if="summaryModal" :closable="true" @modal:close="summaryModal = false" class="summary-modal">
+      <h3 slot="header">Annotation Summary</h3>
+      <div slot="body">
+        <div class="summary-title">Review identified concepts:</div>
+        <annotation-summary :annos="ents" :currentDoc="currentDoc" :taskIDs="(project || {}).tasks || []"
+                            @select:AnnoSummaryConcept="selectEntityFromSummary"></annotation-summary>
       </div>
     </modal>
   </div>
@@ -219,8 +231,8 @@ export default {
       currentEnt: null,
       loadingDoc: false,
       helpModal: false,
-      hModal: false,
       errorModal: false,
+      summaryModal: false,
       docToSubmit: null,
       submitConfirmedLoading: false,
       altSearch: false,
@@ -528,10 +540,13 @@ export default {
   color: $text-highlight;
 }
 
-.help {
+.help, .summary {
   color: $text;
-  position: relative;
-  top: 10px;
+  font-size: 22px;
+}
+
+.summary {
+  padding-left: 20px
 }
 
 .app-header h4 {
