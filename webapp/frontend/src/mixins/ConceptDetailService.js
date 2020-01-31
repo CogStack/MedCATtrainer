@@ -9,7 +9,7 @@ export default {
           if (selectedEnt && queryEntId === selectedEnt.id) {
             selectedEnt.cui = resp.data.label
             this.$http.get(`/api/concepts/?cui=${selectedEnt.cui}`).then(resp => {
-              if (selectedEnt) {
+              if (selectedEnt && resp.data.results.length > 0) {
                 selectedEnt.desc = resp.data.results[0].desc
                 selectedEnt.tui = resp.data.results[0].tui
                 selectedEnt.pretty_name = resp.data.results[0].pretty_name
