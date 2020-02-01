@@ -14,6 +14,24 @@ BOOL_CHOICES = [
         ]
 
 
+class ICDCode(models.Model):
+    code = models.CharField(max_length=10, unique=True)
+    desc = models.CharField(max_length=300)
+    cdb = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=True, null=True)
+
+    def __str__(self):
+        return f'{self.code} | {self.desc}'
+
+
+class OPCSCode(models.Model):
+    code = models.CharField(max_length=10, unique=True)
+    desc = models.CharField(max_length=300)
+    cdb = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=True, null=True)
+
+    def __str__(self):
+        return f'{self.code} | {self.desc}'
+
+
 class Concept(models.Model):
     pretty_name = models.CharField(max_length=300)
     cui = models.CharField(max_length=100, unique=True)
@@ -22,8 +40,8 @@ class Concept(models.Model):
     semantic_type = models.CharField(max_length=200, blank=True, null=True)
     vocab = models.CharField(max_length=100)
     synonyms = models.TextField(default='', blank=True)
-    icd10 = models.TextField(default='', blank=True)
-    opcs4 = models.TextField(default='', blank=True)
+    icd10 = models.ManyToManyField(ICDCode, default=None, blank=True, related_name='concept')
+    opcs4 = models.ManyToManyField(OPCSCode, default=None, blank=True, related_name='concept')
     cdb = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=True, null=True)
 
     def __str__(self):
@@ -141,7 +159,7 @@ class ProjectAnnotateEntities(Project):
     concept_db = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, null=True)
     vocab = models.ForeignKey('Vocabulary', on_delete=models.SET_NULL, null=True)
     cdb_search_filter = models.ManyToManyField('ConceptDB', blank=True, default=None,
-            related_name='concept_source')
+                                               related_name='concept_source')
     require_entity_validation = models.BooleanField(default=True)
     train_model_on_submit = models.BooleanField(default=True)
     tasks = models.ManyToManyField(MetaTask, blank=True, default=None)

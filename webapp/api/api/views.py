@@ -164,6 +164,20 @@ class DatasetViewSet(viewsets.ModelViewSet):
     serializer_class = DatasetSerializer
 
 
+class ICDCodeViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get']
+    queryset = ICDCode.objects.all()
+    serializer_class = ICDCodeSerializer
+
+
+class OPCSCodeViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get']
+    queryset = OPCSCode.objects.all()
+    serializer_class = OPCSCodeSerializer
+
+
 @api_view(http_method_names=['POST'])
 def prepare_documents(request):
     # Get the user

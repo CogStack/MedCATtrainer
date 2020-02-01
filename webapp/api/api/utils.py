@@ -1,5 +1,5 @@
 import os
-from .models import Entity, AnnotatedEntity, Concept
+from .models import Entity, AnnotatedEntity, Concept, ICDCode, OPCSCode, ConceptDB
 from medcat.cdb import CDB
 from medcat.utils.vocab import Vocab
 from medcat.cat import CAT
@@ -58,14 +58,9 @@ def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
             concept.desc = cdb.cui2desc.get(label, '')
             concept.synonyms = ",".join(cdb.cui2original_names.get(label, []))
             concept.cdb = project.concept_db
-            icd10 = '\n'.join([f'{icd_code["chapter"]}| {icd_code["name"]}'
-                               for icd_code in cdb.cui2info[label].get('icd10', [])]).strip()
-            concept.icd10 = icd10
-            opcs4 = '\n'.join([f'{opcs_code["code"]}| {opcs_code["name"]}'
-                               for opcs_code in cdb.cui2info[label].get('opcs4', [])]).strip()
-            log.debug(f'OPCS:{opcs4}')
-            concept.opcs4 = opcs4
             concept.save()
+            set_icd_info_objects(cdb, concept, label)
+            set_opcs_info_objects(cdb, concept, label)
 
         cnt = Entity.objects.filter(label=label).count()
         if cnt == 0:
@@ -91,6 +86,30 @@ def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
             ann_ent.end_ind = ent.end_char
             ann_ent.acc = ent._.acc
             ann_ent.save()
+
+
+def set_icd_info_objects(cdb, concept, cui):
+    objs = get_create_cdb_infos(cdb, concept, cui, 'icd10', 'chapter', 'name', ICDCode)
+    concept.icd10.set(objs)
+
+
+def set_opcs_info_objects(cdb, concept, cui):
+    objs = get_create_cdb_infos(cdb, concept, cui, 'opcs4', 'code', 'name', OPCSCode)
+    concept.opcs4.set(objs)
+
+
+def get_create_cdb_infos(cdb, concept, cui, cui_info_prop, code_prop, desc_prop, model_clazz):
+    codes = [c[code_prop] for c in cdb.cui2info[cui].get(cui_info_prop, []) if code_prop in c]
+    existing_codes = model_clazz.objects.filter(code__in=codes)
+    codes_to_create = set(codes) - set([c.code for c in existing_codes])
+    for code in codes_to_create:
+        new_code = model_clazz()
+        new_code.code = code
+        new_code.desc = [c[desc_prop] for c in cdb.cui2info[cui][cui_info_prop]
+                         if c[code_prop] == code][0]
+        new_code.cdb = concept.cdb
+        new_code.save()
+    return model_clazz.objects.filter(code__in=codes)
 
 
 def _remove_overlap(project, document, start, end):

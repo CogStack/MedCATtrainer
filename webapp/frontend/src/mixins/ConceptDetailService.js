@@ -14,8 +14,28 @@ export default {
                 selectedEnt.tui = resp.data.results[0].tui
                 selectedEnt.pretty_name = resp.data.results[0].pretty_name
                 selectedEnt.semantic_type = resp.data.results[0].semantic_type
-                selectedEnt.icd10 = resp.data.results[0].icd10
-                selectedEnt.opcs4 = resp.data.results[0].opcs4
+                if (resp.data.results[0].icd10.length > 0) {
+                  this.$http.get(
+                    `/api/icd-codes/?id__in=${resp.data.results[0].icd10.join(',')}`).then(resp => {
+                    selectedEnt.icd10 = resp.data.results.map(i => `${i['code']} | ${i['desc']}`).join('\n')
+                    if (callback) {
+                      callback()
+                    }
+                  })
+                } else {
+                  selectedEnt.icd10 = ''
+                }
+                if (resp.data.results[0].opcs4.length > 0) {
+                  this.$http.get(
+                    `/api/opcs-codes/?id__in=${resp.data.results[0].opcs4.join(',')}`).then(resp => {
+                    selectedEnt.opcs4 = resp.data.results.map(i => `${i['code']} | ${i['desc']}`).join('\n')
+                    if (callback) {
+                      callback()
+                    }
+                  })
+                } else {
+                  selectedEnt.opcs4 = ''
+                }
               }
               if (callback) {
                 callback()

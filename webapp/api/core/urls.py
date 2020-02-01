@@ -35,6 +35,8 @@ router.register(r'meta-task-values', api.views.MetaTaskValueViewSet)
 router.register(r'concept-dbs', api.views.ConceptDBViewSet)
 router.register(r'vocabs', api.views.VocabularyViewSet)
 router.register(r'datasets', api.views.DatasetViewSet)
+router.register(r'icd-codes', api.views.ICDCodeViewSet)
+router.register(r'opcs-codes', api.views.OPCSCodeViewSet)
 
 
 urlpatterns = [

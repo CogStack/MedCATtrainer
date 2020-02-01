@@ -11,6 +11,8 @@ from .forms import *
 
 
 # Register your models here.
+from .utils import set_icd_info_objects, set_opcs_info_objects
+
 admin.site.register(Dataset)
 admin.site.register(Entity)
 admin.site.register(MetaTaskValue)
@@ -211,42 +213,44 @@ def _import_concepts(id):
                 concept.tui = tui
                 concept.semantic_type = cdb.tui2name.get(tui, '')
                 concept.desc = cdb.cui2desc.get(cui, '')
-                concept.synonyms = ",".join(cdb.cui2original_names.get(cui, []))
+                concept.synonyms = ", ".join(cdb.cui2original_names.get(cui, []))
                 concept.cdb = concept_db
-                icd10 = '\n'.join([f'{icd_code["chapter"]}|{icd_code["name"]}'
-                                   for icd_code in cdb.cui2info[cui].get('icd10', [])]).strip()
-                concept.icd10 = icd10
-                opcs4 = '\n'.join([f'{opcs_code["code"]}|{opcs_code["name"]}'
-                                   for opcs_code in cdb.cui2info[cui].get('opcs4', [])]).strip()
-                concept.opcs4 = opcs4
-                try:
-                    concept.save()
-                except:
-                    pass
+                set_icd_info_objects(cdb, concept, cui)
+                set_opcs_info_objects(cdb, concept, cui)
+                concept.save()
 
 
 def import_concepts(modeladmin, request, queryset):
     for concept_db in queryset:
         _import_concepts(concept_db.id)
 
+
 def delete_concepts_from_cdb(modeladmin, request, queryset):
     for concept_db in queryset:
         Concept.objects.filter(cdb=concept_db).delete()
+        ICDCode.objects.filter(cdb=concept_db).delete()
+        OPCSCode.objects.filter(cdb=concept_db).delete()
 
 
 class ConceptDBAdmin(admin.ModelAdmin):
     model = ConceptDB
     actions = [import_concepts, delete_concepts_from_cdb]
+
 admin.site.register(ConceptDB, ConceptDBAdmin)
 
 
 def remove_all_concepts(modeladmin, request, queryset):
     Concept.objects.all().delete()
 
+
 class ConceptAdmin(admin.ModelAdmin):
     model = Concept
     actions = [remove_all_concepts]
+
+
 admin.site.register(Concept, ConceptAdmin)
+admin.site.register(ICDCode)
+admin.site.register(OPCSCode)
 
 
 def remove_all_documents(modeladmin, request, queryset):
