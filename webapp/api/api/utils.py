@@ -7,6 +7,7 @@ from medcat.utils.helpers import tkn_inds_from_doc, prepare_name
 from medcat.utils.loggers import basic_logger
 log = basic_logger("api.utils")
 
+
 def remove_annotations(document, project, partial=False):
     try:
         if partial:
@@ -20,6 +21,7 @@ def remove_annotations(document, project, partial=False):
         return "Annotations removed"
     except Exception as e:
         return "Something went wrong: " + str(e)
+
 
 def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
     spacy_doc._.ents.sort(key=lambda x: len(x.text), reverse=True)
@@ -124,6 +126,7 @@ def _remove_overlap(project, document, start, end):
             ann.delete()
             log.debug("Removed")
             log.debug(str(ann))
+
 
 def create_annotation(source_val, right_context, cui, user, project, document, cat):
     text = document.text

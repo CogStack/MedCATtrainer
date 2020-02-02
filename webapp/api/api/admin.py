@@ -215,9 +215,10 @@ def _import_concepts(id):
                 concept.desc = cdb.cui2desc.get(cui, '')
                 concept.synonyms = ", ".join(cdb.cui2original_names.get(cui, []))
                 concept.cdb = concept_db
+                concept.save()
                 set_icd_info_objects(cdb, concept, cui)
                 set_opcs_info_objects(cdb, concept, cui)
-                concept.save()
+
 
 
 def import_concepts(modeladmin, request, queryset):

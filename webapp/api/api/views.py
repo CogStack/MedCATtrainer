@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import datetime
 
 import pandas as pd
@@ -164,11 +165,31 @@ class DatasetViewSet(viewsets.ModelViewSet):
     serializer_class = DatasetSerializer
 
 
+class ICDCodeFilter(drf.FilterSet):
+    code__in = TextInFilter(field_name='code', lookup_expr='in')
+    id__in = TextInFilter(field_name='id', lookup_expr='in')
+
+    class Meta:
+        model = ICDCode
+        fields = ['code', 'id']
+
+
+class OPCSCodeFilter(drf.FilterSet):
+    code__in = TextInFilter(field_name='code', lookup_expr='in')
+    id__in = TextInFilter(field_name='id', lookup_expr='in')
+
+    class Meta:
+        model = OPCSCode
+        fields = ['code', 'id']
+
+
 class ICDCodeViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get']
     queryset = ICDCode.objects.all()
     serializer_class = ICDCodeSerializer
+    filterset_class = ICDCodeFilter
+    filterset_fields = ['code', 'id']
 
 
 class OPCSCodeViewSet(viewsets.ModelViewSet):
@@ -176,6 +197,27 @@ class OPCSCodeViewSet(viewsets.ModelViewSet):
     http_method_names = ['get']
     queryset = OPCSCode.objects.all()
     serializer_class = OPCSCodeSerializer
+    filterset_class = OPCSCodeFilter
+    filterset_fields = ['code', 'id']
+
+
+@api_view(http_method_names=['GET'])
+def search_concept_infos(request):
+    out = {}
+    log.debug(f'request_data:{request.GET}')
+    query = request.GET.get('code', '')
+    cdb_query = request.GET.get('cdb', '')
+    log.debug(f'cdb query:{cdb_query}')
+    log.debug(f'code query:{query}')
+    if len(query) >= 3 and len(cdb_query) > 0 and re.match('^\w\d\d', query):
+        cdb_query = cdb_query.split(',')
+        icd_codes = ICDCode.objects.filter(cdb__in=cdb_query, code__startswith=query)
+        if len(icd_codes):
+            out['icd_codes'] = [ICDCodeSerializer(i).data for i in icd_codes]
+        opcs_codes = OPCSCode.objects.filter(cdb__in=cdb_query, code__startswith=query)
+        if len(opcs_codes):
+            out['opcs_codes'] = [OPCSCodeSerializer(o).data for o in opcs_codes]
+    return Response(out)
 
 
 @api_view(http_method_names=['POST'])
