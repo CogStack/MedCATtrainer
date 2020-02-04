@@ -52,13 +52,6 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
 
-class ConceptViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated, IsReadOnly]
-    queryset = Concept.objects.all()
-    serializer_class = ConceptSerializer 
-    filterset_fields = ['cui', 'tui']
-
-
 class ProjectAnnotateEntitiesViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = ProjectAnnotateEntities.objects.all()
@@ -117,14 +110,24 @@ class TextInFilter(drf.BaseInFilter, drf.CharFilter):
 class NumInFilter(drf.BaseInFilter, drf.NumberFilter):
     pass
 
+
 class ConceptFilter(drf.FilterSet):
     tui__in = TextInFilter(field_name='tui', lookup_expr='in')
     cui__in = TextInFilter(field_name='cui', lookup_expr='in')
     cdb__in = NumInFilter(field_name='cdb', lookup_expr='in')
+    id__in = NumInFilter(field_name='id', lookup_expr='in')
 
     class Meta:
         model = Concept
         fields = ['tui', 'cui', 'cdb']
+
+
+class ConceptViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, IsReadOnly]
+    queryset = Concept.objects.all()
+    serializer_class = ConceptSerializer
+    filterset_class = ConceptFilter
+    filterset_fields = ['cui', 'tui', 'id', 'cdb']
 
 
 class ConceptView(generics.ListAPIView):
@@ -167,7 +170,7 @@ class DatasetViewSet(viewsets.ModelViewSet):
 
 class ICDCodeFilter(drf.FilterSet):
     code__in = TextInFilter(field_name='code', lookup_expr='in')
-    id__in = TextInFilter(field_name='id', lookup_expr='in')
+    id__in = NumInFilter(field_name='id', lookup_expr='in')
 
     class Meta:
         model = ICDCode
@@ -176,7 +179,7 @@ class ICDCodeFilter(drf.FilterSet):
 
 class OPCSCodeFilter(drf.FilterSet):
     code__in = TextInFilter(field_name='code', lookup_expr='in')
-    id__in = TextInFilter(field_name='id', lookup_expr='in')
+    id__in = NumInFilter(field_name='id', lookup_expr='in')
 
     class Meta:
         model = OPCSCode
@@ -204,12 +207,11 @@ class OPCSCodeViewSet(viewsets.ModelViewSet):
 @api_view(http_method_names=['GET'])
 def search_concept_infos(request):
     out = {}
-    log.debug(f'request_data:{request.GET}')
     query = request.GET.get('code', '')
     cdb_query = request.GET.get('cdb', '')
-    log.debug(f'cdb query:{cdb_query}')
-    log.debug(f'code query:{query}')
     if len(query) >= 3 and len(cdb_query) > 0 and re.match('^\w\d\d', query):
+        if len(query) > 3 and query[3] != '.':
+            query = query[:3] + '.' + query[3:]
         cdb_query = cdb_query.split(',')
         icd_codes = ICDCode.objects.filter(cdb__in=cdb_query, code__startswith=query)
         if len(icd_codes):

@@ -11,16 +11,16 @@
         <tr @keyup.stop>
           <td>Concept Lookup</td>
           <td>
-            <v-select v-model="selectedCUI" label="name" @search="searchCUI"
-                      :inputId="'searchBox'"
-                      :clearSearchOnSelect="false"
-                      :filterable="false"
-                      :options="searchResults"></v-select>
+            <concept-picker :project="project" :selection="name" @pickedResult:concept="enrichCUI">
+            </concept-picker>
           </td>
         </tr>
         <tr>
           <td>Context</td>
-          <td class="fit-content context">{{this.prevText}}<span class="highlight">{{this.name}}</span>{{this.nextText.slice(0, 15)}}</td>
+          <td class="fit-content context">{{this.prevText}}
+            <span class="highlight">{{this.name}}</span>
+            {{this.nextText.slice(0, 15)}}
+          </td>
         </tr>
         </tbody>
       </table>
@@ -29,7 +29,7 @@
         <tbody>
         <tr>
           <td>Name</td>
-          <td>{{selectedCUI.name.split(':')[0] || 'n/a'}}</td>
+          <td class="cui-mappings">{{selectedCUI.name.split(':')[0] || 'n/a'}}</td>
         </tr>
         <tr>
           <td>Term ID</td>
@@ -76,15 +76,15 @@
 </template>
 
 <script>
-import _ from 'lodash'
-
-import vSelect from 'vue-select'
+import ConceptDetailService from '@/mixins/ConceptDetailService.js'
+import ConceptPicker from '@/components/common/ConceptPicker'
 
 export default {
   name: 'AddSynoym',
   components: {
-    vSelect
+    ConceptPicker
   },
+  mixins: [ConceptDetailService],
   props: {
     selection: Object,
     project: Object,
@@ -95,59 +95,21 @@ export default {
       name: this.selection.selStr,
       prevText: this.selection.prevText,
       nextText: this.selection.nextText,
-      searchResults: [],
       selectedCUI: null
     }
   },
   created () {
-    let that = this
     window.setTimeout(function () {
-      const el = document.getElementById('searchBox')
-      el.focus()
-      el.value = that.selection.selStr
-      that.searchCUI(that.selection.selStr, () => true)
+      // that.selStr = that.selection.selStr
     }, 50)
   },
   methods: {
-    searchCUI: _.debounce(function (term, loading) {
-      loading(true)
-
-      const mapResult = function (r, allResults) {
-        const isDupName = allResults.filter(res => res.pretty_name === r.pretty_name).length > 1
-        return {
-          name: isDupName ? `${r.pretty_name} : ${r.cui}` : r.pretty_name,
-          cui: r.cui,
-          tui: r.tui,
-          type: r.type,
-          desc: r.desc,
-          icd10: r.icd10,
-          semantic_type: r.semantic_type,
-          synonyms: _.replace(r.synonyms, new RegExp(',', 'g'), ', ')
-        }
+    enrichCUI (concept) {
+      this.selectedCUI = concept
+      if (this.selectedCUI.icd10 || this.selectedCUI.opcs4) {
+        this.fetchConcept(this.selectedCUI)
       }
-
-      const that = this
-      const searchByTerm = function () {
-        let queryParams = `search=${term}&cdb__in=${that.project.cdb_search_filter.join(',')}`
-        that.$http.get(`/api/search-concepts/?${queryParams}`).then(resp => {
-          loading(false)
-          that.searchResults = resp.data.results.map(res => mapResult(res, resp.data.results))
-        })
-      }
-
-      if (term.match(/^(?:c)\d{7}|s-\d*/gmi)) {
-        this.$http.get(`/api/concepts/?cui=${term}`).then(resp => {
-          if (resp.data.results.length > 0) {
-            loading(false)
-            this.searchResults = resp.data.results.map(res => mapResult(res, resp.data.results))
-          } else {
-            searchByTerm()
-          }
-        })
-      } else {
-        searchByTerm()
-      }
-    }, 400),
+    },
     submit () {
       const payload = {
         source_value: this.selection.selStr,
