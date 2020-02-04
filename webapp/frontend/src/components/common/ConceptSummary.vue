@@ -13,10 +13,8 @@
           <td>
             <span v-if="!altSearch">{{conceptSummary['Name'] || 'n/a'}}</span>
             <span v-if="altSearch" class="alt-concept-picker" @keyup.stop>
-              <v-select class="picker" v-model="selectedCUI"
-                        label="name" @search="searchCUI" :options="searchResults"
-                        :filterable="false" :inputId="'pickerID'"></v-select>
-              <font-awesome-icon class="cancel" v-if="altSearch" icon="times-circle" @click="cancelReassign"></font-awesome-icon>
+              <concept-picker :project="project"  @pickedResult:concept="selectedCorrectCUI"></concept-picker>
+              <font-awesome-icon class="cancel" icon="times-circle" @click="cancelReassign"></font-awesome-icon>
             </span>
           </td>
         </tr>
@@ -59,10 +57,8 @@
 </template>
 
 <script>
-import vSelect from 'vue-select'
-import _ from 'lodash'
-
 import ConceptDetailService from '@/mixins/ConceptDetailService.js'
+import ConceptPicker from '@/components/common/ConceptPicker'
 
 const HIDDEN_PROPS = [
   'value', 'project', 'document', 'start_ind', 'end_ind',
@@ -87,7 +83,7 @@ const CONST_PROPS_ORDER = [
 export default {
   name: 'ConceptSummary',
   components: {
-    vSelect
+    ConceptPicker
   },
   props: {
     project: Object,
@@ -137,37 +133,6 @@ export default {
         }
       }
     },
-    searchCUI: _.debounce(function (term, loading) {
-      loading(true)
-      const that = this
-      const searchByTerm = function () {
-        let queryParams = `search=${term}&cdb__in=${that.project.cdb_search_filter.join(',')}`
-        that.$http.get(`/api/search-concepts/?${queryParams}`).then(resp => {
-          loading(false)
-          that.searchResults = resp.data.results.map(r => {
-            return {
-              name: r.pretty_name,
-              cui: r.cui
-            }
-          })
-        })
-      }
-      if (term.match(/^(?:c)\d{7}|s-\d*/gmi)) {
-        this.$http.get(`/api/concepts/?cui=${term}`).then(resp => {
-          if (resp.data.results.length > 0) {
-            loading(false)
-            this.searchResults = [{
-              name: resp.data.results[0].pretty_name,
-              cui: resp.data.results[0].cui
-            }]
-          } else {
-            searchByTerm()
-          }
-        })
-      } else {
-        searchByTerm()
-      }
-    }, 400),
     selectedCorrectCUI (item) {
       if (item) {
         this.$emit('select:altConcept', item)
@@ -205,14 +170,6 @@ export default {
         })
       },
       deep: true
-    },
-    'selectedCUI': 'selectedCorrectCUI',
-    'altSearch' (newVal) {
-      if (newVal) {
-        this.$nextTick(function () {
-          document.getElementById('pickerID').focus()
-        })
-      }
     }
   }
 }
@@ -264,6 +221,10 @@ export default {
 .picker {
   width: calc(100% - 30px);
   display: inline-block;
+}
+
+.select-option {
+  white-space: pre-wrap;
 }
 
 .cui-btns {
