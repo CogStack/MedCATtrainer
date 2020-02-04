@@ -147,8 +147,7 @@ class MetaTaskValue(models.Model):
 class MetaTask(models.Model):
     name = models.CharField(max_length=150)
     values = models.ManyToManyField(MetaTaskValue, related_name='values')
-    default = models.OneToOneField(MetaTaskValue, null=True, blank=True,
-                                   related_name='task_default', on_delete=models.DO_NOTHING)
+    default = models.ForeignKey('MetaTaskValue', null=True, blank=True, on_delete=models.SET_NULL)
     description = models.TextField(default="", blank=True)
 
     def __str__(self):
