@@ -115,7 +115,7 @@ export default {
         source_value: this.selection.selStr,
         document_id: this.documentId,
         project_id: this.project.id,
-        right_context: this.selection.nextText,
+        selection_occur_idx: this.selection.selectionOccurrenceIdx,
         cui: this.selectedCUI.cui
       }
       this.$http.post('/api/add-annotation/', payload).then(resp => {

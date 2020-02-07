@@ -128,16 +128,19 @@ def _remove_overlap(project, document, start, end):
             log.debug(str(ann))
 
 
-def create_annotation(source_val, right_context, cui, user, project, document, cat):
+def create_annotation(source_val, selection_occurrence_index, cui, user, project, document, cat):
     text = document.text
     id = None
 
-    start = None
-    end = None
-    if right_context in text:
-        start = text.index(right_context)
-    elif source_val in text:
-        start = text.index(source_val)
+    all_occurrences_start_idxs = []
+    idx = 0
+    while idx != -1:
+        idx = text.find(source_val, idx)
+        if idx != -1:
+            all_occurrences_start_idxs.append(idx)
+            idx += len(source_val)
+
+    start = all_occurrences_start_idxs[selection_occurrence_index]
 
     if start is not None and len(source_val) > 0 and len(cui) > 0:
         # Remove overlaps

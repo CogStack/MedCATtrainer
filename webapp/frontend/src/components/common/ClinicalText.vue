@@ -14,7 +14,6 @@
 </template>
 
 <script>
-import _ from 'lodash'
 import VRuntimeTemplate from 'v-runtime-template'
 import VueSimpleContextMenu from 'vue-simple-context-menu'
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
@@ -60,6 +59,7 @@ export default {
       for (let i = 0; i < this.ents.length; i++) {
         // highlight the span with default
         let highlightText = this.text.slice(this.ents[i].start_ind, this.ents[i].end_ind)
+
         let styleClass = taskHighlightDefault
         if (this.ents[i].assignedValues[this.taskName] !== null) {
           let btnIndex = this.taskValues.indexOf(this.ents[i].assignedValues[this.taskName])
@@ -130,24 +130,36 @@ export default {
           nextText = anchor.data.slice(selection.anchorOffset)
         }
 
-        _.range(10).forEach(function () {
-          if (priorSibling !== null) {
-            priorText = `${priorSibling.innerText || priorSibling.textContent}${priorText}`
-            priorSibling = priorSibling.previousSibling
+        while (priorSibling !== null) {
+          priorText = `${priorSibling.innerText || priorSibling.textContent}${priorText}`
+          priorSibling = priorSibling.previousSibling
+        }
+        while (nextSibling !== null) {
+          nextText += (nextSibling.innerText || nextSibling.textContent)
+          nextSibling = nextSibling.nextSibling
+        }
+
+        // occurrences of the selected string in the text before and after.
+        let selectionOcurrenceIdx = 0
+        let idx = 0
+        while (idx !== -1) {
+          idx = priorText.indexOf(selStr, idx)
+          if (idx !== -1) {
+            idx += selStr.length
+            selectionOcurrenceIdx += 1
           }
-          if (nextSibling !== null) {
-            nextText += (nextSibling.innerText || nextSibling.textContent)
-            nextSibling = nextSibling.nextSibling
-          }
-        })
+        }
+
         // take only 100 chars of either side?
         nextText = nextText.length < 100 ? nextText : nextText.slice(0, 100)
         priorText = priorText.length < 15 ? priorText : priorText.slice(-15)
         this.selection = {
           selStr: selStr,
           prevText: priorText,
-          nextText: nextText
+          nextText: nextText,
+          selectionOccurrenceIdx: selectionOcurrenceIdx
         }
+
         // event is 132 px too large.
         // TODO: Fix hack, bug introduced with vue-multipane.
         let ev = {

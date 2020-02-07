@@ -299,7 +299,7 @@ def add_annotation(request):
     p_id = request.data['project_id']
     d_id = request.data['document_id']
     source_val = request.data['source_value']
-    right_context = str(source_val) + str(request.data['right_context'])
+    sel_occur_idx = int(request.data['selection_occur_idx'])
     cui = request.data['cui']
 
     log.debug("Annotation being added")
@@ -314,12 +314,12 @@ def add_annotation(request):
     cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
                      CAT_MAP=CAT_MAP, project=project)
     id = create_annotation(source_val=source_val,
-            right_context=right_context,
-            cui=cui,
-            user=user,
-            project=project,
-            document=document,
-            cat=cat)
+                           selection_occurrence_index=sel_occur_idx,
+                           cui=cui,
+                           user=user,
+                           project=project,
+                           document=document,
+                           cat=cat)
 
     return Response({'message': 'Annotation added successfully', 'id': id})
 
