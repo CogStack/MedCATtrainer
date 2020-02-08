@@ -18,11 +18,11 @@
             </span>
           </td>
         </tr>
-        <tr>
+        <tr v-if="conceptSummary['Term ID'] !== 'unk' ">
           <td>Term ID</td>
           <td>{{conceptSummary['Term ID'] || 'n/a'}}</td>
         </tr>
-        <tr>
+        <tr v-if="conceptSummary['Semantic Type']">
           <td>Semantic Type</td>
           <td>{{conceptSummary['Type']  || 'n/a'}}</td>
         </tr>
