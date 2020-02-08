@@ -1,6 +1,4 @@
-import os
 import re
-from datetime import datetime
 
 import pandas as pd
 from django.core.files import File
@@ -14,7 +12,6 @@ from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import *
 from .permissions import *
 from .serializers import *
 from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
@@ -403,59 +400,3 @@ def finished_projects(request):
         validated_projects[project.id] = len(set(all_documents) - set(validated)) == 0
 
     return Response({'validated_projects': validated_projects})
-
-
-@api_view(http_method_names=['GET'])
-def test(request):
-    d_ids = [1003]
-    p_id = 1
-    user = request.user
-
-    project = ProjectAnnotateEntities.objects.get(id=p_id)
-
-    # Is the entity creation forced
-    force = request.data.get('force', 0)
-
-    # Should we update
-    update = request.data.get('update', 1)
-
-    cuis = []
-    tuis = []
-    if project.tuis is not None and project.tuis:
-        tuis = [x.strip() for x in project.tuis.split(",")]
-    if project.cuis is not None and project.cuis:
-        cuis = [x.strip() for x in project.cuis.split(",")]
-
-    for d_id in d_ids:
-        document = Document.objects.get(id=d_id)
-        if force:
-            # Remove all annotations if creation is forced
-            remove_annotations(document, project, partial=False)
-        elif update:
-            # Remove all annotations if creation is forced
-            remove_annotations(document, project, partial=True)
-
-        # Get annotated entities
-        anns = AnnotatedEntity.objects.filter(document=document).filter(project=project)
-
-        # If the document is not already annotated, annotate it
-        if len(anns) == 0 or update:
-            # Based on the project id get the right medcat
-            cat.cdb = cdb
-            cat.vocab = vocab
-            cat.train = False
-
-            print(len(cat.cdb.name2cui))
-            print(cat.spacy_cat.MIN_CUI_COUNT)
-            print(cat.spacy_cat.MIN_ACC)
-
-            spacy_doc = cat(document.text)
-            add_annotations(spacy_doc=spacy_doc,
-                            user=user,
-                            project=project,
-                            document=document,
-                            cdb=cat.cdb,
-                            tuis=tuis,
-                            cuis=cuis)
-
-    return Response({'message': 'Documents prepared successfully'})
