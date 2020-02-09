@@ -30,13 +30,31 @@
           <td>Concept ID</td>
           <td>{{conceptSummary['Concept ID'] || 'n/a'}}</td>
         </tr>
-        <tr v-if="conceptSummary['ICD-10']">
+        <tr v-if="(conceptSummary['ICD-10'] || []).length > 0">
           <td>ICD-10</td>
-          <td class="cui-mappings fit-content">{{conceptSummary['ICD-10']}}></td>
+          <td v-if="!project.clinical_coding_project" class="fit-content">
+            <div v-for="code of conceptSummary['ICD-10']" :key="code.code">{{`${code.code} | ${code.desc}`}}</div>
+          </td>
+          <td v-if="project.clinical_coding_project" class="fit-content">
+            <div class="selectable-code" @click="selectICDCode(code)"
+                 v-for="code of conceptSummary['ICD-10']" :key="code.code">
+              <font-awesome-icon v-if="selectedEnt.icd_code === code.id" icon="check" class="selected-code"></font-awesome-icon>
+              {{`${code.code} | ${code.desc}`}}
+            </div>
+          </td>
         </tr>
-        <tr v-if="conceptSummary['OPCS-4']">
+        <tr v-if="(conceptSummary['OPCS-4'] || []).length > 0">
           <td>OPCS-4</td>
-          <td class="cui-mappings fit-content">{{conceptSummary['OPCS-4']}}></td>
+          <td v-if="!project.clinical_coding_project" class="fit-content">
+            <div v-for="code of conceptSummary['OPCS-4']" :key="code.code">{{`${code.code} | ${code.desc}`}}</div>
+          </td>
+          <td v-if="project.clinical_coding_project" class="fit-content">
+            <div class="selectable-code" @click="selectOPCSCode(code)"
+                 v-for="code of conceptSummary['OPCS-4']" :key="code.code">
+              <font-awesome-icon v-if="selectedEnt.opcs_code === code.id" icon="check" class="selected-code"></font-awesome-icon>
+              {{`${code.code} | ${code.desc}`}}
+            </div>
+          </td>
         </tr>
         <tr>
           <td>Accuracy</td>
@@ -131,6 +149,8 @@ export default {
         for (let k of props) {
           this.conceptSummary[k] = ent[k]
         }
+
+        // show ICD and OPCS lists with special settings for selected ICD/OPCS codes.
       }
     },
     selectedCorrectCUI (item) {
@@ -149,6 +169,12 @@ export default {
       if (this.altSearch && e.keyCode === 27) {
         this.cancelReassign()
       }
+    },
+    selectICDCode (item) {
+      this.$emit('select:ICD', item)
+    },
+    selectOPCSCode (item) {
+      this.$emit('select:OPCS', item)
     }
   },
   mounted () {
@@ -211,8 +237,9 @@ export default {
 
       &.fit-content {
         display: inline-block;
-        max-height: 150px;
+        max-height: 250px;
         overflow-y: auto;
+        width: 100%;
       }
     }
   }
@@ -246,5 +273,19 @@ export default {
 .cancel {
   @extend .cui-btns;
   top: 10px;
+}
+
+.selectable-code {
+  padding: 2px 3px;
+
+  &:hover {
+    cursor: pointer;
+    background-color: $color-2;
+  }
+}
+
+.selected-code {
+  float: right;
+  color: $success
 }
 </style>

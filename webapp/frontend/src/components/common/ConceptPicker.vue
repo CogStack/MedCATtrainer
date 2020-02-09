@@ -67,16 +67,17 @@ export default {
         }
       }
 
-      const mapCuiInfoResult = function (infoResults, idsToConcepts) {
-        return _.flatten(infoResults.map(icdCode => {
-          return icdCode['concept'].map(conceptId => {
+      const mapCuiInfoResult = function (infoResults, idsToConcepts, selectedCodeParam) {
+        return _.orderBy(_.flatten(infoResults.map(cuiInfo => {
+          return cuiInfo['concept'].map(conceptId => {
             const concept = idsToConcepts[conceptId]
             if (!concept) {
               // too many concepts to load return null here then filter out of final result.
               return null
             }
-            return {
-              name: `${icdCode['code']} | ${icdCode['desc']}\n${concept.cui} | ${concept.pretty_name}`,
+            const codeSearchResult = {
+              name: `${cuiInfo.code} | ${cuiInfo.desc}\n${concept.cui} | ${concept.pretty_name}`,
+              orderKey: cuiInfo.code,
               cui: concept.cui,
               tui: concept.tui,
               desc: concept.desc,
@@ -85,8 +86,10 @@ export default {
               semantic_type: concept.semantic_type,
               synonyms: _.replace(concept.synonyms, new RegExp(',', 'g'), ', ')
             }
+            codeSearchResult[selectedCodeParam] = cuiInfo.id
+            return codeSearchResult
           }).filter(i => i !== null)
-        }))
+        })), ['orderKey'], ['asc'])
       }
 
       const that = this
@@ -122,8 +125,10 @@ export default {
               idsToConcepts[r.id] = r
             }
             let results = []
-            results = results.concat(mapCuiInfoResult(infoResp.data['icd_codes'] || [], idsToConcepts))
-            results = results.concat(mapCuiInfoResult(infoResp.data['opcs_codes'] || [], idsToConcepts))
+            results = results.concat(mapCuiInfoResult(infoResp.data['icd_codes'] || [],
+              idsToConcepts, 'icdCode'))
+            results = results.concat(mapCuiInfoResult(infoResp.data['opcs_codes'] || [],
+              idsToConcepts, 'opcsCode'))
             this.searchResults = results
             loading(false)
           })
@@ -139,5 +144,6 @@ export default {
 <style scoped lang="scss">
 .select-option {
   white-space: pre-wrap;
+  padding: 3px 0;
 }
 </style>

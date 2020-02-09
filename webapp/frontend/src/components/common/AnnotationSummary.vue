@@ -20,8 +20,12 @@
           </td>
           <td>{{concept.cui}}</td>
           <td>{{concept.pretty_name}}</td>
-          <td v-if="showInfoCol('icd10')" class="cui-info">{{concept.icd10 || ''}}</td>
-          <td v-if="showInfoCol('opcs4')" class="cui-info">{{concept.opcs4 || ''}}</td>
+          <td v-if="showInfoCol('icd10')" class="cui-info">
+            <div v-for="code of concept.icd10" :key="code.code">{{`${code.code} | ${code.desc}`}}</div>
+          </td>
+          <td v-if="showInfoCol('opcs4')" class="cui-info">
+            <div v-for="code of concept.opcs4" :key="code.code">{{`${code.code} | ${code.desc}`}}</div>
+          </td>
           <td v-for="task in metaAnnos[concept.id]" :key="task.id">
             <span>{{taskMaps[task.id][task.value]}}</span>
           </td>

@@ -1,3 +1,4 @@
+import _ from 'lodash'
 
 export default {
   name: 'ConceptDetailService',
@@ -25,28 +26,40 @@ export default {
           selectedEnt.pretty_name = resp.data.results[0].pretty_name
           selectedEnt.semantic_type = resp.data.results[0].semantic_type
           if (resp.data.results[0].icd10.length > 0) {
-            this.$http.get(
-              `/api/icd-codes/?id__in=${resp.data.results[0].icd10.join(',')}`).then(resp => {
-              // there could be a resp.data.next here
-              selectedEnt.icd10 = resp.data.results.map(i => `${i['code']} | ${i['desc']}`).join('\n')
-              if (callback) {
-                callback()
-              }
-            })
+            selectedEnt.icd10 = []
+            let that = this
+            let getCodes = function (url) {
+              that.$http.get(url).then(resp => {
+                selectedEnt.icd10.push(...resp.data.results)
+                if (resp.data.next) {
+                  getCodes(`/api/${resp.data.next.split('/api/')[1]}`)
+                } else if (callback) {
+                  selectedEnt.icd10 = _.orderBy(selectedEnt.icd10, ['code'], ['asc'])
+                  callback()
+                }
+              })
+            }
+            getCodes(`/api/icd-codes/?id__in=${resp.data.results[0].icd10.join(',')}`)
           } else {
-            selectedEnt.icd10 = ''
+            selectedEnt.icd10 = []
           }
           if (resp.data.results[0].opcs4.length > 0) {
-            this.$http.get(
-              `/api/opcs-codes/?id__in=${resp.data.results[0].opcs4.join(',')}`).then(resp => {
-              // there could be a resp.data.next here
-              selectedEnt.opcs4 = resp.data.results.map(i => `${i['code']} | ${i['desc']}`).join('\n')
-              if (callback) {
-                callback()
-              }
-            })
+            selectedEnt.opcs4 = []
+            let that = this
+            let getCodes = function (url) {
+              that.$http.get(url).then(resp => {
+                selectedEnt.opcs4.push(...resp.data.results)
+                if (resp.data.next) {
+                  getCodes(`/api/${resp.data.next.split('/api/')[1]}`)
+                } else if (callback) {
+                  selectedEnt.opcs4 = _.orderBy(selectedEnt.opcs4, ['code'], ['asc'])
+                  callback()
+                }
+              })
+            }
+            getCodes(`/api/opcs-codes/?id__in=${resp.data.results[0].opcs4.join(',')}`)
           } else {
-            selectedEnt.opcs4 = ''
+            selectedEnt.opcs4 = []
           }
         }
         if (callback) {

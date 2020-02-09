@@ -17,9 +17,10 @@
         </tr>
         <tr>
           <td>Context</td>
-          <td class="fit-content context">{{this.prevText}}
-            <span class="highlight">{{this.name}}</span>
-            {{this.nextText.slice(0, 15)}}
+          <td class="fit-content context">
+            <span class="context">{{this.prevText}}</span>
+            <span class="context highlight">{{this.name}}</span>
+            <span class="context">{{this.nextText.slice(0, 15)}}</span>
           </td>
         </tr>
         </tbody>
@@ -31,11 +32,11 @@
           <td>Name</td>
           <td class="cui-mappings">{{selectedCUI.name.split(':')[0] || 'n/a'}}</td>
         </tr>
-        <tr>
+        <tr v-if="selectedCUI.tui !== 'unk' ">
           <td>Term ID</td>
           <td>{{selectedCUI.tui || 'n/a'}}</td>
         </tr>
-        <tr>
+        <tr v-if="selectedCUI.semantic_type">
           <td>Semantic Type</td>
           <td>{{selectedCUI.semantic_type || 'n/a'}}</td>
         </tr>
@@ -43,13 +44,17 @@
           <td>Concept ID</td>
           <td >{{selectedCUI.cui || 'n/a'}}</td>
         </tr>
-        <tr v-if="selectedCUI.icd10">
+        <tr v-if="(selectedCUI.icd10 || []).length > 0">
           <td>ICD-10</td>
-          <td class="cui-mappings">{{selectedCUI.icd10}}</td>
+          <td class="fit-content">
+            <div v-for="code of selectedCUI.icd10" :key="code.code">{{`${code.code} | ${code.desc}`}}</div>
+          </td>
         </tr>
-        <tr v-if="selectedCUI.opcs4">
+        <tr v-if="(selectedCUI.opcs4 || []).length > 0">
           <td>OPCS-4</td>
-          <td class="cui-mappings">{{selectedCUI.opcs4}}</td>
+          <td class="fit-content">
+            <div v-for="code of selectedCUI.opcs4" :key="code.code">{{`${code.code} | ${code.desc}`}}</div>
+          </td>
         </tr>
         <tr>
           <td>Description</td>
@@ -98,16 +103,17 @@ export default {
       selectedCUI: null
     }
   },
-  created () {
-    window.setTimeout(function () {
-      // that.selStr = that.selection.selStr
-    }, 50)
-  },
   methods: {
     enrichCUI (concept) {
       this.selectedCUI = concept
       if (this.selectedCUI.icd10 || this.selectedCUI.opcs4) {
-        this.fetchConcept(this.selectedCUI)
+        this.fetchConcept(this.selectedCUI, () => {
+          if (concept.icdCode) {
+            this.selectedCUI.icd10 = this.selectedCUI.icd10.filter(i => i.id === concept.icdCode)
+          } else if (concept.opcsCode) {
+            this.selectedCUI.opcs4 = this.selectedCUI.opcs4.filter(i => i.id === concept.opcsCode)
+          }
+        })
       }
     },
     submit () {
@@ -118,6 +124,12 @@ export default {
         selection_occur_idx: this.selection.selectionOccurrenceIdx,
         cui: this.selectedCUI.cui
       }
+      if (this.selectedCUI.icd10 && this.selectedCUI.icd10.length === 1) {
+        payload.icd_code = this.selectedCUI.icd10[0].id
+      } else if (this.selectedCUI.opcs4 && this.selectedCUI.opcs4.length === 1) {
+        payload.opcs_code = this.selectedCUI.opcs4[0].id
+      }
+
       this.$http.post('/api/add-annotation/', payload).then(resp => {
         this.$emit('request:addAnnotationComplete', resp.data.id)
         this.selectedCUI = null
@@ -204,6 +216,7 @@ $button-height: 50px;
         display: inline-block;
         max-height: 150px;
         overflow-y: auto;
+        width: 100%;
       }
     }
   }

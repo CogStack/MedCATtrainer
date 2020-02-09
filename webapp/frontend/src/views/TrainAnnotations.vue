@@ -49,7 +49,7 @@
             <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" :altSearch="altSearch"
                              :project="project"
                              @select:altConcept="markAlternative" @select:alternative="toggleAltSearch"
-                             class="concept-summary"></concept-summary>
+                             @select:ICD="markICD" @select:OPCS="markOPCS" class="concept-summary"></concept-summary>
           </transition>
           <transition name="slide-left">
             <meta-annotation-task-container v-if="metaAnnotate" :taskIDs="(project || {}).tasks || []"
@@ -435,6 +435,14 @@ export default {
       })
       this.currentEnt.cui = item.cui
     },
+    markICD (code) {
+      this.currentEnt.icd_code = code.id
+      this.markCorrect()
+    },
+    markOPCS (code) {
+      this.currentEnt.opcs_code = code.id
+      this.markCorrect()
+    },
     addAnnotationComplete (addedAnnotationId) {
       this.conceptSynonymSelection = null
       if (addedAnnotationId) {
@@ -648,6 +656,7 @@ export default {
   margin: 0;
   left: 0;
   position: relative;
+  width: 10px;
 
   &:before {
     display: block;

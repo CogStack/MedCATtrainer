@@ -128,7 +128,8 @@ def _remove_overlap(project, document, start, end):
             log.debug(str(ann))
 
 
-def create_annotation(source_val, selection_occurrence_index, cui, user, project, document, cat):
+def create_annotation(source_val, selection_occurrence_index, cui, user, project, document, cat, icd_code=None,
+                      opcs_code=None):
     text = document.text
     id = None
 
@@ -167,6 +168,12 @@ def create_annotation(source_val, selection_occurrence_index, cui, user, project
         ann_ent.acc = 1
         ann_ent.validated = True
         ann_ent.manually_created = True
+
+        if icd_code:
+            ann_ent.icd_code = icd_code
+        if opcs_code:
+            ann_ent.opcs_code = opcs_code
+
         ann_ent.save()
         id = ann_ent.id
 

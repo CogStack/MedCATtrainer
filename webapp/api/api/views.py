@@ -298,6 +298,8 @@ def add_annotation(request):
     source_val = request.data['source_value']
     sel_occur_idx = int(request.data['selection_occur_idx'])
     cui = request.data['cui']
+    icd_code = request.data.get('icd_code')
+    opcs_code = request.data.get('opcs_code')
 
     log.debug("Annotation being added")
     log.debug(str(request.data))
@@ -308,6 +310,11 @@ def add_annotation(request):
     project = ProjectAnnotateEntities.objects.get(id=p_id)
     document = Document.objects.get(id=d_id)
 
+    if icd_code:
+        icd_code = ICDCode.objects.filter(id=icd_code).first()
+    if opcs_code:
+        opcs_code = OPCSCode.objects.filter(id=opcs_code).first()
+
     cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
                      CAT_MAP=CAT_MAP, project=project)
     id = create_annotation(source_val=source_val,
@@ -316,7 +323,9 @@ def add_annotation(request):
                            user=user,
                            project=project,
                            document=document,
-                           cat=cat)
+                           cat=cat,
+                           icd_code=icd_code,
+                           opcs_code=opcs_code)
 
     return Response({'message': 'Annotation added successfully', 'id': id})
 

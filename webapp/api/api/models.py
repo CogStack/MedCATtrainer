@@ -131,6 +131,11 @@ class AnnotatedEntity(models.Model):
     deleted = models.BooleanField(default=False)
     killed = models.BooleanField(default=False)
 
+    # Specific to the Clinical Coding use case - feels hacky being directly on this model.
+    # Should AnnotatedEntity be a polymorphic model?? and there be a specific ClinicalCodingAnnotatedEntity??
+    icd_code = models.ForeignKey('ICDCode', on_delete=models.SET_NULL, blank=True, null=True)
+    opcs_code = models.ForeignKey('OPCSCode', on_delete=models.SET_NULL, blank=True, null=True)
+
     last_modified = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -161,13 +166,8 @@ class ProjectAnnotateEntities(Project):
                                                related_name='concept_source')
     require_entity_validation = models.BooleanField(default=True)
     train_model_on_submit = models.BooleanField(default=True)
+    clinical_coding_project = models.BooleanField(default=False)
     tasks = models.ManyToManyField(MetaTask, blank=True, default=None)
-
-
-class ProjectMetaAnnotate(Project):
-    # Take documents and models from the annotate entities project
-    project_annotate_entities = models.ForeignKey('ProjectAnnotateEntities', on_delete=models.CASCADE)
-    tasks = models.ManyToManyField(MetaTask)
 
 
 class MetaAnnotation(models.Model):
