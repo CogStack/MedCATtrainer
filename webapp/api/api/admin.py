@@ -70,11 +70,9 @@ def download_without_text(modeladmin, request, queryset):
                 out_ann['manually_created'] = ann.manually_created
                 out_ann['acc'] = ann.acc
                 if ann.icd_code:
-                    icd_code = ICDCode.objects.filter(id=ann.icd_code)
-                    out_ann['icd_code'] = icd_code.code
+                    out_ann['icd_code'] = ann.icd_code.code
                 if ann.opcs_code:
-                    opcs_code = OPCSCode.objects.filter(id=ann.opcs_code)
-                    out_ann['opcs_code'] = opcs_code.code
+                    out_ann['opcs_code'] = ann.opcs_code.code
                 out_ann['meta_anns'] = []
                 # Get MetaAnnotations
                 meta_anns = MetaAnnotation.objects.filter(annotated_entity=ann)
@@ -142,11 +140,9 @@ def download(modeladmin, request, queryset):
                 out_ann['manually_created'] = ann.manually_created
                 out_ann['acc'] = ann.acc
                 if ann.icd_code:
-                    icd_code = ICDCode.objects.filter(id=ann.icd_code)
-                    out_ann['icd_code'] = icd_code.code
+                    out_ann['icd_code'] = ann.icd_code.code
                 if ann.opcs_code:
-                    opcs_code = OPCSCode.objects.filter(id=ann.opcs_code)
-                    out_ann['opcs_code'] = opcs_code.code
+                    out_ann['opcs_code'] = ann.opcs_code.code
                 out_ann['meta_anns'] = []
                 # Get MetaAnnotations
                 meta_anns = MetaAnnotation.objects.filter(annotated_entity=ann)
