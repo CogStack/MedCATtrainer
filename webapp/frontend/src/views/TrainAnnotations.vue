@@ -106,7 +106,7 @@
           </tr>
           <tr>
             <td></td>
-            <td>1 Key</td>
+            <td>1 Key</td>N
             <td>Correct</td>
           </tr>
           <tr>
@@ -145,9 +145,10 @@
     <modal v-if="docToSubmit" :closable="true" @modal:close="docToSubmit=null" class="summary-modal">
       <h3 slot="header">Submit Document</h3>
       <div slot="body">
-        <div class="summary-title">Review identified concepts and confirm document submission:</div>
-        <annotation-summary :annos="ents" :currentDoc="currentDoc" :taskIDs="(project || {}).tasks || []"
+        <annotation-summary v-if="!project.clinical_coding_project" :annos="ents" :currentDoc="currentDoc" :taskIDs="(project || {}).tasks || []"
                             @select:AnnoSummaryConcept="selectEntityFromSummary"></annotation-summary>
+        <coding-annotation-summary v-if="project.clinical_coding_project" :annos="ents" :currentDoc="currentDoc" :taskIDs="(project || {}).tasks || []"
+                                   @select:AnnoSummaryConcept="selectEntityFromSummary"></coding-annotation-summary>
       </div>
       <div slot="footer">
         <button class="btn btn-primary" :disabled="submitConfirmedLoading" @click="submitConfirmed()">
@@ -162,9 +163,12 @@
     <modal v-if="summaryModal" :closable="true" @modal:close="summaryModal = false" class="summary-modal">
       <h3 slot="header">Annotation Summary</h3>
       <div slot="body">
-        <div class="summary-title">Review identified concepts:</div>
-        <annotation-summary :annos="ents" :currentDoc="currentDoc" :taskIDs="(project || {}).tasks || []"
+        <annotation-summary v-if="!project.clinical_coding_project" :annos="ents" :currentDoc="currentDoc"
+                            :taskIDs="(project || {}).tasks || []"
                             @select:AnnoSummaryConcept="selectEntityFromSummary"></annotation-summary>
+        <coding-annotation-summary v-if="project.clinical_coding_project" :annos="ents"
+                                   :currentDoc="currentDoc" :taskIDs="(project || {}).tasks || []"
+                                   @select:AnnoSummaryConcept="selectEntityFromSummary"></coding-annotation-summary>
       </div>
     </modal>
   </div>
@@ -182,6 +186,7 @@ import TaskBar from '@/components/anns/TaskBar.vue'
 import AddSynonym from '@/components/anns/AddSynonym.vue'
 import MetaAnnotationTaskContainer from '@/components/usecases/MetaAnnotationTaskContainer.vue'
 import AnnotationSummary from '@/components/common/AnnotationSummary.vue'
+import CodingAnnotationSummary from '@/components/cc/CodingAnnotationSummary'
 import { Multipane, MultipaneResizer } from 'vue-multipane'
 
 const TASK_NAME = 'Concept Annotation'
@@ -204,6 +209,7 @@ export default {
     AddSynonym,
     MetaAnnotationTaskContainer,
     AnnotationSummary,
+    CodingAnnotationSummary,
     Multipane,
     MultipaneResizer
   },
@@ -367,6 +373,7 @@ export default {
     },
     selectEntityFromSummary (entIdx) {
       this.docToSubmit = null
+      this.summaryModal = false
       this.selectEntity(entIdx)
     },
     selectEntity (entIdx) {
@@ -437,11 +444,19 @@ export default {
     },
     markICD (code) {
       this.currentEnt.icd_code = code.id
-      this.markCorrect()
+      if (this.currentEnt.alternative) {
+        this.markEntity(false)
+      } else {
+        this.markCorrect()
+      }
     },
     markOPCS (code) {
       this.currentEnt.opcs_code = code.id
-      this.markCorrect()
+      if (this.currentEnt.alternative) {
+        this.markEntity(false)
+      } else {
+        this.markCorrect()
+      }
     },
     addAnnotationComplete (addedAnnotationId) {
       this.conceptSynonymSelection = null

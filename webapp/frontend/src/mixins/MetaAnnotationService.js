@@ -5,7 +5,10 @@ export default {
   name: 'MetaAnnotationService',
   data () {
     return {
-      tasks: Array
+      tasks: {
+        type: Array,
+        default: null
+      }
     }
   },
   methods: {

@@ -1,6 +1,6 @@
 <template>
   <div class="summary">
-    <table class="table table-condensed   table-hover">
+    <table class="table table-condensed table-hover">
       <thead>
         <th>Annotated Text</th>
         <th>Concept ID</th>
@@ -24,7 +24,6 @@
             <div v-for="code of concept.icd10" :key="code.code">{{`${code.code} | ${code.desc}`}}</div>
           </td>
           <td v-if="showInfoCol('opcs4')" class="cui-info">
-            <div v-for="code of concept.opcs4" :key="code.code">{{`${code.code} | ${code.desc}`}}</div>
           </td>
           <td v-for="task in metaAnnos[concept.id]" :key="task.id">
             <span>{{taskMaps[task.id][task.value]}}</span>
@@ -36,82 +35,16 @@
 </template>
 
 <script>
-import _ from 'lodash'
-import MetaAnnotationService from '@/mixins/MetaAnnotationService.js'
-import ConceptDetailService from '@/mixins/ConceptDetailService.js'
+import SummaryMixin from '@/mixins/SummaryMixin'
 
 export default {
   name: 'AnnotationSummary',
+  mixins: [SummaryMixin],
   props: {
-    annos: Array,
-    currentDoc: Object,
-    taskIDs: Array
-  },
-  mixins: [ConceptDetailService, MetaAnnotationService],
-  data () {
-    return {
-      metaAnnos: Object,
-      taskMaps: Object
-    }
+    annos: Array
   },
   created () {
-    this.enrichSummary()
-  },
-
-  methods: {
-    enrichSummary () {
-      const that = this
-
-      this.annos.forEach(anno => {
-        if (!anno.pretty_name) {
-          this.fetchDetail(anno)
-        }
-      })
-      if (this.taskIDs.length > 0) {
-        this.fetchMetaTasks(this.taskIDs, () => {
-          that.taskMaps = {}
-          that.tasks.forEach(task => {
-            that.taskMaps[task.id] = {}
-            task.options.forEach(op => {
-              that.taskMaps[task.id][op.id] = op.name
-            })
-          })
-          that.enrichMetaAnnos()
-        })
-      }
-    },
-    showInfoCol (info) {
-      return _.some(this.annos, a => a[info])
-    },
-    enrichMetaAnnos () {
-      const that = this
-      this.metaAnnos = {}
-      const useDefault = false
-      for (let ent of this.annos) {
-        this.fetchMetaAnnotations(ent, tasks => {
-          that.$set(that.metaAnnos, ent.id, tasks)
-        }, useDefault)
-      }
-    },
-    selectConcept (concept) {
-      this.$emit('select:AnnoSummaryConcept', this.annos.indexOf(concept))
-    },
-    leftContext (concept) {
-      return this.currentDoc.text.slice(_.max([0, concept.start_ind - 20]), concept.start_ind)
-    },
-    rightContext (concept) {
-      const docText = this.currentDoc.text
-      return this.currentDoc.text.slice(concept.end_ind, _.min([docText.length, concept.end_ind + 20]))
-    },
-    highlightClass (concept) {
-      return {
-        'highlight-task-default': !(concept.correct || concept.deleted || concept.killed || concept.alternative),
-        'highlight-task-0': concept.correct,
-        'highlight-task-1': concept.deleted,
-        'highlight-task-2': concept.killed,
-        'highlight-task-3': concept.alternative
-      }
-    }
+    this.enrichSummary(this.annos)
   }
 }
 </script>
@@ -121,6 +54,10 @@ export default {
 .summary {
   height: 550px;
   overflow-y: auto;
+
+  table td {
+    cursor: pointer;
+  }
 }
 
 .cui-info {
