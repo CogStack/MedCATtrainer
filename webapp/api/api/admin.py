@@ -6,6 +6,8 @@ import json
 from background_task import background
 
 from django.contrib import admin
+from rest_framework.exceptions import PermissionDenied
+
 from .models import *
 from .forms import *
 
@@ -25,13 +27,12 @@ def reset_project(modeladmin, request, queryset):
     if not request.user.is_staff:
         raise PermissionDenied
 
-    project = queryset[0]
+    for project in queryset:
+        # Remove all annotations and cascade to meta anns
+        AnnotatedEntity.objects.filter(project=project).delete()
 
-    # Remove all annotations and cascade to metanns
-    anns = AnnotatedEntity.objects.filter(project=project).delete()
-
-    # Set all validated documents to none
-    project.validated_documents.clear()
+        # Set all validated documents to none
+        project.validated_documents.clear()
 
 
 def download_without_text(modeladmin, request, queryset):

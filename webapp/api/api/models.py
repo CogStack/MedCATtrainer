@@ -130,13 +130,13 @@ class AnnotatedEntity(models.Model):
     manually_created = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
     killed = models.BooleanField(default=False)
+    create_time = models.DateTimeField(auto_now_add=True)
+    last_modified = models.DateTimeField(auto_now=True)
 
     # Specific to the Clinical Coding use case - feels hacky being directly on this model.
     # Should AnnotatedEntity be a polymorphic model?? and there be a specific ClinicalCodingAnnotatedEntity??
     icd_code = models.ForeignKey('ICDCode', on_delete=models.SET_NULL, blank=True, null=True)
     opcs_code = models.ForeignKey('OPCSCode', on_delete=models.SET_NULL, blank=True, null=True)
-
-    last_modified = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return str(self.entity)

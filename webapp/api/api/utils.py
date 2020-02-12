@@ -11,16 +11,17 @@ log = basic_logger("api.utils")
 def remove_annotations(document, project, partial=False):
     try:
         if partial:
-            # Remvoves only the ones that are not validated
+            # Removes only the ones that are not validated
             AnnotatedEntity.objects.filter(project=project,
                                            document=document,
                                            validated=False).delete()
+            log.debug(f"Unvalidated Annotations removed for:{document.id}")
         else:
             # Removes everything
             AnnotatedEntity.objects.filter(project=project, document=document).delete()
-        return "Annotations removed"
+            log.debug(f"All Annotations removed for:{document.id}")
     except Exception as e:
-        return "Something went wrong: " + str(e)
+        log.debug(f"Something went wrong: {e}")
 
 
 def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):

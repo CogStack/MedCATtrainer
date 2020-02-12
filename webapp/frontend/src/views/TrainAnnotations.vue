@@ -314,14 +314,14 @@ export default {
       this.currentEnt = null
       this.prepareDoc()
     },
-    prepareDoc (params) {
+    prepareDoc () {
       this.loadingDoc = true
       let payload = {
         project_id: this.project.id,
         document_ids: [this.currentDoc.id]
       }
-      if (params) {
-        payload = Object.assign(payload, params)
+      if (this.validatedDocuments.indexOf(this.currentDoc.id) === -1) {
+        payload['update'] = 1
       }
       this.$http.post('/api/prepare-documents/', payload).then(resp => {
         // assuming a 200 is fine here.
