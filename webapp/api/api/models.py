@@ -32,6 +32,15 @@ class OPCSCode(models.Model):
         return f'{self.code} | {self.desc}'
 
 
+class ConceptDB(models.Model):
+    name = models.CharField(max_length=100, default='', blank=True)
+    cdb_file = models.FileField()
+    use_for_training = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Concept(models.Model):
     pretty_name = models.CharField(max_length=300)
     cui = models.CharField(max_length=100, unique=True)
@@ -46,15 +55,6 @@ class Concept(models.Model):
 
     def __str__(self):
         return str(self.pretty_name)
-
-
-class ConceptDB(models.Model):
-    name = models.CharField(max_length=100, default='', blank=True)
-    cdb_file = models.FileField()
-    use_for_training = models.BooleanField(default=True)
-
-    def __str__(self):
-        return self.name
 
 
 class Vocabulary(models.Model):

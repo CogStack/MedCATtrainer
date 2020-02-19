@@ -1,3 +1,4 @@
+import copy
 from datetime import datetime
 
 from django.http import HttpResponse
@@ -170,9 +171,32 @@ def download(modeladmin, request, queryset):
     return response
 
 
+def clone_projects(modeladmin, request, queryset):
+    if not request.user.is_staff:
+        raise PermissionDenied
+
+    projects = queryset
+    for project in projects:
+        project_copy = copy.copy(project)
+        project_copy.id = None
+        project_copy.pk = None
+        project_copy.name = f'{project.name} (Clone)'
+        project_copy.save()
+
+        # Add M2M fields
+        for m in project.members.all():
+            project_copy.members.add(m)
+        for c in project.cdb_search_filter.all():
+            project_copy.cdb_search_filter.add(c)
+        for t in project.tasks.all():
+            project_copy.tasks.add(t)
+
+        project_copy.save()
+
+
 class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
     model = ProjectAnnotateEntities
-    actions = [download, download_without_text, reset_project]
+    actions = [download, download_without_text, reset_project, clone_projects]
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "concept_db":
@@ -229,7 +253,6 @@ def _import_concepts(id):
                 set_opcs_info_objects(cdb, concept, cui)
 
 
-
 def import_concepts(modeladmin, request, queryset):
     for concept_db in queryset:
         _import_concepts(concept_db.id)
@@ -255,6 +278,7 @@ def remove_all_concepts(modeladmin, request, queryset):
 
 class ConceptAdmin(admin.ModelAdmin):
     model = Concept
+    list_filter = ('cdb',)
     actions = [remove_all_concepts]
 
 
