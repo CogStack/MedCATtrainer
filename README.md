@@ -15,12 +15,12 @@ MedCATTrainer was presented at EMNLP/IJCNLP 2019 :tada:
 
 `$ cd MedCATTrainer`
 
-`$ docker-compose build`
+`$ docker-compose -f docker-compose-dev.yml build`
 
 If the build fails with an error code 137, the virtual machine running the docker 
 daemon does not have enough memory. Adjust in docker daemon settings CLI or associated docker GUI.
 
-`$ docker-compose up`
+`$ docker-compose -f docker-compose-dev.yml up`
 
 3\. MedCATTrainer is now running:
 - The app is at http://localhost:8001/
