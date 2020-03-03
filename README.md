@@ -40,8 +40,8 @@ a given project) can be added via the django admin UI.**
 `$ docker ps`
 
 > CONTAINER ID        IMAGE                      COMMAND                  CREATED             STATUS              PORTS                            NAMES
-> 62b9a2380f30        cattrainer_nginx           "nginx -g 'daemon of…"   2 days ago          Up 2 days           80/tcp, 0.0.0.0:8001->8000/tcp   cattrainer_nginx_1
-> 93168cc98c15        cattrainer_medcattrainer   "/home/run.sh"           2 days ago          Up 2 days           8000/tcp                         **cattrainer_medcattrainer_1**
+> 62b9a2380f30        medcattrainer_nginx           "nginx -g 'daemon of…"   2 days ago          Up 2 days           80/tcp, 0.0.0.0:8001->8000/tcp   medcattrainer_nginx_1
+> 93168cc98c15        medcattrainer_medcattrainer   "/home/run.sh"           2 days ago          Up 2 days           8000/tcp                         **medcattrainer_medcattrainer_1**
 
 &nbsp;&nbsp;2\. Login to the container running django. (The 2nd entry of the output of the ps, as indicated in **bold**).
 
