@@ -96,12 +96,14 @@ list. For example: T184, T047.
 7\. Example Concept and Vocab databses are freely available on MedCAT [github](https://github.com/CogStack/MedCAT).
 Note. UMLS is not freely available, so only these smaller trained concept / vocab databases are made available currently.
 
-
 8\. Tasks allow for the creation of meta-annotations and their associated set of values an annotator can use.
 An example 'meta-annotation' could be 'Temporality'. Values could then be 'Past', 'Present', 'Future'.
 
-
 A more comprehensive guide for setting up a project, will be made available soon.
+
+### Annotate Your Dataset
+
+Navigate to http://localhost:8001/ .login with your username and password. **Please NOTE Firefox and IE are currently not supported**. Please use Chrome or Safari.
 
 
 ### Annotation Guidelines
@@ -109,7 +111,8 @@ A more comprehensive guide for setting up a project, will be made available soon
 Annotation guidelines can assit guiding annotators when annotatinng texts for a MedCATTrainer project.
  
 Once an initial guideline has been defined, a pilot project in MedCATTrainer can be used to further 
-refine the guideline also.
+refine the guideline.
+
 
 
 
