@@ -62,8 +62,9 @@ def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
             concept.synonyms = ",".join(cdb.cui2original_names.get(label, []))
             concept.cdb = project.concept_db
             concept.save()
-            set_icd_info_objects(cdb, concept, label)
-            set_opcs_info_objects(cdb, concept, label)
+            if project.clinical_coding_project:
+                set_icd_info_objects(cdb, concept, label)
+                set_opcs_info_objects(cdb, concept, label)
 
         cnt = Entity.objects.filter(label=label).count()
         if cnt == 0:
