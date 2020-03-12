@@ -1,4 +1,5 @@
 import re
+import traceback
 
 import pandas as pd
 from django.core.files import File
@@ -243,34 +244,38 @@ def prepare_documents(request):
     if project.cuis is not None and project.cuis:
         cuis = [str(cui).strip() for cui in project.cuis.split(",")]
 
-    for d_id in d_ids:
-        document = Document.objects.get(id=d_id)
-        if force:
-            # Remove all annotations if creation is forced
-            remove_annotations(document, project, partial=False)
-        elif update:
-            # Remove annotations that are not verified if creation is update
-            remove_annotations(document, project, partial=True)
+    try:
+        for d_id in d_ids:
+            document = Document.objects.get(id=d_id)
+            if force:
+                # Remove all annotations if creation is forced
+                remove_annotations(document, project, partial=False)
+            elif update:
+                # Remove annotations that are not verified if creation is update
+                remove_annotations(document, project, partial=True)
 
-        # Get annotated entities
-        anns = AnnotatedEntity.objects.filter(document=document).filter(project=project)
+            # Get annotated entities
+            anns = AnnotatedEntity.objects.filter(document=document).filter(project=project)
 
-        is_validated = document in project.validated_documents.all()
+            is_validated = document in project.validated_documents.all()
 
-        # If the document is not already annotated, annotate it
-        if (len(anns) == 0 and not is_validated) or update:
-            # Based on the project id get the right medcat
-            cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
-                             CAT_MAP=CAT_MAP, project=project)
+            # If the document is not already annotated, annotate it
+            if (len(anns) == 0 and not is_validated) or update:
+                # Based on the project id get the right medcat
+                cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
+                                 CAT_MAP=CAT_MAP, project=project)
 
-            spacy_doc = cat(document.text)
-            add_annotations(spacy_doc=spacy_doc,
-                            user=user,
-                            project=project,
-                            document=document,
-                            cdb=cat.cdb,
-                            tuis=tuis,
-                            cuis=cuis)
+                spacy_doc = cat(document.text)
+                add_annotations(spacy_doc=spacy_doc,
+                                user=user,
+                                project=project,
+                                document=document,
+                                cdb=cat.cdb,
+                                tuis=tuis,
+                                cuis=cuis)
+    except Exception as e:
+        stack = traceback.format_exc()
+        return Response({'message': 'Internal Server Error', 'stacktrace': stack}, status=500)
     return Response({'message': 'Documents prepared successfully'})
 
 

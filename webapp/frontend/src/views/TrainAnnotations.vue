@@ -132,10 +132,12 @@
       </div>
     </modal>
 
-    <modal v-if="errorModal" @modal:close="errorModal = false">
-      <h3 slot="header" class="text-danger">Failed To Load Project</h3>
+    <modal v-if="errors.modal" @modal:close="errors.modal = false">
+      <h3 slot="header" class="text-danger">Failure Loading Project Data</h3>
       <div slot="body">
-        <p>No project found for project ID: {{$route.params.projectId}}</p>
+        <p>{{errors.message}}</p>
+        <p v-if="errors.stacktrace">Full Error:</p>
+        <p v-if="errors.stacktrace" class="error-stacktrace">{{errors.stacktrace}}</p>
       </div>
       <div slot="footer">
         <a href="/"><button class="btn btn-primary">CAT Home</button></a>
@@ -237,7 +239,11 @@ export default {
       currentEnt: null,
       loadingDoc: false,
       helpModal: false,
-      errorModal: false,
+      errors: {
+        modal: false,
+        message: '',
+        stacktrace: ''
+      },
       summaryModal: false,
       docToSubmit: null,
       submitConfirmedLoading: false,
@@ -255,7 +261,10 @@ export default {
   methods: {
     fetchData () {
       this.$http.get(`/api/project-annotate-entities/?id=${this.projectId}`).then(resp => {
-        if (resp.data.count === 0) { this.errorModal = true } else {
+        if (resp.data.count === 0) {
+          this.errors.modal = true
+          this.errors.message = `No project found for project ID: ${this.$route.params.projectId}`
+        } else {
           this.project = resp.data.results[0]
           this.validatedDocuments = this.project.validated_documents
           this.fetchDocuments()
@@ -327,7 +336,11 @@ export default {
         // assuming a 200 is fine here.
         this.fetchEntities()
       }).catch(err => {
-        console.error(err)
+        this.errors.modal = true
+        if (err.response) {
+          this.errors.message = err.response.data.message || 'Internal Server Error.'
+          this.errors.stacktrace = err.response.data.stacktrace
+        }
       })
     },
     fetchEntities (selectedEntId) {
@@ -697,6 +710,10 @@ export default {
 .summary-title {
   padding-bottom: 10px;
   font-size: 17px;
+}
+
+.error-stacktrace {
+  white-space: pre-wrap;
 }
 
 </style>
