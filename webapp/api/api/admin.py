@@ -1,7 +1,8 @@
 import copy
+import logging
 from datetime import datetime
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from io import StringIO
 import json
 from background_task import background
@@ -16,7 +17,6 @@ from .forms import *
 # Register your models here.
 from .utils import set_icd_info_objects, set_opcs_info_objects
 
-admin.site.register(Dataset)
 admin.site.register(Entity)
 admin.site.register(MetaTaskValue)
 admin.site.register(MetaTask)
@@ -192,6 +192,21 @@ def clone_projects(modeladmin, request, queryset):
             project_copy.tasks.add(t)
 
         project_copy.save()
+
+
+class ReportErrorModelAdminMixin:
+    """Mixin to catch all errors in the Django Admin and map them to user-visible errors."""
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        try:
+            return super().changeform_view(request, object_id, form_url, extra_context)
+        except Exception as e:
+            self.message_user(request, f'Error with previous action: {e}', level=logging.ERROR)
+            return HttpResponseRedirect(request.path)
+
+
+class DatasetAdmin(ReportErrorModelAdminMixin, admin.ModelAdmin):
+    model = Dataset
+admin.site.register(Dataset, DatasetAdmin)
 
 
 class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):

@@ -11,18 +11,18 @@ def text_from_csv(dataset: Dataset):
     elif '.xlsx' in dataset.original_file.path:
         df = pd.read_excel(dataset.original_file.path)
 
+    df.columns = [c.lower() for c in df.columns]
     if df is not None:
         if 'text' not in df.columns:
-            # TODO: Fix me
-            raise Exception("Please make sure that the csv has a 'text' column")
+            raise Exception("Please make sure the uploaded file has a column with header 'text'")
 
-        for row in df.iterrows():
+        for i, row in enumerate(df.iterrows()):
             row = row[1]
             text = row['text']
             if 'name' in df.columns:
                 name = row['name']
             else:
-                name = "NO NAME"
+                name = f"Doc {i}"
 
             document = Document()
             document.name = name
@@ -30,7 +30,7 @@ def text_from_csv(dataset: Dataset):
             document.dataset = dataset
             document.save()
     else:
-        raise Exception("Please make sure the file is in the right format")
+        raise Exception("Please make sure the file is either a .csv or .xlsx format")
 
 
 # TODO: convert into a bg process
