@@ -19,6 +19,9 @@
         <button class="btn btn-default" @click="helpModal = true">
           <font-awesome-icon icon="question-circle" class="help-icon"></font-awesome-icon>
         </button>
+        <button class="btn btn-default" @click="resetModal = true">
+          <font-awesome-icon icon="undo" class="undo-icon"></font-awesome-icon>
+        </button>
       </div>
     </div>
 
@@ -173,6 +176,16 @@
                                    @select:AnnoSummaryConcept="selectEntityFromSummary"></coding-annotation-summary>
       </div>
     </modal>
+    <modal v-if="resetModal" :closable="true" @modal:close="resetModal = false" class="reset-modal">
+      <h3 slot="header§">Reset Document</h3>
+      <div slot="body">
+        <p class="text-center">Confirm reset of document annotations</p>
+        <p class="text-center">This will clear all current annotations in this document</p>
+      </div>
+      <div slot="footer">
+        <button class="btn btn-primary" @click="confirmReset">Confirm</button>
+      </div>
+    </modal>
   </div>
 </template>
 
@@ -239,6 +252,7 @@ export default {
       currentEnt: null,
       loadingDoc: false,
       helpModal: false,
+      resetModal: false,
       errors: {
         modal: false,
         message: '',
@@ -548,6 +562,26 @@ export default {
     },
     confirmSubmitListenerAdd () {
       window.addEventListener('keyup', this.keyup)
+    },
+    confirmReset () {
+      this.loadingDoc = true
+      const payload = {
+        project_id: this.project.id,
+        document_ids: [this.currentDoc.id],
+        force: true
+      }
+      this.$http.post('/api/prepare-documents/', payload).then(resp => {
+        this.fetchEntities()
+        this.resetModal = false
+        this.loadingDoc = false
+      }).catch(err => {
+        this.resetModal = false
+        this.errors.modal = true
+        if (err.response) {
+          this.errors.message = err.response.data.message || 'Internal Server Error.'
+          this.errors.stacktrace = err.response.data.stacktrace
+        }
+      })
     }
   },
   beforeDestroy () {
@@ -576,7 +610,7 @@ export default {
   color: $text-highlight;
 }
 
-.help-icon, .summary-icon {
+.help-icon, .summary-icon, .undo-icon {
   color: $text;
   font-size: 22px;
 }
@@ -653,7 +687,7 @@ export default {
 }
 
 .sidebar-container {
-  height: 100%;
+  height: calc(100% - 250px - 41px);
   display: flex   ;
   flex-direction: column;
   padding: 5px;
