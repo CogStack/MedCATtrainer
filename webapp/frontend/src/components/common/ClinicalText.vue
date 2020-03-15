@@ -203,7 +203,6 @@ export default {
 }
 
 .highlight-task-selected {
-  font-size: 20px;
   font-weight: bold;
 }
 </style>
