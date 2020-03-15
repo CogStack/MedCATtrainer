@@ -7,7 +7,7 @@ import numpy as np
 def text_from_csv(dataset: Dataset):
     df = None
     if '.csv' in dataset.original_file.path:
-        df = pd.read_csv(dataset.original_file.path, escapechar='\\')
+        df = pd.read_csv(dataset.original_file.path)
     elif '.xlsx' in dataset.original_file.path:
         df = pd.read_excel(dataset.original_file.path)
 

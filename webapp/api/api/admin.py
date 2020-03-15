@@ -220,7 +220,8 @@ class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "cdb_search_filter":
-            kwargs["queryset"] = ConceptDB.objects.filter(use_for_training=False)
+            #kwargs["queryset"] = ConceptDB.objects.filter(use_for_training=False)
+            kwargs["queryset"] = ConceptDB.objects.all()
 
         return super(ProjectAnnotateEntitiesAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
 admin.site.register(ProjectAnnotateEntities, ProjectAnnotateEntitiesAdmin)
