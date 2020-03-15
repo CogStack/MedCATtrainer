@@ -109,10 +109,13 @@ def get_create_cdb_infos(cdb, concept, cui, cui_info_prop, code_prop, desc_prop,
     for code in codes_to_create:
         new_code = model_clazz()
         new_code.code = code
-        new_code.desc = [c[desc_prop] for c in cdb.cui2info[cui][cui_info_prop]
-                         if c[code_prop] == code][0]
-        new_code.cdb = concept.cdb
-        new_code.save()
+        descs = [c[desc_prop] for c in cdb.cui2info[cui][cui_info_prop]
+                 if c[code_prop] == code]
+        if len(descs) > 0:
+            new_code.desc = [c[desc_prop] for c in cdb.cui2info[cui][cui_info_prop]
+                             if c[code_prop] == code][0]
+            new_code.cdb = concept.cdb
+            new_code.save()
     return model_clazz.objects.filter(code__in=codes)
 
 

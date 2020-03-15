@@ -197,13 +197,12 @@ export default {
 
 .highlight-task-default {
   background: lightgrey;
-  border: 3px solid lightgrey;
-  border-radius: 8px;
+  border: 1px solid lightgrey;
+  border-radius: 3px;
   cursor: pointer;
 }
 
 .highlight-task-selected {
-  font-size: 20px;
   font-weight: bold;
 }
 </style>
