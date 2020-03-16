@@ -167,6 +167,7 @@ class ProjectAnnotateEntities(Project):
     require_entity_validation = models.BooleanField(default=True)
     train_model_on_submit = models.BooleanField(default=True)
     clinical_coding_project = models.BooleanField(default=False)
+    add_new_entities = models.BooleanField(default=False)
     tasks = models.ManyToManyField(MetaTask, blank=True, default=None)
 
 

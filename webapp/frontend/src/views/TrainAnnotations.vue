@@ -47,7 +47,7 @@
       </div>
       <multipane-resizer></multipane-resizer>
       <div :style="{ flexGrow: 1, width: '300px', maxWidth: '1000px' }">
-        <div class="sidebar-container">
+        <div :class="{'full-sidebar-container': conceptSynonymSelection, 'sidebar-container': !conceptSynonymSelection}">
           <transition name="slide-left">
             <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" :altSearch="altSearch"
                              :project="project"
@@ -60,9 +60,9 @@
             </meta-annotation-task-container>
           </transition>
           <transition name="slide-left">
-            <add-synonym v-if="conceptSynonymSelection" :selection="conceptSynonymSelection"
+            <add-annotation v-if="conceptSynonymSelection" :selection="conceptSynonymSelection"
                          :project="project" :documentId="currentDoc.id"
-                         @request:addAnnotationComplete="addAnnotationComplete" class="add-synonym"></add-synonym>
+                         @request:addAnnotationComplete="addAnnotationComplete" class="add-annotation"></add-annotation>
           </transition>
         </div>
       </div>
@@ -198,7 +198,7 @@ import Modal from '@/components/common/Modal.vue'
 import ClinicalText from '@/components/common/ClinicalText.vue'
 import NavBar from '@/components/common/NavBar.vue'
 import TaskBar from '@/components/anns/TaskBar.vue'
-import AddSynonym from '@/components/anns/AddSynonym.vue'
+import AddAnnotation from '@/components/anns/AddAnnotation.vue'
 import MetaAnnotationTaskContainer from '@/components/usecases/MetaAnnotationTaskContainer.vue'
 import AnnotationSummary from '@/components/common/AnnotationSummary.vue'
 import CodingAnnotationSummary from '@/components/cc/CodingAnnotationSummary'
@@ -221,7 +221,7 @@ export default {
     ClinicalText,
     NavBar,
     TaskBar,
-    AddSynonym,
+    AddAnnotation,
     MetaAnnotationTaskContainer,
     AnnotationSummary,
     CodingAnnotationSummary,
@@ -692,7 +692,7 @@ export default {
   flex-direction: column;
   padding: 5px;
 
-  .add-synonym {
+  .add-annotation {
     width: 100%;
     flex: 1 1 auto;
   }

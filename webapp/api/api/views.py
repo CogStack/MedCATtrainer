@@ -303,12 +303,12 @@ def add_annotation(request):
     source_val = request.data['source_value']
     sel_occur_idx = int(request.data['selection_occur_idx'])
     cui = request.data['cui']
+
     icd_code = request.data.get('icd_code')
     opcs_code = request.data.get('opcs_code')
 
     log.debug("Annotation being added")
     log.debug(str(request.data))
-    log.debug("Done")
 
     # Get project and the right version of cat
     user = request.user
@@ -331,8 +331,42 @@ def add_annotation(request):
                            cat=cat,
                            icd_code=icd_code,
                            opcs_code=opcs_code)
-
+    log.debug('Annotation added.')
     return Response({'message': 'Annotation added successfully', 'id': id})
+
+
+@api_view(http_method_names=['POST'])
+def add_concept(request):
+    p_id = request.data['project_id']
+    d_id = request.data['document_id']
+    source_val = request.data['source_value']
+    sel_occur_idx = int(request.data['selection_occur_idx'])
+    name = request.data['name']
+    cui = request.data['cui']
+    context = request.data['context']
+    # TODO These aren't used, but no API in current MedCAT add_name func
+    desc = request.data['desc']
+    tui = request.data['tui']
+    s_type = request.data['type']
+
+    user = request.user
+    project = ProjectAnnotateEntities.objects.get(id=p_id)
+    document = Document.objects.get(id=d_id)
+    cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
+                     CAT_MAP=CAT_MAP, project=project)
+    if cui in cat.cdb.cui2names:
+        err_msg = f'Cannot add a concept "{name}" with cui:{cui}. CUI already linked to {cat.cdb.cui2names[cui]}'
+        log.error(err_msg)
+        return Response({'err': err_msg}, 400)
+    cat.add_name(cui, name, context, is_pref_name=True)
+    id = create_annotation(source_val=source_val,
+                           selection_occurrence_index=sel_occur_idx,
+                           cui=cui,
+                           user=user,
+                           project=project,
+                           document=document,
+                           cat=cat)
+    return Response({'message': 'Concept and Annotation added successfully', 'id': id})
 
 
 @api_view(http_method_names=['POST'])

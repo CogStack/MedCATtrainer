@@ -49,6 +49,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('api/add-annotation/', api.views.add_annotation),
+    path('api/add-concept/', api.views.add_concept),
     path('api/submit-document/', api.views.submit_document),
     path('api/save-models/', api.views.save_models),
     path('api/get-create-entity/', api.views.get_create_entity),

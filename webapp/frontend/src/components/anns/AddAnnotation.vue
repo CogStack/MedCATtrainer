@@ -1,6 +1,11 @@
 <template>
   <div class="sidebar">
-    <div class="title">Add Annotation</div>
+    <div class="title">
+      Add Annotation
+      <button @click="cancel()" class="btn btn-default close-window" @mousedown.stop>
+        <font-awesome-icon icon="times"></font-awesome-icon>
+      </button>
+    </div>
     <div class="main-panel">
       <table class="add-synonym-table">
         <tbody>
@@ -25,7 +30,6 @@
         </tr>
         </tbody>
       </table>
-      <div class="spacer" v-if="!selectedCUI"></div>
       <table class="add-synonym-table" v-if="selectedCUI">
         <tbody>
         <tr>
@@ -67,7 +71,7 @@
         </tbody>
       </table>
     </div>
-    <div class="action-buttons">
+    <div v-if="selectedCUI !== null" class="action-buttons">
       <button @click="submit()" class="btn task-btn-0">
         <font-awesome-icon icon="plus"></font-awesome-icon>
         Add Synonym
@@ -77,16 +81,22 @@
         Cancel
       </button>
     </div>
+    <add-new-concept :selection="selection" :project="project" :documentId="documentId"
+                     @select:newConcept="newConceptSelected"
+                     @request:addConceptComplete="newConceptAddedComplete"
+    ></add-new-concept>
   </div>
 </template>
 
 <script>
 import ConceptDetailService from '@/mixins/ConceptDetailService.js'
 import ConceptPicker from '@/components/common/ConceptPicker'
+import AddNewConcept from '@/components/common/AddNewConcept'
 
 export default {
-  name: 'AddSynoym',
+  name: 'AddAnnotation',
   components: {
+    AddNewConcept,
     ConceptPicker
   },
   mixins: [ConceptDetailService],
@@ -142,6 +152,12 @@ export default {
       if (e.keyCode === 27) {
         this.cancel()
       }
+    },
+    newConceptSelected () {
+      this.selectedCUI = null
+    },
+    newConceptAddedComplete (annoId) {
+      this.$emit('request:addAnnotationComplete', annoId)
     }
   },
   mounted () {
@@ -162,13 +178,8 @@ $button-height: 50px;
   height: 100%;
 }
 
-.spacer {
-  width: 100%;
-  height: 350px;
-}
-
 .main-panel {
-  height: calc(100% - #{$title-height} - #{$button-height});
+  //height: calc(100% - #{$title-height} - #{$button-height});
   overflow-y: auto;
 }
 
@@ -184,12 +195,20 @@ $button-height: 50px;
 
 .action-buttons {
   text-align: center;
-  paddind-top: 10px;
+  padding-top: 10px;
   height: $button-height;
 }
 
 .cui-mappings {
   white-space: pre-wrap;
+}
+
+.close-window {
+  opacity: 0.5;
+  float: right;
+  &:hover {
+    opacity: 1.0;
+  }
 }
 
 .add-synonym-table {

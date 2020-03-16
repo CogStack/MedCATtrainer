@@ -97,7 +97,6 @@ export default {
       const searchByTerm = function () {
         let searchConceptsQueryParams = `search=${term}&cdb__in=${conceptDbs}`
         that.$http.get(`/api/search-concepts/?${searchConceptsQueryParams}`).then(resp => {
-          // that.$emit('searchResults:cuiResults', resp)
           that.searchResults = resp.data.results.map(res => mapResult(res, resp.data.results))
           loading(false)
         })
