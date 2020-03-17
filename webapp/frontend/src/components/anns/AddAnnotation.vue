@@ -179,7 +179,6 @@ $button-height: 50px;
 }
 
 .main-panel {
-  //height: calc(100% - #{$title-height} - #{$button-height});
   overflow-y: auto;
 }
 

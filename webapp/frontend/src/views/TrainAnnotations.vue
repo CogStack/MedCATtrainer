@@ -488,14 +488,7 @@ export default {
     addAnnotationComplete (addedAnnotationId) {
       this.conceptSynonymSelection = null
       if (addedAnnotationId) {
-        this.$http.get(`/api/annotated-entities/${addedAnnotationId}/`).then(resp => {
-          let newEnt = resp.data
-          newEnt.assignedValues = {}
-          newEnt.assignedValues[TASK_NAME] = CONCEPT_CORRECT
-          this.ents = null
-          this.currentEnt = null
-          this.fetchEntities(newEnt.id)
-        })
+        this.prepareDoc()
       }
     },
     addSynonym (selection) {

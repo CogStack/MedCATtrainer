@@ -345,15 +345,18 @@ def add_concept(request):
     cui = request.data['cui']
     context = request.data['context']
     # TODO These aren't used, but no API in current MedCAT add_name func
+    # Add these fields to the add_name func of MedCAT add_name
     desc = request.data['desc']
     tui = request.data['tui']
     s_type = request.data['type']
+    synonyms = request.data['synonyms']
 
     user = request.user
     project = ProjectAnnotateEntities.objects.get(id=p_id)
     document = Document.objects.get(id=d_id)
     cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
                      CAT_MAP=CAT_MAP, project=project)
+
     if cui in cat.cdb.cui2names:
         err_msg = f'Cannot add a concept "{name}" with cui:{cui}. CUI already linked to {cat.cdb.cui2names[cui]}'
         log.error(err_msg)
@@ -366,6 +369,20 @@ def add_concept(request):
                            project=project,
                            document=document,
                            cat=cat)
+
+    # Create a new Concept
+    if Concept.objects.filter(cui=cui).count() == 0:
+        c = Concept()
+        c.cui = cui
+        c.pretty_name = name
+        c.desc = desc
+        c.tui = tui
+        c.synonyms = synonyms
+        c.semantic_type = s_type
+        c.cdb = project.concept_db
+        c.save()
+        log.debug(f'Added new concept to concept list:{cui}')
+
     return Response({'message': 'Concept and Annotation added successfully', 'id': id})
 
 

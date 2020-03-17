@@ -32,6 +32,10 @@
         <td>Term ID</td>
         <td><input v-model="concept.tui" type="text" class="form-control"></td>
       </tr>
+      <tr v-if="showAdd">
+        <td>Synonyms</td>
+        <td><textarea v-model="concept.synonyms" class="form-control"></textarea></td>
+      </tr>
       </tbody>
     </table>
     <div class="footer action-buttons">
@@ -60,7 +64,8 @@ export default {
         desc: '',
         type: '',
         tui: '',
-        cui: ''
+        cui: '',
+        synonyms: ''
       },
       addConceptErr: false
     }

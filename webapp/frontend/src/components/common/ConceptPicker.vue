@@ -3,6 +3,7 @@
             :inputId="'searchBox'"
             :clearSearchOnSelect="false"
             :filterable="false"
+            :appendToBody="true"
             :options="searchResults">
     <template v-slot:option="option">
       <span class="select-option">{{option.name}}</span>
