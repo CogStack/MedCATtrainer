@@ -52,7 +52,9 @@ export default {
         this.fetchMetaAnnotations(ent, tasks => {
           that.$set(that.metaAnnos, ent.id, tasks)
           if (Object.entries(this.metaAnnos).length === annos.length) {
-            finishedEnrichmentCallback()
+            if (finishedEnrichmentCallback) {
+              finishedEnrichmentCallback()
+            }
           }
         }, useDefault)
       }
