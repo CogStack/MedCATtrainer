@@ -1,6 +1,7 @@
 <template>
   <div class="container full-height">
     <login v-if="!loginSuccessful" @login:success="loggedIn()"></login>
+    <transition name="alert"><div class="alert alert-danger" v-if="routeAlert" role="alert">{{routeAlert}}</div></transition>
     <div class="home-title">Available Projects:</div>
     <div class="table-container">
       <loading-overlay :loading="loadingProjects">
@@ -64,7 +65,8 @@ export default {
       loadingProjects: false,
       modelSaved: false,
       modelSavedError: false,
-      saving: false
+      saving: false,
+      routeAlert: false
     }
 
     if (this.$cookie.apiToken) {
@@ -86,6 +88,13 @@ export default {
   },
   methods: {
     loggedIn () {
+      if (this.$route.path !== '/') {
+        this.routeAlert = `Invalid URL: ${this.$route.path}, redirected to the MedCAT Home page.`
+        const that = this
+        setTimeout(() => {
+          that.routeAlert = false
+        }, 5000)
+      }
       if (this.$cookie.get('api-token')) {
         this.loginSuccessful = true
         this.fetchProjects()

@@ -11,11 +11,6 @@ export default new Router({
   base: process.env.BASE_URL,
   routes: [
     {
-      path: '/',
-      name: 'home',
-      component: Home
-    },
-    {
       path: '/train-annotations/:projectId/:docId?',
       name: 'train-annotations',
       // route level code-splitting
@@ -28,6 +23,11 @@ export default new Router({
       path: '/demo',
       name: 'demo',
       component: Demo
+    },
+    {
+      path: '*',
+      name: 'home',
+      component: Home
     }
   ]
 })
