@@ -4,7 +4,7 @@
     <div v-if="loadingDoc" class="loading-doc"></div>
     <div class="doc-list">
       <div v-for="doc of docs" :key="doc.id" class="doc clickable"
-           :class="{'selected-doc': selectedDocId === doc.id}" @click="loadDoc(doc.id)">
+           :class="{'selected-doc': selectedDocId === doc.id}" @click="loadDoc(doc)">
         <font-awesome-icon v-if="validatedDocIds.includes(doc.id)" class="validated-doc" icon="check"></font-awesome-icon>
         <div class="note-summary">
           {{doc.text === 'nan' ? '' : (doc.text || '') | limitText }}
@@ -48,11 +48,11 @@ export default {
     keyup (e) {
       if (!this.loadingDoc && e.keyCode === 40 && this.selectedDocId !== this.docs.slice(-1).id) {
         // down
-        this.$emit('request:loadDoc', this.docs[this.docs.map(d => d.id).indexOf(this.selectedDocId) + 1].id)
+        this.$emit('request:loadDoc', this.docs[this.docs.map(d => d.id).indexOf(this.selectedDocId) + 1])
         this.$nextTick(this.scrollSelectedDocId)
       } else if (!this.loadingDoc && e.keyCode === 38 && this.selectedDocId !== this.docs[0].id && !this.loadingDoc) {
         // up
-        this.$emit('request:loadDoc', this.docs[this.docs.map(d => d.id).indexOf(this.selectedDocId) - 1].id)
+        this.$emit('request:loadDoc', this.docs[this.docs.map(d => d.id).indexOf(this.selectedDocId) - 1])
         this.$nextTick(this.scrollSelectedDocId)
       }
     }

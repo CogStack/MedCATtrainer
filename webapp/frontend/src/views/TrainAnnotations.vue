@@ -154,11 +154,13 @@
                             @select:AnnoSummaryConcept="selectEntityFromSummary"></annotation-summary>
         <coding-annotation-summary v-if="project.clinical_coding_project" :annos="ents" :currentDoc="currentDoc" :taskIDs="(project || {}).tasks || []"
                                    @select:AnnoSummaryConcept="selectEntityFromSummary"></coding-annotation-summary>
+
       </div>
       <div slot="footer">
         <button class="btn btn-primary" :disabled="submitConfirmedLoading" @click="submitConfirmed()">
           <span v-if="!submitConfirmedLoading">Confirm</span>
           <span v-if="submitConfirmedLoading">
+            Submitting Document
             <font-awesome-icon icon="spinner" spin></font-awesome-icon>
           </span>
         </button>
@@ -202,6 +204,7 @@ import AddAnnotation from '@/components/anns/AddAnnotation.vue'
 import MetaAnnotationTaskContainer from '@/components/usecases/MetaAnnotationTaskContainer.vue'
 import AnnotationSummary from '@/components/common/AnnotationSummary.vue'
 import CodingAnnotationSummary from '@/components/cc/CodingAnnotationSummary'
+import LoadingOverlay from '@/components/common/LoadingOverlay'
 import { Multipane, MultipaneResizer } from 'vue-multipane'
 
 const TASK_NAME = 'Concept Annotation'
@@ -212,9 +215,12 @@ const CONCEPT_ALTERNATIVE = 'Alternative'
 
 const TASK_VALUES = [CONCEPT_CORRECT, CONCEPT_REMOVED, CONCEPT_KILLED, CONCEPT_ALTERNATIVE]
 
+const LOAD_NUM_DOC_PAGES = 10 // 30 docs per page, 300 documents
+
 export default {
   name: 'TrainAnnotations',
   components: {
+    LoadingOverlay,
     ConceptSummary,
     DocumentSummary,
     Modal,
@@ -239,6 +245,8 @@ export default {
   data () {
     return {
       docs: null,
+      docIds: null,
+      docIdsToDocs: null,
       totalDocs: 0,
       nextDocSetUrl: null,
       nextEntSetUrl: null,
@@ -269,9 +277,6 @@ export default {
   created () {
     this.fetchData()
   },
-  watch: {
-    '$route': 'fetchData'
-  },
   methods: {
     fetchData () {
       this.$http.get(`/api/project-annotate-entities/?id=${this.projectId}`).then(resp => {
@@ -281,11 +286,31 @@ export default {
         } else {
           this.project = resp.data.results[0]
           this.validatedDocuments = this.project.validated_documents
-          this.fetchDocuments()
+          const loadedDocs = () => {
+            this.docIds = this.docs.map(d => d.id)
+            this.docIdsToDocs = Object.assign({}, ...this.docs.map(item => ({ [item['id']]: item })))
+            const docIdRoute = Number(this.$route.params.docId)
+            if (docIdRoute) {
+              while (!this.docs.map(d => d.id).includes(docIdRoute)) {
+                this.fetchDocuments(0, loadedDocs)
+              }
+              this.loadDoc(this.docIdsToDocs[docIdRoute])
+            } else {
+              // find first unvalidated doc.
+              const ids = _.difference(this.docIds, this.validatedDocuments)
+              if (ids.length > 0) {
+                this.loadDoc(this.docIdsToDocs[ids[0]])
+              } else {
+                // no unvalidated docs and no next doc URL. Go back to first doc
+                this.loadDoc(this.docs[0])
+              }
+            }
+          }
+          this.fetchDocuments(0, loadedDocs)
         }
       })
     },
-    fetchDocuments () {
+    fetchDocuments (numPagesLoaded, finishedLoading) {
       let params = this.nextDocSetUrl === null ? `?dataset=${this.project.dataset}`
         : `?${this.nextDocSetUrl.split('?').slice(-1)[0]}`
 
@@ -295,26 +320,11 @@ export default {
           this.totalDocs = resp.data.count
           this.nextDocSetUrl = resp.data.next
 
-          if (this.currentDoc === null) {
-            const docIdRoute = Number(this.$route.params.docId)
-
-            if (docIdRoute) {
-              // Ideally should only load this page and have load prev docs... meh
-              if (this.docs.map(d => d.id).includes(docIdRoute)) { this.loadDoc(docIdRoute) } else { this.fetchDocuments() }
-            } else {
-              // find first unvalidated doc.
-              const ids = _.difference(this.docs.map(d => d.id), this.validatedDocuments)
-              if (ids.length !== 0) {
-                this.loadDoc(ids[0])
-                // load next url worth of docs?
-              } else {
-                if (this.nextDocSetUrl !== null) {
-                  this.fetchDocuments()
-                } else {
-                  // no unvalidated docs and no next doc URL. Go back to first doc.
-                  this.loadDoc(this.docs[0].id)
-                }
-              }
+          if (this.nextDocSetUrl && numPagesLoaded < LOAD_NUM_DOC_PAGES) {
+            this.fetchDocuments(numPagesLoaded + 1, finishedLoading)
+          } else {
+            if (finishedLoading) {
+              finishedLoading()
             }
           }
         }
@@ -322,15 +332,16 @@ export default {
         console.error(err)
         // use error modal to show errors?
       })
+      return finishedLoading
     },
-    loadDoc (docId) {
-      this.currentDoc = _.find(this.docs, (d) => d.id === docId)
-      if (this.$route.params.docId !== docId) {
+    loadDoc (doc) {
+      this.currentDoc = doc
+      if (this.$route.params.docId !== doc.id) {
         this.$router.replace({
           name: this.$route.name,
           params: {
             projectId: this.$route.params.projectId,
-            docId: docId
+            docId: doc.id
           }
         })
       }
@@ -514,7 +525,6 @@ export default {
     submitConfirmed () {
       this.confirmSubmitListenerRemove()
       this.submitConfirmedLoading = true
-      this.docToSubmit = null
       this.$http.get(`/api/project-annotate-entities/?id=${this.projectId}`).then(resp => {
         // refresh project validated documents as multiple users may be submitting. Mitigates but
         // does not solve a potential inconsistent validated_documents state seen.
@@ -531,15 +541,12 @@ export default {
             document_id: this.currentDoc.id
           }
           this.$http.post(`/api/submit-document/`, payload).then(() => {
+            this.docToSubmit = null
             this.submitConfirmedLoading = false
-            if (this.currentDoc.id !== this.docs.slice(-1)[0].id ||
+            if (this.currentDoc.id !== this.docIds.slice(-1)[0].id ||
               this.validatedDocuments.length !== this.docs.length) {
-              let docIds = this.docs.map(d => d.id)
-              let newDocId = this.docs[docIds.indexOf(this.currentDoc.id) + 1].id
-              while (this.validatedDocuments.indexOf(newDocId) > -1) {
-                newDocId = this.docs[docIds.indexOf(newDocId) + 1].id
-              }
-              this.loadDoc(this.docs[docIds.indexOf(newDocId)].id)
+              const newDocId = this.docIds[this.docIds.indexOf(this.currentDoc.id) + 1]
+              this.loadDoc(this.docIdsToDocs[newDocId])
             }
           })
         })

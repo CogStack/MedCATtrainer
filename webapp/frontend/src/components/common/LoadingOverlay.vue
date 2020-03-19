@@ -26,11 +26,12 @@ export default {
   background: $loading-background-color;
   height: 100%;
   position: relative;
+  z-index: 10000;
 
   .loading-message {
     position: absolute;
     top: 40%;
-    left: 45%;
+    left: 48%;
     opacity: 0.25;
   }
 

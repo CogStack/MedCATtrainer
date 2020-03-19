@@ -1,6 +1,8 @@
 <template>
   <div class="note-container">
-    <loading-overlay :loading="loading"></loading-overlay>
+    <loading-overlay :loading="loading">
+      <div slot="message">Preparing Document...</div>
+    </loading-overlay>
     <div v-if="!loading" class="clinical-note">
       <v-runtime-template ref="clinicalText" :template="formattedText"></v-runtime-template>
     </div>
