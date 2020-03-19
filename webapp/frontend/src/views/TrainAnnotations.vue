@@ -204,7 +204,6 @@ import AddAnnotation from '@/components/anns/AddAnnotation.vue'
 import MetaAnnotationTaskContainer from '@/components/usecases/MetaAnnotationTaskContainer.vue'
 import AnnotationSummary from '@/components/common/AnnotationSummary.vue'
 import CodingAnnotationSummary from '@/components/cc/CodingAnnotationSummary'
-import LoadingOverlay from '@/components/common/LoadingOverlay'
 import { Multipane, MultipaneResizer } from 'vue-multipane'
 
 const TASK_NAME = 'Concept Annotation'
@@ -220,7 +219,6 @@ const LOAD_NUM_DOC_PAGES = 10 // 30 docs per page, 300 documents
 export default {
   name: 'TrainAnnotations',
   components: {
-    LoadingOverlay,
     ConceptSummary,
     DocumentSummary,
     Modal,
