@@ -1,5 +1,7 @@
+from django.core.files import File
 from django.db import models
 from django.conf import settings
+from medcat.cdb import CDB
 from polymorphic.models import PolymorphicModel
 
 
@@ -160,7 +162,8 @@ class MetaTask(models.Model):
 
 
 class ProjectAnnotateEntities(Project):
-    concept_db = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, null=True)
+    concept_db = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=True,
+                                   null=True, default=None)
     vocab = models.ForeignKey('Vocabulary', on_delete=models.SET_NULL, null=True)
     cdb_search_filter = models.ManyToManyField('ConceptDB', blank=True, default=None,
                                                related_name='concept_source')
@@ -170,6 +173,18 @@ class ProjectAnnotateEntities(Project):
     add_new_entities = models.BooleanField(default=False)
     tasks = models.ManyToManyField(MetaTask, blank=True, default=None)
 
+    def save(self, *args, **kwargs):
+        if self.concept_db is None:
+            cdb = CDB()
+            cdb.save_dict('empty_cdb.dat')
+            f = open('empty_cdb.dat', 'rb')
+            cdb_obj = ConceptDB()
+            cdb_obj.name = f'{self.name}_empty_cdb'
+            cdb_obj.cdb_file.save(f'{self.name}_empty_cdb.dat', File(f))
+            cdb_obj.use_for_training = True
+            cdb_obj.save()
+            self.concept_db = cdb_obj
+        super(ProjectAnnotateEntities, self).save(*args, **kwargs)
 
 class MetaAnnotation(models.Model):
     annotated_entity = models.ForeignKey('AnnotatedEntity', on_delete=models.CASCADE)
