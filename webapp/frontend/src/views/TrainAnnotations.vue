@@ -334,7 +334,7 @@ export default {
     },
     loadDoc (doc) {
       this.currentDoc = doc
-      if (this.$route.params.docId !== doc.id) {
+      if (String(this.$route.params.docId) !== String(doc.id)) {
         this.$router.replace({
           name: this.$route.name,
           params: {
