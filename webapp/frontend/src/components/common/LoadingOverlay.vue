@@ -30,8 +30,8 @@ export default {
 
   .loading-message {
     position: absolute;
-    top: 40%;
-    left: 48%;
+    top: 45%;
+    left: 43%;
     opacity: 0.25;
   }
 
