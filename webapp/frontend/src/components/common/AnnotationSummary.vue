@@ -63,4 +63,11 @@ export default {
 .cui-info {
   white-space: pre-wrap;
 }
+
+.highlight-task-new {
+  @extend .highlight-task-0;
+  &::after {
+    content: "*";
+  }
+}
 </style>

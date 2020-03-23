@@ -70,8 +70,11 @@ export default {
       return this.currentDoc.text.slice(concept.end_ind, _.min([docText.length, concept.end_ind + 20]))
     },
     highlightClass (concept) {
+      const def = !concept.correct && !concept.deleted && !concept.killed &&
+        !concept.alternative && !concept.manually_created
       return {
-        'highlight-task-default': !concept.correct && !concept.deleted && !concept.killed && !concept.alternative,
+        'highlight-task-default': def,
+        'highlight-task-new': concept.manually_created,
         'highlight-task-0': concept.correct,
         'highlight-task-1': concept.deleted,
         'highlight-task-2': concept.killed,

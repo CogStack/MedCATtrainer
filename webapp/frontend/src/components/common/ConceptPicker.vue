@@ -1,10 +1,11 @@
 <template>
   <v-select v-model="selectedCUI" @search="searchCUI"
             :inputId="'searchBox'"
-            :clearSearchOnSelect="false"
+            :clearSearchOnSelect="true"
             :filterable="false"
             :appendToBody="true"
-            :options="searchResults">
+            :options="searchResults"
+            label="cui">
     <template v-slot:option="option">
       <span class="select-option">{{option.name}}</span>
     </template>
