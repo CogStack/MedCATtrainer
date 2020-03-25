@@ -5,7 +5,7 @@ MedCATTrainer is an interface for building, improving and customising a given Na
 MedCATTrainer was presented at EMNLP/IJCNLP 2019 :tada:
 [here](https://www.aclweb.org/anthology/D19-3024.pdf) 
 
-## Developer Guide
+## Installation Guide
  
 1\. Clone the repo:
 
@@ -18,7 +18,7 @@ MedCATTrainer was presented at EMNLP/IJCNLP 2019 :tada:
 `$ docker-compose -f docker-compose-dev.yml build`
 
 If the build fails with an error code 137, the virtual machine running the docker 
-daemon does not have enough memory. Adjust in docker daemon settings CLI or associated docker GUI.
+daemon does not have enough memory. Increase the allocated memory to containers in the docker daemon settings CLI or associated docker GUI.
 
 `$ docker-compose -f docker-compose-dev.yml up`
 
@@ -67,6 +67,8 @@ a given project) can be added via the django admin UI.**
 
 &nbsp;&nbsp;5\. To upload documents and begin annotating, you'll first need to create a project via the admin page: 
 http://localhost:8001/admin/.
+
+## User Guide
 
 ### Create an Annotation Project
 
