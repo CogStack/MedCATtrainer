@@ -5,7 +5,7 @@ MedCATTrainer is an interface for building, improving and customising a given Na
 MedCATTrainer was presented at EMNLP/IJCNLP 2019 :tada:
 [here](https://www.aclweb.org/anthology/D19-3024.pdf) 
 
-## Installation Guide
+# Installation
  
 1\. Clone the repo:
 
@@ -29,7 +29,7 @@ daemon does not have enough memory. Increase the allocated memory to containers 
 A username / password permissions the data / models that are setup via the administrator app. 
 An initial super user must be setup to login to login to admin. 
 
-### Administrator Setup
+# Administrator Setup
 
 1\.  The container runs a vanilla [django](https://www.djangoproject.com/) app, 
 that by default has no users (or super users). To add the first superuser use the django manage.py 
@@ -68,53 +68,88 @@ a given project) can be added via the django admin UI.**
 &nbsp;&nbsp;5\. To upload documents and begin annotating, you'll first need to create a project via the admin page: 
 http://localhost:8001/admin/.
 
-## User Guide
+# User Guide
 
-### Create an Annotation Project
+## Create an Annotation Project
 
-Using the admin page, a configured superuser can create, edit and delete annotation projects. 
+Using the admin page, a configured superuser can create, edit and delete annotation projects.
 
-1\. On http://localhost:8001/admin/, choose 'Project annotate entities'.
+Annotation projects are used to inspect, validate and improve concepts recognised by MedCAT.
+
+1\. Navigate to http://localhost:8001/admin/ and select 'Project annotate entities'.
+
+![Main Menu list](docs/imgs/project_annotate_entities.png)
 
 2\. 'Add Project Annotate Entities'
 
-3\. Complete the form as indicated
+![Add Project Annotate Entities button](docs/imgs/add_project_annotate_entities.png)
 
-4\. '+' next to fields allows the addition of those field types in pop out windows
+3\. Complete the new annotation project form. The table below provides details the purpose of each field:
 
-5\. Datasets can be uploaded in CSV format. Example:
+|Parameter|Description|
+|---------|-----------|
+|Name|# Name of the project that appears on the landing page|
+|Description| Example projects', # Description as it appears on the landing page|
+|Members    | **list** of users that have access to this project, select the '+' to create new users |
+|Dataset    | The set of documents to be annotated. The dataset tabular schema is described below.  |
+|Validated Documents| Ignore this list. Use of this list is described in the forthcoming advanced administrator user guide|
+|Cuis       | (Optional) A list of comma separated Concept Unique Identifiers (CUIs). Use this to only show precise concepts in this project |
+|Tuis       | (Optional) A list of comma separated Term Unique Identifiers (TUIs). Use this to only show groups of CUIs as configured in your CDB. TUIs are logical groupings of CUIs such as 'disease', or 'symptom'|
+|Concept DB | A MedCAT Concept Database. This should be the resulting file from a call to the function medcat.cdb.CDB.save_dict('name_of_cdb.dat'). Clicking the '+' icon here opens a dialog to upload a CDB file. |
+|vocab      | A MedCAT Vocabulary. This should be the resulting file from a call to the function medcat.cdb.utils.Vocab.save_dict('name_of_vocab.dat'). Clicking the '+' icon here opens a dialog to upload a vocab file.|
+|cdb_search_filter|**list** of CDB IDs that are used to lookup concepts during addition of annotations to a document|
+|Require Entity Validation| (Default: True) This option ticked, annotations in the interface, that are made by MedCAT will appear 'grey' indicating they have not been validated. Document submission is dependent upon all 'grey' annotations to be marked by a user. Unticked ensures all annotations are marked 'valid' by default|
+|Train Model On Submit| (Default: True) This option ticked, each document submission trains the configured MedCAT instance with the marked, and added if any, annotations from this document. Unticked, ensures the MedCAT model does not train between submissions.|
+|Clinical Coding Project| (Default: False) This option ticked, is an experimental feature, tailoring interface to the problem of clinical coding| 
+|Add New Entities|(Default: False) This option ticked, allows users to add entirely new concepts to the existing MedCAT CDB. False ensures this option is not available to users.|
+|Tasks| Select from the list 'Meta Annotation' tasks that will appear once a givn annotation has been marked correct.|
+
+Datasets can be uploaded in CSV or XLSX format. Example:
 
 | name  | text                   | 
 |-------|------------------------|
 | Doc 1 | Example document text  |
 | Doc 2 | More example text      |
 
-The name column is optional, and will be auto-generated for each document if not supplied in the upload.
+The name column is optional, and will be auto-generated for each document if not supplied in the upload. Example datasets are supplied under docs/example_data/*.csv
 
-6\. CUIs (UMLS Concept Unique Identifiers) and TUIs (UMLS Term Unique Identifiers), allow projects to be
-configured to only display a subset of total UMLS concepts. They can be specified in a comma separated
-list. For example: T184, T047.
+4\. Click 'Save' to store the new project.
 
-7\. Example Concept and Vocab databses are freely available on MedCAT [github](https://github.com/CogStack/MedCAT).
-Note. UMLS is not freely available, so only these smaller trained concept / vocab databases are made available currently.
+5\. Navigate to the home screen (http://localhost:8001/admin/), login with your username and password setup previously.
 
-8\. Tasks allow for the creation of meta-annotations and their associated set of values an annotator can use.
+ ![](docs/imgs/login.png)
+
+6\. select your new project to begin annotating documents
+
+![](docs/imgs/available-projects.png)
+ 
+
+**NB.** Example Concept and Vocab databses are freely available on MedCAT [github](https://github.com/CogStack/MedCAT).
+Note. UMLS and SNOMED-CT are licensed products so only these smaller trained concept / vocab databases are made available currently.
+
+More documentation on the creation of UMLS / SNOMED-CT CDBs from respective source data will be released soon.
+
+**NNB.** Tasks allow for the creation of meta-annotations and their associated set of values an annotator can use.
 An example 'meta-annotation' could be 'Temporality'. Values could then be 'Past', 'Present', 'Future'.
 
-A more comprehensive guide for setting up a project, will be made available soon.
+**NB*** **Please NOTE Firefox and IE are currently not supported**. Please use Chrome or Safari.
 
-### Annotate Your Dataset
-
-Navigate to http://localhost:8001/ .login with your username and password. **Please NOTE Firefox and IE are currently not supported**. Please use Chrome or Safari.
+## Annotation Interface
 
 
-### Annotation Guidelines
+
+## Annotation Guidelines
 
 Annotation guidelines can assit guiding annotators when annotatinng texts for a MedCATTrainer project.
  
 Once an initial guideline has been defined, a pilot project in MedCATTrainer can be used to further 
 refine the guideline.
 
+
+## Advanced Usage
+
+ReST API Usage for bulk dataset / project creation
+Bulk Creation Programmatic 
 
 
 
