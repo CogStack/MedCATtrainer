@@ -1,6 +1,7 @@
  # Medical <img src="https://github.com/CogStack/MedCATtrainer/blob/master/webapp/frontend/src/assets/cat-logo.png" width=45>oncept Annotation Tool Trainer
  
-MedCATTrainer is an interface for building, improving and customising a given Named Entity Recognition and Linking (NER+L) model for biomedical domain text
+MedCATTrainer is an interface for building, improving and customising a given Named Entity Recognition 
+and Linking (NER+L) model for biomedical domain text
 
 MedCATTrainer was presented at EMNLP/IJCNLP 2019 :tada:
 [here](https://www.aclweb.org/anthology/D19-3024.pdf) 
@@ -18,7 +19,14 @@ MedCATTrainer was presented at EMNLP/IJCNLP 2019 :tada:
 `$ docker-compose -f docker-compose-dev.yml build`
 
 If the build fails with an error code 137, the virtual machine running the docker 
-daemon does not have enough memory. Increase the allocated memory to containers in the docker daemon settings CLI or associated docker GUI.
+daemon does not have enough memory. Increase the allocated memory to containers in the docker daemon 
+settings CLI or associated docker GUI.
+
+On MAC: https://docs.docker.com/docker-for-mac/#memory
+
+On Windows: https://docs.docker.com/docker-for-windows/#resources 
+
+Then run:
 
 `$ docker-compose -f docker-compose-dev.yml up`
 
@@ -111,18 +119,22 @@ Datasets can be uploaded in CSV or XLSX format. Example:
 | Doc 1 | Example document text  |
 | Doc 2 | More example text      |
 
-The name column is optional, and will be auto-generated for each document if not supplied in the upload. Example datasets are supplied under docs/example_data/*.csv
+The name column is optional, and will be auto-generated for each document if not supplied in the upload. 
+Example datasets are supplied under docs/example_data/*.csv
 
 4\. Click 'Save' to store the new project.
 
 5\. Navigate to the home screen (http://localhost:8001/admin/), login with your username and password setup previously.
 
- ![](docs/imgs/login.png)
+![](docs/imgs/login.png)
 
 6\. select your new project to begin annotating documents
 
 ![](docs/imgs/available-projects.png)
  
+## Meta Annotations (Optional)
+
+Meta Annotations are additional annotations above the initial concept annotation. An example of meta annotation is temporality.  
 
 **NB.** Example Concept and Vocab databses are freely available on MedCAT [github](https://github.com/CogStack/MedCAT).
 Note. UMLS and SNOMED-CT are licensed products so only these smaller trained concept / vocab databases are made available currently.
@@ -132,10 +144,90 @@ More documentation on the creation of UMLS / SNOMED-CT CDBs from respective sour
 **NNB.** Tasks allow for the creation of meta-annotations and their associated set of values an annotator can use.
 An example 'meta-annotation' could be 'Temporality'. Values could then be 'Past', 'Present', 'Future'.
 
-**NB*** **Please NOTE Firefox and IE are currently not supported**. Please use Chrome or Safari.
+**NB** **Please NOTE Firefox and IE are currently not supported**. Please use Chrome or Safari.
 
 ## Annotation Interface
 
+The annotation interface can be split initially into 5 sections.
+
+![](docs/imgs/main-annotation-interface.png)
+
+### Section 1 - Document Summary List
+A list of documents to be completed in this project. Currently selected documents are highlighted in blue 
+left border. Submitted documents are marked with a ![tick_mark](docs/imgs/tick_mark.png). 
+
+### Section 2 - Clinical Text
+The selected documents text, highlighted with each concept recognised by the configured MedCAT model. 
+Highlighted spans of text indicate status of the annotation:
+- Grey: A User has *not reviewed* this span that has been recognised and linked by MedCAT to a CDB concept.
+- Blue: A User has reviewed the span and marked it as ***correct*** in terms of its linked MedCAT concept.
+- Red: A User has reviewed the span and marked it as **incorrect** in terms of its linked MedCAT concept.
+- Dark Red: A User has reviewed the span and marked it to **terminate**, meaning the text span should never again 
+link to this text span, this informs MedCAT that  
+- Turqoise: A User has reviewed the span and marked it as an  **alternative** linked concept. The user has used the 
+'Concept Picker' to choose the correct concept that should be linked.
+
+#### Additional Annotations
+MedCAT may miss text spans that are acronyms, abbreviations or misspellings of concepts. Missing annotations can be 
+added to the text by directly highlighting the text span, right clicking, selecting 'Add Annotation', searching for
+ concept (via ID, or name), and selecting Add Synonym:
+ 
+![](docs/imgs/add-annotation-text.png) -> ![](docs/imgs/add-annotation-menu.png) -> ![](docs/imgs/add-annotation-concept-pick.png) 
+
+Select: 
+- Add Synonym: to add this annotation to the text span and link the selected concept
+- Cancel: (Shortcut esc): to cancel adding the annotation to the text. 
+ 
+![](docs/imgs/add-annotation-select-concept.png)
+ 
+### Section 3 - Action Bar
+
+#### Concept Navigation
+Navigating between the list of concepts as they appear in the document:
+- Action buttons, left and right 
+- Left and right arrow keys on keyboard
+- Directly clicking on the concept within the text.
+
+#### Concept Status Buttons
+A concept can be marked with only one status. Status is recorded but only sent to MedCAT for
+training on **submit** of the document and if the projects configured with "Train Model On Submit" is ticked.
+
+#### Submit Button
+Submit is disabled until all concepts have been reviewed and marked with a status. Clicking submit will produce  
+a submission confirmation dialog with an annotation summary. Confirming submission will send all new annotations 
+to MedCATTrainer middle tier, and re-train the MedCAT model. The following document will be selected and annotated 
+by the newly trained MedCAT model
+
+### Section 4 - Header Toolbar
+Lists the current name of the document under review and the number of remaining documents to annotate in this project
+action buttons for:
+- ![](docs/imgs/summary-button.png): Summary of current annotations. A similar view is shown before confirmation of submission of the annotations
+- ![](docs/imgs/help-button.png): Help dialog, showing shortcuts for document & concept navigation, concept annotation and submission.
+- ![](docs/imgs/reset-button.png): Reset document. If an annotation is incorrectly added, or incorrectly submitted resetting the document will
+clear all previous annotations and their status.
+
+ ### Section 5 - Concept Summary
+Lists the current selected concepts details.
+
+|Concept Detail| Description |
+|--------------| ------------|
+|Annotated Text| The text span linked to the concept|
+|Name          | The linked concept name from within the MedCAT CDB|
+|Term ID       | The higher level group of concepts that this concept sits under. This may be 'N/A' depending if you CDB is complete with TUIs.|
+|Concept ID    | The unique identifier for this linked concept from the MedCAT CDB.|
+|Accuracy      | The MedCAT found accuracy of the linked concept for this span. Text spans will have an accuracy 1.0, if they are uniquely identified by that name in the CDB|
+|Description   | The MedCAT associated description of the concept. SNOMED-CT does not provide descriptions of concepts, only alternative names whereas UMLS does provide descriptions|
+
+### Meta Annotations
+
+MedCAT is also able to learn project & context specific annotations that overlay on top of the base layer of concept annotations.
+
+MedCATTrainer is configurable (via the administrator app), to allow for the collection of these meta annotations. We 
+currently have not integrated the active learning components of the concept recognition,   
+These are known as Meta Annotations.  
+
+
+## Project Administrator 
 
 
 ## Annotation Guidelines
@@ -148,9 +240,7 @@ refine the guideline.
 
 ## Advanced Usage
 
-ReST API Usage for bulk dataset / project creation
-Bulk Creation Programmatic 
-
+- ReST API Usage for bulk dataset / project creation: available in the jupyter notebook 
 
 
 
