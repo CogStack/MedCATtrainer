@@ -19,5 +19,5 @@ RUN npm install && npm rebuild node-sass && npm run build
 WORKDIR /home/api
 RUN pip install pip --upgrade 
 RUN pip install -r /home/requirements.txt
-RUN pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.3/en_core_sci_md-0.2.3.tar.gz
+RUN pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.4/en_core_sci_md-0.2.4.tar.gz
 RUN chmod a+x /home/run.sh
