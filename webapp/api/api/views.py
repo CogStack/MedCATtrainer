@@ -147,7 +147,7 @@ class EntityViewSet(viewsets.ModelViewSet):
 
 class ConceptDBViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ['get']
+    http_method_names = ['get', 'post', 'head']
     queryset = ConceptDB.objects.all()
     serializer_class = ConceptDBSerializer
 
