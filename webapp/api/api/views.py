@@ -466,22 +466,40 @@ def finished_projects(request):
 
     return Response({'validated_projects': validated_projects})
 
-@api_view(http_method_names=['GET'])
+@api_view(http_method_names=['GET', 'POST'])
 def update_meta_annotation(request):
-    log.debug(f'getting here to update')
+
     annotated_entity_id = request.data['annotated_entity_id']
     meta_task_id = request.data['meta_task_id']
     meta_task_value = request.data['meta_task_value']
 
 
-    annotation = AnnotatedEntity.objects.filter(id = annotated_entity_id)
+    annotation = AnnotatedEntity.objects.filter(id = annotated_entity_id)[0]
     annotation.correct = True
+    log.debug(annotation)
+    
     annotation.save()
 
-    meta_annoatation = MetaAnnotation()
-    meta_annoatation.meta_task = meta_task_id
-    meta_annoatation.meta_task_value = meta_task_value
-    meta_annoatation.save()
+    meta_task = MetaTask.objects.filter(id = meta_task_id)[0]
+    meta_task_value = MetaTaskValue.objects.filter(id = meta_task_value)[0]
 
-    return Response({'meta_annoatation': json.dumps(meta_annoatation)})
-    
+    meta_annotation_list = MetaAnnotation.objects.filter(annotated_entity = annotation)
+
+    log.debug(meta_annotation_list)
+
+    if len(meta_annotation_list) > 0:
+        meta_annotation = meta_annotation_list[0]
+
+        meta_annotation.meta_task = meta_task
+        meta_annotation.meta_task_value = meta_task_value
+
+    else:
+        meta_annotation = MetaAnnotation()
+        meta_annotation.annotated_entity = annotation
+        meta_annotation.meta_task = meta_task
+        meta_annotation.meta_task_value = meta_task_value
+
+    log.debug(meta_annotation)    
+    meta_annotation.save()
+
+     return Response({'meta_annotation': 'added meta annotation')})
