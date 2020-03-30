@@ -465,3 +465,23 @@ def finished_projects(request):
         validated_projects[project.id] = len(set(all_documents) - set(validated)) == 0
 
     return Response({'validated_projects': validated_projects})
+
+@api_view(http_method_names=['GET'])
+def update_meta_annotation(request):
+    log.debug(f'getting here to update')
+    annotated_entity_id = request.data['annotated_entity_id']
+    meta_task_id = request.data['meta_task_id']
+    meta_task_value = request.data['meta_task_value']
+
+
+    annotation = AnnotatedEntity.objects.filter(id = annotated_entity_id)
+    annotation.correct = True
+    annotation.save()
+
+    meta_annoatation = MetaAnnotation()
+    meta_annoatation.meta_task = meta_task_id
+    meta_annoatation.meta_task_value = meta_task_value
+    meta_annoatation.save()
+
+    return Response({'meta_annoatation': json.dumps(meta_annoatation)})
+    
