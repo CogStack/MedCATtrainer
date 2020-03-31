@@ -387,6 +387,7 @@ only need to save once across all projects. Wait for the confirmation dialog for
 
 4\. Click the CDB file, you will be prompted to save down the new CDB file. This file will be of the same format you 
 have used previously, i.e. you've called medcat.cdb.save_dict('<location>').
+
 ![](docs/imgs/save_cdb.png)
 
 5\. To load the new dictionary use medcat.cdb.load_dict('<location>')
