@@ -247,7 +247,7 @@ To create a new Meta Annotation Task and attach to an existing project:
 3\. Complete the form and add additional meta task values if required for your task via the '+' icon and the 'values' input. 
 Values are enumerated options for your specific task. These can be re-used across projects or be project specific.
 Ensure the default is one of the corresponding values available. Descriptions appear alongside the tasks in interface 
-and in full in the help dialog.   
+and in full in the help dialog.
  
 ![](docs/imgs/meta-task-form.png)
 
@@ -262,16 +262,94 @@ only appear for concepts that are correct.
 ![](docs/imgs/meta-tasks-interface.png)
 
 ### Project / Tool Administration
-  
+
+#### Concept Picker - CDB Concept Import
+
+The concept picker is used to:
+- Pick alternative concepts for an existing recognised span
+![](docs/imgs/pick-alternative-concept.png)
+- Pick a concept during the 'Add Annotation' process.
+![](docs/imgs/add-annotation-concept.png)
+
+The available list of concepts is populated via a MedCAT CDB and indexed to enable fast type-ahead style search. 
+
+SNOMED-CT / UMLS built databases can contain thousands if not millions of concepts so this process is executed 
+in asynchronous task to ensure the admin page and app are still available for use.
+
+**This process should only be done once for each concept universe (i.e. SNOMED-CT, UMLS are 2 distinct concept universes)** 
+per deployment or if the underlying MedCAT CDB changes Concepts will be indexed by there CUI, so importing different 
+CDB instances that reference the same concept universe will only import
+the concepts that are in the set difference.
+
+To make these concepts available to a (or any project):
+
+1\. Open the admin app. (http://localhost:8001/admin/)
+
+2\. Select 'Concept Dbs'
+![](docs/imgs/select-concept-dbs.png)
+
+3\. Select the Concept DB entry, and choose the action 'Import Concept', then press the 'Go' button.
+![](docs/imgs/import-concepts.png)
+
+#### Downloading Annotations
+Project annotations can be downloaded with or without the source text, especially important if the source text is
+particularly sensitive and should be not be shared.
+
+1\. Open the admin app. (http://localhost:8001/admin/)
+
+2\. Select 'Project annotate entities', 
+![Main Menu list](docs/imgs/project_annotate_entities.png)
+
+3\. Select the project(s) to download the annotations for and select the appropriate action for w/ or w/o source text, 
+then press the 'Go' button. This will download all annotations, the meta-annotations (if any) for all projects selected.
+Annotations
+
+4\. An example jupyter notebook is provided under docs/Processing_Annotations.ipynb. 
+
+![](docs/imgs/download-annos.png)
+
+#### Clone Project 
+Cloning Projects is a easy & fast method to create copies of configured projects. This includes the dataset, CDB / vocab
+reference, meta annotation settings etc. Annotations themselves will not be copied across.
+copied across.
+
+1\. Open the admin app. (http://localhost:8001/admin/), and select 'Project annotate entities' (same as above for downloading)
+
+2\. Select the project(s) to clone, select the 'Clone projects', then press the 'Go' button.
+![](docs/imgs/clone-projects.png)
+
+#### Reset Project
+**Use with caution. Resetting projects deletes all annotations and resets a project to its state upon initial creation.** 
+
+1\. Open the admin app. (http://localhost:8001/admin/), and select 'Project annotate entities'
+(same as above for downloading)
+
+2\. Select the project(s) to reset, then press the 'Go' button.
+![](docs/imgs/reset-projects.png)
+
+#### Save / Download Models
+Saving a model, takes the current state of the CDB is currently loaded in memory of the container and overwrites to the
+associated CDB file originally uploaded. To save and download a model for further use in a MedCAT instance:
+ 
+1\. Select the 'Save' model icon on the home page of that project. If the same CDB is used across multiple projects, you 
+only need to save once across all projects. Wait for the confirmation dialog for successfull saving of models to appear.  
+
+2\. Open the admin app. (http://localhost:8001/admin/), and select 'Concept dbs'.
+
+3\. Click the CDB item you would like to download.
+
+4\. Click the CDB file, you will be prompted to save down the new CDB file. This file will be of the same format you 
+have used previously, i.e. you've called medcat.cdb.save_dict('<location>').
+![](docs/imgs/save_cdb.png)
+
+5\. To load the new dictionary use medcat.cdb.load_dict('<location>')
 
 
 ## Annotation Guidelines
-
-Annotation guidelines can assist guiding annotators when annotatinng texts for a MedCATTrainer project.
+Annotation guidelines can assist guiding annotators when annotating texts for a MedCATTrainer project.
  
 Once an initial guideline has been defined, a pilot project in MedCATTrainer can be used to further 
 refine the guideline.
-
 
 ## Advanced Usage
 
