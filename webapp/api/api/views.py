@@ -469,13 +469,15 @@ def finished_projects(request):
 @api_view(http_method_names=['GET', 'POST'])
 def update_meta_annotation(request):
 
-    annotated_entity_id = request.data['annotated_entity_id']
+    project_id = request.data['project_id']
+    entity_id = request.data['entity_id']
+    document_id = request.data['document_id']
     meta_task_id = request.data['meta_task_id']
     meta_task_value = request.data['meta_task_value']
 
-
-    annotation = AnnotatedEntity.objects.filter(id = annotated_entity_id)[0]
+    annotation = AnnotatedEntity.objects.filter(project= project_id, entity=entity_id, document=document_id)[0]
     annotation.correct = True
+    annotation.validated = True
     log.debug(annotation)
     
     annotation.save()
@@ -502,4 +504,5 @@ def update_meta_annotation(request):
     log.debug(meta_annotation)    
     meta_annotation.save()
 
-     return Response({'meta_annotation': 'added meta annotation')})
+    return Response({'meta_annotation': 'added meta annotation'})
+    
