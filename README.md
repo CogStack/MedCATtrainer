@@ -72,11 +72,12 @@ will create a defaulted administrator user with details:
  
  **username: admin**  ---- **password: admin**
 
-2.\ We strongly recommend creating a new admin user before using the trainer in 'production'. To add a new user
-navigate to select http://localhost:8001/admin/ and select 'Users'.
+2\. We strongly recommend creating a new admin user before using the trainer in 'production' and storing sensitive
+clinical documents on the trainer. To add a new user navigate to select http://localhost:8001/admin/ and select 'Users'.
+
 ![](docs/imgs/users-select.png)
 
-3.\ Select 'Add User' and complete the form with a new username / password.
+3\. Select 'Add User' and complete the form with a new username / password.
 
 ![](docs/imgs/add-new-users.png)
 
