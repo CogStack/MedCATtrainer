@@ -17,18 +17,18 @@ MedCATTrainer was presented at EMNLP/IJCNLP 2019 :tada:
         2. [Section 2 - Clinical Text](#main-text)
             1. [Additional Annotations](#add-annos)
         3. [Section 3 - Action Bar](#action-bar)
-            1. [Concept Navigation](#concept-nav)
+            1. [Concept Navigation Buttons](#concept-nav)
             2. [Concept Status Buttons](#concept-status)
-            3. [Submit](#submit)
+            3. [Submit Button](#submit)
         4. [Section 4 - Header Toolbar](#header-tools)
         5. [Section 5 - Concept Summary](#concept-summary)
-    3. [Meta-Annotations](#meta-annos)
+    3. [Meta-Annotations](#meta-annos)  
         1. [Meta Annotation Configuration](#meta-anno-config)
     4. [Project & Tool Administration](#project-tool-admin)
-        1. [Concept Picker](#concept-picker-admin)
+        1. [Configuring Concept Picker](#concept-picker-admin)
         2. [Downloading Annotations](#download-annos)
-        3. [Clone Projects](#clone-proj)
-        4. [Reset Projects](#reset-proj)
+        3. [Cloning Projects](#clone-proj)
+        4. [Resetting Projects](#reset-proj)
 3. [Annotation Guidelines](#anno-guidelines)
 4. [Advanced Usage](#advanced-usage)
         
@@ -58,11 +58,11 @@ Then run:
 `$ docker-compose -f docker-compose-dev.yml up`
 
 3\. MedCATTrainer is now running:
-- The app is at http://localhost:8001/
-- The administrator (admin) app is at http://localhost:8001/admin/
+- The main app is available at http://localhost:8001/
+- The administrator (admin) app is available at http://localhost:8001/admin/
 
-A username / password permissions the data / models that are setup via the administrator app. 
-An initial super user must be setup to login to login to admin. 
+Upon initial install, an example administrator user, example dataset, concept database, vocab and project are setup. 
+The next session provides further details.
 
 <a name="admin-setup"></a>
 # Administrator Setup
@@ -70,7 +70,8 @@ An initial super user must be setup to login to login to admin.
 1\.  The container runs a vanilla [django](https://www.djangoproject.com/) app, that upon initially loaded
 will create a defaulted administrator user with details:
  
- **username: admin**  ---- **password: admin**
+ username: **admin**  
+ password: **admin**
 
 2\. We strongly recommend creating a new admin user before using the trainer in 'production' and storing sensitive
 clinical documents on the trainer. To add a new user navigate to select http://localhost:8001/admin/ and select 'Users'.
