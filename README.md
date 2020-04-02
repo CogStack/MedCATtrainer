@@ -67,42 +67,25 @@ An initial super user must be setup to login to login to admin.
 <a name="admin-setup"></a>
 # Administrator Setup
  
-1\.  The container runs a vanilla [django](https://www.djangoproject.com/) app, 
-that by default has no users (or super users). To add the first superuser use the django manage.py 
-createsuperuser function within the runnning container. **Further users, (i.e. annotators for 
-a given project) can be added via the django admin UI.**
+1\.  The container runs a vanilla [django](https://www.djangoproject.com/) app, that upon initially loaded
+will create a defaulted administrator user with details:
+ 
+ **username: admin**  ---- **password: admin**
 
- &nbsp;&nbsp;1\. First get the running container name:
-`$ docker ps`
+2.\ We strongly recommend creating a new admin user before using the trainer in 'production'. To add a new user
+navigate to select http://localhost:8001/admin/ and select 'Users'.
+![](docs/imgs/users-select.png)
 
-> CONTAINER ID        IMAGE                      COMMAND                  CREATED             STATUS              PORTS                            NAMES
-> 62b9a2380f30        medcattrainer_nginx           "nginx -g 'daemon of…"   2 days ago          Up 2 days           80/tcp, 0.0.0.0:8001->8000/tcp   medcattrainer_nginx_1
-> 93168cc98c15        medcattrainer_medcattrainer   "/home/run.sh"           2 days ago          Up 2 days           8000/tcp                         **medcattrainer_medcattrainer_1**
+3.\ Select 'Add User' and complete the form with a new username / password.
 
-&nbsp;&nbsp;2\. Login to the container running django. (The 2nd entry of the output of the ps, as indicated in **bold**).
+![](docs/imgs/add-new-users.png)
 
-`docker exec -it cattrainer_medcattrainer_1 bash`
+4\. Once created, select the new user, and tick the 'Staff Status' or 'Superuser Status' to allow the user to
+access the admin app. 
 
-> root@93168cc98c15:/home/api# 
+5\. Remove the default admin user by navigating to step 2, select the user and the action  
 
-&nbsp;&nbsp;3\. Create the superuser username and password by following the prompts.
-
-`root@93168cc98c15:/home/api# python manage.py createsuperuser`
-
-> Username (leave blank to use 'root'): 
-> Email address: 
-> Password: 
-> Password (again): 
-> The password is too similar to the username.
-> This password is too short. It must contain at least 8 characters.
-> This password is too common.
-> Bypass password validation and create user anyway? [y/N]: y
-> Superuser created successfully.
-
-&nbsp;&nbsp;4\. You can now login to the main and admin app with the newly created user.
-
-&nbsp;&nbsp;5\. To upload documents and begin annotating, you'll first need to create a project via the admin page: 
-http://localhost:8001/admin/.
+![](docs/imgs/remove-default-user.png)
 
 <a name="user-guide"></a>
 # User Guide 
