@@ -242,8 +242,8 @@ def _import_concepts(id):
     cdb.load_dict(concept_db.cdb_file.path)
     tuis = None
 
-    # Get all existing cuis
-    existing_cuis = set(Concept.objects.all().values_list('cui', flat=True))
+    # Get all existing cuis for this CDB
+    existing_cuis = set(Concept.objects.filter(cdb=id).values_list('cui', flat=True))
 
     for cui in cdb.cui2names.keys():
         if cui not in existing_cuis:
