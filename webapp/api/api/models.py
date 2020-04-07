@@ -45,7 +45,7 @@ class ConceptDB(models.Model):
 
 class Concept(models.Model):
     pretty_name = models.CharField(max_length=300)
-    cui = models.CharField(max_length=100, unique=True)
+    cui = models.CharField(max_length=100)
     desc = models.TextField(default="", blank=True)
     tui = models.CharField(max_length=20)
     semantic_type = models.CharField(max_length=200, blank=True, null=True)
