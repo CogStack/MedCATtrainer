@@ -105,6 +105,7 @@ class Project(PolymorphicModel):
     validated_documents = models.ManyToManyField(Document, default=None, blank=True)
     cuis = models.TextField(default=None, blank=True)
     tuis = models.TextField(default=None, blank=True)
+    cuis_file = models.FileField(null=True, blank=True)
 
     def __str__(self):
         return str(self.name)
