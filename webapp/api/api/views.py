@@ -246,7 +246,7 @@ def prepare_documents(request):
     if project.cuis_file is not None and project.cuis_file:
         # Add cuis from json file if it exists
         import json
-        cuis.extend(json.load(open(project.cuis_file.path)))
+        cuis.update(json.load(open(project.cuis_file.path)))
 
     try:
         for d_id in d_ids:
