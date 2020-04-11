@@ -1,5 +1,5 @@
 """
-WSGI config for MedAnno project.
+WSGI config for MedCATTrainer project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

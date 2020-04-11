@@ -1,12 +1,39 @@
  # Medical <img src="https://github.com/CogStack/MedCATtrainer/blob/master/webapp/frontend/src/assets/cat-logo.png" width=45>oncept Annotation Tool Trainer
  
 MedCATTrainer is an interface for building, improving and customising a given Named Entity Recognition 
-and Linking (NER+L) model for biomedical domain text
+and Linking (NER+L) model (MedCAT) for biomedical domain text.
 
 MedCATTrainer was presented at EMNLP/IJCNLP 2019 :tada:
-[here](https://www.aclweb.org/anthology/D19-3024.pdf) 
+[here](https://www.aclweb.org/anthology/D19-3024.pdf)
 
-# Installation
+# Table Of Contents
+1. [Installation](#installation)
+2. [Admin Setup](#admin-setup)
+3. [User Guide](#user-guide)
+    1. [Create An Annotation Project](#create-project)
+        1. [Notes](#notes)
+    2. [Annotation Interface](#anno-ui)
+        1. [Section 1 - Document Summary List](#doc-summary)
+        2. [Section 2 - Clinical Text](#main-text)
+            1. [Additional Annotations](#add-annos)
+        3. [Section 3 - Action Bar](#action-bar)
+            1. [Concept Navigation Buttons](#concept-nav)
+            2. [Concept Status Buttons](#concept-status)
+            3. [Submit Button](#submit)
+        4. [Section 4 - Header Toolbar](#header-tools)
+        5. [Section 5 - Concept Summary](#concept-summary)
+    3. [Meta-Annotations](#meta-annos)  
+        1. [Meta Annotation Configuration](#meta-anno-config)
+    4. [Project & Tool Administration](#project-tool-admin)
+        1. [Configuring Concept Picker](#concept-picker-admin)
+        2. [Downloading Annotations](#download-annos)
+        3. [Cloning Projects](#clone-proj)
+        4. [Resetting Projects](#reset-proj)
+3. [Annotation Guidelines](#anno-guidelines)
+4. [Advanced Usage](#advanced-usage)
+        
+<a name="installation"></a>
+# Installation 
  
 1\. Clone the repo:
 
@@ -31,54 +58,42 @@ Then run:
 `$ docker-compose -f docker-compose-dev.yml up`
 
 3\. MedCATTrainer is now running:
-- The app is at http://localhost:8001/
-- The administrator (admin) app is at http://localhost:8001/admin/
+- The main app is available at http://localhost:8001/
+- The administrator (admin) app is available at http://localhost:8001/admin/
 
-A username / password permissions the data / models that are setup via the administrator app. 
-An initial super user must be setup to login to login to admin. 
+Upon initial install, an example administrator user, example dataset, concept database, vocab and project are setup. 
+The next session provides further details.
 
+<a name="admin-setup"></a>
 # Administrator Setup
+ 
+1\.  The container runs a vanilla [django](https://www.djangoproject.com/) app, that upon initially loaded
+will create a defaulted administrator user with details:
+ 
+ username: **admin**  
+ password: **admin**
 
-1\.  The container runs a vanilla [django](https://www.djangoproject.com/) app, 
-that by default has no users (or super users). To add the first superuser use the django manage.py 
-createsuperuser function within the runnning container. **Further users, (i.e. annotators for 
-a given project) can be added via the django admin UI.**
+2\. We strongly recommend creating a new admin user before using the trainer in 'production' and storing sensitive
+clinical documents on the trainer. To add a new user navigate to select http://localhost:8001/admin/ and select 'Users'.
 
- &nbsp;&nbsp;1\. First get the running container name:
-`$ docker ps`
+![](docs/imgs/users-select.png)
 
-> CONTAINER ID        IMAGE                      COMMAND                  CREATED             STATUS              PORTS                            NAMES
-> 62b9a2380f30        medcattrainer_nginx           "nginx -g 'daemon of…"   2 days ago          Up 2 days           80/tcp, 0.0.0.0:8001->8000/tcp   medcattrainer_nginx_1
-> 93168cc98c15        medcattrainer_medcattrainer   "/home/run.sh"           2 days ago          Up 2 days           8000/tcp                         **medcattrainer_medcattrainer_1**
+3\. Select 'Add User' and complete the form with a new username / password.
 
-&nbsp;&nbsp;2\. Login to the container running django. (The 2nd entry of the output of the ps, as indicated in **bold**).
+![](docs/imgs/add-new-users.png)
 
-`docker exec -it cattrainer_medcattrainer_1 bash`
+4\. Once created, select the new user, and tick the 'Staff Status' or 'Superuser Status' to allow the user to
+access the admin app. 
 
-> root@93168cc98c15:/home/api# 
+5\. Remove the default admin user by navigating to step 2, select the user and the action  
 
-&nbsp;&nbsp;3\. Create the superuser username and password by following the prompts.
+![](docs/imgs/remove-default-user.png)
 
-`root@93168cc98c15:/home/api# python manage.py createsuperuser`
+<a name="user-guide"></a>
+# User Guide 
 
-> Username (leave blank to use 'root'): 
-> Email address: 
-> Password: 
-> Password (again): 
-> The password is too similar to the username.
-> This password is too short. It must contain at least 8 characters.
-> This password is too common.
-> Bypass password validation and create user anyway? [y/N]: y
-> Superuser created successfully.
-
-&nbsp;&nbsp;4\. You can now login to the main and admin app with the newly created user.
-
-&nbsp;&nbsp;5\. To upload documents and begin annotating, you'll first need to create a project via the admin page: 
-http://localhost:8001/admin/.
-
-# User Guide
-
-## Create an Annotation Project
+<a name="create-project"></a>
+## Create an Annotation Project 
 
 Using the admin page, a configured superuser can create, edit and delete annotation projects.
 
@@ -110,7 +125,7 @@ Annotation projects are used to inspect, validate and improve concepts recognise
 |Train Model On Submit| (Default: True) This option ticked, each document submission trains the configured MedCAT instance with the marked, and added if any, annotations from this document. Unticked, ensures the MedCAT model does not train between submissions.|
 |Clinical Coding Project| (Default: False) This option ticked, is an experimental feature, tailoring interface to the problem of clinical coding| 
 |Add New Entities|(Default: False) This option ticked, allows users to add entirely new concepts to the existing MedCAT CDB. False ensures this option is not available to users.|
-|Tasks| Select from the list 'Meta Annotation' tasks that will appear once a givn annotation has been marked correct.|
+|Tasks| Select from the list 'Meta Annotation' tasks that will appear once a given annotation has been marked correct.|
 
 Datasets can be uploaded in CSV or XLSX format. Example:
 
@@ -131,10 +146,9 @@ Example datasets are supplied under docs/example_data/*.csv
 6\. select your new project to begin annotating documents
 
 ![](docs/imgs/available-projects.png)
- 
-## Meta Annotations (Optional)
 
-Meta Annotations are additional annotations above the initial concept annotation. An example of meta annotation is temporality.  
+<a name="caveats"></a>
+### Notes
 
 **NB.** Example Concept and Vocab databses are freely available on MedCAT [github](https://github.com/CogStack/MedCAT).
 Note. UMLS and SNOMED-CT are licensed products so only these smaller trained concept / vocab databases are made available currently.
@@ -146,16 +160,19 @@ An example 'meta-annotation' could be 'Temporality'. Values could then be 'Past'
 
 **NB** **Please NOTE Firefox and IE are currently not supported**. Please use Chrome or Safari.
 
-## Annotation Interface
+<a name="anno-ui"></a>
+## Annotation Interface 
 
 The annotation interface can be split initially into 5 sections.
 
 ![](docs/imgs/main-annotation-interface.png)
 
-### Section 1 - Document Summary List
+<a name="doc-summary"></a>
+### Section 1 - Document Summary List 
 A list of documents to be completed in this project. Currently selected documents are highlighted in blue 
 left border. Submitted documents are marked with a ![tick_mark](docs/imgs/tick_mark.png). 
 
+<a name="main-text"></a>
 ### Section 2 - Clinical Text
 The selected documents text, highlighted with each concept recognised by the configured MedCAT model. 
 Highlighted spans of text indicate status of the annotation:
@@ -167,7 +184,8 @@ link to this text span, this informs MedCAT that
 - Turqoise: A User has reviewed the span and marked it as an  **alternative** linked concept. The user has used the 
 'Concept Picker' to choose the correct concept that should be linked.
 
-#### Additional Annotations
+<a name="add-annos"></a>
+#### Additional Annotations 
 MedCAT may miss text spans that are acronyms, abbreviations or misspellings of concepts. Missing annotations can be 
 added to the text by directly highlighting the text span, right clicking, selecting 'Add Annotation', searching for
  concept (via ID, or name), and selecting Add Synonym:
@@ -180,25 +198,30 @@ Select:
  
 ![](docs/imgs/add-annotation-select-concept.png)
  
-### Section 3 - Action Bar
+<a name="action-bar"></a>
+### Section 3 - Action Bar 
 
-#### Concept Navigation
+<a name="concept-nav"></a>
+#### Concept Navigation 
 Navigating between the list of concepts as they appear in the document:
 - Action buttons, left and right 
 - Left and right arrow keys on keyboard
 - Directly clicking on the concept within the text.
 
-#### Concept Status Buttons
+<a name="concept-status"></a>
+#### Concept Status Buttons 
 A concept can be marked with only one status. Status is recorded but only sent to MedCAT for
 training on **submit** of the document and if the projects configured with "Train Model On Submit" is ticked.
 
-#### Submit Button
+<a name="submit"></a>
+#### Submit Button 
 Submit is disabled until all concepts have been reviewed and marked with a status. Clicking submit will produce  
 a submission confirmation dialog with an annotation summary. Confirming submission will send all new annotations 
 to MedCATTrainer middle tier, and re-train the MedCAT model. The following document will be selected and annotated 
 by the newly trained MedCAT model
 
-### Section 4 - Header Toolbar
+<a name="header-tools"></a>
+### Section 4 - Header Toolbar 
 Lists the current name of the document under review and the number of remaining documents to annotate in this project
 action buttons for:
 - ![](docs/imgs/summary-button.png): Summary of current annotations. A similar view is shown before confirmation of submission of the annotations
@@ -206,7 +229,8 @@ action buttons for:
 - ![](docs/imgs/reset-button.png): Reset document. If an annotation is incorrectly added, or incorrectly submitted resetting the document will
 clear all previous annotations and their status.
 
- ### Section 5 - Concept Summary
+<a name="concept-summary"></a>
+### Section 5 - Concept Summary 
 Lists the current selected concepts details.
 
 |Concept Detail| Description |
@@ -218,7 +242,8 @@ Lists the current selected concepts details.
 |Accuracy      | The MedCAT found accuracy of the linked concept for this span. Text spans will have an accuracy 1.0, if they are uniquely identified by that name in the CDB|
 |Description   | The MedCAT associated description of the concept. SNOMED-CT does not provide descriptions of concepts, only alternative names whereas UMLS does provide descriptions|
 
-### Meta Annotations
+<a name="meta-annos"></a>
+## Meta Annotations 
 
 MedCAT is also able to learn project & context specific annotations that overlay on top of the base layer of concept annotations.
 
@@ -232,6 +257,7 @@ Example use cases of these annotations could be to train models to predict if:
 MedCATTrainer is configurable (via the administrator app), to allow for the collection of these meta annotations. We 
 currently have not integrated the active learning components of the concept recognition.  
 
+<a name="meta-anno-config"></a>
 #### Meta Annotation Configuration
 
 To create a new Meta Annotation Task and attach to an existing project:
@@ -247,7 +273,7 @@ To create a new Meta Annotation Task and attach to an existing project:
 3\. Complete the form and add additional meta task values if required for your task via the '+' icon and the 'values' input. 
 Values are enumerated options for your specific task. These can be re-used across projects or be project specific.
 Ensure the default is one of the corresponding values available. Descriptions appear alongside the tasks in interface 
-and in full in the help dialog.   
+and in full in the help dialog.
  
 ![](docs/imgs/meta-task-form.png)
 
@@ -261,21 +287,107 @@ only appear for concepts that are correct.
 
 ![](docs/imgs/meta-tasks-interface.png)
 
-### Project / Tool Administration
-  
+<a name="project-tool-admin"></a>
+## Project / Tool Administration
 
+<a name="concept-picker-admin"></a>
+### Concept Picker - CDB Concept Import
 
-## Annotation Guidelines
+The concept picker is used to:
+- Pick alternative concepts for an existing recognised span
+![](docs/imgs/pick-alternative-concept.png)
+- Pick a concept during the 'Add Annotation' process.
+![](docs/imgs/add-annotation-concept.png)
 
-Annotation guidelines can assist guiding annotators when annotatinng texts for a MedCATTrainer project.
+The available list of concepts is populated via a MedCAT CDB and indexed to enable fast type-ahead style search. 
+
+SNOMED-CT / UMLS built databases can contain thousands if not millions of concepts so this process is executed 
+in asynchronous task to ensure the admin page and app are still available for use.
+
+**This process should only be done once for each concept universe (i.e. SNOMED-CT, UMLS are 2 distinct concept universes)** 
+per deployment or if the underlying MedCAT CDB changes Concepts will be indexed by there CUI, so importing different 
+CDB instances that reference the same concept universe will only import
+the concepts that are in the set difference.
+
+To make these concepts available to a (or any project):
+
+1\. Open the admin app. (http://localhost:8001/admin/)
+
+2\. Select 'Concept Dbs'
+![](docs/imgs/select-concept-dbs.png)
+
+3\. Select the Concept DB entry, and choose the action 'Import Concept', then press the 'Go' button.
+![](docs/imgs/import-concepts.png)
+
+<a name="download-annos"></a>
+### Downloading Annotations
+Project annotations can be downloaded with or without the source text, especially important if the source text is
+particularly sensitive and should be not be shared.
+
+1\. Open the admin app. (http://localhost:8001/admin/)
+
+2\. Select 'Project annotate entities', 
+![Main Menu list](docs/imgs/project_annotate_entities.png)
+
+3\. Select the project(s) to download the annotations for and select the appropriate action for w/ or w/o source text, 
+then press the 'Go' button. This will download all annotations, the meta-annotations (if any) for all projects selected.
+Annotations
+
+4\. An example jupyter notebook is provided under docs/Processing_Annotations.ipynb. 
+
+![](docs/imgs/download-annos.png)
+
+<a name="clone-proj"></a>
+### Clone Project 
+Cloning Projects is a easy & fast method to create copies of configured projects. This includes the dataset, CDB / vocab
+reference, meta annotation settings etc. Annotations themselves will not be copied across.
+copied across.
+
+1\. Open the admin app. (http://localhost:8001/admin/), and select 'Project annotate entities' (same as above for downloading)
+
+2\. Select the project(s) to clone, select the 'Clone projects', then press the 'Go' button.
+![](docs/imgs/clone-projects.png)
+
+<a name="reset-proj"></a>
+### Reset Project
+**Use with caution. Resetting projects deletes all annotations and resets a project to its state upon initial creation.** 
+
+1\. Open the admin app. (http://localhost:8001/admin/), and select 'Project annotate entities'
+(same as above for downloading)
+
+2\. Select the project(s) to reset, then press the 'Go' button.
+![](docs/imgs/reset-projects.png)
+
+<a name="save-download-models"></a>
+### Save / Download Models
+Saving a model, takes the current state of the CDB is currently loaded in memory of the container and overwrites to the
+associated CDB file originally uploaded. To save and download a model for further use in a MedCAT instance:
+ 
+1\. Select the 'Save' model icon on the home page of that project. If the same CDB is used across multiple projects, you 
+only need to save once across all projects. Wait for the confirmation dialog for successfull saving of models to appear.  
+
+2\. Open the admin app. (http://localhost:8001/admin/), and select 'Concept dbs'.
+
+3\. Click the CDB item you would like to download.
+
+4\. Click the CDB file, you will be prompted to save down the new CDB file. This file will be of the same format you 
+have used previously, i.e. you've called medcat.cdb.save_dict('<location>').
+
+![](docs/imgs/save_cdb.png)
+
+5\. To load the new dictionary use medcat.cdb.load_dict('<location>')
+
+<a name="anno-guidelines"></a>
+# Annotation Guidelines
+Annotation guidelines can assist guiding annotators when annotating texts for a MedCATTrainer project.
  
 Once an initial guideline has been defined, a pilot project in MedCATTrainer can be used to further 
 refine the guideline.
 
+<a name="advanced-usage"></a>
+# Advanced Usage
 
-## Advanced Usage
-
-- ReST API Usage for bulk dataset / project creation: available in the jupyter notebook 
+- ReST API Usage for bulk dataset / project creation: available in: docs/API_Examples.ipynb 
 
 
 

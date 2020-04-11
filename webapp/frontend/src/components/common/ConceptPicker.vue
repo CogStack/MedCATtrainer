@@ -32,7 +32,7 @@ export default {
       el.focus()
       el.value = that.selection
       that.searchCUI(that.selection, () => true)
-    }, 50)
+    }, 500)
   },
   data () {
     return {

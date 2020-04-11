@@ -1,5 +1,5 @@
 <template>
-  <div class="sidebar">
+  <div class="sidebar" @keyup.stop>
     <div class="title">
       Add Annotation
       <button @click="cancel()" class="btn btn-default close-window" @mousedown.stop>
