@@ -1,3 +1,4 @@
+import json
 import re
 import traceback
 
@@ -237,12 +238,15 @@ def prepare_documents(request):
     # Should we update
     update = request.data.get('update', 0)
 
-    cuis = []
-    tuis = []
+    cuis = set()
+    tuis = set()
     if project.tuis is not None and project.tuis:
-        tuis = [str(tui).strip() for tui in project.tuis.split(",")]
+        tuis = set([str(tui).strip() for tui in project.tuis.split(",")])
     if project.cuis is not None and project.cuis:
-        cuis = [str(cui).strip() for cui in project.cuis.split(",")]
+        cuis = set([str(cui).strip() for cui in project.cuis.split(",")])
+    if project.cuis_file is not None and project.cuis_file:
+        # Add cuis from json file if it exists
+        cuis.update(json.load(open(project.cuis_file.path)))
 
     try:
         for d_id in d_ids:
