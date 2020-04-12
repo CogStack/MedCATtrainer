@@ -55,7 +55,7 @@ class OPCSCodeSerializer(serializers.ModelSerializer):
 class ProjectAnnotateEntitiesSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectAnnotateEntities
-        fields = '__all__'
+        exclude = ('cuis_file', )
 
 
 class DocumentSerializer(serializers.ModelSerializer):
