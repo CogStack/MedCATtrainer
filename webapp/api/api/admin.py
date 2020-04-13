@@ -52,9 +52,9 @@ def download_without_text(modeladmin, request, queryset):
         out['tuis'] = project.tuis
         out['documents'] = []
 
-        if project.cuis_file is not None:
+        if project.cuis_file is not None and project.cuis_file:
             # Add cuis from json file if it exists
-            out['cuis'] = out.get('cuis', '') + ",".join(json.load(open(project.cuis_file.path)))
+            out['cuis'] = out.get('cuis', '') + "," + ",".join(json.load(open(project.cuis_file.path)))
 
         for doc in project.validated_documents.all():
             out_doc = {}
@@ -120,9 +120,9 @@ def download(modeladmin, request, queryset):
         out['tuis'] = project.tuis
         out['documents'] = []
 
-        if project.cuis_file is not None:
+        if project.cuis_file is not None and project.cuis_file:
             # Add cuis from json file if it exists
-            out['cuis'] = out.get('cuis', '') + ",".join(json.load(open(project.cuis_file.path)))
+            out['cuis'] = out.get('cuis', '') + "," + ",".join(json.load(open(project.cuis_file.path)))
 
         for doc in project.validated_documents.all():
             out_doc = {}

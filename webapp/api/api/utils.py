@@ -182,17 +182,6 @@ def create_annotation(source_val, selection_occurrence_index, cui, user, project
         ann_ent.save()
         id = ann_ent.id
 
-        # Add this annotation to CUIs for this project
-        #if it is not already included
-        """
-        if project.cuis or project.tuis:
-            if cui not in project.cuis:
-                tui = cat.cdb.cui2tui.get(cui, 'unk')
-                if tui not in project.tuis:
-                    project.cuis = project.cuis + "," + str(cui)
-                    project.save()
-        """
-
     return id
 
 
