@@ -218,12 +218,4 @@ h3 {
 .complete-project {
   color: $success;
 }
-
-.alert-enter-active, .alert-leave-active {
-  transition: opacity .5s;
-}
-
-.alert-enter, .alert-leave-to {
-  opacity: 0;
-}
 </style>

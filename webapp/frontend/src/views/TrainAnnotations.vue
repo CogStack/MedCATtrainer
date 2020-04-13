@@ -109,7 +109,7 @@
           </tr>
           <tr>
             <td></td>
-            <td>1 Key</td>N
+            <td>1 Key</td>
             <td>Correct</td>
           </tr>
           <tr>
@@ -129,6 +129,15 @@
           </tr>
           </tbody>
         </table>
+        <div>
+          <h4>Experimental Features</h4>
+          <button class="btn btn-primary" :disabled="resubmittingAllDocs" @click="submitAll">
+            <span v-if="!resubmittingAllDocs">Re-Submit All Validated Documents</span>
+            <span v-if="resubmittingAllDocs">Submitting...</span>
+          </button>
+          <transition name="alert"><span v-if="resubmitSuccess" class="alert alert-info">
+            Successfully Re-submitted</span></transition>
+        </div>
       </div>
       <div slot="footer">
         <button class="btn btn-primary" @click="helpModal = false">Close</button>
@@ -257,6 +266,8 @@ export default {
       currentDoc: null,
       currentEnt: null,
       loadingDoc: false,
+      resubmittingAllDocs: false,
+      resubmitSuccess: false,
       helpModal: false,
       resetModal: false,
       errors: {
@@ -555,6 +566,32 @@ export default {
           })
         })
       })
+    },
+    submitAll () {
+      let subPromises = []
+      for (const vDoc of this.project.validated_documents) {
+        const payload = {
+          project_id: this.project.id,
+          document_id: vDoc
+        }
+        subPromises.push(this.$http.post(`/api/submit-document/`, payload))
+        this.resubmittingAllDocs = true
+        this.loadingDoc = true
+        Promise.all(subPromises).then(resp => {
+          this.resubmitSuccess = true
+          this.loadingDoc = false
+          this.resubmittingAllDocs = false
+          const that = this
+          setTimeout(function () {
+            that.resubmitSuccess = false
+          }, 10000)
+        }).catch(() => {
+          this.resubmittingAllDocs = true
+          this.loadingDoc = false
+          this.errors.modal = true
+          this.errors.message = 'Failure re-submitting all validated documents: Refresh Project'
+        })
+      }
     },
     keyup (e) {
       if (e.keyCode === 13 && this.docToSubmit && !this.submitConfirmedLoading) {
