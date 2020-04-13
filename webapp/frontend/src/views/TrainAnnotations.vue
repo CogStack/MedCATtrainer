@@ -533,13 +533,12 @@ export default {
       this.$http.get(`/api/project-annotate-entities/?id=${this.projectId}`).then(resp => {
         // refresh project validated documents as multiple users may be submitting. Mitigates but
         // does not solve a potential inconsistent validated_documents state seen.
-        this.project.validated_documents = resp.data.results[0].validated_documents
-
-        if (this.project.validated_documents.indexOf(this.currentDoc.id) === -1) {
-          this.project.validated_documents = this.project.validated_documents.concat(this.currentDoc.id)
+        let proj = resp.data.results[0]
+        if (proj.validated_documents.indexOf(this.currentDoc.id) === -1) {
+          proj.validated_documents = this.project.validated_documents.concat(this.currentDoc.id)
         }
-        this.validatedDocuments = this.project.validated_documents
-        this.project.require_entity_validation = this.project.require_entity_validation ? 1 : 0
+        this.project = proj
+        this.validatedDocuments = proj.validated_documents
         this.$http.put(`/api/project-annotate-entities/${this.projectId}/`, this.project).then(() => {
           let payload = {
             project_id: this.project.id,
