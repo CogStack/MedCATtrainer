@@ -406,6 +406,34 @@ def submit_document(request):
     if project.train_model_on_submit:
         train_medcat(cat, project, document)
 
+    # Add cuis to filter if they did not exist
+    cuis = []
+    tuis = []
+
+    if project.cuis_file is not None and project.cuis_file:
+        cuis = cuis + json.load(open(project.cuis_file.path))
+    if project.cuis is not None and project.cuis:
+        cuis = cuis + [str(cui).strip() for cui in project.cuis.split(",")]
+    if project.tuis is not None and project.tuis:
+        tuis = tuis + [str(tui).strip() for tui in project.tuis.split(",")]
+
+    cuis = set(cuis) # Convert to set, only cuis
+    if cuis or tuis:
+        anns = AnnotatedEntity.objects.filter(project=project, document=document, validated=True)
+        doc_cuis = [ann.entity.label for ann in anns]
+
+        for cui in doc_cuis:
+            if cui not in cuis:
+                tui = cat.cdb.cui2tui.get(cui, 'unk')
+                if tui not in tuis:
+                    if project.cuis:
+                        project.cuis = project.cuis + "," + str(cui)
+                    else:
+                        project.cuis = str(cui)
+                    project.save()
+                    # Add this cui so we do not repeat things
+                    cuis.add(cui)
+
     return Response({'message': 'Document submited successfully'})
 
 
