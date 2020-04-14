@@ -205,6 +205,9 @@ def train_medcat(cat, project, document):
             # This will add the concept if it doesn't exist and if it 
             #does just link the new name to the concept, if the namee is
             #already linked then it will just train.
+            manually_created = False
+            if ann.manually_created or ann.alternative:
+                manually_created = True
             cat.add_name(cui=cui,
                          source_val=ann.value,
                          text=text,
@@ -213,7 +216,7 @@ def train_medcat(cat, project, document):
                          lr=lr,
                          anneal=anneal,
                          negative=ann.deleted,
-                         manually_created=ann.manually_created)
+                         manually_created=manually_created)
 
     # Completely remove concept names that the user killed
     killed_anns = AnnotatedEntity.objects.filter(project=project, document=document, killed=True)
