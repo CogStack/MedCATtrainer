@@ -469,3 +469,44 @@ def finished_projects(request):
         validated_projects[project.id] = len(set(all_documents) - set(validated)) == 0
 
     return Response({'validated_projects': validated_projects})
+
+@api_view(http_method_names=['GET', 'POST'])
+def update_meta_annotation(request):
+
+    project_id = request.data['project_id']
+    entity_id = request.data['entity_id']
+    document_id = request.data['document_id']
+    meta_task_id = request.data['meta_task_id']
+    meta_task_value = request.data['meta_task_value']
+
+    annotation = AnnotatedEntity.objects.filter(project= project_id, entity=entity_id, document=document_id)[0]
+    annotation.correct = True
+    annotation.validated = True
+    log.debug(annotation)
+    
+    annotation.save()
+
+    meta_task = MetaTask.objects.filter(id = meta_task_id)[0]
+    meta_task_value = MetaTaskValue.objects.filter(id = meta_task_value)[0]
+
+    meta_annotation_list = MetaAnnotation.objects.filter(annotated_entity = annotation)
+
+    log.debug(meta_annotation_list)
+
+    if len(meta_annotation_list) > 0:
+        meta_annotation = meta_annotation_list[0]
+
+        meta_annotation.meta_task = meta_task
+        meta_annotation.meta_task_value = meta_task_value
+
+    else:
+        meta_annotation = MetaAnnotation()
+        meta_annotation.annotated_entity = annotation
+        meta_annotation.meta_task = meta_task
+        meta_annotation.meta_task_value = meta_task_value
+
+    log.debug(meta_annotation)    
+    meta_annotation.save()
+
+    return Response({'meta_annotation': 'added meta annotation'})
+    
