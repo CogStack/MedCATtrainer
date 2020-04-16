@@ -35,6 +35,7 @@
           <div class="main-viewport">
             <clinical-text :loading="loadingDoc" :text="currentDoc !== null ? currentDoc.text : null"
                            :currentEnt="currentEnt" :ents="ents" :taskName="taskName" :taskValues="taskValues"
+                           :addAnnos="true"
                            @select:concept="selectEntity" @select:addSynonym="addSynonym"></clinical-text>
             <div class="taskbar">
               <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt" @select:next="next" @select:back="back"></nav-bar>
