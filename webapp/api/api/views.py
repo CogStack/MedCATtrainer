@@ -512,7 +512,7 @@ def update_meta_annotation(request):
     annotation.correct = True
     annotation.validated = True
     log.debug(annotation)
-    
+
     annotation.save()
 
     meta_task = MetaTask.objects.filter(id = meta_task_id)[0]
@@ -534,7 +534,7 @@ def update_meta_annotation(request):
         meta_annotation.meta_task = meta_task
         meta_annotation.meta_task_value = meta_task_value
 
-    log.debug(meta_annotation)    
+    log.debug(meta_annotation)
     meta_annotation.save()
 
     return Response({'meta_annotation': 'added meta annotation'})
