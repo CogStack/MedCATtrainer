@@ -498,6 +498,7 @@ def finished_projects(request):
 
     return Response({'validated_projects': validated_projects})
 
+
 @api_view(http_method_names=['GET', 'POST'])
 def update_meta_annotation(request):
 
@@ -537,4 +538,47 @@ def update_meta_annotation(request):
     meta_annotation.save()
 
     return Response({'meta_annotation': 'added meta annotation'})
-    
+
+
+@api_view(http_method_names=['POST'])
+def annotate_text(request):
+    p_id = request.data['project_id']
+    message = request.data['message']
+    cuis = request.data['cuis']
+    tuis = request.data['tuis']
+    if message is None or p_id is None:
+        return HttpResponseBadRequest('No message to annotate')
+
+    project = ProjectAnnotateEntities.objects.get(id=p_id)
+
+    cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
+                     CAT_MAP=CAT_MAP, project=project)
+    spacy_doc = cat(message)
+
+    ents = []
+    anno_tkns = []
+    for ent in spacy_doc._.ents:
+        if (not cuis and not tuis) or (ent._.tui in tuis) or (ent._.cui in cuis):
+            cnt = Entity.objects.filter(label=ent._.cui).count()
+            inc_ent = all(tkn not in anno_tkns for tkn in ent)
+            if inc_ent and cnt != 0:
+                anno_tkns.extend([tkn for tkn in ent])
+                entity = Entity.objects.get(label=ent._.cui)
+                ents.append({
+                    'entity': entity.id,
+                    'value': ent.text,
+                    'start_ind': ent.start_char,
+                    'end_ind': ent.end_char,
+                    'acc': ent._.acc
+                })
+
+    ents.sort(key=lambda e: e['start_ind'])
+    out = {'message': message, 'entities': ents}
+    return Response(out)
+
+
+
+
+
+
+
