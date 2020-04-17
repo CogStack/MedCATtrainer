@@ -172,6 +172,7 @@ class ProjectAnnotateEntities(Project):
     train_model_on_submit = models.BooleanField(default=True)
     clinical_coding_project = models.BooleanField(default=False)
     add_new_entities = models.BooleanField(default=False)
+    restrict_concept_lookup = models.BooleanField(default=False)
     tasks = models.ManyToManyField(MetaTask, blank=True, default=None)
 
     def save(self, *args, **kwargs):
