@@ -81,10 +81,9 @@
         Cancel
       </button>
     </div>
-    <add-new-concept :selection="selection" :project="project" :documentId="documentId"
+    <add-new-concept v-if="project.add_new_entities" :selection="selection" :project="project" :documentId="documentId"
                      @select:newConcept="newConceptSelected"
-                     @request:addConceptComplete="newConceptAddedComplete"
-    ></add-new-concept>
+                     @request:addConceptComplete="newConceptAddedComplete"></add-new-concept>
   </div>
 </template>
 

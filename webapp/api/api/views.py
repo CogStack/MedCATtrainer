@@ -406,6 +406,34 @@ def submit_document(request):
     if project.train_model_on_submit:
         train_medcat(cat, project, document)
 
+    # Add cuis to filter if they did not exist
+    cuis = []
+    tuis = []
+
+    if project.cuis_file is not None and project.cuis_file:
+        cuis = cuis + json.load(open(project.cuis_file.path))
+    if project.cuis is not None and project.cuis:
+        cuis = cuis + [str(cui).strip() for cui in project.cuis.split(",")]
+    if project.tuis is not None and project.tuis:
+        tuis = tuis + [str(tui).strip() for tui in project.tuis.split(",")]
+
+    cuis = set(cuis) # Convert to set, only cuis
+    if cuis or tuis:
+        anns = AnnotatedEntity.objects.filter(project=project, document=document, validated=True)
+        doc_cuis = [ann.entity.label for ann in anns]
+
+        for cui in doc_cuis:
+            if cui not in cuis:
+                tui = cat.cdb.cui2tui.get(cui, 'unk')
+                if tui not in tuis:
+                    if project.cuis:
+                        project.cuis = project.cuis + "," + str(cui)
+                    else:
+                        project.cuis = str(cui)
+                    project.save()
+                    # Add this cui so we do not repeat things
+                    cuis.add(cui)
+
     return Response({'message': 'Document submited successfully'})
 
 
@@ -470,6 +498,7 @@ def finished_projects(request):
 
     return Response({'validated_projects': validated_projects})
 
+
 @api_view(http_method_names=['GET', 'POST'])
 def update_meta_annotation(request):
 
@@ -483,7 +512,7 @@ def update_meta_annotation(request):
     annotation.correct = True
     annotation.validated = True
     log.debug(annotation)
-    
+
     annotation.save()
 
     meta_task = MetaTask.objects.filter(id = meta_task_id)[0]
@@ -505,8 +534,51 @@ def update_meta_annotation(request):
         meta_annotation.meta_task = meta_task
         meta_annotation.meta_task_value = meta_task_value
 
-    log.debug(meta_annotation)    
+    log.debug(meta_annotation)
     meta_annotation.save()
 
     return Response({'meta_annotation': 'added meta annotation'})
-    
+
+
+@api_view(http_method_names=['POST'])
+def annotate_text(request):
+    p_id = request.data['project_id']
+    message = request.data['message']
+    cuis = request.data['cuis']
+    tuis = request.data['tuis']
+    if message is None or p_id is None:
+        return HttpResponseBadRequest('No message to annotate')
+
+    project = ProjectAnnotateEntities.objects.get(id=p_id)
+
+    cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
+                     CAT_MAP=CAT_MAP, project=project)
+    spacy_doc = cat(message)
+
+    ents = []
+    anno_tkns = []
+    for ent in spacy_doc._.ents:
+        if (not cuis and not tuis) or (ent._.tui in tuis) or (ent._.cui in cuis):
+            cnt = Entity.objects.filter(label=ent._.cui).count()
+            inc_ent = all(tkn not in anno_tkns for tkn in ent)
+            if inc_ent and cnt != 0:
+                anno_tkns.extend([tkn for tkn in ent])
+                entity = Entity.objects.get(label=ent._.cui)
+                ents.append({
+                    'entity': entity.id,
+                    'value': ent.text,
+                    'start_ind': ent.start_char,
+                    'end_ind': ent.end_char,
+                    'acc': ent._.acc
+                })
+
+    ents.sort(key=lambda e: e['start_ind'])
+    out = {'message': message, 'entities': ents}
+    return Response(out)
+
+
+
+
+
+
+

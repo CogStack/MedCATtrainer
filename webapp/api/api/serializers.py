@@ -1,3 +1,5 @@
+import json
+
 from django.contrib.auth.models import User
 from .models import *
 from rest_framework import serializers
@@ -56,6 +58,12 @@ class ProjectAnnotateEntitiesSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectAnnotateEntities
         exclude = ('cuis_file', )
+
+    def to_representation(self, instance):
+        data = super(ProjectAnnotateEntitiesSerializer, self).to_representation(instance)
+        cuis_from_file = ','.join(json.load(open(instance.cuis_file.path))) if instance.cuis_file else ''
+        data['cuis'] = data['cuis'] + ',' + cuis_from_file if len(data['cuis']) > 0 else cuis_from_file
+        return data
 
 
 class DocumentSerializer(serializers.ModelSerializer):

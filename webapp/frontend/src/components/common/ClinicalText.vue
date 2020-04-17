@@ -34,7 +34,8 @@ export default {
     task: Object,
     ents: Array,
     loading: Boolean,
-    currentEnt: Object
+    currentEnt: Object,
+    addAnnos: Boolean
   },
   data () {
     return {
@@ -51,7 +52,8 @@ export default {
       if (this.loading || !this.text || !this.ents) { return '' }
       if (this.ents.length === 0) {
         let text = this.text.replace('&', '&amp').replace('<', '&gt').replace('>', '&gt')
-        return `<div @contextmenu.prevent.stop="showCtxMenu($event)">${text === 'nan' ? '' : text}</div>`
+        text = text === 'nan' ? '' : text
+        return this.addAnnos ? `<div @contextmenu.prevent.stop="showCtxMenu($event)">${text}</div>` : `<div>${text}</div>`
       }
 
       const taskHighlightDefault = 'highlight-task-default'
@@ -85,8 +87,8 @@ export default {
         .replace(/&lt(?=\/span>)/g, '<')
         .replace(/(?<!")>/g, '&gt')
         .replace(/(?<=<\/span)&gt/g, '>')
-      formattedText = `<div @contextmenu.prevent.stop="showCtxMenu($event)">${formattedText}</div>`
 
+      formattedText = this.addAnnos ? `<div @contextmenu.prevent.stop="showCtxMenu($event)">${formattedText}</div>` : `<div>${formattedText}</div>`
       this.scrollIntoView(timeout)
       return formattedText
     }
@@ -186,6 +188,7 @@ export default {
   background: rgba(0, 114, 206, .2);
   padding: 50px 50px 0 50px;
   border-radius: 10px;
+  height: 100%;
 }
 
 .clinical-note {

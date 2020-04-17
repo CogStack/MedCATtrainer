@@ -100,6 +100,16 @@ export default {
         let searchConceptsQueryParams = `search=${term}&cdb__in=${conceptDbs}`
         that.$http.get(`/api/search-concepts/?${searchConceptsQueryParams}`).then(resp => {
           that.searchResults = resp.data.results.map(res => mapResult(res, resp.data.results))
+          if (that.project.restrict_concept_lookup) {
+            if (that.project.tuis) {
+              let tuis = that.project.tuis.split(',').map(t => t.trim())
+              that.searchResults = that.searchResults.filter(r => tuis.indexOf(r.tui) !== -1)
+            }
+            if (that.project.cuis) {
+              let cuis = that.project.cuis.split(',').map(c => c.trim())
+              that.searchResults = that.searchResults.filter(r => cuis.indexOf(r.cui) !== -1)
+            }
+          }
           loading(false)
         })
       }
