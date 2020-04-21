@@ -92,6 +92,31 @@ access the admin app.
 <a name="user-guide"></a>
 # User Guide 
 
+## Demo
+For demonstration purposes and general testing of a current model a stripped back version of the annotator is provided
+via the 'Demo' tab of the main screen.
+
+![](docs/imgs/demo_tab.png)
+
+This presents a similar looking annotation screen as a real project, described in detail [here](#anno-ui), but does not 
+force usage of a particular dataset, setup of filters, and other project settings. This view does not allow for 'annotating'
+identified concepts (or adding new concepts) but allows for users to get a feel for what an existing MedCAT model is 
+capable of annotating in via an interactive model
+
+![](docs/imgs/demo_interface.png)
+
+1\. A form to:
+- Select the appropriate project model to view concept annotations for.
+- Clinical text to annotate and display in 2.
+- CUI and TUI filters can be used to only show concepts of interest in 2. For example for a UMLS CDB this could be
+ T047 for "Disease or Syndrome". CUI and TUI filters are combined if entries are included in both form inputs.
+ 
+2\. Example clinical text is displayed here, with text spans highlighted in blue. Click any annotation to show linked
+concept DB details in 3.
+
+3\. Linked concept details from selected concepts from the 2. 
+
+
 <a name="create-project"></a>
 ## Create an Annotation Project 
 
@@ -374,6 +399,12 @@ only need to save once across all projects. Wait for the confirmation dialog for
 
 4\. Click the CDB file, you will be prompted to save down the new CDB file. This file will be of the same format you 
 have used previously, i.e. you've called medcat.cdb.save_dict('<location>').
+
+The saved MedCAT models can be used in any instance a regular MedCAT model may be used. I.e. in a jupyter notebook, 
+part of a web service, or further fine-tuning in anothe MedCATTrainer instance. 
+
+The Trainer currently does not support inspection / training / storage of the meta annotation models. These will be
+integrated in a forthcoming release.
 
 ![](docs/imgs/save_cdb.png)
 
