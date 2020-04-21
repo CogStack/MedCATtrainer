@@ -82,7 +82,8 @@ def download_without_text(modeladmin, request, queryset):
                     out_ann['icd_code'] = ann.icd_code.code
                 if ann.opcs_code:
                     out_ann['opcs_code'] = ann.opcs_code.code
-                out_ann['meta_anns'] = []
+                out_ann['meta_anns'] = {}
+
                 # Get MetaAnnotations
                 meta_anns = MetaAnnotation.objects.filter(annotated_entity=ann)
                 for meta_ann in meta_anns:
@@ -91,7 +92,10 @@ def download_without_text(modeladmin, request, queryset):
                     o_meta_ann['value'] = meta_ann.meta_task_value.name
                     o_meta_ann['acc'] = meta_ann.acc
                     o_meta_ann['validated'] = meta_ann.validated
-                    out_ann['meta_anns'].append(o_meta_ann)
+
+                    # Add annotation
+                    key = meta_ann.meta_task.name
+                    out_ann['meta_anns'][key] = o_meta_ann
 
                 out_doc['annotations'].append(out_ann)
             out['documents'].append(out_doc)
@@ -158,7 +162,8 @@ def download(modeladmin, request, queryset):
                     out_ann['icd_code'] = ann.icd_code.code
                 if ann.opcs_code:
                     out_ann['opcs_code'] = ann.opcs_code.code
-                out_ann['meta_anns'] = []
+                out_ann['meta_anns'] = {}
+
                 # Get MetaAnnotations
                 meta_anns = MetaAnnotation.objects.filter(annotated_entity=ann)
                 for meta_ann in meta_anns:
@@ -167,7 +172,10 @@ def download(modeladmin, request, queryset):
                     o_meta_ann['value'] = meta_ann.meta_task_value.name
                     o_meta_ann['acc'] = meta_ann.acc
                     o_meta_ann['validated'] = meta_ann.validated
-                    out_ann['meta_anns'].append(o_meta_ann)
+
+                    # Add annotation
+                    key = meta_ann.meta_task.name
+                    out_ann['meta_anns'][key] = o_meta_ann
 
                 out_doc['annotations'].append(out_ann)
             out['documents'].append(out_doc)
