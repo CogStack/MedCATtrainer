@@ -1,9 +1,17 @@
 <template>
   <div class="doc-summary">
-    <div class="title">Clinical Notes</div>
+    <div class="title">
+      Clinical Notes
+      <font-awesome-icon icon="search" class="search-icon" @click="activateSearch"></font-awesome-icon>
+    </div>
+    <div v-if="searching" class="search-docs">
+      <input id="doc-search-input" type="text" class="form-control" placeholder="Search by note name"
+             :value="searchCrit" @keyup="searchDocs">
+    </div>
     <div v-if="loadingDoc" class="loading-doc"></div>
+
     <div class="doc-list">
-      <div v-for="doc of docs" :key="doc.id" class="doc clickable"
+      <div v-for="doc of (searchCrit ? filteredDocs : docs)" :key="doc.id" class="doc clickable"
            :class="{'selected-doc': selectedDocId === doc.id}" @click="loadDoc(doc)">
         <font-awesome-icon v-if="validatedDocIds.includes(doc.id)" class="validated-doc" icon="check"></font-awesome-icon>
         <div class="note-summary">
@@ -28,6 +36,13 @@ export default {
     selectedDocId: Number,
     loadingDoc: Boolean,
     validatedDocIds: Array
+  },
+  data () {
+    return {
+      searching: false,
+      filteredDocs: [],
+      searchCrit: null
+    }
   },
   methods: {
     scrollSelectedDocId () {
@@ -54,6 +69,28 @@ export default {
         // up
         this.$emit('request:loadDoc', this.docs[this.docs.map(d => d.id).indexOf(this.selectedDocId) - 1])
         this.$nextTick(this.scrollSelectedDocId)
+      }
+    },
+    activateSearch () {
+      this.searching = !this.searching
+      if (this.searching) {
+        // keyboard focus on that element.
+        setTimeout(function () {
+          const el = document.getElementById('doc-search-input')
+          el.focus()
+        }, 50)
+      } else {
+        this.searchCrit = null
+      }
+    },
+    searchDocs (event) {
+      this.searchCrit = event.target.value
+      if (this.searchCrit) {
+        this.filteredDocs = this.docs.filter(d => {
+          return d.name.toLowerCase().startsWith(this.searchCrit.toLowerCase())
+        })
+      } else {
+        this.filteredDocs = []
       }
     }
   },
@@ -159,6 +196,21 @@ $width: 200px;
     width: 80%;
     height: 1.2em;
   }
+}
+
+.search-icon {
+  font-size: 10pt;
+  vertical-align: center;
+  opacity: 0.5;
+  text-align: right;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.search-docs {
+  width: 100%;
 }
 
 </style>
