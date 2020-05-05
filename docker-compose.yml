@@ -12,7 +12,7 @@ services:
     expose:
       - "8000"
     env_file:
-      - ./envs/env
+      - ./envs/
     command: /home/run.sh
   nginx:
     build:
