@@ -62,7 +62,7 @@ class ProjectAnnotateEntitiesSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super(ProjectAnnotateEntitiesSerializer, self).to_representation(instance)
         cuis_from_file = ','.join(json.load(open(instance.cuis_file.path))) if instance.cuis_file else ''
-        data['cuis'] = data['cuis'] + ',' + cuis_from_file if len(data['cuis']) > 0 else cuis_from_file
+        data['cuis'] = data['cuis'] + (',' + cuis_from_file) if len(data['cuis']) > 0 else cuis_from_file
         return data
 
 
