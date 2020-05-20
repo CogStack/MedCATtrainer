@@ -26,7 +26,7 @@
     </div>
 
     <multipane class="viewport-container">
-      <div class="full-height">
+      <div :style="{minWith: '500px'}" class="full-height">
         <div class="app-main">
           <document-summary :docs="docs" :moreDocs="nextDocSetUrl !== null"
                             :validatedDocIds="validatedDocuments"
@@ -47,7 +47,7 @@
         </div>
       </div>
       <multipane-resizer></multipane-resizer>
-      <div :style="{ flexGrow: 1, width: '300px', maxWidth: '1000px' }">
+      <div :style="{ flexGrow: 1, width: '300px', minWidth: '350px', maxWidth: '1000px' }">
         <div :class="{'full-sidebar-container': conceptSynonymSelection, 'sidebar-container': !conceptSynonymSelection}">
           <transition name="slide-left">
             <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" :altSearch="altSearch"
