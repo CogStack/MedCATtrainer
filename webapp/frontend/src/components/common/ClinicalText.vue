@@ -41,7 +41,7 @@ export default {
     return {
       ctxMenuOptions: [
         {
-          name: 'Add Annotation'
+          name: 'Add Term'
         }
       ],
       selection: null

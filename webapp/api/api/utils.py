@@ -192,8 +192,7 @@ def train_medcat(cat, project, document):
     # Just in case, disable unsupervised training
     cat.train = False
     # Get all annotations
-    anns = AnnotatedEntity.objects.filter(project=project, document=document, validated=True,
-            killed=False)
+    anns = AnnotatedEntity.objects.filter(project=project, document=document, validated=True, killed=False)
     text = document.text
     doc = cat(text)
 
