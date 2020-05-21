@@ -1,5 +1,5 @@
 <template>
-  <div v-if="tasks && tasks.length > 0">
+  <div class="meta-task-container" v-if="tasks && tasks.length > 0">
     <div class="title">Meta Annotation Tasks</div>
     <div class="task-list">
       <meta-annotation-task v-for="task of tasks" :key="task.id"
@@ -76,8 +76,12 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.meta-task-container {
+  height: calc(100% - 450px);
+}
+
 .task-list {
-  height: 250px;
+  height: calc(100% - 41px);
   overflow-y: auto;
 }
 </style>

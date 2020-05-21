@@ -213,7 +213,7 @@ export default {
 }
 
 .sidebar {
-  height: 100%;
+  height: 450px;
   background: $background;
   color: $text;
 }

@@ -21,7 +21,6 @@ services:
     build:
         network: host
         context: ./nginx
-    restart: always
     volumes:
       - api-media:/home/api/media
       - api-static:/home/api/static

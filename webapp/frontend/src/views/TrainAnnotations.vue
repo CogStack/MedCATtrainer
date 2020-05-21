@@ -47,8 +47,8 @@
         </div>
       </div>
       <multipane-resizer></multipane-resizer>
-      <div :style="{ flexGrow: 1, width: '300px', minWidth: '350px', maxWidth: '1000px' }">
-        <div :class="{'full-sidebar-container': conceptSynonymSelection, 'sidebar-container': !conceptSynonymSelection}">
+      <div :style="{ flexGrow: 1, width: '375px', minWidth: '425px', maxWidth: '1000px' }">
+        <div class="sidebar-container">
           <transition name="slide-left">
             <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" :altSearch="altSearch"
                              :project="project"
@@ -729,8 +729,8 @@ export default {
 }
 
 .sidebar-container {
-  height: calc(100% - 250px - 41px);
-  display: flex   ;
+  height: 100%;
+  display: flex;
   flex-direction: column;
   padding: 5px;
 
