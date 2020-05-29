@@ -114,7 +114,7 @@ export default {
       const anchor = selection.anchorNode
       const focus = selection.focusNode
 
-      if (focus !== null) {
+      if (selStr.length > 0 && focus !== null) {
         let nextText = focus.data.slice(selection.focusOffset)
         let nextSibling = focus.nextSibling || focus.parentElement.nextSibling
         let priorText = anchor.data.slice(0, selection.anchorOffset)
@@ -134,13 +134,17 @@ export default {
           nextText = anchor.data.slice(selection.anchorOffset)
         }
 
-        while (priorSibling !== null) {
+        let i = 0
+        while (priorSibling !== null && i < 10) {
           priorText = `${priorSibling.innerText || priorSibling.textContent}${priorText}`
           priorSibling = priorSibling.previousSibling
+          i++
         }
-        while (nextSibling !== null) {
+        i = 0
+        while (nextSibling !== null && i < 15) {
           nextText += (nextSibling.innerText || nextSibling.textContent)
           nextSibling = nextSibling.nextSibling
+          i++
         }
 
         // occurrences of the selected string in the text before and after.
