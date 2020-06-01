@@ -1,5 +1,5 @@
 <template>
-  <div class="container full-height">
+  <div class="full-height project-table">
     <login v-if="!loginSuccessful" @login:success="loggedIn()"></login>
     <transition name="alert"><div class="alert alert-danger" v-if="routeAlert" role="alert">{{routeAlert}}</div></transition>
     <div class="home-title">Available Projects:</div>
@@ -27,8 +27,8 @@
           <td>{{project.name}}</td>
           <td>{{project.description}}</td>
           <td>{{(new Date(project.create_time)).toLocaleDateString()}}</td>
-          <td><span class="term-list">{{project.cuis || 'All'}}</span></td>
-          <td><span class="term-list">{{project.tuis || 'All'}}</span></td>
+          <td><span class="term-list">{{project.cuis.slice(0, 40) || 'All'}}</span></td>
+          <td><span class="term-list">{{project.tuis.slice(0, 40) || 'All'}}</span></td>
           <td>{{project.require_entity_validation ? 'Annotate' : 'Validate'}}</td>
           <td @click.stop><button class="btn btn-outline-primary" @click="saveModel(project.id)"><font-awesome-icon icon="save"></font-awesome-icon></button></td>
           <td>
@@ -189,6 +189,11 @@ h3 {
 .table-container {
   height: calc(100% - 200px);
   overflow-y: auto;
+}
+
+.project-table {
+  width: 90%;
+  margin: auto;
 }
 
 .table {
