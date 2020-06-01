@@ -24,13 +24,19 @@ def remove_annotations(document, project, partial=False):
         log.debug(f"Something went wrong: {e}")
 
 
-def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
+def add_annotations(spacy_doc, user, project, document, cdb, existing_annotations, tuis=[], cuis=[]):
     spacy_doc._.ents.sort(key=lambda x: len(x.text), reverse=True)
 
     tkns_in = []
     ents = []
+    existing_annos_intervals = [(ann.start_ind, ann.end_ind) for ann in existing_annotations]
+
+    def check_ents(ent):
+        return any((ea[0] < ent.start_char < ea[1]) or
+                   (ea[0] < ent.end_char < ea[1]) for ea in existing_annos_intervals)
+
     for ent in spacy_doc._.ents:
-        if (not cuis and not tuis) or (ent._.tui in tuis) or (ent._.cui in cuis):
+        if not check_ents(ent) and ((not cuis and not tuis) or (ent._.tui in tuis) or (ent._.cui in cuis)):
             to_add = True
             for tkn in ent:
                 if tkn in tkns_in:
@@ -123,14 +129,9 @@ def _remove_overlap(project, document, start, end):
     anns = AnnotatedEntity.objects.filter(project=project, document=document)
 
     for ann in anns:
-        if ann.start_ind >= start and ann.start_ind <= end:
-            log.debug("Removed")
-            log.debug(str(ann))
+        if (start <= ann.start_ind <= end) or (start <= ann.end_ind <= end):
+            log.debug("Removed %s ", str(ann))
             ann.delete()
-        elif ann.end_ind >= start and ann.end_ind <= end:
-            ann.delete()
-            log.debug("Removed")
-            log.debug(str(ann))
 
 
 def create_annotation(source_val, selection_occurrence_index, cui, user, project, document, cat, icd_code=None,

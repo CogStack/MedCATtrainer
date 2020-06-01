@@ -275,6 +275,7 @@ def prepare_documents(request):
                                 project=project,
                                 document=document,
                                 cdb=cat.cdb,
+                                existing_annotations=anns,
                                 tuis=tuis,
                                 cuis=cuis)
     except Exception as e:
