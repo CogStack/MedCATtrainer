@@ -151,7 +151,8 @@ Annotation projects are used to inspect, validate and improve concepts recognise
 |Train Model On Submit| (Default: True) With this option ticked, each document submission trains the configured MedCAT instance with the marked, and added if any, annotations from this document. Unticked, ensures the MedCAT model does not train between submissions.|
 |Clinical Coding Project| (Default: False) With this option ticked, is an experimental feature, tailoring interface to the problem of clinical coding| 
 |Add New Entities|(Default: False) With this option ticked, allows users to add entirely new concepts to the existing MedCAT CDB. False ensures this option is not available to users.|
-|Restrict Concept Lookup|(Default: False) With this option ticked, restricts the concept lookup (add annotation / alternative concept) to only include those CUIs listed in the above filters (either from CUI / TUI list or uploade 'CUI File' list| 
+|Restrict Concept Lookup|(Default: False) With this option ticked, restricts the concept lookup (add annotation / alternative concept) to only include those CUIs listed in the above filters (either from CUI / TUI list or uploade 'CUI File' list|
+|Terminate Available|(Default: True) With this option ticked, the option to terminate an annotated concept will appear| 
 |Tasks| Select from the list 'Meta Annotation' tasks that will appear once a given annotation has been marked correct.|
 
 Datasets can be uploaded in CSV or XLSX format. Example:
