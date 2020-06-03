@@ -61,7 +61,8 @@ def add_annotations(spacy_doc, user, project, document, cdb, existing_annotation
             if label in cdb.cui2pretty_name:
                 pretty_name = cdb.cui2pretty_name[label]
             elif label in cdb.cui2original_names and len(cdb.cui2original_names[label]) > 0:
-                pretty_name = cdb.cui2original_names[label][0]
+                # take shortest name here.
+                pretty_name = sorted(cdb.cui2original_names[label], key=len)[0]
 
             concept = Concept()
             concept.pretty_name = pretty_name
