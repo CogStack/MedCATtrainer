@@ -1,9 +1,13 @@
+import json
 import os
-from .models import Entity, AnnotatedEntity, Concept, ICDCode, OPCSCode, ConceptDB
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+from .models import Entity, AnnotatedEntity, Concept, ICDCode, OPCSCode, ProjectAnnotateEntities
 from medcat.cdb import CDB
 from medcat.utils.vocab import Vocab
 from medcat.cat import CAT
-from medcat.utils.helpers import tkn_inds_from_doc, prepare_name
 from medcat.utils.loggers import basic_logger
 log = basic_logger("api.utils")
 
@@ -254,3 +258,14 @@ def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
         cat.train = False
         CAT_MAP[cat_id] = cat
     return cat
+
+
+@receiver(post_save, sender=ProjectAnnotateEntities)
+def save_project_anno(sender, instance, **kwargs):
+    if instance.cuis_file:
+        post_save.disconnect(save_project_anno, sender=ProjectAnnotateEntities)
+        cuis_from_file = json.load(open(instance.cuis_file.path))
+        cui_list = [c.strip() for c in instance.cuis.split(',')]
+        instance.cuis = ','.join(set(cui_list) - set(cuis_from_file))
+        instance.save()
+        post_save.connect(save_project_anno, sender=ProjectAnnotateEntities)
