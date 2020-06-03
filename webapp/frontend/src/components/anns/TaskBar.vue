@@ -5,10 +5,10 @@
         Correct</button>
       <button :disabled="taskLocked" class="btn task-btn-1" @click="remove">
         Incorrect</button>
-      <button :disabled="taskLocked" class="btn task-btn-2" @click="kill">
+      <button v-if="terminateEnabled" :disabled="taskLocked" class="btn task-btn-2" @click="kill">
         Terminate</button>
-        <button :disabled="taskLocked" class="btn task-btn-3" @click="alternative">
-          Alternative</button>
+      <button :disabled="taskLocked" class="btn task-btn-3" @click="alternative">
+        Alternative</button>
     </div>
     <button :disabled="submitDisabled()" @click="submit()" class="btn btn-outline-primary mb-2 submit-btn submit"
               type="button">Submit</button>
@@ -24,7 +24,8 @@ export default {
     ents: Array,
     taskLocked: Boolean,
     submitLocked: Boolean,
-    altSearch: Boolean
+    altSearch: Boolean,
+    terminateEnabled: Boolean
   },
   watch: {
     'submitLocked' (oldVal, newVal) {

@@ -182,6 +182,8 @@ class ProjectAnnotateEntities(Project):
     restrict_concept_lookup = models.BooleanField(default=False,
                                                   help_text='users can only select terms from the list configured for '
                                                             'the project, i.e. either from the cuis or cuis_file lists.')
+    terminate_available = models.BooleanField(default=True,
+                                              help_text='enable the option to terminate concepts.')
     tasks = models.ManyToManyField(MetaTask, blank=True, default=None)
 
     def save(self, *args, **kwargs):
@@ -196,6 +198,7 @@ class ProjectAnnotateEntities(Project):
             cdb_obj.save()
             self.concept_db = cdb_obj
         super(ProjectAnnotateEntities, self).save(*args, **kwargs)
+
 
 class MetaAnnotation(models.Model):
     annotated_entity = models.ForeignKey('AnnotatedEntity', on_delete=models.CASCADE)
