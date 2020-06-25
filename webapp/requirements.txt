@@ -8,4 +8,5 @@ django-background-tasks~=1.2
 numpy~=1.15
 pandas~=0.23
 xlrd~=1.2
+sklearn~=0.0
 medcat~=0.3
