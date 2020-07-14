@@ -115,10 +115,10 @@ export default {
 <style scoped lang="scss">
 @import "bootstrap";
 
-$width: 200px;
+$width: 175px;
 
 .title {
-  padding: 5px 15px;
+  padding: 5px 10px;
   font-size: 16pt;
   box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
 }
@@ -182,7 +182,7 @@ $width: 200px;
 
 .note-summary {
   white-space: pre-wrap;
-  font-size: 11px;
+  font-size: 10px;
   overflow: hidden;
   position: relative;
   height: 6em; /* 5 lines */

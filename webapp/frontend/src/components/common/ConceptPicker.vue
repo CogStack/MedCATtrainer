@@ -60,7 +60,6 @@ export default {
           name: isDupName ? `${r.pretty_name} : ${r.cui}` : r.pretty_name,
           cui: r.cui,
           tui: r.tui,
-          type: r.type,
           desc: r.desc,
           icd10: r.icd10,
           opcs4: r.opcs4,

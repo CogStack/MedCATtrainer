@@ -2,7 +2,7 @@
   <div class="container-fluid app-container">
     <div class="app-header">
       <div class="project-name">
-        <span>Train Annotations:
+        <span>
           <h4>{{ project === null ? '' : project.name }}</h4>
         </span>
       </div>
@@ -731,6 +731,7 @@ export default {
 .sidebar-container {
   height: 100%;
   display: flex;
+  justify-content: space-between;
   flex-direction: column;
   padding: 5px;
 
