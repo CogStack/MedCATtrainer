@@ -269,6 +269,16 @@ def prepare_documents(request):
                 cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
                                  CAT_MAP=CAT_MAP, project=project)
 
+                # Set CAT filters
+                if len(cuis) > 0:
+                    cat.spacy_cat.CUI_FILTER = cuis
+                else:
+                    cat.spacy_cat.CUI_FILTER = None
+                if len(tuis) > 0:
+                    cat.spacy_cat.TUI_FILTER = tuis
+                else:
+                    cat.spacy_cat.TUI_FILTER = None
+
                 spacy_doc = cat(document.text)
                 add_annotations(spacy_doc=spacy_doc,
                                 user=user,
@@ -278,6 +288,11 @@ def prepare_documents(request):
                                 existing_annotations=anns,
                                 tuis=tuis,
                                 cuis=cuis)
+
+                # JIC set the filters back to None
+                cat.spacy_cat.TUI_FILTER = None
+                cat.spacy_cat.CUI_FILTER = None
+
     except Exception as e:
         stack = traceback.format_exc()
         return Response({'message': 'Internal Server Error', 'stacktrace': stack}, status=500)
