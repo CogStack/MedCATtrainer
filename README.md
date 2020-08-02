@@ -369,12 +369,16 @@ Annotations
 ### Clone Project 
 Cloning Projects is a easy & fast method to create copies of configured projects. This includes the dataset, CDB / vocab
 reference, meta annotation settings etc. Annotations themselves will not be copied across.
-copied across.
 
 1\. Open the admin app. (http://localhost:8001/admin/), and select 'Project annotate entities' (same as above for downloading)
 
 2\. Select the project(s) to clone, select the 'Clone projects', then press the 'Go' button.
 ![](docs/imgs/clone-projects.png)
+
+NB: Cloning projects will use the same CDB instance. If you're double annotating datasets to then calculate agreement scores (IIA, Cohen's Kappa etc.)
+then uncheck "Train Model On Submit" for each of the projects to ensure the model is not trained by each annotator. 
+If you do want 'online training' of the model, use separate instances of the same model. You can directly upload multiple 
+instances of the same CDB file appropriately named to achieve this.
 
 <a name="reset-proj"></a>
 ### Reset Project
@@ -388,7 +392,7 @@ copied across.
 
 <a name="save-download-models"></a>
 ### Save / Download Models
-Saving a model, takes the current state of the CDB is currently loaded in memory of the container and overwrites to the
+Saving a model, takes the current state of the CDB that is currently loaded in memory of the container and overwrites to the
 associated CDB file originally uploaded. To save and download a model for further use in a MedCAT instance:
  
 1\. Select the 'Save' model icon on the home page of that project. If the same CDB is used across multiple projects, you 

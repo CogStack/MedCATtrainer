@@ -173,17 +173,17 @@ class ProjectAnnotateEntities(Project):
     require_entity_validation = models.BooleanField(default=True,
                                                     help_text='Entities appear grey and are required to be validated '
                                                               'before submission')
-    train_model_on_submit = models.BooleanField(default=True, help_text='active learning - configured CDB is trained'
+    train_model_on_submit = models.BooleanField(default=True, help_text='Active learning - configured CDB is trained '
                                                                         'on each submit')
     clinical_coding_project = models.BooleanField(default=False, help_text='customised UI for the clinical coding '
                                                                            '(ICD-10/OPCS-4) use case')
     add_new_entities = models.BooleanField(default=False,
-                                           help_text='allow the creation of new terms to be added to the CDB')
+                                           help_text='Allow the creation of new terms to be added to the CDB')
     restrict_concept_lookup = models.BooleanField(default=False,
-                                                  help_text='users can only select terms from the list configured for '
+                                                  help_text='Users can only select terms from the list configured for '
                                                             'the project, i.e. either from the cuis or cuis_file lists.')
     terminate_available = models.BooleanField(default=True,
-                                              help_text='enable the option to terminate concepts.')
+                                              help_text='Enable the option to terminate concepts.')
     tasks = models.ManyToManyField(MetaTask, blank=True, default=None)
 
     def save(self, *args, **kwargs):
