@@ -43,7 +43,7 @@ MedCATTrainer was presented at EMNLP/IJCNLP 2019 :tada:
 
 `$ cd MedCATTrainer`
 
-`$ docker-compose build`
+`$ docker-compose up`
 
 If the build fails with an error code 137, the virtual machine running the docker 
 daemon does not have enough memory. Increase the allocated memory to containers in the docker daemon 
