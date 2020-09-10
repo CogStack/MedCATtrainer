@@ -41,7 +41,7 @@ MedCATTrainer was presented at EMNLP/IJCNLP 2019 :tada:
 
 2\.  Build and run the latest docker image
 
-`$ cd MedCATTrainer`
+`$ cd MedCATtrainer`
 
 `$ docker-compose up`
 
