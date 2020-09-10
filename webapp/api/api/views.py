@@ -600,11 +600,11 @@ def download_annos(request):
     if not user.is_superuser:
         return HttpResponseBadRequest('User is not super user, and not allowed to download project outputs')
 
-    p_ids = request.GET['project_id']
+    p_ids = str(request.GET['project_ids']).split(',')
     with_text_flag = request.GET.get('with_text', False)
 
-    if p_ids is None:
-       return HttpResponseBadRequest('No projects to download annotations')
+    if p_ids is None or len(p_ids) == 0:
+        return HttpResponseBadRequest('No projects to download annotations')
 
     projects = ProjectAnnotateEntities.objects.filter(id__in=p_ids)
     out = download_projects_with_text(projects) if with_text_flag else \
