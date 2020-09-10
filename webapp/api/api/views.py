@@ -14,6 +14,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from .admin import download_projects_with_text, download_projects_without_text
 from .permissions import *
 from .serializers import *
 from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
@@ -591,6 +592,29 @@ def annotate_text(request):
     ents.sort(key=lambda e: e['start_ind'])
     out = {'message': message, 'entities': ents}
     return Response(out)
+
+
+@api_view(http_method_names=['GET'])
+def download_annos(request):
+    user = request.user
+    if not user.is_superuser:
+        return HttpResponseBadRequest('User is not super user, and not allowed to download project outputs')
+
+    p_ids = request.GET['project_id']
+    with_text_flag = request.GET.get('with_text', False)
+
+    if p_ids is None:
+       return HttpResponseBadRequest('No projects to download annotations')
+
+    projects = ProjectAnnotateEntities.objects.filter(id__in=p_ids)
+    out = download_projects_with_text(projects) if with_text_flag else \
+        download_projects_without_text(projects)
+    return out
+
+
+
+
+
 
 
 

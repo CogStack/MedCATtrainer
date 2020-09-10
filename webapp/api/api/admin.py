@@ -2,6 +2,7 @@ import copy
 import logging
 from datetime import datetime
 
+from django.db.models import QuerySet
 from django.http import HttpResponse, HttpResponseRedirect
 from io import StringIO
 import json
@@ -41,9 +42,12 @@ def download_without_text(modeladmin, request, queryset):
         raise PermissionDenied
 
     projects = queryset
+    return download_projects_without_text(projects)
+
+
+def download_projects_without_text(projects):
 
     all_projects_out = {'projects': []}
-
     for project in projects:
         out = {}
         out['name'] = project.name
@@ -114,8 +118,11 @@ def download_without_text(modeladmin, request, queryset):
 def download(modeladmin, request, queryset):
     if not request.user.is_staff:
         raise PermissionDenied
-
     projects = queryset
+    return download_projects_with_text(projects)
+
+
+def download_projects_with_text(projects: QuerySet):
     all_projects_out = {'projects': []}
 
     for project in projects:
