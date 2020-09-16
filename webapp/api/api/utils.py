@@ -104,6 +104,7 @@ def add_annotations(spacy_doc, user, project, document, cdb, existing_annotation
             MIN_ACC = float(os.getenv('MIN_ACC', 0.2))
             if ent._.acc < MIN_ACC:
                 ann_ent.deleted = True
+                ann_ent.validated = True
 
             ann_ent.save()
 
