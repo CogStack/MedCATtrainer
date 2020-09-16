@@ -120,7 +120,7 @@ def set_opcs_info_objects(cdb, concept, cui):
 
 
 def get_create_cdb_infos(cdb, concept, cui, cui_info_prop, code_prop, desc_prop, model_clazz):
-    codes = [c[code_prop] for c in cdb.cui2info[cui].get(cui_info_prop, []) if code_prop in c]
+    codes = [c[code_prop] for c in cdb.cui2info.get(cui, {}).get(cui_info_prop, []) if code_prop in c]
     existing_codes = model_clazz.objects.filter(code__in=codes)
     codes_to_create = set(codes) - set([c.code for c in existing_codes])
     for code in codes_to_create:

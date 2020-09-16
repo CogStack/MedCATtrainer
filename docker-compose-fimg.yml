@@ -24,7 +24,7 @@ services:
       - api-media:/home/api/media
       - api-static:/home/api/static
     ports:
-      - "8001:8000"
+      - "${MCTRAINER_PORT:-8001}:8000"
     depends_on:
       - medcattrainer
 volumes:

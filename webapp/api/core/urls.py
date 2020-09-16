@@ -58,5 +58,6 @@ urlpatterns = [
     path('api/annotate-text/', api.views.annotate_text),
     path('api/update-meta-annotation/', api.views.update_meta_annotation),
     path('api/annotate-text/', api.views.annotate_text),
-    re_path('^.*$', api.views.index, name='index'), # Match everything else to home
+    path('api/download-annos/', api.views.download_annos),
+    re_path('^.*$', api.views.index, name='index'),  # Match everything else to home
 ]
