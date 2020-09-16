@@ -100,6 +100,11 @@ def add_annotations(spacy_doc, user, project, document, cdb, existing_annotation
             ann_ent.start_ind = ent.start_char
             ann_ent.end_ind = ent.end_char
             ann_ent.acc = ent._.acc
+
+            MIN_ACC = float(os.getenv('MIN_ACC', 0.2))
+            if ent._.acc < MIN_ACC:
+                ann_ent.deleted = True
+
             ann_ent.save()
 
 
@@ -257,6 +262,8 @@ def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
 
         cat = CAT(cdb=cdb, vocab=vocab)
         cat.train = False
+        cat.spacy_cat.MIN_ACC = -5
+        cat.spacy_cat.IS_TRAINER = True
         CAT_MAP[cat_id] = cat
     return cat
 
