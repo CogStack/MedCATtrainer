@@ -78,7 +78,7 @@ export default {
         start = this.ents[i].end_ind
         formattedText += precedingText + spanText
         if (i === this.ents.length - 1) {
-          formattedText += this.text.slice(start, this.text.length - 1)
+          formattedText += this.text.slice(start, this.text.length)
         }
       }
       // escape '<' '>' that may be interpreted as start/end tags.
@@ -177,7 +177,7 @@ export default {
         this.$refs.ctxMenu.showMenu(ev)
       }
     },
-    ctxOptionClicked  (event) {
+    ctxOptionClicked  () {
       this.$emit('select:addSynonym', this.selection)
     }
   }
