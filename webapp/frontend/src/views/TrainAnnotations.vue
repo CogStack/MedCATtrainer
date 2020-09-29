@@ -153,7 +153,17 @@
         <p v-if="errors.stacktrace" class="error-stacktrace">{{errors.stacktrace}}</p>
       </div>
       <div slot="footer">
-        <a href="/"><button class="btn btn-primary">CAT Home</button></a>
+        <a href="/"><button class="btn btn-primary">MedCATtrainer Home</button></a>
+      </div>
+    </modal>
+
+    <modal v-if="projectCompleteModal" @modal:close="projectCompleteModal = false">
+      <h3 slot="header" class="text-success">Project Annotations Complete</h3>
+      <div slot="body">
+        <p>Exit this window to review annotations or return to the project selection screen</p>
+      </div>
+      <div slot="footer">
+        <a href="/"><button class="btn btn-primary">MedCATtrainer Home</button></a>
       </div>
     </modal>
 
@@ -270,6 +280,7 @@ export default {
       resubmittingAllDocs: false,
       resubmitSuccess: false,
       helpModal: false,
+      projectCompleteModal: false,
       resetModal: false,
       errors: {
         modal: false,
@@ -562,7 +573,11 @@ export default {
             if (this.currentDoc.id !== this.docIds.slice(-1)[0].id ||
               this.validatedDocuments.length !== this.docs.length) {
               const newDocId = this.docIds[this.docIds.indexOf(this.currentDoc.id) + 1]
-              this.loadDoc(this.docIdsToDocs[newDocId])
+              if (!newDocId) {
+                this.projectCompleteModal = true
+              } else {
+                this.loadDoc(this.docIdsToDocs[newDocId])
+              }
             }
           })
         })
