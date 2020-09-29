@@ -99,7 +99,7 @@ export default {
       setTimeout(function () { // setTimeout to put this into event queue
         if (el[0]) {
           el[0].scrollIntoView({
-            block: 'center',
+            block: 'nearest',
             behavior: 'smooth'
           })
         }
