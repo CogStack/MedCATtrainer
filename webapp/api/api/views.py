@@ -421,7 +421,15 @@ def submit_document(request):
                      CAT_MAP=CAT_MAP, project=project)
 
     if project.train_model_on_submit:
-        train_medcat(cat, project, document)
+        try:
+            train_medcat(cat, project, document)
+        except Exception as e:
+            if project.vocab.id:
+                if len(VOCAB_MAP[project.vocab.id].unigram_table) == 0:
+                    raise Exception('Vocab is missing the unigram table. On the vocab instance '
+                                    'use vocab.make_unigram_table() to build')
+            else:
+                raise e
 
     # Add cuis to filter if they did not exist
     cuis = []
