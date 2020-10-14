@@ -120,7 +120,15 @@ export default {
         return results
       }
 
-      if (term.match(/^(?:c)\d{7}|s-\d*/gmi)) {
+      let match = term.match(/^(?:c)\d{7}|s-\d*/gmi)
+      if (!match && term.match(/^\d{7}$/gmi)) {
+        term = 'C' + term
+        match = true
+      } else if (!match && term.match(/^\d{8,}/gmi)) {
+        term = 'S-' + term
+        match = true
+      }
+      if (match) {
         this.$http.get(`/api/concepts/?cui=${term}`).then(resp => {
           if (resp.data.results.length > 0) {
             loading(false)
