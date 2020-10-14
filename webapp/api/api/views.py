@@ -4,7 +4,7 @@ import traceback
 
 import pandas as pd
 from django.core.files import File
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, HttpResponseServerError
 from django.shortcuts import render
 from django_filters import rest_framework as drf
 from django_filters.rest_framework import DjangoFilterBackend
@@ -426,10 +426,10 @@ def submit_document(request):
         except Exception as e:
             if project.vocab.id:
                 if len(VOCAB_MAP[project.vocab.id].unigram_table) == 0:
-                    raise Exception('Vocab is missing the unigram table. On the vocab instance '
-                                    'use vocab.make_unigram_table() to build')
+                    return HttpResponseServerError('Vocab is missing the unigram table. On the vocab instance '
+                                                   'use vocab.make_unigram_table() to build')
             else:
-                raise e
+                return HttpResponseServerError(e.message)
 
     # Add cuis to filter if they did not exist
     cuis = []

@@ -146,7 +146,7 @@
     </modal>
 
     <modal v-if="errors.modal" @modal:close="errors.modal = false">
-      <h3 slot="header" class="text-danger">Failure Loading Project Data</h3>
+      <h3 slot="header" class="text-danger">Error</h3>
       <div slot="body">
         <p>{{errors.message}}</p>
         <p v-if="errors.stacktrace">Full Error:</p>
@@ -579,6 +579,11 @@ export default {
                 this.loadDoc(this.docIdsToDocs[newDocId])
               }
             }
+          }, (err) => {
+            this.submitConfirmedLoading = false
+            this.docToSubmit = false
+            this.errors.modal = true
+            this.errors.message = err.response.data
           })
         })
       })
