@@ -67,9 +67,21 @@ export default {
     }
   },
   created () {
-    this.$http.get('/api/project-annotate-entities/').then(resp => {
-      this.projects = resp.data.results
-    })
+    let projectList = []
+    let that = this
+    const baseUrl = '/api/project-annotate-entities/'
+    let getProjects = function (url) {
+      that.$http.get(url).then(resp => {
+        if (resp.data.count === (projectList.length + resp.data.results.length)) {
+          that.projects = projectList.concat(resp.data.results)
+        } else {
+          const nextUrl = `${baseUrl}?${resp.data.next.split('?').slice(-1)}`
+          projectList = projectList.concat(resp.data.results)
+          getProjects(nextUrl)
+        }
+      })
+    }
+    getProjects(baseUrl)
   },
   methods: {
     annotate () {

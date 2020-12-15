@@ -105,7 +105,9 @@ class Project(PolymorphicModel):
     validated_documents = models.ManyToManyField(Document, default=None, blank=True)
     cuis = models.TextField(default=None, blank=True)
     tuis = models.TextField(default=None, blank=True)
-    cuis_file = models.FileField(null=True, blank=True)
+    cuis_file = models.FileField(null=True, blank=True,
+                                 help_text='A file containing a JSON formatted list of CUI code strings, '
+                                           'i.e. ["S-1234","S-54321"]')
 
     def __str__(self):
         return str(self.name)
@@ -168,11 +170,20 @@ class ProjectAnnotateEntities(Project):
     vocab = models.ForeignKey('Vocabulary', on_delete=models.SET_NULL, null=True)
     cdb_search_filter = models.ManyToManyField('ConceptDB', blank=True, default=None,
                                                related_name='concept_source')
-    require_entity_validation = models.BooleanField(default=True)
-    train_model_on_submit = models.BooleanField(default=True)
-    clinical_coding_project = models.BooleanField(default=False)
-    add_new_entities = models.BooleanField(default=False)
-    restrict_concept_lookup = models.BooleanField(default=False)
+    require_entity_validation = models.BooleanField(default=True,
+                                                    help_text='Entities appear grey and are required to be validated '
+                                                              'before submission')
+    train_model_on_submit = models.BooleanField(default=True, help_text='Active learning - configured CDB is trained '
+                                                                        'on each submit')
+    clinical_coding_project = models.BooleanField(default=False, help_text='customised UI for the clinical coding '
+                                                                           '(ICD-10/OPCS-4) use case')
+    add_new_entities = models.BooleanField(default=False,
+                                           help_text='Allow the creation of new terms to be added to the CDB')
+    restrict_concept_lookup = models.BooleanField(default=False,
+                                                  help_text='Users can only select terms from the list configured for '
+                                                            'the project, i.e. either from the cuis or cuis_file lists.')
+    terminate_available = models.BooleanField(default=True,
+                                              help_text='Enable the option to terminate concepts.')
     tasks = models.ManyToManyField(MetaTask, blank=True, default=None)
 
     def save(self, *args, **kwargs):
@@ -187,6 +198,7 @@ class ProjectAnnotateEntities(Project):
             cdb_obj.save()
             self.concept_db = cdb_obj
         super(ProjectAnnotateEntities, self).save(*args, **kwargs)
+
 
 class MetaAnnotation(models.Model):
     annotated_entity = models.ForeignKey('AnnotatedEntity', on_delete=models.CASCADE)

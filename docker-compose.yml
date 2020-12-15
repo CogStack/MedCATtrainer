@@ -2,9 +2,10 @@ version: '3.4'
 
 services:
   medcattrainer:
-    build:
-        network: host
-        context: ./webapp
+    container_name: medcattrainer
+    hostname: medcat
+    restart: always
+    image: cogstacksystems/medcat-trainer:latest
     volumes:
       - api-media:/home/api/media
       - api-static:/home/api/static
@@ -15,18 +16,17 @@ services:
       - ./envs/env
     command: /home/run.sh
   nginx:
-    build:
-        network: host
-        context: ./nginx
+    container_name: medcattrainer_nginx
+    image: cogstacksystems/medcat-trainer-nginx:latest
     restart: always
     volumes:
       - api-media:/home/api/media
       - api-static:/home/api/static
     ports:
-      - "8001:8000"
+      - "${MCTRAINER_PORT:-8001}:8000"
     depends_on:
       - medcattrainer
 volumes:
-      api-media:
-      api-static:
-      api-db:
+  api-media:
+  api-static:
+  api-db:

@@ -1,9 +1,13 @@
+import json
 import os
-from .models import Entity, AnnotatedEntity, Concept, ICDCode, OPCSCode, ConceptDB
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+from .models import Entity, AnnotatedEntity, Concept, ICDCode, OPCSCode, ProjectAnnotateEntities
 from medcat.cdb import CDB
 from medcat.utils.vocab import Vocab
 from medcat.cat import CAT
-from medcat.utils.helpers import tkn_inds_from_doc, prepare_name
 from medcat.utils.loggers import basic_logger
 log = basic_logger("api.utils")
 
@@ -24,13 +28,19 @@ def remove_annotations(document, project, partial=False):
         log.debug(f"Something went wrong: {e}")
 
 
-def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
+def add_annotations(spacy_doc, user, project, document, cdb, existing_annotations, tuis=[], cuis=[]):
     spacy_doc._.ents.sort(key=lambda x: len(x.text), reverse=True)
 
     tkns_in = []
     ents = []
+    existing_annos_intervals = [(ann.start_ind, ann.end_ind) for ann in existing_annotations]
+
+    def check_ents(ent):
+        return any((ea[0] < ent.start_char < ea[1]) or
+                   (ea[0] < ent.end_char < ea[1]) for ea in existing_annos_intervals)
+
     for ent in spacy_doc._.ents:
-        if (not cuis and not tuis) or (ent._.tui in tuis) or (ent._.cui in cuis):
+        if not check_ents(ent) and ((not cuis and not tuis) or (ent._.tui in tuis) or (ent._.cui in cuis)):
             to_add = True
             for tkn in ent:
                 if tkn in tkns_in:
@@ -51,7 +61,8 @@ def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
             if label in cdb.cui2pretty_name:
                 pretty_name = cdb.cui2pretty_name[label]
             elif label in cdb.cui2original_names and len(cdb.cui2original_names[label]) > 0:
-                pretty_name = cdb.cui2original_names[label][0]
+                # take shortest name here.
+                pretty_name = sorted(cdb.cui2original_names[label], key=len)[0]
 
             concept = Concept()
             concept.pretty_name = pretty_name
@@ -89,6 +100,12 @@ def add_annotations(spacy_doc, user, project, document, cdb, tuis=[], cuis=[]):
             ann_ent.start_ind = ent.start_char
             ann_ent.end_ind = ent.end_char
             ann_ent.acc = ent._.acc
+
+            MIN_ACC = float(os.getenv('MIN_ACC', 0.2))
+            if ent._.acc < MIN_ACC:
+                ann_ent.deleted = True
+                ann_ent.validated = True
+
             ann_ent.save()
 
 
@@ -103,7 +120,7 @@ def set_opcs_info_objects(cdb, concept, cui):
 
 
 def get_create_cdb_infos(cdb, concept, cui, cui_info_prop, code_prop, desc_prop, model_clazz):
-    codes = [c[code_prop] for c in cdb.cui2info[cui].get(cui_info_prop, []) if code_prop in c]
+    codes = [c[code_prop] for c in cdb.cui2info.get(cui, {}).get(cui_info_prop, []) if code_prop in c]
     existing_codes = model_clazz.objects.filter(code__in=codes)
     codes_to_create = set(codes) - set([c.code for c in existing_codes])
     for code in codes_to_create:
@@ -123,14 +140,9 @@ def _remove_overlap(project, document, start, end):
     anns = AnnotatedEntity.objects.filter(project=project, document=document)
 
     for ann in anns:
-        if ann.start_ind >= start and ann.start_ind <= end:
-            log.debug("Removed")
-            log.debug(str(ann))
+        if (start <= ann.start_ind <= end) or (start <= ann.end_ind <= end):
+            log.debug("Removed %s ", str(ann))
             ann.delete()
-        elif ann.end_ind >= start and ann.end_ind <= end:
-            ann.delete()
-            log.debug("Removed")
-            log.debug(str(ann))
 
 
 def create_annotation(source_val, selection_occurrence_index, cui, user, project, document, cat, icd_code=None,
@@ -192,8 +204,7 @@ def train_medcat(cat, project, document):
     # Just in case, disable unsupervised training
     cat.train = False
     # Get all annotations
-    anns = AnnotatedEntity.objects.filter(project=project, document=document, validated=True,
-            killed=False)
+    anns = AnnotatedEntity.objects.filter(project=project, document=document, validated=True, killed=False)
     text = document.text
     doc = cat(text)
 
@@ -252,5 +263,18 @@ def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
 
         cat = CAT(cdb=cdb, vocab=vocab)
         cat.train = False
+        cat.spacy_cat.MIN_ACC = -5
+        cat.spacy_cat.IS_TRAINER = True
         CAT_MAP[cat_id] = cat
     return cat
+
+
+@receiver(post_save, sender=ProjectAnnotateEntities)
+def save_project_anno(sender, instance, **kwargs):
+    if instance.cuis_file:
+        post_save.disconnect(save_project_anno, sender=ProjectAnnotateEntities)
+        cuis_from_file = json.load(open(instance.cuis_file.path))
+        cui_list = [c.strip() for c in instance.cuis.split(',')]
+        instance.cuis = ','.join(set(cui_list) - set(cuis_from_file))
+        instance.save()
+        post_save.connect(save_project_anno, sender=ProjectAnnotateEntities)

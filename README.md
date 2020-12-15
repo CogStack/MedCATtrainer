@@ -39,11 +39,11 @@ MedCATTrainer was presented at EMNLP/IJCNLP 2019 :tada:
 
 `$ git clone https://github.com/CogStack/MedCATtrainer.git`
 
-2\.  Build and run the docker image
+2\.  Build and run the latest docker image
 
-`$ cd MedCATTrainer`
+`$ cd MedCATtrainer`
 
-`$ docker-compose -f docker-compose-dev.yml build`
+`$ docker-compose up`
 
 If the build fails with an error code 137, the virtual machine running the docker 
 daemon does not have enough memory. Increase the allocated memory to containers in the docker daemon 
@@ -55,7 +55,7 @@ On Windows: https://docs.docker.com/docker-for-windows/#resources
 
 Then run:
 
-`$ docker-compose -f docker-compose-dev.yml up`
+`$ docker-compose up`
 
 3\. MedCATTrainer is now running:
 - The main app is available at http://localhost:8001/
@@ -151,7 +151,8 @@ Annotation projects are used to inspect, validate and improve concepts recognise
 |Train Model On Submit| (Default: True) With this option ticked, each document submission trains the configured MedCAT instance with the marked, and added if any, annotations from this document. Unticked, ensures the MedCAT model does not train between submissions.|
 |Clinical Coding Project| (Default: False) With this option ticked, is an experimental feature, tailoring interface to the problem of clinical coding| 
 |Add New Entities|(Default: False) With this option ticked, allows users to add entirely new concepts to the existing MedCAT CDB. False ensures this option is not available to users.|
-|Restrict Concept Lookup|(Default: False) With this option ticked, restricts the concept lookup (add annotation / alternative concept) to only include those CUIs listed in the above filters (either from CUI / TUI list or uploade 'CUI File' list| 
+|Restrict Concept Lookup|(Default: False) With this option ticked, restricts the concept lookup (add annotation / alternative concept) to only include those CUIs listed in the above filters (either from CUI / TUI list or uploade 'CUI File' list|
+|Terminate Available|(Default: True) With this option ticked, the option to terminate an annotated concept will appear| 
 |Tasks| Select from the list 'Meta Annotation' tasks that will appear once a given annotation has been marked correct.|
 
 Datasets can be uploaded in CSV or XLSX format. Example:
@@ -368,12 +369,16 @@ Annotations
 ### Clone Project 
 Cloning Projects is a easy & fast method to create copies of configured projects. This includes the dataset, CDB / vocab
 reference, meta annotation settings etc. Annotations themselves will not be copied across.
-copied across.
 
 1\. Open the admin app. (http://localhost:8001/admin/), and select 'Project annotate entities' (same as above for downloading)
 
 2\. Select the project(s) to clone, select the 'Clone projects', then press the 'Go' button.
 ![](docs/imgs/clone-projects.png)
+
+NB: Cloning projects will use the same CDB instance. If you're double annotating datasets to then calculate agreement scores (IIA, Cohen's Kappa etc.)
+then uncheck "Train Model On Submit" for each of the projects to ensure the model is not trained by each annotator. 
+If you do want 'online training' of the model, use separate instances of the same model. You can directly upload multiple 
+instances of the same CDB file appropriately named to achieve this.
 
 <a name="reset-proj"></a>
 ### Reset Project
@@ -387,7 +392,7 @@ copied across.
 
 <a name="save-download-models"></a>
 ### Save / Download Models
-Saving a model, takes the current state of the CDB is currently loaded in memory of the container and overwrites to the
+Saving a model, takes the current state of the CDB that is currently loaded in memory of the container and overwrites to the
 associated CDB file originally uploaded. To save and download a model for further use in a MedCAT instance:
  
 1\. Select the 'Save' model icon on the home page of that project. If the same CDB is used across multiple projects, you 

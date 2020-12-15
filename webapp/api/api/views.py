@@ -4,7 +4,7 @@ import traceback
 
 import pandas as pd
 from django.core.files import File
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, HttpResponseServerError
 from django.shortcuts import render
 from django_filters import rest_framework as drf
 from django_filters.rest_framework import DjangoFilterBackend
@@ -14,6 +14,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from .admin import download_projects_with_text, download_projects_without_text
 from .permissions import *
 from .serializers import *
 from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
@@ -134,7 +135,7 @@ class ConceptView(generics.ListAPIView):
     queryset = Concept.objects.all()
     serializer_class = ConceptSerializer
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = ['pretty_name']
+    search_fields = ['$pretty_name']
     filterset_class = ConceptFilter
     filterset_fields = ['tui', 'cui', 'cdb']
 
@@ -269,14 +270,30 @@ def prepare_documents(request):
                 cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
                                  CAT_MAP=CAT_MAP, project=project)
 
+                # Set CAT filters
+                if len(cuis) > 0:
+                    cat.spacy_cat.CUI_FILTER = cuis
+                else:
+                    cat.spacy_cat.CUI_FILTER = None
+                if len(tuis) > 0:
+                    cat.spacy_cat.TUI_FILTER = tuis
+                else:
+                    cat.spacy_cat.TUI_FILTER = None
+
                 spacy_doc = cat(document.text)
                 add_annotations(spacy_doc=spacy_doc,
                                 user=user,
                                 project=project,
                                 document=document,
                                 cdb=cat.cdb,
+                                existing_annotations=anns,
                                 tuis=tuis,
                                 cuis=cuis)
+
+                # JIC set the filters back to None
+                cat.spacy_cat.TUI_FILTER = None
+                cat.spacy_cat.CUI_FILTER = None
+
     except Exception as e:
         stack = traceback.format_exc()
         return Response({'message': 'Internal Server Error', 'stacktrace': stack}, status=500)
@@ -404,7 +421,15 @@ def submit_document(request):
                      CAT_MAP=CAT_MAP, project=project)
 
     if project.train_model_on_submit:
-        train_medcat(cat, project, document)
+        try:
+            train_medcat(cat, project, document)
+        except Exception as e:
+            if project.vocab.id:
+                if len(VOCAB_MAP[project.vocab.id].unigram_table) == 0:
+                    return HttpResponseServerError('Vocab is missing the unigram table. On the vocab instance '
+                                                   'use vocab.make_unigram_table() to build')
+            else:
+                return HttpResponseServerError(e.message)
 
     # Add cuis to filter if they did not exist
     cuis = []
@@ -575,6 +600,29 @@ def annotate_text(request):
     ents.sort(key=lambda e: e['start_ind'])
     out = {'message': message, 'entities': ents}
     return Response(out)
+
+
+@api_view(http_method_names=['GET'])
+def download_annos(request):
+    user = request.user
+    if not user.is_superuser:
+        return HttpResponseBadRequest('User is not super user, and not allowed to download project outputs')
+
+    p_ids = str(request.GET['project_ids']).split(',')
+    with_text_flag = request.GET.get('with_text', False)
+
+    if p_ids is None or len(p_ids) == 0:
+        return HttpResponseBadRequest('No projects to download annotations')
+
+    projects = ProjectAnnotateEntities.objects.filter(id__in=p_ids)
+    out = download_projects_with_text(projects) if with_text_flag else \
+        download_projects_without_text(projects)
+    return out
+
+
+
+
+
 
 
 

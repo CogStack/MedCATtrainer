@@ -60,7 +60,6 @@ export default {
           name: isDupName ? `${r.pretty_name} : ${r.cui}` : r.pretty_name,
           cui: r.cui,
           tui: r.tui,
-          type: r.type,
           desc: r.desc,
           icd10: r.icd10,
           opcs4: r.opcs4,
@@ -97,28 +96,44 @@ export default {
       const that = this
       const conceptDbs = this.project.cdb_search_filter.concat(this.project.concept_db).join(',')
       const searchByTerm = function () {
+        term = term.split(' ').join('\\s')
         let searchConceptsQueryParams = `search=${term}&cdb__in=${conceptDbs}`
         that.$http.get(`/api/search-concepts/?${searchConceptsQueryParams}`).then(resp => {
-          that.searchResults = resp.data.results.map(res => mapResult(res, resp.data.results))
-          if (that.project.restrict_concept_lookup) {
-            if (that.project.tuis) {
-              let tuis = that.project.tuis.split(',').map(t => t.trim())
-              that.searchResults = that.searchResults.filter(r => tuis.indexOf(r.tui) !== -1)
-            }
-            if (that.project.cuis) {
-              let cuis = that.project.cuis.split(',').map(c => c.trim())
-              that.searchResults = that.searchResults.filter(r => cuis.indexOf(r.cui) !== -1)
-            }
-          }
+          that.searchResults = filterResults(that.project,
+            resp.data.results.map(res => mapResult(res, resp.data.results)))
+          that.searchResults = _.sortBy(that.searchResults, r => r.name.length)
           loading(false)
         })
       }
 
-      if (term.match(/^(?:c)\d{7}|s-\d*/gmi)) {
+      const filterResults = function (project, results) {
+        if (project.restrict_concept_lookup) {
+          if (project.tuis) {
+            let tuis = project.tuis.split(',').map(t => t.trim())
+            results = results.filter(r => tuis.indexOf(r.tui) !== -1)
+          }
+          if (project.cuis) {
+            let cuis = project.cuis.split(',').map(c => c.trim())
+            results = results.filter(r => cuis.indexOf(r.cui) !== -1)
+          }
+        }
+        return results
+      }
+
+      let match = term.match(/^(?:c)\d{7}|s-\d*/gmi)
+      if (!match && term.match(/^\d{7}$/gmi)) {
+        term = 'C' + term
+        match = true
+      } else if (!match && term.match(/^\d{8,}/gmi)) {
+        term = 'S-' + term
+        match = true
+      }
+      if (match) {
         this.$http.get(`/api/concepts/?cui=${term}`).then(resp => {
           if (resp.data.results.length > 0) {
             loading(false)
-            this.searchResults = resp.data.results.map(res => mapResult(res, resp.data.results))
+            this.searchResults = filterResults(that.project,
+              resp.data.results.map(res => mapResult(res, resp.data.results)))
           }
         })
       } else if (term.match(/^\w\d\d.*/i)) {

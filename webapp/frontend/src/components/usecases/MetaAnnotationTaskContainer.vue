@@ -1,7 +1,7 @@
 <template>
-  <div v-if="tasks && tasks.length > 0">
+  <div class="meta-task-container" v-if="tasks && tasks.length > 0">
     <div class="title">Meta Annotation Tasks</div>
-    <div class="task-list">
+    <div>
       <meta-annotation-task v-for="task of tasks" :key="task.id"
                             @select:metaAnno="selectedTaskAnno" :task="task"></meta-annotation-task>
     </div>
@@ -76,8 +76,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.task-list {
-  height: 250px;
+.meta-task-container {
   overflow-y: auto;
 }
 </style>

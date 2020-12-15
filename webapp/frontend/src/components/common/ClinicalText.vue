@@ -41,7 +41,7 @@ export default {
     return {
       ctxMenuOptions: [
         {
-          name: 'Add Annotation'
+          name: 'Add Term'
         }
       ],
       selection: null
@@ -78,7 +78,7 @@ export default {
         start = this.ents[i].end_ind
         formattedText += precedingText + spanText
         if (i === this.ents.length - 1) {
-          formattedText += this.text.slice(start, this.text.length - 1)
+          formattedText += this.text.slice(start, this.text.length)
         }
       }
       // escape '<' '>' that may be interpreted as start/end tags.
@@ -99,7 +99,7 @@ export default {
       setTimeout(function () { // setTimeout to put this into event queue
         if (el[0]) {
           el[0].scrollIntoView({
-            block: 'center',
+            block: 'nearest',
             behavior: 'smooth'
           })
         }
@@ -114,7 +114,7 @@ export default {
       const anchor = selection.anchorNode
       const focus = selection.focusNode
 
-      if (focus !== null) {
+      if (selStr.length > 0 && focus !== null) {
         let nextText = focus.data.slice(selection.focusOffset)
         let nextSibling = focus.nextSibling || focus.parentElement.nextSibling
         let priorText = anchor.data.slice(0, selection.anchorOffset)
@@ -134,13 +134,17 @@ export default {
           nextText = anchor.data.slice(selection.anchorOffset)
         }
 
-        while (priorSibling !== null) {
+        let i = 0
+        while (priorSibling !== null && i < 10) {
           priorText = `${priorSibling.innerText || priorSibling.textContent}${priorText}`
           priorSibling = priorSibling.previousSibling
+          i++
         }
-        while (nextSibling !== null) {
+        i = 0
+        while (nextSibling !== null && i < 15) {
           nextText += (nextSibling.innerText || nextSibling.textContent)
           nextSibling = nextSibling.nextSibling
+          i++
         }
 
         // occurrences of the selected string in the text before and after.
@@ -173,7 +177,7 @@ export default {
         this.$refs.ctxMenu.showMenu(ev)
       }
     },
-    ctxOptionClicked  (event) {
+    ctxOptionClicked  () {
       this.$emit('select:addSynonym', this.selection)
     }
   }

@@ -2,7 +2,7 @@
   <div class="container-fluid app-container">
     <div class="app-header">
       <div class="project-name">
-        <span>Train Annotations:
+        <span>
           <h4>{{ project === null ? '' : project.name }}</h4>
         </span>
       </div>
@@ -26,7 +26,7 @@
     </div>
 
     <multipane class="viewport-container">
-      <div class="full-height">
+      <div :style="{minWith: '500px'}" class="full-height">
         <div class="app-main">
           <document-summary :docs="docs" :moreDocs="nextDocSetUrl !== null"
                             :validatedDocIds="validatedDocuments"
@@ -40,15 +40,15 @@
             <div class="taskbar">
               <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt" @select:next="next" @select:back="back"></nav-bar>
               <task-bar class="tasks" :taskLocked="taskLocked" :ents="ents" :altSearch="altSearch"
-                        :submitLocked="docToSubmit !== null" @select:remove="markRemove" @select:correct="markCorrect"
+                        :submitLocked="docToSubmit !== null" :terminateEnabled="(project || {}).terminate_available" @select:remove="markRemove" @select:correct="markCorrect"
                         @select:kill="markKill" @select:alternative="toggleAltSearch" @submit="submitDoc"></task-bar>
             </div>
           </div>
         </div>
       </div>
       <multipane-resizer></multipane-resizer>
-      <div :style="{ flexGrow: 1, width: '300px', maxWidth: '1000px' }">
-        <div :class="{'full-sidebar-container': conceptSynonymSelection, 'sidebar-container': !conceptSynonymSelection}">
+      <div :style="{ flexGrow: 1, width: '375px', minWidth: '425px', maxWidth: '1000px' }">
+        <div class="sidebar-container">
           <transition name="slide-left">
             <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" :altSearch="altSearch"
                              :project="project"
@@ -146,14 +146,24 @@
     </modal>
 
     <modal v-if="errors.modal" @modal:close="errors.modal = false">
-      <h3 slot="header" class="text-danger">Failure Loading Project Data</h3>
+      <h3 slot="header" class="text-danger">Error</h3>
       <div slot="body">
         <p>{{errors.message}}</p>
         <p v-if="errors.stacktrace">Full Error:</p>
         <p v-if="errors.stacktrace" class="error-stacktrace">{{errors.stacktrace}}</p>
       </div>
       <div slot="footer">
-        <a href="/"><button class="btn btn-primary">CAT Home</button></a>
+        <a href="/"><button class="btn btn-primary">MedCATtrainer Home</button></a>
+      </div>
+    </modal>
+
+    <modal v-if="projectCompleteModal" @modal:close="projectCompleteModal = false">
+      <h3 slot="header" class="text-success">Project Annotations Complete</h3>
+      <div slot="body">
+        <p>Exit this window to review annotations or return to the project selection screen</p>
+      </div>
+      <div slot="footer">
+        <a href="/"><button class="btn btn-primary">MedCATtrainer Home</button></a>
       </div>
     </modal>
 
@@ -270,6 +280,7 @@ export default {
       resubmittingAllDocs: false,
       resubmitSuccess: false,
       helpModal: false,
+      projectCompleteModal: false,
       resetModal: false,
       errors: {
         modal: false,
@@ -562,8 +573,17 @@ export default {
             if (this.currentDoc.id !== this.docIds.slice(-1)[0].id ||
               this.validatedDocuments.length !== this.docs.length) {
               const newDocId = this.docIds[this.docIds.indexOf(this.currentDoc.id) + 1]
-              this.loadDoc(this.docIdsToDocs[newDocId])
+              if (!newDocId) {
+                this.projectCompleteModal = true
+              } else {
+                this.loadDoc(this.docIdsToDocs[newDocId])
+              }
             }
+          }, (err) => {
+            this.submitConfirmedLoading = false
+            this.docToSubmit = false
+            this.errors.modal = true
+            this.errors.message = err.response.data
           })
         })
       })
@@ -729,8 +749,9 @@ export default {
 }
 
 .sidebar-container {
-  height: calc(100% - 250px - 41px);
-  display: flex   ;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
   flex-direction: column;
   padding: 5px;
 

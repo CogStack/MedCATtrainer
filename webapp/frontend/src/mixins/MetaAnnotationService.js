@@ -47,7 +47,7 @@ export default {
       if (useDefault === undefined) {
         useDefault = true
       }
-      if (this.tasks && selectedEnt !== null) {
+      if (this.tasks.length > 0 && selectedEnt !== null) {
         for (let t of this.tasks) {
           t.value = null
         }

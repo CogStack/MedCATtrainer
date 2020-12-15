@@ -2,6 +2,7 @@ import copy
 import logging
 from datetime import datetime
 
+from django.db.models import QuerySet
 from django.http import HttpResponse, HttpResponseRedirect
 from io import StringIO
 import json
@@ -41,9 +42,12 @@ def download_without_text(modeladmin, request, queryset):
         raise PermissionDenied
 
     projects = queryset
+    return download_projects_without_text(projects)
+
+
+def download_projects_without_text(projects):
 
     all_projects_out = {'projects': []}
-
     for project in projects:
         out = {}
         out['name'] = project.name
@@ -82,7 +86,8 @@ def download_without_text(modeladmin, request, queryset):
                     out_ann['icd_code'] = ann.icd_code.code
                 if ann.opcs_code:
                     out_ann['opcs_code'] = ann.opcs_code.code
-                out_ann['meta_anns'] = []
+                out_ann['meta_anns'] = {}
+
                 # Get MetaAnnotations
                 meta_anns = MetaAnnotation.objects.filter(annotated_entity=ann)
                 for meta_ann in meta_anns:
@@ -91,7 +96,10 @@ def download_without_text(modeladmin, request, queryset):
                     o_meta_ann['value'] = meta_ann.meta_task_value.name
                     o_meta_ann['acc'] = meta_ann.acc
                     o_meta_ann['validated'] = meta_ann.validated
-                    out_ann['meta_anns'].append(o_meta_ann)
+
+                    # Add annotation
+                    key = meta_ann.meta_task.name
+                    out_ann['meta_anns'][key] = o_meta_ann
 
                 out_doc['annotations'].append(out_ann)
             out['documents'].append(out_doc)
@@ -110,8 +118,11 @@ def download_without_text(modeladmin, request, queryset):
 def download(modeladmin, request, queryset):
     if not request.user.is_staff:
         raise PermissionDenied
-
     projects = queryset
+    return download_projects_with_text(projects)
+
+
+def download_projects_with_text(projects: QuerySet):
     all_projects_out = {'projects': []}
 
     for project in projects:
@@ -158,7 +169,8 @@ def download(modeladmin, request, queryset):
                     out_ann['icd_code'] = ann.icd_code.code
                 if ann.opcs_code:
                     out_ann['opcs_code'] = ann.opcs_code.code
-                out_ann['meta_anns'] = []
+                out_ann['meta_anns'] = {}
+
                 # Get MetaAnnotations
                 meta_anns = MetaAnnotation.objects.filter(annotated_entity=ann)
                 for meta_ann in meta_anns:
@@ -167,7 +179,10 @@ def download(modeladmin, request, queryset):
                     o_meta_ann['value'] = meta_ann.meta_task_value.name
                     o_meta_ann['acc'] = meta_ann.acc
                     o_meta_ann['validated'] = meta_ann.validated
-                    out_ann['meta_anns'].append(o_meta_ann)
+
+                    # Add annotation
+                    key = meta_ann.meta_task.name
+                    out_ann['meta_anns'][key] = o_meta_ann
 
                 out_doc['annotations'].append(out_ann)
             out['documents'].append(out_doc)

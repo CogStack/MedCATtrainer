@@ -1,7 +1,7 @@
 <template>
   <div class="sidebar" @keyup.stop>
     <div class="title">
-      Add Annotation
+      Add Term
       <button @click="cancel()" class="btn btn-default close-window" @mousedown.stop>
         <font-awesome-icon icon="times"></font-awesome-icon>
       </button>
@@ -10,7 +10,7 @@
       <table class="add-synonym-table">
         <tbody>
         <tr>
-          <td>New Annotation</td>
+          <td>New Term</td>
           <td class="fit-content">{{name}}</td>
         </tr>
         <tr @keyup.stop>
@@ -37,7 +37,7 @@
           <td class="cui-mappings">{{selectedCUI.name.split(':')[0] || 'n/a'}}</td>
         </tr>
         <tr v-if="selectedCUI.tui !== 'unk' ">
-          <td>Term ID</td>
+          <td>Type ID</td>
           <td>{{selectedCUI.tui || 'n/a'}}</td>
         </tr>
         <tr v-if="selectedCUI.semantic_type">
@@ -74,7 +74,7 @@
     <div v-if="selectedCUI !== null" class="action-buttons">
       <button @click="submit()" class="btn task-btn-0">
         <font-awesome-icon icon="plus"></font-awesome-icon>
-        Add Synonym
+        Add Term
       </button>
       <button @click="cancel()" class="btn task-btn-1">
         <font-awesome-icon icon="times"></font-awesome-icon>
