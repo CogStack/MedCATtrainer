@@ -16,7 +16,7 @@ from .forms import *
 
 
 # Register your models here.
-from .utils import set_icd_info_objects, set_opcs_info_objects
+#from .utils import set_icd_info_objects, set_opcs_info_objects
 
 admin.site.register(Entity)
 admin.site.register(MetaTaskValue)
@@ -266,35 +266,24 @@ admin.site.register(AnnotatedEntity, AnnotatedEntityAdmin)
 def _import_concepts(id):
     from medcat.cdb import CDB
     concept_db = ConceptDB.objects.get(id=id)
-    cdb = CDB()
-    cdb.load_dict(concept_db.cdb_file.path)
-    tuis = None
+    cdb = CDB.load(concept_db.cdb_file.path)
 
     # Get all existing cuis for this CDB
     existing_cuis = set(Concept.objects.filter(cdb=id).values_list('cui', flat=True))
 
     for cui in cdb.cui2names.keys():
         if cui not in existing_cuis:
-            pretty_name = None
-
-            if cui in cdb.cui2pretty_name:
-                pretty_name = cdb.cui2pretty_name[cui]
-            elif cui in cdb.cui2original_names and len(cdb.cui2original_names[cui]) > 0:
-                pretty_name = next(iter(cdb.cui2original_names[cui]))
-
-            tui = cdb.cui2tui.get(cui, 'unk')
-            if pretty_name is not None and (tuis is None or tui in tuis):
-                concept = Concept()
-                concept.pretty_name = pretty_name
-                concept.cui = cui
-                concept.tui = tui
-                concept.semantic_type = cdb.tui2name.get(tui, '')
-                concept.desc = cdb.cui2desc.get(cui, '')
-                concept.synonyms = ", ".join(cdb.cui2original_names.get(cui, []))
-                concept.cdb = concept_db
-                concept.save()
-                set_icd_info_objects(cdb, concept, cui)
-                set_opcs_info_objects(cdb, concept, cui)
+            concept = Concept()
+            concept.pretty_name = cdb.cui2preferred_name.get(cui, cui)
+            concept.cui = cui
+            concept.tui = list(cdb.cui2type_ids.get(cui, ''))
+            concept.semantic_type = [cdb.addl_info['type_id2name'].get(tui, '') for tui in list(cdb.cui2type_ids.get(cui, ''))]
+            concept.desc = cdb.addl_info['cui2description'].get(cui, '')
+            concept.synonyms = ", ".join(cdb.addl_info['cui2original_names'].get(cui, []))
+            concept.cdb = concept_db
+            concept.save()
+            #set_icd_info_objects(cdb, concept, cui)
+            #set_opcs_info_objects(cdb, concept, cui)
 
 
 def import_concepts(modeladmin, request, queryset):

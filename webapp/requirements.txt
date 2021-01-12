@@ -1,11 +1,8 @@
 uwsgi~=2.0
-Django~=2.0
+Django==2.0
 django-filter~=2.2
 django-polymorphic~=2.1
 djangorestframework~=3.10
 django-background-tasks~=1.2
-numpy~=1.15
-pandas~=0.23
 xlrd~=1.2
-sklearn~=0.0
-medcat~=0.3
+medcat~=1.0.0.dev21

@@ -1,6 +1,7 @@
 import json
 import re
 import traceback
+import logging
 
 import pandas as pd
 from django.core.files import File
@@ -19,6 +20,8 @@ from .permissions import *
 from .serializers import *
 from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
 
+from medcat.utils.helpers import tkns_from_doc
+
 # For local testing, put envs
 """
 from environs import Env
@@ -27,9 +30,10 @@ env.read_env("/home/ubuntu/projects/MedAnno/MedAnno/env_umls", recurse=False)
 print(os.environ)
 """
 
-from medcat.utils.helpers import prepare_name
-from medcat.utils.loggers import basic_logger
-log = basic_logger("api.views")
+from medcat.utils.loggers import add_handlers
+
+log = logging.getLogger('medcat.trainer')
+log = add_handlers(log)
 
 
 # Maps between IDs and objects 
@@ -240,9 +244,6 @@ def prepare_documents(request):
     update = request.data.get('update', 0)
 
     cuis = set()
-    tuis = set()
-    if project.tuis is not None and project.tuis:
-        tuis = set([str(tui).strip() for tui in project.tuis.split(",")])
     if project.cuis is not None and project.cuis:
         cuis = set([str(cui).strip() for cui in project.cuis.split(",")])
     if project.cuis_file is not None and project.cuis_file:
@@ -271,28 +272,15 @@ def prepare_documents(request):
                                  CAT_MAP=CAT_MAP, project=project)
 
                 # Set CAT filters
-                if len(cuis) > 0:
-                    cat.spacy_cat.CUI_FILTER = cuis
-                else:
-                    cat.spacy_cat.CUI_FILTER = None
-                if len(tuis) > 0:
-                    cat.spacy_cat.TUI_FILTER = tuis
-                else:
-                    cat.spacy_cat.TUI_FILTER = None
+                cat.config.linking['filters']['cuis'] = cuis
 
                 spacy_doc = cat(document.text)
                 add_annotations(spacy_doc=spacy_doc,
                                 user=user,
                                 project=project,
                                 document=document,
-                                cdb=cat.cdb,
-                                existing_annotations=anns,
-                                tuis=tuis,
-                                cuis=cuis)
-
-                # JIC set the filters back to None
-                cat.spacy_cat.TUI_FILTER = None
-                cat.spacy_cat.CUI_FILTER = None
+                                cat=cat,
+                                existing_annotations=anns)
 
     except Exception as e:
         stack = traceback.format_exc()
@@ -310,8 +298,12 @@ def name2cuis(request):
     cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
                      CAT_MAP=CAT_MAP, project=project)
 
-    name, _ = prepare_name(cat=cat, name=text)
-    out = {'cuis': list(cat.cdb.name2cui.get(name, []))}
+    names = prepare_name(text, cat, {}, cat.config)
+    cuis = []
+    for name in names:
+        cuis.extend(self.cdb.name2cuis.get(name, []))
+
+    out = {'cuis': cuis}
 
     return Response(out)
 
@@ -382,7 +374,16 @@ def add_concept(request):
         err_msg = f'Cannot add a concept "{name}" with cui:{cui}. CUI already linked to {cat.cdb.cui2names[cui]}'
         log.error(err_msg)
         return Response({'err': err_msg}, 400)
-    cat.add_name(cui, name, context, is_pref_name=True)
+
+    spacy_doc = cat(text)
+    spacy_entity = None
+    if source_val in spacy_doc.text:
+        start = spacy_doc.text.index(source_val)
+        end = start + len(source_val)
+        spacy_entity = tkns_from_doc(spacy_doc=spacy_doc, start=start, end=end)
+
+    cat.add_and_train_concept(cui=cui, name=name, spacy_doc=spacy_doc, spacy_entity=spacy_entity)
+
     id = create_annotation(source_val=source_val,
                            selection_occurrence_index=sel_occur_idx,
                            cui=cui,
@@ -433,31 +434,26 @@ def submit_document(request):
 
     # Add cuis to filter if they did not exist
     cuis = []
-    tuis = []
 
     if project.cuis_file is not None and project.cuis_file:
         cuis = cuis + json.load(open(project.cuis_file.path))
     if project.cuis is not None and project.cuis:
         cuis = cuis + [str(cui).strip() for cui in project.cuis.split(",")]
-    if project.tuis is not None and project.tuis:
-        tuis = tuis + [str(tui).strip() for tui in project.tuis.split(",")]
 
     cuis = set(cuis) # Convert to set, only cuis
-    if cuis or tuis:
+    if cuis:
         anns = AnnotatedEntity.objects.filter(project=project, document=document, validated=True)
         doc_cuis = [ann.entity.label for ann in anns]
 
         for cui in doc_cuis:
             if cui not in cuis:
-                tui = cat.cdb.cui2tui.get(cui, 'unk')
-                if tui not in tuis:
-                    if project.cuis:
-                        project.cuis = project.cuis + "," + str(cui)
-                    else:
-                        project.cuis = str(cui)
-                    project.save()
-                    # Add this cui so we do not repeat things
-                    cuis.add(cui)
+                if project.cuis:
+                    project.cuis = project.cuis + "," + str(cui)
+                else:
+                    project.cuis = str(cui)
+                project.save()
+                # Add this cui so we do not repeat things
+                cuis.add(cui)
 
     return Response({'message': 'Document submited successfully'})
 
@@ -470,7 +466,7 @@ def save_models(request):
     cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
                      CAT_MAP=CAT_MAP, project=project)
 
-    cat.cdb.save_dict(project.concept_db.cdb_file.path)
+    cat.cdb.save(project.concept_db.cdb_file.path)
 
     return Response({'message': 'Models saved'})
 
@@ -570,32 +566,32 @@ def annotate_text(request):
     p_id = request.data['project_id']
     message = request.data['message']
     cuis = request.data['cuis']
-    tuis = request.data['tuis']
     if message is None or p_id is None:
         return HttpResponseBadRequest('No message to annotate')
 
     project = ProjectAnnotateEntities.objects.get(id=p_id)
 
+
     cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
                      CAT_MAP=CAT_MAP, project=project)
+    cat.config.linking['filters']['cuis'] = set(cuis)
     spacy_doc = cat(message)
 
     ents = []
     anno_tkns = []
     for ent in spacy_doc._.ents:
-        if (not cuis and not tuis) or (ent._.tui in tuis) or (ent._.cui in cuis):
-            cnt = Entity.objects.filter(label=ent._.cui).count()
-            inc_ent = all(tkn not in anno_tkns for tkn in ent)
-            if inc_ent and cnt != 0:
-                anno_tkns.extend([tkn for tkn in ent])
-                entity = Entity.objects.get(label=ent._.cui)
-                ents.append({
-                    'entity': entity.id,
-                    'value': ent.text,
-                    'start_ind': ent.start_char,
-                    'end_ind': ent.end_char,
-                    'acc': ent._.acc
-                })
+        cnt = Entity.objects.filter(label=ent._.cui).count()
+        inc_ent = all(tkn not in anno_tkns for tkn in ent)
+        if inc_ent and cnt != 0:
+            anno_tkns.extend([tkn for tkn in ent])
+            entity = Entity.objects.get(label=ent._.cui)
+            ents.append({
+                'entity': entity.id,
+                'value': ent.text,
+                'start_ind': ent.start_char,
+                'end_ind': ent.end_char,
+                'acc': ent._.context_similarity
+            })
 
     ents.sort(key=lambda e: e['start_ind'])
     out = {'message': message, 'entities': ents}

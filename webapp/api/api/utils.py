@@ -1,15 +1,22 @@
 import json
 import os
+import logging
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from .models import Entity, AnnotatedEntity, Concept, ICDCode, OPCSCode, ProjectAnnotateEntities
+
 from medcat.cdb import CDB
-from medcat.utils.vocab import Vocab
+from medcat.vocab import Vocab
 from medcat.cat import CAT
-from medcat.utils.loggers import basic_logger
-log = basic_logger("api.utils")
+from medcat.utils.filters import check_filters
+from medcat.utils.helpers import tkns_from_doc
+from medcat.utils.loggers import add_handlers
+from medcat.config import Config
+
+log = logging.getLogger('medcat.trainer')
+log = add_handlers(log)
 
 
 def remove_annotations(document, project, partial=False):
@@ -28,7 +35,7 @@ def remove_annotations(document, project, partial=False):
         log.debug(f"Something went wrong: {e}")
 
 
-def add_annotations(spacy_doc, user, project, document, cdb, existing_annotations, tuis=[], cuis=[]):
+def add_annotations(spacy_doc, user, project, document, existing_annotations, cat):
     spacy_doc._.ents.sort(key=lambda x: len(x.text), reverse=True)
 
     tkns_in = []
@@ -40,7 +47,7 @@ def add_annotations(spacy_doc, user, project, document, cdb, existing_annotation
                    (ea[0] < ent.end_char < ea[1]) for ea in existing_annos_intervals)
 
     for ent in spacy_doc._.ents:
-        if not check_ents(ent) and ((not cuis and not tuis) or (ent._.tui in tuis) or (ent._.cui in cuis)):
+        if not check_ents(ent) and check_filters(ent._.cui, cat.config.linking['filters']):
             to_add = True
             for tkn in ent:
                 if tkn in tkns_in:
@@ -52,30 +59,27 @@ def add_annotations(spacy_doc, user, project, document, cdb, existing_annotation
 
     for ent in ents:
         label = ent._.cui
-        tui = ent._.tui
+        tuis = list(cat.cdb.cui2type_ids.get(label, ''))
 
         # Add the concept info to the Concept table if it doesn't exist
         cnt = Concept.objects.filter(cui=label).count()
         if cnt == 0:
-            pretty_name = ""
-            if label in cdb.cui2pretty_name:
-                pretty_name = cdb.cui2pretty_name[label]
-            elif label in cdb.cui2original_names and len(cdb.cui2original_names[label]) > 0:
-                # take shortest name here.
-                pretty_name = sorted(cdb.cui2original_names[label], key=len)[0]
+            pretty_name = cat.cdb.cui2preferred_name.get(label, label)
 
             concept = Concept()
             concept.pretty_name = pretty_name
             concept.cui = label
-            concept.tui = tui
-            concept.semantic_type = cdb.tui2name.get(tui, '')
-            concept.desc = cdb.cui2desc.get(label, '')
-            concept.synonyms = ",".join(cdb.cui2original_names.get(label, []))
+            concept.tui = tuis
+            concept.semantic_type = [cat.cdb.addl_info['type_id2name'].get(tui, '') for tui in tuis]
+            concept.desc = cat.cdb.addl_info['cui2description'].get(label, '')
+            concept.synonyms = ",".join(cat.cdb.addl_info['cui2original_names'].get(label, []))
             concept.cdb = project.concept_db
             concept.save()
+            """ REMOVE
             if project.clinical_coding_project:
                 set_icd_info_objects(cdb, concept, label)
                 set_opcs_info_objects(cdb, concept, label)
+            """
 
         cnt = Entity.objects.filter(label=label).count()
         if cnt == 0:
@@ -99,10 +103,10 @@ def add_annotations(spacy_doc, user, project, document, cdb, existing_annotation
             ann_ent.value = ent.text
             ann_ent.start_ind = ent.start_char
             ann_ent.end_ind = ent.end_char
-            ann_ent.acc = ent._.acc
+            ann_ent.acc = ent._.context_similarity
 
-            MIN_ACC = float(os.getenv('MIN_ACC', 0.2))
-            if ent._.acc < MIN_ACC:
+            MIN_ACC = cat.config.linking.get('similarity_threshold_trainer', 0.2)
+            if ent._.context_similarity < MIN_ACC:
                 ann_ent.deleted = True
                 ann_ent.validated = True
 
@@ -198,37 +202,29 @@ def create_annotation(source_val, selection_occurrence_index, cui, user, project
 
 
 def train_medcat(cat, project, document):
-    lr = float(os.getenv("LR", 1))
-    anneal = os.getenv("ANNEAL", 'false').lower() == 'true'
-
-    # Just in case, disable unsupervised training
-    cat.train = False
     # Get all annotations
     anns = AnnotatedEntity.objects.filter(project=project, document=document, validated=True, killed=False)
     text = document.text
-    doc = cat(text)
+    spacy_doc = cat(text)
 
     if len(anns) > 0 and text is not None and len(text) > 5:
         for ann in anns:
             cui = ann.entity.label
             # Indices for this annotation
-            text_inds = [ann.start_ind, ann.end_ind]
+            spacy_entity = tkns_from_doc(spacy_doc=spacy_doc, start=ann.start_ind, end=ann.end_ind)
             # This will add the concept if it doesn't exist and if it 
             #does just link the new name to the concept, if the namee is
             #already linked then it will just train.
             manually_created = False
             if ann.manually_created or ann.alternative:
                 manually_created = True
-            cat.add_name(cui=cui,
-                         source_val=ann.value,
-                         text=text,
-                         spacy_doc=doc,
-                         text_inds=text_inds,
-                         lr=lr,
-                         anneal=anneal,
-                         negative=ann.deleted,
-                         manually_created=manually_created)
 
+            cat.add_and_train_concept(cui=cui,
+                          name=ann.value,
+                          spacy_doc=spacy_doc,
+                          spacy_entity=spacy_entity,
+                          negative=ann.deleted,
+                          devalue_others=manually_created)
     # Completely remove concept names that the user killed
     killed_anns = AnnotatedEntity.objects.filter(project=project, document=document, killed=True)
     for ann in killed_anns:
@@ -241,6 +237,8 @@ def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
     cdb_id = project.concept_db.id
     vocab_id = project.vocab.id
     cat_id = str(cdb_id) + "-" + str(vocab_id)
+    config = Config()
+    config.parse_config_file(path=os.getenv("medcat_config_file"))
 
     if cat_id in CAT_MAP:
         cat = CAT_MAP[cat_id]
@@ -249,22 +247,17 @@ def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
             cdb = CDB_MAP[cdb_id]
         else:
             cdb_path = project.concept_db.cdb_file.path
-            cdb = CDB()
-            cdb.load_dict(cdb_path)
+            cdb = CDB.load(cdb_path, config=config)
             CDB_MAP[cdb_id] = cdb
 
         if vocab_id in VOCAB_MAP:
             vocab = VOCAB_MAP[vocab_id]
         else:
             vocab_path = project.vocab.vocab_file.path
-            vocab = Vocab()
-            vocab.load_dict(vocab_path)
+            vocab = Vocab.load(vocab_path)
             VOCAB_MAP[vocab_id] = vocab
 
-        cat = CAT(cdb=cdb, vocab=vocab)
-        cat.train = False
-        cat.spacy_cat.MIN_ACC = -5
-        cat.spacy_cat.IS_TRAINER = True
+        cat = CAT(cdb=cdb, config=cdb.config, vocab=vocab)
         CAT_MAP[cat_id] = cat
     return cat
 

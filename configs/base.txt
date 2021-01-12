@@ -1,0 +1,8 @@
+linking.optim = {'type': 'standard', 'lr': 0.1}
+linking.filter_before_disamb = True
+# 20 - INFO; 10 - DEBUG
+general.log_level = 20
+# Recommended is to have this one negative
+linking.similarity_threshold = -5
+# And this one to be used as the real th
+linking.similarity_threshold_trainer = 0.2
