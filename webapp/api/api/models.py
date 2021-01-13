@@ -120,6 +120,15 @@ class Entity(models.Model):
         return str(self.label)
 
 
+class ProjectCuiCounter(models.Model):
+    project = models.ForeignKey('Project', on_delete=models.CASCADE)
+    entity = models.ForeignKey('Entity', on_delete=models.CASCADE)
+    count = models.IntegerField()
+
+    def __str__(self):
+        return str(self.entity) + " - " + str(self.count)
+
+
 class AnnotatedEntity(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     project = models.ForeignKey('Project', on_delete=models.CASCADE)
