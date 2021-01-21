@@ -44,8 +44,8 @@ class ConceptDB(models.Model):
 
 
 class Concept(models.Model):
-    pretty_name = models.CharField(max_length=300)
-    cui = models.CharField(max_length=100)
+    pretty_name = models.CharField(max_length=300, db_index=True)
+    cui = models.CharField(max_length=100, db_index=True)
     desc = models.TextField(default="", blank=True)
     tui = models.CharField(max_length=20)
     semantic_type = models.CharField(max_length=200, blank=True, null=True)
@@ -118,6 +118,15 @@ class Entity(models.Model):
 
     def __str__(self):
         return str(self.label)
+
+
+class ProjectCuiCounter(models.Model):
+    project = models.ForeignKey('Project', on_delete=models.CASCADE)
+    entity = models.ForeignKey('Entity', on_delete=models.CASCADE)
+    count = models.IntegerField()
+
+    def __str__(self):
+        return str(self.entity) + " - " + str(self.count)
 
 
 class AnnotatedEntity(models.Model):
