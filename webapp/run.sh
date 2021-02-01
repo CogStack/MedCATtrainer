@@ -16,6 +16,6 @@ if User.objects.count() == 0:
     User.objects.create_superuser('admin', 'admin@example.com', 'admin')
 " | python manage.py shell
 
-#python /home/load_examples.py &
+python /home/load_examples.py &
 
 uwsgi --http-timeout 360s --http :8000 --master --chdir /home/api/  --module core.wsgi
