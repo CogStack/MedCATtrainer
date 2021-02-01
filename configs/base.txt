@@ -7,4 +7,6 @@ linking.similarity_threshold = -5
 # And this one to be used as the real th
 linking.similarity_threshold_trainer = 0.2
 # Used for limiting the number of occ of a concept in a project
-general.cui_count_limit = 4
+general.cui_count_limit = 100
+# Is unlink full
+general.full_unlink = True
