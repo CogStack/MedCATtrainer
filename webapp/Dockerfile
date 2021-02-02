@@ -19,6 +19,6 @@ RUN npm install && npm rebuild node-sass && npm run build
 WORKDIR /home/api
 RUN pip install pip --upgrade 
 RUN pip install -r /home/requirements.txt
-RUN pip install pip install https://zkcl.s3-eu-west-1.amazonaws.com/en_core_sci_lg-0.3.0.tar.gz
-RUN pip install pip install https://zkcl.s3-eu-west-1.amazonaws.com/en_core_sci_md-0.3.0.tar.gz
+RUN pip install https://zkcl.s3-eu-west-1.amazonaws.com/en_core_sci_lg-0.3.0.tar.gz
+RUN pip install https://zkcl.s3-eu-west-1.amazonaws.com/en_core_sci_md-0.3.0.tar.gz
 RUN chmod a+x /home/run.sh
