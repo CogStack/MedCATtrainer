@@ -9,6 +9,9 @@
         Terminate</button>
       <button :disabled="taskLocked" class="btn task-btn-3" @click="alternative">
         Alternative</button>
+      <button v-if="irrelevantEnabled" :disabled="taskLocked" class="btn task-btn-4" @click="irrelevant">
+        Irrelevant
+      </button>
     </div>
     <button :disabled="submitDisabled()" @click="submit()" class="btn btn-outline-primary mb-2 submit-btn submit"
               type="button">Submit</button>
@@ -25,7 +28,8 @@ export default {
     taskLocked: Boolean,
     submitLocked: Boolean,
     altSearch: Boolean,
-    terminateEnabled: Boolean
+    terminateEnabled: Boolean,
+    irrelevantEnabled: Boolean
   },
   watch: {
     'submitLocked' (oldVal, newVal) {
@@ -49,6 +53,9 @@ export default {
     alternative () {
       this.$emit('select:alternative', !this.altSearch)
     },
+    irrelevant () {
+      this.$emit('select:irrelevant')
+    },
     submit () {
       this.$emit('submit', true)
     },
@@ -66,9 +73,9 @@ export default {
           this.ignoreSubmit()
           this.submit()
         }
-      } else if (e.keyCode >= 49 && e.keyCode < 53 && !this.taskLocked) {
-        let codeRange = _.range(4)
-        let keyRange = _.range(49, 53)
+      } else if (e.keyCode >= 49 && e.keyCode < 54 && !this.taskLocked) {
+        let codeRange = _.range(5)
+        let keyRange = _.range(49, 54)
         let selectIdx = _.zipObject(keyRange, codeRange)[e.keyCode]
         switch (selectIdx) {
           case 0:
@@ -82,6 +89,9 @@ export default {
             break
           case 3:
             this.alternative()
+            break
+          case 4:
+            this.irrelevant()
         }
       }
     },

@@ -195,11 +195,12 @@ class ProjectAnnotateEntities(Project):
     terminate_available = models.BooleanField(default=True,
                                               help_text='Enable the option to terminate concepts.')
     irrelevant_available = models.BooleanField(default=False,
-                                              help_text='Enable the option to add the irrelevant button.')
+                                               help_text='Enable the option to add the irrelevant button.')
     tasks = models.ManyToManyField(MetaTask, blank=True, default=None)
 
     def save(self, *args, **kwargs):
         if self.concept_db is None:
+            # TODO: Fix this...
             cdb = CDB()
             cdb.save_dict('empty_cdb.dat')
             f = open('empty_cdb.dat', 'rb')

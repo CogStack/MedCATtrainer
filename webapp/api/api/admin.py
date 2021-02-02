@@ -82,6 +82,7 @@ def download_projects_without_text(projects):
                 out_ann['deleted'] = ann.deleted
                 out_ann['alternative'] = ann.alternative
                 out_ann['killed'] = ann.killed
+                out_ann['irrelevant'] = ann.irrelevant
                 out_ann['last_modified'] = str(ann.last_modified)
                 out_ann['manually_created'] = ann.manually_created
                 out_ann['acc'] = ann.acc
@@ -165,6 +166,7 @@ def download_projects_with_text(projects: QuerySet):
                 out_ann['deleted'] = ann.deleted
                 out_ann['alternative'] = ann.alternative
                 out_ann['killed'] = ann.killed
+                out_ann['irrelevant'] = ann.irrelevant
                 out_ann['last_modified'] = str(ann.last_modified)
                 out_ann['manually_created'] = ann.manually_created
                 out_ann['acc'] = ann.acc

@@ -40,8 +40,11 @@
             <div class="taskbar">
               <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt" @select:next="next" @select:back="back"></nav-bar>
               <task-bar class="tasks" :taskLocked="taskLocked" :ents="ents" :altSearch="altSearch"
-                        :submitLocked="docToSubmit !== null" :terminateEnabled="(project || {}).terminate_available" @select:remove="markRemove" @select:correct="markCorrect"
-                        @select:kill="markKill" @select:alternative="toggleAltSearch" @submit="submitDoc"></task-bar>
+                        :submitLocked="docToSubmit !== null" :terminateEnabled="(project || {}).terminate_available"
+                        :irrelevantEnabled="(project || {}).irrelevant_available"
+                        @select:remove="markRemove" @select:correct="markCorrect"
+                        @select:kill="markKill" @select:alternative="toggleAltSearch"
+                        @select:irrelevant="markIrrelevant" @submit="submitDoc"></task-bar>
             </div>
           </div>
         </div>
@@ -120,13 +123,18 @@
           </tr>
           <tr>
             <td></td>
-            <td>3 Key</td>
+            <td>3 Key (if set on your project)</td>
             <td>Terminate</td>
           </tr>
           <tr>
             <td></td>
             <td>4 Key</td>
             <td>Alternative</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>5 Key (if set on your project)</td>
+            <td>Irrelevant</td>
           </tr>
           </tbody>
         </table>
@@ -231,8 +239,9 @@ const CONCEPT_CORRECT = 'Correct'
 const CONCEPT_REMOVED = 'Deleted'
 const CONCEPT_KILLED = 'Killed'
 const CONCEPT_ALTERNATIVE = 'Alternative'
+const CONCEPT_IRRELEVANT = 'Irrelevant'
 
-const TASK_VALUES = [CONCEPT_CORRECT, CONCEPT_REMOVED, CONCEPT_KILLED, CONCEPT_ALTERNATIVE]
+const TASK_VALUES = [CONCEPT_CORRECT, CONCEPT_REMOVED, CONCEPT_KILLED, CONCEPT_ALTERNATIVE, CONCEPT_IRRELEVANT]
 
 const LOAD_NUM_DOC_PAGES = 10 // 30 docs per page, 300 documents
 
@@ -407,6 +416,8 @@ export default {
               taskVal = CONCEPT_KILLED
             } else if (e.alternative) {
               taskVal = CONCEPT_ALTERNATIVE
+            } else if (e.irrelevant) {
+              taskVal = CONCEPT_IRRELEVANT
             }
             e.assignedValues[TASK_NAME] = taskVal
           }
@@ -443,10 +454,12 @@ export default {
     },
     setStatus (status) {
       this.currentEnt.validated = 1
+      // reset statuses in case this is a re-annotation.
       this.currentEnt.correct = 0
       this.currentEnt.killed = 0
       this.currentEnt.alternative = 0
       this.currentEnt.deleted = 0
+      this.currentEnt.irrlevant = 0
       this.currentEnt[status] = 1
     },
     markCorrect () {
@@ -500,6 +513,12 @@ export default {
         this.ents[i] = this.currentEnt
       })
       this.currentEnt.cui = item.cui
+    },
+    markIrrelevant () {
+      this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_IRRELEVANT
+      this.setStatus('irrelevant')
+      this.markEntity(true)
+      this.metaAnnotate = false
     },
     markICD (code) {
       this.currentEnt.icd_code = code.id
