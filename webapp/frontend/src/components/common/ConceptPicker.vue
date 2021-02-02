@@ -108,10 +108,6 @@ export default {
 
       const filterResults = function (project, results) {
         if (project.restrict_concept_lookup) {
-          if (project.tuis) {
-            let tuis = project.tuis.split(',').map(t => t.trim())
-            results = results.filter(r => tuis.indexOf(r.tui) !== -1)
-          }
           if (project.cuis) {
             let cuis = project.cuis.split(',').map(c => c.trim())
             results = results.filter(r => cuis.indexOf(r.cui) !== -1)
@@ -125,7 +121,7 @@ export default {
         term = 'C' + term
         match = true
       } else if (!match && term.match(/^\d{8,}/gmi)) {
-        term = 'S-' + term
+        // potential SNOMED concept ID
         match = true
       }
       if (match) {

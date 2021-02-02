@@ -104,7 +104,6 @@ class Project(PolymorphicModel):
     dataset = models.ForeignKey('Dataset', on_delete=models.CASCADE)
     validated_documents = models.ManyToManyField(Document, default=None, blank=True)
     cuis = models.TextField(default=None, blank=True)
-    tuis = models.TextField(default=None, blank=True)
     cuis_file = models.FileField(null=True, blank=True,
                                  help_text='A file containing a JSON formatted list of CUI code strings, '
                                            'i.e. ["S-1234","S-54321"]')

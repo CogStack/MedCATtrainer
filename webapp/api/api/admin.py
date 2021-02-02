@@ -56,7 +56,6 @@ def download_projects_without_text(projects):
         out['name'] = project.name
         out['id'] = project.id
         out['cuis'] = project.cuis
-        out['tuis'] = project.tuis
         out['documents'] = []
 
         if project.cuis_file is not None and project.cuis_file:
@@ -134,7 +133,6 @@ def download_projects_with_text(projects: QuerySet):
         out['name'] = project.name
         out['id'] = project.id
         out['cuis'] = project.cuis
-        out['tuis'] = project.tuis
         out['documents'] = []
 
         if project.cuis_file is not None and project.cuis_file:
@@ -300,7 +298,7 @@ def _reset_cdb_filters(id):
     cdb.save(concept_db.cdb_file.path)
 
 
-def reset_cdb_filters(modeladmin, request, queryset)
+def reset_cdb_filters(modeladmin, request, queryset):
     for concept_db in queryset:
         _reset_cdb_filters(concept_db.id)
 
