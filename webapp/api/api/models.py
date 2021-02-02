@@ -144,6 +144,7 @@ class AnnotatedEntity(models.Model):
     manually_created = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
     killed = models.BooleanField(default=False)
+    irrelevant = models.BooleanField(default=False)
     create_time = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
 
@@ -193,6 +194,8 @@ class ProjectAnnotateEntities(Project):
                                                             'the project, i.e. either from the cuis or cuis_file lists.')
     terminate_available = models.BooleanField(default=True,
                                               help_text='Enable the option to terminate concepts.')
+    irrelevant_available = models.BooleanField(default=False,
+                                              help_text='Enable the option to add the irrelevant button.')
     tasks = models.ManyToManyField(MetaTask, blank=True, default=None)
 
     def save(self, *args, **kwargs):
