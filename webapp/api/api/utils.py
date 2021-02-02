@@ -253,6 +253,14 @@ def train_medcat(cat, project, document):
         name = ann.value
         cat.unlink_concept_name(cui=cui, name=name)
 
+    # Add irrelevant cuis to cui_exclude
+    irrelevant_anns = AnnotatedEntity.objects.filter(project=project, document=document, irrelevant=True)
+    for ann in irrelevant_anns:
+        cui = ann.entity.label
+        if 'cuis_exclude' not in in cat.config.linking['filters']:
+            cat.config.linking['filters']['cuis_exclude'] = set()
+        cat.config.linking['filters'].get('cuis_exclude').update([cui])
+
 
 def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
     cdb_id = project.concept_db.id

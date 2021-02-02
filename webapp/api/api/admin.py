@@ -289,6 +289,20 @@ def _import_concepts(id):
             #set_opcs_info_objects(cdb, concept, cui)
 
 
+@background(schedule=5)
+def _reset_cdb_filters(id):
+    from medcat.cdb import CDB
+    concept_db = ConceptDB.objects.get(id=id)
+    cdb = CDB.load(concept_db.cdb_file.path)
+    cdb.config.linking['filters'] = {'cuis': set()}
+    cdb.save(concept_db.cdb_file.path)
+
+
+def reset_cdb_filters(modeladmin, request, queryset)
+    for concept_db in queryset:
+        _reset_cdb_filters(concept_db.id)
+
+
 def import_concepts(modeladmin, request, queryset):
     for concept_db in queryset:
         _import_concepts(concept_db.id)
@@ -303,7 +317,7 @@ def delete_concepts_from_cdb(modeladmin, request, queryset):
 
 class ConceptDBAdmin(admin.ModelAdmin):
     model = ConceptDB
-    actions = [import_concepts, delete_concepts_from_cdb]
+    actions = [import_concepts, delete_concepts_from_cdb, reset_cdb_filters]
 
 admin.site.register(ConceptDB, ConceptDBAdmin)
 
