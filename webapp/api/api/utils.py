@@ -15,7 +15,7 @@ from medcat.utils.helpers import tkns_from_doc
 from medcat.utils.loggers import add_handlers
 from medcat.config import Config
 
-log = logging.getLogger('medcat.trainer')
+log = logging.getLogger('trainer')
 log = add_handlers(log)
 
 

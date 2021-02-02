@@ -32,7 +32,7 @@ print(os.environ)
 
 from medcat.utils.loggers import add_handlers
 
-log = logging.getLogger('medcat.trainer')
+log = logging.getLogger('trainer')
 log = add_handlers(log)
 
 
