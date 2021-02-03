@@ -266,8 +266,6 @@ def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
     cdb_id = project.concept_db.id
     vocab_id = project.vocab.id
     cat_id = str(cdb_id) + "-" + str(vocab_id)
-    config = Config()
-    config.parse_config_file(path=os.getenv("medcat_config_file"))
 
     if cat_id in CAT_MAP:
         cat = CAT_MAP[cat_id]
@@ -276,7 +274,8 @@ def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
             cdb = CDB_MAP[cdb_id]
         else:
             cdb_path = project.concept_db.cdb_file.path
-            cdb = CDB.load(cdb_path, config=config)
+            cdb = CDB.load(cdb_path)
+            cdb.config.parse_config_file(path=os.getenv("medcat_config_file"))
             CDB_MAP[cdb_id] = cdb
 
         if vocab_id in VOCAB_MAP:
