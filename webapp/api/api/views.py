@@ -1,4 +1,3 @@
-import json
 import re
 import traceback
 import logging
@@ -289,26 +288,6 @@ def prepare_documents(request):
 
 
 @api_view(http_method_names=['POST'])
-def name2cuis(request):
-    print(request.data)
-    text = request.data['text']
-    p_id = request.data['project_id']
-    project = ProjectAnnotateEntities.objects.get(id=p_id)
-
-    cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
-                     CAT_MAP=CAT_MAP, project=project)
-
-    names = prepare_name(text, cat, {}, cat.config)
-    cuis = []
-    for name in names:
-        cuis.extend(self.cdb.name2cuis.get(name, []))
-
-    out = {'cuis': cuis}
-
-    return Response(out)
-
-
-@api_view(http_method_names=['POST'])
 def add_annotation(request):
     # Get project id
     p_id = request.data['project_id']
@@ -375,7 +354,7 @@ def add_concept(request):
         log.error(err_msg)
         return Response({'err': err_msg}, 400)
 
-    spacy_doc = cat(text)
+    spacy_doc = cat(document.text)
     spacy_entity = None
     if source_val in spacy_doc.text:
         start = spacy_doc.text.index(source_val)

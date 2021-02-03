@@ -44,7 +44,6 @@ urlpatterns = [
     path('api/search-concepts/', api.views.ConceptView.as_view()),
     path('api/search-concept-infos/', api.views.search_concept_infos),
     path('api/prepare-documents/', api.views.prepare_documents),
-    path('api/name-to-cuisi/', api.views.name2cuis),
     path('api/api-token-auth/', auth_views.obtain_auth_token),
     path('admin/', admin.site.urls),
     path('api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
