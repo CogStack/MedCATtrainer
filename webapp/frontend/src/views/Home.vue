@@ -15,9 +15,7 @@
           <th>Description</th>
           <th>Create Time</th>
           <th>Concepts</th>
-          <th>Terms</th>
           <th>Annotate / Validate</th>
-          <th>Save Model</th>
           <th>Complete</th>
         </tr>
         </thead>
@@ -29,7 +27,6 @@
           <td>{{(new Date(project.create_time)).toLocaleDateString()}}</td>
           <td><span class="term-list">{{project.cuis.slice(0, 40) || 'All'}}</span></td>
           <td>{{project.require_entity_validation ? 'Annotate' : 'Validate'}}</td>
-          <td @click.stop><button class="btn btn-outline-primary" @click="saveModel(project.id)"><font-awesome-icon icon="save"></font-awesome-icon></button></td>
           <td>
             <font-awesome-icon v-if="project.complete" class="complete-project" icon="check"></font-awesome-icon>
           </td>
@@ -37,9 +34,6 @@
         </tbody>
       </table>
     </div>
-    <transition name="alert"><div class="alert alert-info" v-if="saving" role="alert">Saving models</div></transition>
-    <transition name="alert"><div class="alert alert-primary" v-if="modelSaved" role="alert">Model Successfully saved</div></transition>
-    <transition name="alert"><div class="alert alert-danger" v-if="modelSavedError" role="alert">Error saving model</div></transition>
   </div>
 </template>
 <script>

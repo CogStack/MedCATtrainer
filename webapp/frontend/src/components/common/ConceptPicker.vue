@@ -116,14 +116,7 @@ export default {
         return results
       }
 
-      let match = term.match(/^(?:c)\d{7}|s-\d*/gmi)
-      if (!match && term.match(/^\d{7}$/gmi)) {
-        term = 'C' + term
-        match = true
-      } else if (!match && term.match(/^\d{8,}/gmi)) {
-        // potential SNOMED concept ID
-        match = true
-      }
+      let match = term.match(/^\w?\d{4,}/gmi)
       if (match) {
         this.$http.get(`/api/concepts/?cui=${term}`).then(resp => {
           if (resp.data.results.length > 0) {

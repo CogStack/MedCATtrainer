@@ -392,11 +392,14 @@ instances of the same CDB file appropriately named to achieve this.
 
 <a name="save-download-models"></a>
 ### Save / Download Models
-Saving a model, takes the current state of the CDB that is currently loaded in memory of the container and overwrites to the
-associated CDB file originally uploaded. To save and download a model for further use in a MedCAT instance:
+We strongly suggest models are not saved within MedCATtrainer then directly used. Instead we suggest you use the collected
+annotations from projects to train and test a new MedCAT model.
+
+However, to save the current state of the model you can use:
+
  
-1\. Select the 'Save' model icon on the home page of that project. If the same CDB is used across multiple projects, you 
-only need to save once across all projects. Wait for the confirmation dialog for successfull saving of models to appear.  
+1\. An API call - \<deployment\>:\<port\>/save-models/<project-id> that can be used to save the current state of
+a model. This will overwrite the current CDB file.  
 
 2\. Open the admin app. (http://localhost:8001/admin/), and select 'Concept dbs'.
 
@@ -406,7 +409,7 @@ only need to save once across all projects. Wait for the confirmation dialog for
 have used previously, i.e. you've called medcat.cdb.save_dict('<location>').
 
 The saved MedCAT models can be used in any instance a regular MedCAT model may be used. I.e. in a jupyter notebook, 
-part of a web service, or further fine-tuning in anothe MedCATTrainer instance. 
+part of a web service, or further fine-tuning in another MedCATTrainer instance. 
 
 The Trainer currently does not support inspection / training / storage of the meta annotation models. These will be
 integrated in a forthcoming release.
