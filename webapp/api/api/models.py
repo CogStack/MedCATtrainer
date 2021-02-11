@@ -53,7 +53,7 @@ class Concept(models.Model):
     synonyms = models.TextField(default='', blank=True)
     icd10 = models.ManyToManyField(ICDCode, default=None, blank=True, related_name='concept')
     opcs4 = models.ManyToManyField(OPCSCode, default=None, blank=True, related_name='concept')
-    cdb = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=True, null=True)
+    cdb = models.ForeignKey('ConceptDB', on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return str(self.pretty_name)
