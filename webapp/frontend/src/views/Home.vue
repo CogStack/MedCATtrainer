@@ -50,7 +50,7 @@ export default {
     Login
   },
   data () {
-    let data = {
+    return {
       projects: [],
       next: null,
       previous: null,
@@ -61,11 +61,6 @@ export default {
       saving: false,
       routeAlert: false
     }
-
-    if (this.$cookie.apiToken) {
-      data.loginSuccessful = true
-    }
-    return data
   },
   created () {
     this.loggedIn()
@@ -88,6 +83,8 @@ export default {
           that.routeAlert = false
         }, 5000)
       }
+      // assume if there's an api-token we've logged in before and will try get projects
+      // fallback to logging in otherwise
       if (this.$cookie.get('api-token')) {
         this.loginSuccessful = true
         this.fetchProjects()
@@ -104,6 +101,11 @@ export default {
             this.fetchCompletionStatus()
             this.loadingProjects = false
           }
+        }).catch(() => {
+          this.$cookie.delete('username')
+          this.$cookie.delete('api-token')
+          this.loadingProjects = false
+          this.loginSuccessful = false
         })
       }
     },
