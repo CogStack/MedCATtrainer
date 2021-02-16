@@ -279,14 +279,13 @@ def _import_concepts(id):
             concept = Concept()
             concept.pretty_name = cdb.cui2preferred_name.get(cui, cui)
             concept.cui = cui
-            concept.tui = list(cdb.cui2type_ids.get(cui, ''))
-            concept.semantic_type = [cdb.addl_info['type_id2name'].get(tui, '') for tui in list(cdb.cui2type_ids.get(cui, ''))]
+            concept.tui = ','.join(list(cdb.cui2type_ids.get(cui, '')))
+            concept.semantic_type = ','.join([cdb.addl_info['type_id2name'].get(tui, '')
+                                              for tui in list(cdb.cui2type_ids.get(cui, ''))])
             concept.desc = cdb.addl_info['cui2description'].get(cui, '')
             concept.synonyms = ", ".join(cdb.addl_info['cui2original_names'].get(cui, []))
             concept.cdb = concept_db
             concept.save()
-            #set_icd_info_objects(cdb, concept, cui)
-            #set_opcs_info_objects(cdb, concept, cui)
 
 
 @background(schedule=5)

@@ -69,17 +69,12 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
             concept = Concept()
             concept.pretty_name = pretty_name
             concept.cui = label
-            concept.tui = tuis
-            concept.semantic_type = [cat.cdb.addl_info['type_id2name'].get(tui, '') for tui in tuis]
+            concept.tui = ','.join(tuis)
+            concept.semantic_type = ','.join([cat.cdb.addl_info['type_id2name'].get(tui, '') for tui in tuis])
             concept.desc = cat.cdb.addl_info['cui2description'].get(label, '')
             concept.synonyms = ",".join(cat.cdb.addl_info['cui2original_names'].get(label, []))
             concept.cdb = project.concept_db
             concept.save()
-            """ REMOVE
-            if project.clinical_coding_project:
-                set_icd_info_objects(cdb, concept, label)
-                set_opcs_info_objects(cdb, concept, label)
-            """
 
         cnt = Entity.objects.filter(label=label).count()
         if cnt == 0:

@@ -147,8 +147,7 @@ Annotation projects are used to inspect, validate and improve concepts recognise
 |vocab      | A MedCAT Vocabulary. This should be the resulting file from a call to the function medcat.cdb.utils.Vocab.save_dict('name_of_vocab.dat'). Clicking the '+' icon here opens a dialog to upload a vocab file.|
 |cdb_search_filter|**list** of CDB IDs that are used to lookup concepts during addition of annotations to a document|
 |Require Entity Validation| (Default: True) With this option ticked, annotations in the interface, that are made by MedCAT will appear 'grey' indicating they have not been validated. Document submission is dependent upon all 'grey' annotations to be marked by a user. Unticked ensures all annotations are marked 'valid' by default|
-|Train Model On Submit| (Default: True) With this option ticked, each document submission trains the configured MedCAT instance with the marked, and added if any, annotations from this document. Unticked, ensures the MedCAT model does not train between submissions.|
-|Clinical Coding Project| (Default: False) With this option ticked, is an experimental feature, tailoring interface to the problem of clinical coding| 
+|Train Model On Submit| (Default: True) With this option ticked, each document submission trains the configured MedCAT instance with the marked, and added if any, annotations from this document. Unticked, ensures the MedCAT model does not train between submissions.| 
 |Add New Entities|(Default: False) With this option ticked, allows users to add entirely new concepts to the existing MedCAT CDB. False ensures this option is not available to users.|
 |Restrict Concept Lookup|(Default: False) With this option ticked, restricts the concept lookup (add annotation / alternative concept) to only include those CUIs listed in the above filters (either from CUI / TUI list or uploade 'CUI File' list|
 |Terminate Available|(Default: True) With this option ticked, the option to terminate an annotated concept will appear|
@@ -221,7 +220,7 @@ added to the text by directly highlighting the text span, right clicking, select
 ![](docs/imgs/add-annotation-text.png) -> ![](docs/imgs/add-annotation-menu.png) -> ![](docs/imgs/add-annotation-concept-pick.png) 
 
 Select: 
-- Add Synonym: to add this annotation to the text span and link the selected concept
+- Add Synonym: to add this anno§tation to the text span and link the selected concept
 - Cancel: (Shortcut esc): to cancel adding the annotation to the text. 
  
 ![](docs/imgs/add-annotation-select-concept.png)

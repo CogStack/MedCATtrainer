@@ -106,7 +106,7 @@ class Project(PolymorphicModel):
     cuis = models.TextField(default=None, blank=True)
     cuis_file = models.FileField(null=True, blank=True,
                                  help_text='A file containing a JSON formatted list of CUI code strings, '
-                                           'i.e. ["S-1234","S-54321"]')
+                                           'i.e. ["1234567","7654321"]')
 
     def __str__(self):
         return str(self.name)
@@ -184,8 +184,6 @@ class ProjectAnnotateEntities(Project):
                                                               'before submission')
     train_model_on_submit = models.BooleanField(default=True, help_text='Active learning - configured CDB is trained '
                                                                         'on each submit')
-    clinical_coding_project = models.BooleanField(default=False, help_text='customised UI for the clinical coding '
-                                                                           '(ICD-10/OPCS-4) use case')
     add_new_entities = models.BooleanField(default=False,
                                            help_text='Allow the creation of new terms to be added to the CDB')
     restrict_concept_lookup = models.BooleanField(default=False,

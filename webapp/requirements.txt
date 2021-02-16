@@ -1,7 +1,7 @@
 uwsgi~=2.0
-Django~=2.0
-django-filter~=2.2
-django-polymorphic~=2.1
+Django~=2.2
+django-filter~=2.4
+django-polymorphic~=3.0
 djangorestframework~=3.10
 django-background-tasks~=1.2
 xlrd~=1.2

@@ -94,7 +94,7 @@ export default {
       }
 
       const that = this
-      const conceptDbs = this.project.cdb_search_filter.concat(this.project.concept_db).join(',')
+      const conceptDbs = Array.from(new Set(this.project.cdb_search_filter.concat(this.project.concept_db))).join(',')
       const searchByTerm = function () {
         term = term.split(' ').join('\\s')
         let searchConceptsQueryParams = `search=${term}&cdb__in=${conceptDbs}`

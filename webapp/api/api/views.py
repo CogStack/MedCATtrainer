@@ -130,7 +130,7 @@ class ConceptViewSet(viewsets.ModelViewSet):
     queryset = Concept.objects.all()
     serializer_class = ConceptSerializer
     filterset_class = ConceptFilter
-    filterset_fields = ['cui', 'tui', 'id', 'cdb']
+    filterset_fields = ['cui', 'id', 'cdb']
 
 
 class ConceptView(generics.ListAPIView):
@@ -140,7 +140,7 @@ class ConceptView(generics.ListAPIView):
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['$pretty_name']
     filterset_class = ConceptFilter
-    filterset_fields = ['tui', 'cui', 'cdb']
+    filterset_fields = ['cui', 'cdb']
 
 
 class EntityViewSet(viewsets.ModelViewSet):
