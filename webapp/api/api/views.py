@@ -139,6 +139,7 @@ class ConceptView(generics.ListAPIView):
     serializer_class = ConceptSerializer
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['$pretty_name']
+    ordering = ['pretty_name']
     filterset_class = ConceptFilter
     filterset_fields = ['cui', 'cdb']
 
