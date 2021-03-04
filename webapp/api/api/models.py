@@ -49,7 +49,6 @@ class Concept(models.Model):
     desc = models.TextField(default="", blank=True)
     tui = models.CharField(max_length=20)
     semantic_type = models.CharField(max_length=200, blank=True, null=True)
-    vocab = models.CharField(max_length=100)
     synonyms = models.TextField(default='', blank=True)
     icd10 = models.ManyToManyField(ICDCode, default=None, blank=True, related_name='concept')
     opcs4 = models.ManyToManyField(OPCSCode, default=None, blank=True, related_name='concept')
