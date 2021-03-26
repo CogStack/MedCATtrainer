@@ -1,8 +1,12 @@
 import copy
 import logging
+import os
+import tarfile
 from datetime import datetime
+from typing import Dict, List
 
-from django.db.models import QuerySet
+from django.contrib.auth.models import User
+from django.db.models import QuerySet, Model
 from django.http import HttpResponse, HttpResponseRedirect
 from io import StringIO
 import json
@@ -13,10 +17,6 @@ from rest_framework.exceptions import PermissionDenied
 
 from .models import *
 from .forms import *
-
-
-# Register your models here.
-#from .utils import set_icd_info_objects, set_opcs_info_objects
 
 admin.site.register(Entity)
 admin.site.register(MetaTaskValue)
@@ -118,6 +118,90 @@ def download_projects_without_text(projects):
     return response
 
 
+def download_deployment_export():
+    """
+    Packages projects, annotations, meta-annotations etc. into a flat list of linked entities,
+    ready to be downloaded and imported into a new trainer instance
+    :param projects:
+    :return: dict:
+    """
+    dt_fmt = '%Y-%m-%d::%H:%M-%z'
+
+    def clean_dict(d, keys=None):
+        filter_keys = ['_state', 'id']
+        if keys is not None:
+            filter_keys += keys
+        return {k: v for k, v in d.items() if k not in filter_keys}
+
+    def extract_model_dict(model, date_keys: List[str]=None):
+        if date_keys is None:
+            date_keys = []
+        return {m.id: {k: v.strftime(dt_fmt) if k in date_keys else v for k, v in clean_dict(m.__dict__).items()}
+                for m in model.objects.all()}
+
+    user_keys = ['id', 'username', 'first_name', 'last_name', 'email', 'is_staff', 'is_active']
+    users_map = {u.id: {k: v for k, v in u.__dict__.items() if k in user_keys} for u in User.objects.all()}
+
+    projects_map = extract_model_dict(ProjectAnnotateEntities, ['create_time'])
+    annos_map = extract_model_dict(AnnotatedEntity, ['last_modified', 'create_time'])
+    meta_anno_tasks_map = extract_model_dict(MetaTask)
+    meta_anno_values_map = extract_model_dict(MetaTaskValue)
+    meta_annos_map = extract_model_dict(MetaAnnotation)
+    dataset_filename_map = {d.id: str(d.original_file.path) for d in Dataset.objects.all()}
+    dataset_map = extract_model_dict(Dataset, ['create_time'])
+    entities_map = extract_model_dict(Entity)
+
+    # concepts table is intentionally ignored: [ {'cdb': 2 i.e. the id} ]
+    cdbs_imported = list(Concept.objects.values('cdb').distinct())
+    cdbs = extract_model_dict(ConceptDB)
+    cdbs_file_map = {c.id: c.cdb_file.path for c in ConceptDB.objects.all()}
+    vocabs = extract_model_dict(Vocabulary)
+    vocab_file_map = {v.id: v.vocab_file.path for v in Vocabulary.objects.all()}
+
+    # tar gz, the entire thing
+    export = {
+        'users': users_map,
+        'projects': projects_map,
+        'annos': annos_map,
+        'meta_annos': meta_annos_map,
+        'meta_anno_tasks': meta_anno_tasks_map,
+        'meta_anno_values': meta_anno_values_map,
+        'dataset_map': dataset_map,
+        'entities_map': entities_map,
+        'cdbs_imported': cdbs_imported,
+        'cdbs': cdbs,
+        'vocabs': vocabs
+    }
+
+    # write everything to a tar.gz
+    filename = 'mc_trainer_deployment_export.tar.gz'
+    with tarfile.open(filename, 'w:gz') as tar:
+        json.dump(export, open('data.json', 'w'))
+        tar.add('data.json')
+        for d_path in dataset_filename_map.values():
+            tar.add(d_path, arcname=f'datasets/{d_path.split("/")[-1]}')
+        for cdb_file_path in cdbs_file_map.values():
+            tar.add(cdb_file_path, arcname=f'cdbs/{cdb_file_path.split("/")[-1]}')
+        for vocab_file_path in vocab_file_map.values():
+            tar.add(vocab_file_path, arcname=f'vocabs/{vocab_file_path.split("/")[-1]}')
+
+    file_loaded = open(filename, 'rb')
+    response = HttpResponse(file_loaded.read(), content_type='application/x-gzip')
+    file_loaded.close()
+    response['Content-Type'] = 'application/octet-stream'
+    # response['Content-Length'] = str(os.stat(filename).st_size)
+    response['Content-Encoding'] = 'tar'
+    response['Content-Disposition'] = 'attachment; filename={}'.format(filename)
+    return response
+
+
+def upload_deployment_export(file: tarfile.TarFile):
+    file.extractall()
+    # rebuild databases
+
+    # kick off concept database
+
+
 def download(modeladmin, request, queryset):
     if not request.user.is_staff:
         raise PermissionDenied
@@ -126,8 +210,21 @@ def download(modeladmin, request, queryset):
 
 
 def download_projects_with_text(projects: QuerySet):
-    all_projects_out = {'projects': []}
+    all_projects = _retrieve_project_data(projects)
 
+    sio = StringIO()
+    json.dump(all_projects, sio)
+    sio.seek(0)
+
+    f_name = "MedCAT_Export_With_Text_{}.json".format(datetime.now().strftime('%Y-%m-%d:%H:%M:%S'))
+    response = HttpResponse(sio, content_type='text/json')
+    response['Content-Disposition'] = 'attachment; filename={}'.format(f_name)
+
+    return response
+
+
+def _retrieve_project_data(projects: QuerySet):
+    all_projects = {'projects': []}
     for project in projects:
         out = {}
         out['name'] = project.name
@@ -189,17 +286,8 @@ def download_projects_with_text(projects: QuerySet):
 
                 out_doc['annotations'].append(out_ann)
             out['documents'].append(out_doc)
-        all_projects_out['projects'].append(out)
-
-    sio = StringIO()
-    json.dump(all_projects_out, sio)
-    sio.seek(0)
-
-    f_name = "MedCAT_Export_With_Text_{}.json".format(datetime.now().strftime('%Y-%m-%d:%H:%M:%S'))
-    response = HttpResponse(sio, content_type='text/json')
-    response['Content-Disposition'] = 'attachment; filename={}'.format(f_name)
-
-    return response
+        all_projects['projects'].append(out)
+    return all_projects
 
 
 def clone_projects(modeladmin, request, queryset):

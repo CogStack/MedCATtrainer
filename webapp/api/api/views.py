@@ -14,7 +14,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .admin import download_projects_with_text, download_projects_without_text
+from .admin import download_projects_with_text, download_projects_without_text, download_deployment_export, \
+    upload_deployment_export
 from .permissions import *
 from .serializers import *
 from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
@@ -596,13 +597,17 @@ def download_annos(request):
     return out
 
 
+@api_view(http_method_names=['GET'])
+def download_deployment(request):
+    user = request.user
+    if not user.is_superuser:
+        return HttpResponseBadRequest('User is not super user, and not allowed to download a deployment')
+    return download_deployment_export()
 
 
-
-
-
-
-
-
-
-
+@api_view(http_method_names=['POST'])
+def upload_deployment(request):
+    user = request.user
+    if not user.is_superuser:
+        return HttpResponseBadRequest('User is not super user, and not allowed to upload a deployment')
+    upload_deployment_export()
