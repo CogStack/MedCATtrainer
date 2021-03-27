@@ -15,12 +15,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include, re_path
-from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from rest_framework.authtoken import views as auth_views
 from rest_framework import routers
 import api.views
-from django.conf.urls.static import static
-from django.conf import setting
+
 
 router = routers.DefaultRouter()
 router.register(r'users', api.views.UserViewSet)

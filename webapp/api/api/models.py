@@ -1,6 +1,9 @@
+import os
+
 from django.core.files import File
 from django.db import models
 from django.conf import settings
+from django.dispatch import receiver
 from medcat.cdb import CDB
 from polymorphic.models import PolymorphicModel
 
@@ -220,4 +223,22 @@ class MetaAnnotation(models.Model):
         return str(self.annotated_entity)
 
 
+@receiver(models.signals.post_delete, sender=ConceptDB)
+def auto_delete_cdb_file_on_delete(sender, instance, **kwargs):
+    _remove_file(instance, 'cdb_file')
 
+
+@receiver(models.signals.post_delete, sender=Vocabulary)
+def auto_delete_vocab_file_on_delete(sender, instance, **kwargs):
+    _remove_file(instance, 'vocab_file')
+
+
+@receiver(models.signals.post_delete, sender=Dataset)
+def auto_delete_dataset_file_on_delete(sender, instance, **kwargs):
+    _remove_file(instance, 'original_file')
+
+
+def _remove_file(instance, prop):
+    if getattr(instance, prop):
+        if os.path.isfile(getattr(instance, prop).path):
+            os.remove(getattr(instance, prop).path)
