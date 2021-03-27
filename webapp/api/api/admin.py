@@ -5,6 +5,7 @@ import tarfile
 from datetime import datetime
 from typing import Dict, List
 
+import pkg_resources
 from django.contrib.auth.models import User
 from django.db.models import QuerySet, Model
 from django.http import HttpResponse, HttpResponseRedirect
@@ -118,7 +119,7 @@ def download_projects_without_text(projects):
     return response
 
 
-def download_deployment_export():
+def download_deployment_export(data_only=False):
     """
     Packages projects, annotations, meta-annotations etc. into a flat list of linked entities,
     ready to be downloaded and imported into a new trainer instance
@@ -170,7 +171,8 @@ def download_deployment_export():
         'entities_map': entities_map,
         'cdbs_imported': cdbs_imported,
         'cdbs': cdbs,
-        'vocabs': vocabs
+        'vocabs': vocabs,
+        'medcat_version': [p.version for p in pkg_resources.working_set if p.project_name == 'medcat'][0]
     }
 
     # write everything to a tar.gz
@@ -178,12 +180,16 @@ def download_deployment_export():
     with tarfile.open(filename, 'w:gz') as tar:
         json.dump(export, open('data.json', 'w'))
         tar.add('data.json')
-        for d_path in dataset_filename_map.values():
-            tar.add(d_path, arcname=f'datasets/{d_path.split("/")[-1]}')
-        for cdb_file_path in cdbs_file_map.values():
-            tar.add(cdb_file_path, arcname=f'cdbs/{cdb_file_path.split("/")[-1]}')
-        for vocab_file_path in vocab_file_map.values():
-            tar.add(vocab_file_path, arcname=f'vocabs/{vocab_file_path.split("/")[-1]}')
+        if not data_only:
+            for d_path in dataset_filename_map.values():
+                tar.add(d_path, arcname=f'datasets/{d_path.split("/")[-1]}')
+            for cdb_file_path in cdbs_file_map.values():
+                tar.add(cdb_file_path, arcname=f'cdbs/{cdb_file_path.split("/")[-1]}')
+            for vocab_file_path in vocab_file_map.values():
+                tar.add(vocab_file_path, arcname=f'vocabs/{vocab_file_path.split("/")[-1]}')
+
+    # clean up
+    os.remove('data.json')
 
     file_loaded = open(filename, 'rb')
     response = HttpResponse(file_loaded.read(), content_type='application/x-gzip')
@@ -200,6 +206,7 @@ def upload_deployment_export(file: tarfile.TarFile):
     # rebuild databases
 
     # kick off concept database
+    pass
 
 
 def download(modeladmin, request, queryset):

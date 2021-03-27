@@ -602,7 +602,8 @@ def download_deployment(request):
     user = request.user
     if not user.is_superuser:
         return HttpResponseBadRequest('User is not super user, and not allowed to download a deployment')
-    return download_deployment_export()
+    data_only = request.GET['data_only', False]
+    return download_deployment_export(data_only)
 
 
 @api_view(http_method_names=['POST'])
