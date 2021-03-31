@@ -20,6 +20,7 @@ from .permissions import *
 from .serializers import *
 from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
 
+# TODO: fix import / missing func / is adding concepts broken??
 from medcat.utils.helpers import tkns_from_doc
 
 # For local testing, put envs
@@ -602,7 +603,7 @@ def download_deployment(request):
     user = request.user
     if not user.is_superuser:
         return HttpResponseBadRequest('User is not super user, and not allowed to download a deployment')
-    data_only = request.GET['data_only', False]
+    data_only = request.GET.get('data_only', False)
     return download_deployment_export(data_only)
 
 
@@ -611,4 +612,8 @@ def upload_deployment(request):
     user = request.user
     if not user.is_superuser:
         return HttpResponseBadRequest('User is not super user, and not allowed to upload a deployment')
-    upload_deployment_export()
+    prev_deployment_tar_filename = 'mc_trainer_deployment_export.tar.gz'
+    with open(prev_deployment_tar_filename, 'wb') as dest:
+        for chunk in request.FILES['file'].chunks():
+            dest.write(chunk)
+    upload_deployment_export(prev_deployment_tar_filename)

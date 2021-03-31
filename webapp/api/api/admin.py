@@ -3,6 +3,7 @@ import logging
 import os
 import tarfile
 from datetime import datetime
+from glob import glob
 from typing import Dict, List
 
 import pkg_resources
@@ -140,73 +141,150 @@ def download_deployment_export(data_only=False):
         return {m.id: {k: v.strftime(dt_fmt) if k in date_keys else v for k, v in clean_dict(m.__dict__).items()}
                 for m in model.objects.all()}
 
-    user_keys = ['id', 'username', 'first_name', 'last_name', 'email', 'is_staff', 'is_active']
+    user_keys = ['username', 'first_name', 'last_name', 'email', 'is_staff', 'is_active']
     users_map = {u.id: {k: v for k, v in u.__dict__.items() if k in user_keys} for u in User.objects.all()}
 
-    projects_map = extract_model_dict(ProjectAnnotateEntities, ['create_time'])
+    project_anno_map = extract_model_dict(ProjectAnnotateEntities, ['create_time'])
+    project_anno_map = {p_id: dict(p_val, **{'members': [v['id'] for v in
+                                                         ProjectAnnotateEntities.objects.get(id=p_id).members.values()]})
+                        for p_id, p_val in project_anno_map.items()}
+    project_cui_file_map = {p.cuis_file.path: p.id for p in
+                            ProjectAnnotateEntities.objects.exclude(cuis_file__exact="")}
+
     annos_map = extract_model_dict(AnnotatedEntity, ['last_modified', 'create_time'])
     meta_anno_tasks_map = extract_model_dict(MetaTask)
     meta_anno_values_map = extract_model_dict(MetaTaskValue)
     meta_annos_map = extract_model_dict(MetaAnnotation)
-    dataset_filename_map = {d.id: str(d.original_file.path) for d in Dataset.objects.all()}
+    dataset_filename_map = {d.original_file.path: d.id for d in Dataset.objects.all()}
     dataset_map = extract_model_dict(Dataset, ['create_time'])
     entities_map = extract_model_dict(Entity)
 
     # concepts table is intentionally ignored: [ {'cdb': 2 i.e. the id} ]
     cdbs_imported = list(Concept.objects.values('cdb').distinct())
     cdbs = extract_model_dict(ConceptDB)
-    cdbs_file_map = {c.id: c.cdb_file.path for c in ConceptDB.objects.all()}
+    cdbs_file_map = {c.cdb_file.path: c.id for c in ConceptDB.objects.all()}
+
     vocabs = extract_model_dict(Vocabulary)
-    vocab_file_map = {v.id: v.vocab_file.path for v in Vocabulary.objects.all()}
+    vocab_file_map = {v.vocab_file.path: v.id for v in Vocabulary.objects.all()}
 
     # tar gz, the entire thing
     export = {
         'users': users_map,
-        'projects': projects_map,
+        'projects': project_anno_map,
         'annos': annos_map,
         'meta_annos': meta_annos_map,
         'meta_anno_tasks': meta_anno_tasks_map,
         'meta_anno_values': meta_anno_values_map,
         'dataset_map': dataset_map,
+        'datasets_file_to_id': dataset_filename_map,
         'entities_map': entities_map,
         'cdbs_imported': cdbs_imported,
         'cdbs': cdbs,
+        'cdb_files_to_id': cdbs_file_map,
         'vocabs': vocabs,
-        'medcat_version': [p.version for p in pkg_resources.working_set if p.project_name == 'medcat'][0]
+        'vocabs_file_to_id': vocab_file_map,
+        'project_cui_file_to_id': project_cui_file_map,
+        'medcat_version': [p.version for p in pkg_resources.working_set if p.project_name == 'medcat'][0],
+        'medcattrainer_version': '1.0'  # TODO: source from setup.py?
     }
 
-    # write everything to a tar.gz
     filename = 'mc_trainer_deployment_export.tar.gz'
-    with tarfile.open(filename, 'w:gz') as tar:
-        json.dump(export, open('data.json', 'w'))
-        tar.add('data.json')
-        if not data_only:
-            for d_path in dataset_filename_map.values():
-                tar.add(d_path, arcname=f'datasets/{d_path.split("/")[-1]}')
-            for cdb_file_path in cdbs_file_map.values():
-                tar.add(cdb_file_path, arcname=f'cdbs/{cdb_file_path.split("/")[-1]}')
-            for vocab_file_path in vocab_file_map.values():
-                tar.add(vocab_file_path, arcname=f'vocabs/{vocab_file_path.split("/")[-1]}')
+    try:
+        # write everything to a tar.gz
+        with tarfile.open(filename, 'w:gz') as tar:
+            json.dump(export, open('data.json', 'w'))
+            tar.add('data.json')
+            if not data_only:
+                for d_path in dataset_filename_map.keys():
+                    tar.add(d_path, arcname=f'datasets/{d_path.split("/")[-1]}')
+                for cdb_file_path in cdbs_file_map.keys():
+                    tar.add(cdb_file_path, arcname=f'cdbs/{cdb_file_path.split("/")[-1]}')
+                for vocab_file_path in vocab_file_map.keys():
+                    tar.add(vocab_file_path, arcname=f'vocabs/{vocab_file_path.split("/")[-1]}')
+                for project_cui_file_path in project_cui_file_map.keys():
+                    tar.add(project_cui_file_path, arcname=f'project_cui_files/{project_cui_file_path.split("/")[-1]}')
 
-    # clean up
-    os.remove('data.json')
+        # clean up
+        os.remove('data.json')
+        file_loaded = open(filename, 'rb')
+        response = HttpResponse(file_loaded.read(), content_type='application/x-gzip')
+        file_loaded.close()
+        response['Content-Type'] = 'application/octet-stream'
+        # response['Content-Length'] = str(os.stat(filename).st_size)
+        response['Content-Encoding'] = 'tar'
+        response['Content-Disposition'] = 'attachment; filename={}'.format(filename)
+        return response
+    finally:
+        try:
+            os.remove(filename)
+        except FileNotFoundError:
+            pass
 
-    file_loaded = open(filename, 'rb')
-    response = HttpResponse(file_loaded.read(), content_type='application/x-gzip')
-    file_loaded.close()
-    response['Content-Type'] = 'application/octet-stream'
-    # response['Content-Length'] = str(os.stat(filename).st_size)
-    response['Content-Encoding'] = 'tar'
-    response['Content-Disposition'] = 'attachment; filename={}'.format(filename)
-    return response
 
+def upload_deployment_export(filename: str):
+    prfx = 'prev_deployment'
+    with tarfile.open(filename, 'r:gz') as f:
+        os.makedirs(prfx, exist_ok=True)
+        f.extractall(prfx)
 
-def upload_deployment_export(file: tarfile.TarFile):
-    file.extractall()
-    # rebuild databases
+    # read data.json
+    dep_map = json.load(open(f'{prfx}/data.json'))
 
-    # kick off concept database
-    pass
+    # check medcat major version is consistent
+    curr_ver = [p.version for p in pkg_resources.working_set if p.project_name == 'medcat'][0]
+    compatible_mc_ver = curr_ver.split('.')[0] == dep_map['medcat_version'].split('.')[0]
+    if compatible_mc_ver:
+        # load cdbs / vocabs / datasets if any
+        cdb_files = [cdb_file for cdb_file in glob(f'{prfx}/cdbs/*')]
+        vocab_files = [vocab_file for vocab_file in glob(f'{prfx}/vocabs/*')]
+        datasets = [dataset_file for dataset_file in glob(f'{prfx}/datasets/*')]
+        cui_files = [cui_file for cui_file in glob(f'{prfx}/project_cui_files/*')]
+
+        def _remap_file_fields(model, file_names, file_name_attr, filename_map_prev_id, **kwargs):
+            remap_model_ids = {}
+            for file_path in file_names:
+                m = model()
+                setattr(m, file_name_attr, file_path)
+                for k, val in kwargs.items():
+                    setattr(m, k, val)
+                m.save()
+                remap_model_ids[filename_map_prev_id[file_path]] = m
+            return remap_model_ids
+        # Create CDBs / Vocabs / Datasets
+        remapped_vocabs = _remap_file_fields(Vocabulary, vocab_files, 'vocab_file', dep_map['vocab_file_map'])
+        remapped_cdbs = _remap_file_fields(ConceptDB, cdb_files, 'cdb_file', dep_map['cdb_file_to_id'])
+        remapped_datasets = _remap_file_fields(Dataset, datasets, 'original_file', dep_map['datasets_file_to_id'])
+        remapped_cui_files = _remap_file_fields(ProjectAnnotateEntities, cui_files, 'cui_file',
+                                                dep_map['project_cui_file_to_id'])
+
+    def _remap_model_data(model, dep_map_key, time_keys=None):
+        remapped_model_ids = {}
+        time_keys = time_keys if time_keys else []
+        for prev_model_id, model_data in dep_map[dep_map_key].items():
+            m = model()
+            for m_k, m_v in model_data.items():
+                setattr(m, m_k, m_v)
+            m.save()
+            remapped_model_ids[prev_model_id] = m.id
+        return remapped_model_ids
+
+    # User model probably doesn't work without a password
+    # remapped_users = _remap_model_data(User, 'users')
+    remapped_meta_tasks = _remap_model_data(MetaTask, 'meta_anno_tasks')
+    remapped_meta_values = _remap_model_data(MetaTaskValue, 'meta_anno_values')
+    remapped_meta_annos = _remap_model_data(MetaAnnotation, 'meta_annos')
+    remapped_projects = _remap_model_data(ProjectAnnotateEntities, 'projects')
+    remapped_annos = _remap_model_data(AnnotatedEntity, 'annos', ['create_time'])
+    remapped_entities = _remap_model_data(Entity, 'entities_map')
+
+    # wire up models
+    for prev_p_id, project in dep_map['projects']:
+        new_proj = ProjectAnnotateEntities.objects.get(id=remapped_projects[prev_p_id])
+        # ignore members for now
+        new_cdb_id = remapped_cdbs[project['concept_db']]
+        new_proj.concept_db = ConceptDB.objects.get(id=new_cdb_id)
+
+    # Kick off concept database import
 
 
 def download(modeladmin, request, queryset):
