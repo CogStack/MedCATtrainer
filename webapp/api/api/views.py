@@ -1,27 +1,26 @@
+import logging
 import re
 import traceback
-import logging
 
 import pandas as pd
-from django.core.files import File
 from django.http import HttpResponseBadRequest, HttpResponseServerError
 from django.shortcuts import render
 from django_filters import rest_framework as drf
 from django_filters.rest_framework import DjangoFilterBackend
+# TODO: fix import / missing func / is adding concepts broken??
+from medcat.utils.helpers import tkns_from_doc
 from rest_framework import filters
 from rest_framework import generics
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.viewsets import ViewSet
 
 from .admin import download_projects_with_text, download_projects_without_text, download_deployment_export, \
     upload_deployment_export
 from .permissions import *
 from .serializers import *
 from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
-
-# TODO: fix import / missing func / is adding concepts broken??
-from medcat.utils.helpers import tkns_from_doc
 
 # For local testing, put envs
 """
@@ -208,6 +207,16 @@ class OPCSCodeViewSet(viewsets.ModelViewSet):
     serializer_class = OPCSCodeSerializer
     filterset_class = OPCSCodeFilter
     filterset_fields = ['code', 'id']
+
+
+class DeploymentUploadViewSet(ViewSet):
+    serializer_class = DeploymentUploadSerializer
+
+    def create(self, request):
+        deployment_upload = request.FILES.get('deployment_file')
+        errs = upload_deployment_export(deployment_upload.file.name)
+        log.info(f'Errors encountered during previous deployment upload\n{errs}')
+        return Response(errs, 200)
 
 
 @api_view(http_method_names=['GET'])
@@ -605,15 +614,3 @@ def download_deployment(request):
         return HttpResponseBadRequest('User is not super user, and not allowed to download a deployment')
     data_only = request.GET.get('data_only', False)
     return download_deployment_export(data_only)
-
-
-@api_view(http_method_names=['POST'])
-def upload_deployment(request):
-    user = request.user
-    if not user.is_superuser:
-        return HttpResponseBadRequest('User is not super user, and not allowed to upload a deployment')
-    prev_deployment_tar_filename = 'mc_trainer_deployment_export.tar.gz'
-    with open(prev_deployment_tar_filename, 'wb') as dest:
-        for chunk in request.FILES['file'].chunks():
-            dest.write(chunk)
-    upload_deployment_export(prev_deployment_tar_filename)

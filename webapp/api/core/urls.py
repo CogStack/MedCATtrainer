@@ -35,6 +35,7 @@ router.register(r'vocabs', api.views.VocabularyViewSet)
 router.register(r'datasets', api.views.DatasetViewSet)
 router.register(r'icd-codes', api.views.ICDCodeViewSet)
 router.register(r'opcs-codes', api.views.OPCSCodeViewSet)
+router.register(r'upload-deployment', api.views.DeploymentUploadViewSet, basename='upload')
 
 
 urlpatterns = [
@@ -57,6 +58,5 @@ urlpatterns = [
     path('api/annotate-text/', api.views.annotate_text),
     path('api/download-annos/', api.views.download_annos),
     path('api/download-deployment/', api.views.download_deployment),
-    path('api/upload-deployment/', api.views.upload_deployment),
     re_path('^.*$', api.views.index, name='index'),  # Match everything else to home
 ]

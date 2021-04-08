@@ -199,16 +199,19 @@ class ProjectAnnotateEntities(Project):
 
     def save(self, *args, **kwargs):
         if self.concept_db is None:
-            # TODO: Fix this...
-            cdb = CDB()
-            cdb.save_dict('empty_cdb.dat')
-            f = open('empty_cdb.dat', 'rb')
-            cdb_obj = ConceptDB()
-            cdb_obj.name = f'{self.name}_empty_cdb'
-            cdb_obj.cdb_file.save(f'{self.name}_empty_cdb.dat', File(f))
-            cdb_obj.use_for_training = True
-            cdb_obj.save()
-            self.concept_db = cdb_obj
+            # TODO: Fix creation of default CDB
+            try:
+                cdb = CDB()
+                cdb.save_dict('empty_cdb.dat')
+                f = open('empty_cdb.dat', 'rb')
+                cdb_obj = ConceptDB()
+                cdb_obj.name = f'{self.name}_empty_cdb'
+                cdb_obj.cdb_file.save(f'{self.name}_empty_cdb.dat', File(f))
+                cdb_obj.use_for_training = True
+                cdb_obj.save()
+                self.concept_db = cdb_obj
+            except:
+                pass
         super(ProjectAnnotateEntities, self).save(*args, **kwargs)
 
 

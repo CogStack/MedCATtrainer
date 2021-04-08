@@ -1,6 +1,9 @@
 import json
 
 from django.contrib.auth.models import User
+from rest_framework.fields import FileField
+from rest_framework.serializers import Serializer
+
 from .models import *
 from rest_framework import serializers
 
@@ -101,3 +104,11 @@ class MetaTaskValueSerializer(serializers.ModelSerializer):
     class Meta:
         model = MetaTaskValue
         fields = '__all__'
+
+
+# Serializers define the API representation.
+class DeploymentUploadSerializer(Serializer):
+    deployment_file = FileField()
+
+    class Meta:
+        fields = ['deployment_file']
