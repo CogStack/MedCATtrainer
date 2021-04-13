@@ -32,10 +32,7 @@
         </tr>
         <tr v-if="(conceptSummary['ICD-10'] || []).length > 0">
           <td>ICD-10</td>
-          <td v-if="!project.clinical_coding_project" class="fit-content">
-            <div v-for="code of conceptSummary['ICD-10']" :key="code.code">{{`${code.code} | ${code.desc}`}}</div>
-          </td>
-          <td v-if="project.clinical_coding_project" class="fit-content">
+          <td class="fit-content">
             <div class="selectable-code" @click="selectICDCode(code)"
                  v-for="code of conceptSummary['ICD-10']" :key="code.code">
               <font-awesome-icon v-if="selectedEnt.icd_code === code.id" icon="check" class="selected-code"></font-awesome-icon>
@@ -45,15 +42,8 @@
         </tr>
         <tr v-if="(conceptSummary['OPCS-4'] || []).length > 0">
           <td>OPCS-4</td>
-          <td v-if="!project.clinical_coding_project" class="fit-content">
+          <td class="fit-content">
             <div v-for="code of conceptSummary['OPCS-4']" :key="code.code">{{`${code.code} | ${code.desc}`}}</div>
-          </td>
-          <td v-if="project.clinical_coding_project" class="fit-content">
-            <div class="selectable-code" @click="selectOPCSCode(code)"
-                 v-for="code of conceptSummary['OPCS-4']" :key="code.code">
-              <font-awesome-icon v-if="selectedEnt.opcs_code === code.id" icon="check" class="selected-code"></font-awesome-icon>
-              {{`${code.code} | ${code.desc}`}}
-            </div>
           </td>
         </tr>
         <tr>

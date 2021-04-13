@@ -15,9 +15,7 @@
           <th>Description</th>
           <th>Create Time</th>
           <th>Concepts</th>
-          <th>Terms</th>
           <th>Annotate / Validate</th>
-          <th>Save Model</th>
           <th>Complete</th>
         </tr>
         </thead>
@@ -28,9 +26,7 @@
           <td>{{project.description}}</td>
           <td>{{(new Date(project.create_time)).toLocaleDateString()}}</td>
           <td><span class="term-list">{{project.cuis.slice(0, 40) || 'All'}}</span></td>
-          <td><span class="term-list">{{project.tuis.slice(0, 40) || 'All'}}</span></td>
           <td>{{project.require_entity_validation ? 'Annotate' : 'Validate'}}</td>
-          <td @click.stop><button class="btn btn-outline-primary" @click="saveModel(project.id)"><font-awesome-icon icon="save"></font-awesome-icon></button></td>
           <td>
             <font-awesome-icon v-if="project.complete" class="complete-project" icon="check"></font-awesome-icon>
           </td>
@@ -38,9 +34,6 @@
         </tbody>
       </table>
     </div>
-    <transition name="alert"><div class="alert alert-info" v-if="saving" role="alert">Saving models</div></transition>
-    <transition name="alert"><div class="alert alert-primary" v-if="modelSaved" role="alert">Model Successfully saved</div></transition>
-    <transition name="alert"><div class="alert alert-danger" v-if="modelSavedError" role="alert">Error saving model</div></transition>
   </div>
 </template>
 <script>
@@ -57,7 +50,7 @@ export default {
     Login
   },
   data () {
-    let data = {
+    return {
       projects: [],
       next: null,
       previous: null,
@@ -68,11 +61,6 @@ export default {
       saving: false,
       routeAlert: false
     }
-
-    if (this.$cookie.apiToken) {
-      data.loginSuccessful = true
-    }
-    return data
   },
   created () {
     this.loggedIn()
@@ -95,6 +83,8 @@ export default {
           that.routeAlert = false
         }, 5000)
       }
+      // assume if there's an api-token we've logged in before and will try get projects
+      // fallback to logging in otherwise
       if (this.$cookie.get('api-token')) {
         this.loginSuccessful = true
         this.fetchProjects()
@@ -111,6 +101,11 @@ export default {
             this.fetchCompletionStatus()
             this.loadingProjects = false
           }
+        }).catch(() => {
+          this.$cookie.delete('username')
+          this.$cookie.delete('api-token')
+          this.loadingProjects = false
+          this.loginSuccessful = false
         })
       }
     },

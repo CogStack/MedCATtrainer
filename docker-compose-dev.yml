@@ -2,6 +2,7 @@ version: '3.4'
 
 services:
   medcattrainer:
+    image: medcattrainer:latest
     build:
         network: host
         context: ./webapp
@@ -9,6 +10,7 @@ services:
       - ./webapp/api/core:/home/api/core
       - ./webapp/api/api:/home/api/api
       - ./webapp/run.sh:/home/run.sh
+      - ./configs:/home/configs
       - api-media:/home/api/media
       - api-static:/home/api/static
       - api-db:/home/api/db
@@ -18,6 +20,7 @@ services:
       - ./envs/env
     command: /home/run.sh
   nginx:
+    image: medcattrainer-nginx:latest
     build:
         network: host
         context: ./nginx

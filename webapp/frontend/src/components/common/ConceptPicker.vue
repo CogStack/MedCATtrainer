@@ -94,7 +94,7 @@ export default {
       }
 
       const that = this
-      const conceptDbs = this.project.cdb_search_filter.concat(this.project.concept_db).join(',')
+      const conceptDbs = Array.from(new Set(this.project.cdb_search_filter.concat(this.project.concept_db))).join(',')
       const searchByTerm = function () {
         term = term.split(' ').join('\\s')
         let searchConceptsQueryParams = `search=${term}&cdb__in=${conceptDbs}`
@@ -108,10 +108,6 @@ export default {
 
       const filterResults = function (project, results) {
         if (project.restrict_concept_lookup) {
-          if (project.tuis) {
-            let tuis = project.tuis.split(',').map(t => t.trim())
-            results = results.filter(r => tuis.indexOf(r.tui) !== -1)
-          }
           if (project.cuis) {
             let cuis = project.cuis.split(',').map(c => c.trim())
             results = results.filter(r => cuis.indexOf(r.cui) !== -1)
@@ -120,14 +116,7 @@ export default {
         return results
       }
 
-      let match = term.match(/^(?:c)\d{7}|s-\d*/gmi)
-      if (!match && term.match(/^\d{7}$/gmi)) {
-        term = 'C' + term
-        match = true
-      } else if (!match && term.match(/^\d{8,}/gmi)) {
-        term = 'S-' + term
-        match = true
-      }
+      let match = term.match(/^\w?\d{4,}/gmi)
       if (match) {
         this.$http.get(`/api/concepts/?cui=${term}`).then(resp => {
           if (resp.data.results.length > 0) {

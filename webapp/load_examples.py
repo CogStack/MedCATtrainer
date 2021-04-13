@@ -39,7 +39,7 @@ while True:
             print("Found No Objects. Populating Example: Concept DB, Vocabulary, Dataset and Project...")
             # download example cdb, vocab, dataset
             print("Downloading example CDB...")
-            cdb_file = requests.get('https://s3-eu-west-1.amazonaws.com/zkcl/cdb-medmen.dat')
+            cdb_file = requests.get('https://s3-eu-west-1.amazonaws.com/zkcl/cdb-medmen-v1.dat')
             with open(CDB_TMP_FILE, 'wb') as f:
                 f.write(cdb_file.content)
             print("Downloading example vocab...")

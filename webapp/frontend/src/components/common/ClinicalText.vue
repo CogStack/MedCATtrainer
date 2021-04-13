@@ -75,6 +75,10 @@ export default {
         let spanText = `<span @click="selectEnt(${i})" class="${styleClass}">${highlightText}</span>`
         let precedingText = this.text.slice(start, this.ents[i].start_ind)
         precedingText = precedingText.length !== 0 ? precedingText : ' '
+        let wrapNewLines = precedingText.match(/^\n*/g)
+        if (wrapNewLines && wrapNewLines[0].length === precedingText.length) {
+          precedingText = precedingText.split('').map(_ => '<br>').join('')
+        }
         start = this.ents[i].end_ind
         formattedText += precedingText + spanText
         if (i === this.ents.length - 1) {
@@ -83,10 +87,10 @@ export default {
       }
       // escape '<' '>' that may be interpreted as start/end tags.
       formattedText = formattedText
-        .replace(/<(?!span)/g, '&lt')
+        .replace(/<(?!span|br)/g, '&lt')
         .replace(/&lt(?=\/span>)/g, '<')
         .replace(/(?<!")>/g, '&gt')
-        .replace(/(?<=<\/span)&gt/g, '>')
+        .replace(/(?<=<\/span|br)&gt/g, '>')
 
       formattedText = this.addAnnos ? `<div @contextmenu.prevent.stop="showCtxMenu($event)">${formattedText}</div>` : `<div>${formattedText}</div>`
       this.scrollIntoView(timeout)
@@ -135,7 +139,7 @@ export default {
         }
 
         let i = 0
-        while (priorSibling !== null && i < 10) {
+        while (priorSibling !== null) {
           priorText = `${priorSibling.innerText || priorSibling.textContent}${priorText}`
           priorSibling = priorSibling.previousSibling
           i++
@@ -147,7 +151,7 @@ export default {
           i++
         }
 
-        // occurrences of the selected string in the text before and after.
+        // occurrences of the selected string in the text before.
         let selectionOcurrenceIdx = 0
         let idx = 0
         while (idx !== -1) {
@@ -199,7 +203,7 @@ export default {
   background: white;
   overflow-y: auto;
   height: 100%;
-  box-shadow: 0px -2px 3px 2px rgba(0,0,0,0.2);
+  box-shadow: 0px -2px 3px 2px rgba(0, 0, 0, 0.2);
   padding: 25px;
   white-space: pre-wrap;
 }

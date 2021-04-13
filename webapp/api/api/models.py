@@ -1,6 +1,9 @@
+import os
+
 from django.core.files import File
 from django.db import models
 from django.conf import settings
+from django.dispatch import receiver
 from medcat.cdb import CDB
 from polymorphic.models import PolymorphicModel
 
@@ -44,16 +47,15 @@ class ConceptDB(models.Model):
 
 
 class Concept(models.Model):
-    pretty_name = models.CharField(max_length=300)
-    cui = models.CharField(max_length=100)
+    pretty_name = models.CharField(max_length=300, db_index=True)
+    cui = models.CharField(max_length=100, db_index=True)
     desc = models.TextField(default="", blank=True)
     tui = models.CharField(max_length=20)
     semantic_type = models.CharField(max_length=200, blank=True, null=True)
-    vocab = models.CharField(max_length=100)
     synonyms = models.TextField(default='', blank=True)
     icd10 = models.ManyToManyField(ICDCode, default=None, blank=True, related_name='concept')
     opcs4 = models.ManyToManyField(OPCSCode, default=None, blank=True, related_name='concept')
-    cdb = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=True, null=True)
+    cdb = models.ForeignKey('ConceptDB', on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return str(self.pretty_name)
@@ -104,10 +106,9 @@ class Project(PolymorphicModel):
     dataset = models.ForeignKey('Dataset', on_delete=models.CASCADE)
     validated_documents = models.ManyToManyField(Document, default=None, blank=True)
     cuis = models.TextField(default=None, blank=True)
-    tuis = models.TextField(default=None, blank=True)
     cuis_file = models.FileField(null=True, blank=True,
                                  help_text='A file containing a JSON formatted list of CUI code strings, '
-                                           'i.e. ["S-1234","S-54321"]')
+                                           'i.e. ["1234567","7654321"]')
 
     def __str__(self):
         return str(self.name)
@@ -118,6 +119,15 @@ class Entity(models.Model):
 
     def __str__(self):
         return str(self.label)
+
+
+class ProjectCuiCounter(models.Model):
+    project = models.ForeignKey('Project', on_delete=models.CASCADE)
+    entity = models.ForeignKey('Entity', on_delete=models.CASCADE)
+    count = models.IntegerField()
+
+    def __str__(self):
+        return str(self.entity) + " - " + str(self.count)
 
 
 class AnnotatedEntity(models.Model):
@@ -135,6 +145,7 @@ class AnnotatedEntity(models.Model):
     manually_created = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
     killed = models.BooleanField(default=False)
+    irrelevant = models.BooleanField(default=False)
     create_time = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
 
@@ -175,8 +186,6 @@ class ProjectAnnotateEntities(Project):
                                                               'before submission')
     train_model_on_submit = models.BooleanField(default=True, help_text='Active learning - configured CDB is trained '
                                                                         'on each submit')
-    clinical_coding_project = models.BooleanField(default=False, help_text='customised UI for the clinical coding '
-                                                                           '(ICD-10/OPCS-4) use case')
     add_new_entities = models.BooleanField(default=False,
                                            help_text='Allow the creation of new terms to be added to the CDB')
     restrict_concept_lookup = models.BooleanField(default=False,
@@ -184,19 +193,25 @@ class ProjectAnnotateEntities(Project):
                                                             'the project, i.e. either from the cuis or cuis_file lists.')
     terminate_available = models.BooleanField(default=True,
                                               help_text='Enable the option to terminate concepts.')
+    irrelevant_available = models.BooleanField(default=False,
+                                               help_text='Enable the option to add the irrelevant button.')
     tasks = models.ManyToManyField(MetaTask, blank=True, default=None)
 
     def save(self, *args, **kwargs):
         if self.concept_db is None:
-            cdb = CDB()
-            cdb.save_dict('empty_cdb.dat')
-            f = open('empty_cdb.dat', 'rb')
-            cdb_obj = ConceptDB()
-            cdb_obj.name = f'{self.name}_empty_cdb'
-            cdb_obj.cdb_file.save(f'{self.name}_empty_cdb.dat', File(f))
-            cdb_obj.use_for_training = True
-            cdb_obj.save()
-            self.concept_db = cdb_obj
+            # TODO: Fix creation of default CDB
+            try:
+                cdb = CDB()
+                cdb.save_dict('empty_cdb.dat')
+                f = open('empty_cdb.dat', 'rb')
+                cdb_obj = ConceptDB()
+                cdb_obj.name = f'{self.name}_empty_cdb'
+                cdb_obj.cdb_file.save(f'{self.name}_empty_cdb.dat', File(f))
+                cdb_obj.use_for_training = True
+                cdb_obj.save()
+                self.concept_db = cdb_obj
+            except:
+                pass
         super(ProjectAnnotateEntities, self).save(*args, **kwargs)
 
 
@@ -211,4 +226,22 @@ class MetaAnnotation(models.Model):
         return str(self.annotated_entity)
 
 
+@receiver(models.signals.post_delete, sender=ConceptDB)
+def auto_delete_cdb_file_on_delete(sender, instance, **kwargs):
+    _remove_file(instance, 'cdb_file')
 
+
+@receiver(models.signals.post_delete, sender=Vocabulary)
+def auto_delete_vocab_file_on_delete(sender, instance, **kwargs):
+    _remove_file(instance, 'vocab_file')
+
+
+@receiver(models.signals.post_delete, sender=Dataset)
+def auto_delete_dataset_file_on_delete(sender, instance, **kwargs):
+    _remove_file(instance, 'original_file')
+
+
+def _remove_file(instance, prop):
+    if getattr(instance, prop):
+        if os.path.isfile(getattr(instance, prop).path):
+            os.remove(getattr(instance, prop).path)

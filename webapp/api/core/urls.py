@@ -15,12 +15,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include, re_path
-from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from rest_framework.authtoken import views as auth_views
 from rest_framework import routers
 import api.views
-from django.conf.urls.static import static
-from django.conf import settings
+
 
 router = routers.DefaultRouter()
 router.register(r'users', api.views.UserViewSet)
@@ -37,6 +35,7 @@ router.register(r'vocabs', api.views.VocabularyViewSet)
 router.register(r'datasets', api.views.DatasetViewSet)
 router.register(r'icd-codes', api.views.ICDCodeViewSet)
 router.register(r'opcs-codes', api.views.OPCSCodeViewSet)
+router.register(r'upload-deployment', api.views.DeploymentUploadViewSet, basename='upload')
 
 
 urlpatterns = [
@@ -44,7 +43,6 @@ urlpatterns = [
     path('api/search-concepts/', api.views.ConceptView.as_view()),
     path('api/search-concept-infos/', api.views.search_concept_infos),
     path('api/prepare-documents/', api.views.prepare_documents),
-    path('api/name-to-cuisi/', api.views.name2cuis),
     path('api/api-token-auth/', auth_views.obtain_auth_token),
     path('admin/', admin.site.urls),
     path('api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
@@ -59,5 +57,6 @@ urlpatterns = [
     path('api/update-meta-annotation/', api.views.update_meta_annotation),
     path('api/annotate-text/', api.views.annotate_text),
     path('api/download-annos/', api.views.download_annos),
+    path('api/download-deployment/', api.views.download_deployment),
     re_path('^.*$', api.views.index, name='index'),  # Match everything else to home
 ]
