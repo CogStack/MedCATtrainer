@@ -7,7 +7,6 @@ from django.http import HttpResponseBadRequest, HttpResponseServerError
 from django.shortcuts import render
 from django_filters import rest_framework as drf
 from django_filters.rest_framework import DjangoFilterBackend
-# TODO: fix import / missing func / is adding concepts broken??
 from medcat.utils.helpers import tkns_from_doc
 from rest_framework import filters
 from rest_framework import generics
@@ -54,6 +53,8 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsReadOnly]
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
+
+    filterset_fields = ['username']
 
 
 class ProjectAnnotateEntitiesViewSet(viewsets.ModelViewSet):

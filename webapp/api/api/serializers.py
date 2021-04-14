@@ -11,7 +11,7 @@ from rest_framework import serializers
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
-        fields = ['url', 'username', 'email', 'id']
+        fields = ['url', 'username', 'email', 'id', 'is_staff', 'is_superuser']
 
 
 class ConceptSerializer(serializers.ModelSerializer):

@@ -46,6 +46,7 @@ export default {
     logout () {
       this.$cookie.delete('username')
       this.$cookie.delete('api-token')
+      this.$cookie.delete('admin')
       if (this.$route.name !== 'home') {
         this.$router.push({ name: 'home' })
       } else {

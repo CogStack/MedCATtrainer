@@ -9,6 +9,7 @@
         <input v-model="password" class="form-control" type="password" id="password">
       </form>
       <span v-if="failed" class="text-danger">Username and/or password incorrect</span>
+      <span v-if="failedAdminStatusCheck" class="text-danger">Cannot determine admin status of username</span>
     </div>
     <div slot="footer">
       <button class="login-submit btn btn-primary" @click="login()">Login</button>
@@ -32,7 +33,8 @@ export default {
     return {
       uname: '',
       password: '',
-      failed: false
+      failed: false,
+      failedAdminStatusCheck: false
     }
   },
   methods: {
@@ -46,7 +48,21 @@ export default {
         this.$cookie.set('username', this.uname)
         this.$http.defaults.headers.common['Authorization'] = `Token ${this.$cookie.get('api-token')}`
         window.removeEventListener('keyup', this.keyup)
-        EventBus.$emit('login:success')
+        this.$http.get(`/api/users/?username=${this.uname}`).then(resp => {
+          if (resp.data.results.length > 0) {
+            const adminState = resp.data.results[0].is_staff || resp.data.results[0].is_superuser
+            this.$cookie.set('admin', adminState)
+            EventBus.$emit('login:success')
+          } else {
+            this.failedAdminStatusCheck = true
+            setTimeout(() => {
+              this.$cookie.set('admin', false)
+              EventBus.$emit('login:success')
+            }, 1000)
+          }
+        }).catch(() => {
+          this.failed = true
+        })
       }).catch(() => {
         this.failed = true
       })

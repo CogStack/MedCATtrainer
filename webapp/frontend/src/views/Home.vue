@@ -17,6 +17,7 @@
           <th>Concepts</th>
           <th>Annotate / Validate</th>
           <th>Complete</th>
+          <th v-if="isAdmin">Save Model</th>
         </tr>
         </thead>
         <tbody>
@@ -30,10 +31,16 @@
           <td>
             <font-awesome-icon v-if="project.complete" class="complete-project" icon="check"></font-awesome-icon>
           </td>
+          <td @click.stop v-if="isAdmin">
+            <button class="btn btn-outline-primary" @click="saveModel(project.id)"><font-awesome-icon icon="save"></font-awesome-icon></button>
+          </td>
         </tr>
         </tbody>
       </table>
     </div>
+    <transition name="alert"><div class="alert alert-info" v-if="saving" role="alert">Saving models</div></transition>
+    <transition name="alert"><div class="alert alert-primary" v-if="modelSaved" role="alert">Model Successfully saved</div></transition>
+    <transition name="alert"><div class="alert alert-danger" v-if="modelSavedError" role="alert">Error saving model</div></transition>
   </div>
 </template>
 <script>
@@ -59,7 +66,8 @@ export default {
       modelSaved: false,
       modelSavedError: false,
       saving: false,
-      routeAlert: false
+      routeAlert: false,
+      isAdmin: false
     }
   },
   created () {
@@ -72,7 +80,7 @@ export default {
     EventBus.$on('login:success', this.loggedIn)
   },
   beforeDestroy () {
-    EventBus.$off('login:success', this.loggedIn)
+    EventBus.$off('login:success')
   },
   methods: {
     loggedIn () {
@@ -87,6 +95,7 @@ export default {
       // fallback to logging in otherwise
       if (this.$cookie.get('api-token')) {
         this.loginSuccessful = true
+        this.isAdmin = this.$cookie.get('admin') === 'true'
         this.fetchProjects()
       }
     },
@@ -104,6 +113,7 @@ export default {
         }).catch(() => {
           this.$cookie.delete('username')
           this.$cookie.delete('api-token')
+          this.$cookie.delete('admin')
           this.loadingProjects = false
           this.loginSuccessful = false
         })
