@@ -86,13 +86,15 @@ export default {
   },
   methods: {
     loggedIn () {
-      if (this.$route.path !== '/') {
-        this.routeAlert = `Invalid URL: ${this.$route.path}, redirected to the MedCAT Home page.`
-        const that = this
-        setTimeout(() => {
-          that.routeAlert = false
-        }, 5000)
-      }
+      this.$http.get('/api/behind-rp/').then(resp => {
+        if (!resp.data && this.$route.path !== '/') {
+          this.routeAlert = `Invalid URL: ${this.$route.path}, redirected to the MedCAT Home page.`
+          const that = this
+          setTimeout(() => {
+            that.routeAlert = false
+          }, 5000)
+        }
+      })
       // assume if there's an api-token we've logged in before and will try get projects
       // fallback to logging in otherwise
       if (this.$cookie.get('api-token')) {

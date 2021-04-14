@@ -58,5 +58,6 @@ urlpatterns = [
     path('api/annotate-text/', api.views.annotate_text),
     path('api/download-annos/', api.views.download_annos),
     path('api/download-deployment/', api.views.download_deployment),
+    path('api/behind-rp/', api.views.behind_reverse_proxy),
     re_path('^.*$', api.views.index, name='index'),  # Match everything else to home
 ]

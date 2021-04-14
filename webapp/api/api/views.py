@@ -615,3 +615,8 @@ def download_deployment(request):
         return HttpResponseBadRequest('User is not super user, and not allowed to download a deployment')
     data_only = request.GET.get('data_only', False)
     return download_deployment_export(data_only)
+
+
+@api_view(http_method_names=['GET'])
+def behind_reverse_proxy(request):
+    return Response(bool(int(os.environ.get('behind_rp', False))))

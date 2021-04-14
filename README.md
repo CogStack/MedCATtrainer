@@ -29,6 +29,8 @@ MedCATTrainer was presented at EMNLP/IJCNLP 2019 :tada:
         2. [Downloading Annotations](#download-annos)
         3. [Cloning Projects](#clone-proj)
         4. [Resetting Projects](#reset-proj)
+        5. [Save Models](#save-models)
+        6. [Download Models](#download-models)
 3. [Annotation Guidelines](#anno-guidelines)
 4. [Advanced Usage](#advanced-usage)
         
@@ -251,7 +253,7 @@ by the newly trained MedCAT model
 ### Section 4 - Header Toolbar 
 Lists the current name of the document under review and the number of remaining documents to annotate in this project
 action buttons for:
-- ![](docs/imgs/summary-button.png): Summary of current annotations. A similar view is shown before confirmation of submission of the annotations
+- ![](docs/imgs/summary-button.png): Summary of current annotations. f A similar view is shown before confirmation of submission of the annotations
 - ![](docs/imgs/help-button.png): Help dialog, showing shortcuts for document & concept navigation, concept annotation and submission.
 - ![](docs/imgs/reset-button.png): Reset document. If an annotation is incorrectly added, or incorrectly submitted resetting the document will
 clear all previous annotations and their status.
@@ -390,19 +392,21 @@ instances of the same CDB file appropriately named to achieve this.
 ![](docs/imgs/reset-projects.png)
 
 <a name="save-download-models"></a>
-### Save / Download Models
-We strongly suggest models are not saved within MedCATtrainer then directly used. Instead we suggest you use the collected
+### Save Models
+We strongly suggest models are not saved within MedCATtrainer then directly used. Instead, we suggest you use the collected
 annotations from projects to train and test a new MedCAT model.
 
 However, to save the current state of the model you can use:
-
  
-1\. An API call - \<deployment\>:\<port\>/save-models/<project-id> that can be used to save the current state of
-a model. This will overwrite the current CDB file.  
+An API call - \<deployment\>:\<port\>/save-models/<project-id> that can be used to save the current state of
+a model. This will overwrite the current CDB file. Alternatively, login with an admin account and hit the save model button
+associated with the project.
 
-2\. Open the admin app. (http://localhost:8001/admin/), and select 'Concept dbs'.
+### Download Models
 
-3\. Click the CDB item you would like to download.
+1\. Open the admin app. (http://localhost:8001/admin/), and select 'Concept dbs'.
+
+2\. Click the CDB item you would like to download.
 
 4\. Click the CDB file, you will be prompted to save down the new CDB file. This file will be of the same format you 
 have used previously, i.e. you've called medcat.cdb.save_dict('<location>').
