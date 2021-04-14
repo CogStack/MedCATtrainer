@@ -32,15 +32,17 @@
             <font-awesome-icon v-if="project.complete" class="complete-project" icon="check"></font-awesome-icon>
           </td>
           <td @click.stop v-if="isAdmin">
-            <button class="btn btn-outline-primary" @click="saveModel(project.id)"><font-awesome-icon icon="save"></font-awesome-icon></button>
+            <button class="btn btn-outline-primary" :disabled="saving" @click="saveModel(project.id)"><font-awesome-icon icon="save"></font-awesome-icon></button>
           </td>
         </tr>
         </tbody>
       </table>
     </div>
-    <transition name="alert"><div class="alert alert-info" v-if="saving" role="alert">Saving models</div></transition>
-    <transition name="alert"><div class="alert alert-primary" v-if="modelSaved" role="alert">Model Successfully saved</div></transition>
-    <transition name="alert"><div class="alert alert-danger" v-if="modelSavedError" role="alert">Error saving model</div></transition>
+    <div>
+      <transition name="alert"><div class="alert alert-primary" v-if="saving" role="alert">Saving models</div></transition>
+      <transition name="alert"><div class="alert alert-primary" v-if="modelSaved" role="alert">Model Successfully saved</div></transition>
+      <transition name="alert"><div class="alert alert-danger" v-if="modelSavedError" role="alert">Error saving model</div></transition>
+    </div>
   </div>
 </template>
 <script>
@@ -192,7 +194,7 @@ h3 {
 }
 
 .table-container {
-  height: calc(100% - 200px);
+  height: calc(100% - 250px);
   overflow-y: auto;
 }
 
@@ -228,4 +230,5 @@ h3 {
 .complete-project {
   color: $success;
 }
+
 </style>
