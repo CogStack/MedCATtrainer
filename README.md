@@ -391,7 +391,7 @@ instances of the same CDB file appropriately named to achieve this.
 2\. Select the project(s) to reset, then press the 'Go' button.
 ![](docs/imgs/reset-projects.png)
 
-<a name="save-download-models"></a>
+<a name="save-models"></a>
 ### Save Models
 We strongly suggest models are not saved within MedCATtrainer then directly used. Instead, we suggest you use the collected
 annotations from projects to train and test a new MedCAT model.
@@ -399,9 +399,11 @@ annotations from projects to train and test a new MedCAT model.
 However, to save the current state of the model you can use:
  
 An API call - \<deployment\>:\<port\>/save-models/<project-id> that can be used to save the current state of
-a model. This will overwrite the current CDB file. Alternatively, login with an admin account and hit the save model button
-associated with the project.
+a model. This will overwrite the current CDB file. 
 
+Alternatively, login with an 'admin', (i.e. staff or superuser) account and hit the save model button associated with the project.
+
+<a name="download-models"></a>
 ### Download Models
 
 1\. Open the admin app. (http://localhost:8001/admin/), and select 'Concept dbs'.
