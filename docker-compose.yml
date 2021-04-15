@@ -7,6 +7,7 @@ services:
     restart: always
     image: cogstacksystems/medcat-trainer:latest
     volumes:
+      - ./configs:/home/configs
       - api-media:/home/api/media
       - api-static:/home/api/static
       - api-db:/home/api/db

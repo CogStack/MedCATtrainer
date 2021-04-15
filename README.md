@@ -66,6 +66,15 @@ Then run:
 Upon initial install, an example administrator user, example dataset, concept database, vocab and project are setup. 
 The next session provides further details.
 
+4\. (Optional), Environment variables are used to configure the app:
+
+|Parameter|Description|
+|---------|-----------|
+|MEDCAT_CONFIG_FILE|MedCAT config file as described [here](https://github.com/CogStack/MedCAT/blob/master/medcat/config.py)|
+|BEHIND_RP| If you're running MedCATtrainer, use 1, othewise this defaults to 0 i.e. False|
+
+
+
 <a name="admin-setup"></a>
 # Administrator Setup
  

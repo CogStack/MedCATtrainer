@@ -619,4 +619,4 @@ def download_deployment(request):
 
 @api_view(http_method_names=['GET'])
 def behind_reverse_proxy(request):
-    return Response(bool(int(os.environ.get('behind_rp', False))))
+    return Response(bool(int(os.environ.get('BEHIND_RP', False))))
