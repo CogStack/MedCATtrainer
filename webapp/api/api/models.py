@@ -48,7 +48,7 @@ class ConceptDB(models.Model):
 
 class Concept(models.Model):
     pretty_name = models.CharField(max_length=300, db_index=True)
-    cui = models.CharField(max_length=100, db_index=True)
+    cui = models.CharField(max_length=100, db_index=True, unique=True)
     desc = models.TextField(default="", blank=True)
     tui = models.CharField(max_length=20)
     semantic_type = models.CharField(max_length=200, blank=True, null=True)
@@ -189,8 +189,9 @@ class ProjectAnnotateEntities(Project):
     add_new_entities = models.BooleanField(default=False,
                                            help_text='Allow the creation of new terms to be added to the CDB')
     restrict_concept_lookup = models.BooleanField(default=False,
-                                                  help_text='Users can only select terms from the list configured for '
-                                                            'the project, i.e. either from the cuis or cuis_file lists.')
+                                                  help_text='Users can only search for concept terms from the list '
+                                                            'configured for the project, i.e. either from the cuis '
+                                                            'or cuis_file lists.')
     terminate_available = models.BooleanField(default=True,
                                               help_text='Enable the option to terminate concepts.')
     irrelevant_available = models.BooleanField(default=False,
