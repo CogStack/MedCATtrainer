@@ -36,16 +36,10 @@ MedCATTrainer was presented at EMNLP/IJCNLP 2019 :tada:
         
 <a name="installation"></a>
 # Installation 
- 
-1\. Clone the repo:
+MedCATtrainer is docker-compose package Django application.
 
-`$ git clone https://github.com/CogStack/MedCATtrainer.git`
-
-2\.  Build and run the latest docker image
-
-`$ cd MedCATtrainer`
-
-`$ docker-compose up`
+Quick-install script, downloads the docker-compose file, default env var and runs them.
+1\. curl https://cdn.githubraw.com/CogStack/MedCATtrainer/f9f753a8/install.sh | bash 
 
 If the build fails with an error code 137, the virtual machine running the docker 
 daemon does not have enough memory. Increase the allocated memory to containers in the docker daemon 
@@ -53,27 +47,28 @@ settings CLI or associated docker GUI.
 
 On MAC: https://docs.docker.com/docker-for-mac/#memory
 
-On Windows: https://docs.docker.com/docker-for-windows/#resources 
+On Windows: https://docs.docker.com/docker-for-windows/#resources
 
-Then run:
-
-`$ docker-compose up`
-
-3\. MedCATTrainer is now running:
+2\. MedCATTrainer is now running:
 - The main app is available at http://localhost:8001/
 - The administrator (admin) app is available at http://localhost:8001/admin/
 
 Upon initial install, an example administrator user, example dataset, concept database, vocab and project are setup. 
-The next session provides further details.
+The next section provides further details.
 
-4\. (Optional), Environment variables are used to configure the app:
+3\. (Optional), Environment variables are used to configure the app:
 
 |Parameter|Description|
 |---------|-----------|
 |MEDCAT_CONFIG_FILE|MedCAT config file as described [here](https://github.com/CogStack/MedCAT/blob/master/medcat/config.py)|
 |BEHIND_RP| If you're running MedCATtrainer, use 1, othewise this defaults to 0 i.e. False|
 
+Set these a re-run the install script with:
 
+`$ curl https://cdn.githubraw.com/CogStack/MedCATtrainer/f9f753a8/install.sh | bash -E`
+
+
+You'll need to docker stop / rm the running containers if you have already run the install.
 
 <a name="admin-setup"></a>
 # Administrator Setup
