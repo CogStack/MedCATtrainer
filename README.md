@@ -61,7 +61,7 @@ The next section provides further details.
 |Parameter|Description|
 |---------|-----------|
 |MEDCAT_CONFIG_FILE|MedCAT config file as described [here](https://github.com/CogStack/MedCAT/blob/master/medcat/config.py)|
-|BEHIND_RP| If you're running MedCATtrainer, use 1, othewise this defaults to 0 i.e. False|
+|BEHIND_RP| If you're running MedCATtrainer, use 1, otherwise this defaults to 0 i.e. False|
 
 Set these a re-run the install script with:
 
