@@ -14,8 +14,7 @@ RUN apt-get install curl && \
 # Build frontend
 WORKDIR /home/frontend
 #RUN npm install && npm rebuild node-sass && npm run build
-RUN npm install && npm uninstall node-sass && npm install node-sass && npm run build
-
+RUN npm install && npm uninstall node-sass && npm install node-sass@4.12.0 && npm run build
 # Build backend
 WORKDIR /home/api
 RUN pip install pip --upgrade 
