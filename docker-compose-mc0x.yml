@@ -13,7 +13,7 @@ services:
     expose:
       - "8000"
     env_file:
-      - ./envs/env
+      - ./envs/.env-mc0x
     command: /home/run.sh
   nginx:
     container_name: medcattrainer_nginx
