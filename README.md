@@ -36,12 +36,18 @@ MedCATTrainer was presented at EMNLP/IJCNLP 2019 :tada:
         
 <a name="installation"></a>
 # Installation 
-MedCATtrainer is docker-compose package Django application.
+MedCATtrainer is a docker-compose packaged Django application.
 
 Quick-install script, downloads the docker-compose file, default env var and runs them.
 1\. <pre>$ git clone https://github.com/CogStack/MedCATtrainer 
 $ cd MedCATtrainer
-$ docker-compose up</pre> 
+$ docker-compose up</pre>
+
+If you have MedCAT v0.x models, and want to use the trainer please use the following docker-compose file:
+This refences the latest built image for the trainer that is still compatible with [MedCAT v0.x.](https://pypi.org/project/medcat/0.4.0.6/) and under. 
+<pre>
+$ docker-compose -f docker-compose-mc0x.yml up
+</pre>
 
 If the build fails with an error code 137, the virtual machine running the docker 
 daemon does not have enough memory. Increase the allocated memory to containers in the docker daemon 
