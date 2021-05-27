@@ -70,13 +70,11 @@ The next section provides further details.
 |---------|-----------|
 |MEDCAT_CONFIG_FILE|MedCAT config file as described [here](https://github.com/CogStack/MedCAT/blob/master/medcat/config.py)|
 |BEHIND_RP| If you're running MedCATtrainer, use 1, otherwise this defaults to 0 i.e. False|
+|MCTRAINER_PORT|The port to run the trainer app on|
 
-Set these a re-run the install script with:
+Set these and re-run the docker-compose file.
 
-`$ curl https://cdn.githubraw.com/CogStack/MedCATtrainer/f9f753a8/install.sh | bash -E`
-
-
-You'll need to docker stop / rm the running containers if you have already run the install.
+You'll need to docker stop the running containers if you have already run the install.
 
 <a name="admin-setup"></a>
 # Administrator Setup
