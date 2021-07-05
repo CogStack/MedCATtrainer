@@ -153,6 +153,22 @@ class EntityViewSet(viewsets.ModelViewSet):
     serializer_class = EntitySerializer
 
 
+class RelationViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get', 'post', 'head']
+    queryset = Relation.objects.all()
+    serializer_class = RelationSerializer
+
+
+class EntityRelationViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get', 'post', 'head']
+    queryset = EntityRelation.objects.all()
+    serializer_class = EntityRelationSerializer
+    filterset_fields = ['project', 'document']
+
+
+
 class ConceptDBViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get', 'post', 'head']
