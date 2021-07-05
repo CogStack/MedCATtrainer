@@ -121,6 +121,13 @@ class Entity(models.Model):
         return str(self.label)
 
 
+class Relation(models.Model):
+    label = models.CharField(max_length=300, unique=True)
+
+    def __str__(self):
+        return str(self.label)
+
+
 class ProjectCuiCounter(models.Model):
     project = models.ForeignKey('Project', on_delete=models.CASCADE)
     entity = models.ForeignKey('Entity', on_delete=models.CASCADE)
@@ -128,6 +135,19 @@ class ProjectCuiCounter(models.Model):
 
     def __str__(self):
         return str(self.entity) + " - " + str(self.count)
+
+
+class EntityRelation(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    project = models.ForeignKey('Project', on_delete=models.CASCADE)
+    document = models.ForeignKey('Document', on_delete=models.CASCADE, related_name='entity_relation_document')
+    relation = models.ForeignKey('Relation', on_delete=models.CASCADE)
+    start_entity = models.ForeignKey('AnnotatedEntity', related_name='start_entity', on_delete=models.CASCADE)
+    end_entity = models.ForeignKey('AnnotatedEntity', related_name='end_entity', on_delete=models.CASCADE)
+    validated = models.BooleanField(default=False)
+
+    create_time = models.DateTimeField(auto_now_add=True)
+    last_modified = models.DateTimeField(auto_now=True)
 
 
 class AnnotatedEntity(models.Model):
@@ -197,6 +217,9 @@ class ProjectAnnotateEntities(Project):
     irrelevant_available = models.BooleanField(default=False,
                                                help_text='Enable the option to add the irrelevant button.')
     tasks = models.ManyToManyField(MetaTask, blank=True, default=None)
+
+    relations = models.ManyToManyField(Relation, blank=True, default=None,
+            help_text='Relations that will be available for this project')
 
     def save(self, *args, **kwargs):
         if self.concept_db is None:

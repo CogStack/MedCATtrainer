@@ -39,11 +39,11 @@ while True:
             print("Found No Objects. Populating Example: Concept DB, Vocabulary, Dataset and Project...")
             # download example cdb, vocab, dataset
             print("Downloading example CDB...")
-            cdb_file = requests.get('https://s3-eu-west-1.amazonaws.com/zkcl/cdb-medmen-v1.dat')
+            cdb_file = requests.get('https://medcat.rosalind.kcl.ac.uk/media/cdb-medmen-v1.dat')
             with open(CDB_TMP_FILE, 'wb') as f:
                 f.write(cdb_file.content)
             print("Downloading example vocab...")
-            vocab_file = requests.get('https://s3-eu-west-1.amazonaws.com/zkcl/vocab.dat')
+            vocab_file = requests.get('https://medcat.rosalind.kcl.ac.uk/media/vocab.dat')
             with open(VOCAB_TMP_FILE, 'wb') as f:
                 f.write(vocab_file.content)
             print("Downloading example dataset")
@@ -79,7 +79,6 @@ while True:
                 'description': 'Example projects using example psychiatric clinical notes from '
                                'https://www.mtsamples.com/',
                 'cuis': '',
-                'tuis': 'T047, T048, T184',
                 'dataset': ds_id,
                 'concept_db': cdb_id,
                 'vocab': vocab_id,

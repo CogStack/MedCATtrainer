@@ -27,6 +27,8 @@ admin.site.register(MetaTaskValue)
 admin.site.register(MetaTask)
 admin.site.register(MetaAnnotation)
 admin.site.register(Vocabulary)
+admin.site.register(Relation)
+admin.site.register(EntityRelation)
 
 
 def reset_project(modeladmin, request, queryset):
@@ -481,6 +483,22 @@ def _retrieve_project_data(projects: QuerySet):
                     out_ann['meta_anns'][key] = o_meta_ann
 
                 out_doc['annotations'].append(out_ann)
+
+            # Add relations if they exist
+            rels = EntityRelation.objects.filter(project=project, document=doc)
+            out_rels = []
+            out_rel = {}
+            for rel in rels:
+                out_rel['start_entity'] = rel.start_entity
+                out_rel['end_entity'] = rel.end_entity
+                out_rel['user'] = rel.user.username
+                out_rel['relation'] = rel.relation.label
+                out_rel['validated'] = rel.validated
+
+                out_rels.append(out_rel)
+                out_rel = {}
+            out_doc['relations'] = out_rels
+
             out['documents'].append(out_doc)
         all_projects['projects'].append(out)
     return all_projects
