@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import axios from 'axios'
 import VueCookie from 'vue-cookie'
+import { Tabs, Tab } from 'vue-tabs-component'
 
 import App from './App.vue'
 import router from './router'
@@ -14,6 +15,8 @@ import 'vue-select/dist/vue-select.css'
 import '@/plugins/fontawesome'
 import '@/assets/main.css'
 
+Vue.component('tabs', Tabs)
+Vue.component('tab', Tab)
 Vue.use(VueCookie);
 
 (function () {

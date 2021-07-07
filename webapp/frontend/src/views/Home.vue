@@ -118,6 +118,7 @@ export default {
           this.$cookie.delete('username')
           this.$cookie.delete('api-token')
           this.$cookie.delete('admin')
+          this.$cookie.delete('user-id')
           this.loadingProjects = false
           this.loginSuccessful = false
         })

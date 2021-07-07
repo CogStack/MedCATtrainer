@@ -41,7 +41,7 @@ class RelationSerializer(serializers.ModelSerializer):
 
 class EntityRelationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Relation
+        model = EntityRelation
         fields = '__all__'
 
 

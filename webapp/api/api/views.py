@@ -46,6 +46,13 @@ cat = None
 def index(request):
     return render(request, 'index.html')
 
+
+class TextInFilter(drf.BaseInFilter, drf.CharFilter):
+    pass
+class NumInFilter(drf.BaseInFilter, drf.NumberFilter):
+    pass
+
+
 class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
@@ -73,10 +80,15 @@ class ProjectAnnotateEntitiesViewSet(viewsets.ModelViewSet):
         return projects
 
 
+class AnnotatedEntityFilter(drf.FilterSet):
+    id__in = NumInFilter(field_name='id', lookup_expr='in')
+
+
 class AnnotatedEntityViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = AnnotatedEntity.objects.all()
     serializer_class = AnnotatedEntitySerializer
+    filterset_class = AnnotatedEntityFilter
     filterset_fields = ['id', 'user', 'project', 'document', 'entity', 'validated',
                         'deleted']
 
@@ -100,7 +112,7 @@ class MetaAnnotationViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'head', 'post', 'put', 'delete']
     queryset = MetaAnnotation.objects.all()
     serializer_class = MetaAnnotationSerializer
-    filterset_fields = ['id', 'annotated_entity','validated']
+    filterset_fields = ['id', 'annotated_entity', 'validated']
 
 
 class DocumentViewSet(viewsets.ModelViewSet):
@@ -108,12 +120,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
     filterset_fields = ['dataset']
-
-
-class TextInFilter(drf.BaseInFilter, drf.CharFilter):
-    pass
-class NumInFilter(drf.BaseInFilter, drf.NumberFilter):
-    pass
 
 
 class ConceptFilter(drf.FilterSet):
@@ -162,11 +168,10 @@ class RelationViewSet(viewsets.ModelViewSet):
 
 class EntityRelationViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ['get', 'post', 'head']
+    http_method_names = ['get', 'post', 'put', 'head', 'delete']
     queryset = EntityRelation.objects.all()
     serializer_class = EntityRelationSerializer
     filterset_fields = ['project', 'document']
-
 
 
 class ConceptDBViewSet(viewsets.ModelViewSet):

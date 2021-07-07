@@ -27,7 +27,8 @@
     "vue-select": "^3.11.2",
     "vue-sidebar-menu": "^4.7.4",
     "vue-simple-context-menu": "^3.4.1",
-    "vue-splitpane": "^1.0.6"
+    "vue-splitpane": "^1.0.6",
+    "vue-tabs-component": "^1.5.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.12.1",
@@ -40,7 +41,7 @@
     "chai": "^4.3.0",
     "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.0.0",
-    "node-sass": "^4.14.1",
+    "node-sass": "^6.0.1",
     "sass-loader": "^10.1.1",
     "vue-template-compiler": "^2.6.12"
   },

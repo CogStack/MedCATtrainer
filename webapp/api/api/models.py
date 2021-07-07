@@ -145,9 +145,11 @@ class EntityRelation(models.Model):
     start_entity = models.ForeignKey('AnnotatedEntity', related_name='start_entity', on_delete=models.CASCADE)
     end_entity = models.ForeignKey('AnnotatedEntity', related_name='end_entity', on_delete=models.CASCADE)
     validated = models.BooleanField(default=False)
-
     create_time = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.start_entity} - {self.relation} - {self.end_entity}'
 
 
 class AnnotatedEntity(models.Model):

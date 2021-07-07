@@ -53,10 +53,20 @@
       <div :style="{ flexGrow: 1, width: '375px', minWidth: '425px', maxWidth: '1000px' }">
         <div class="sidebar-container">
           <transition name="slide-left">
-            <concept-summary v-if="!conceptSynonymSelection" :selectedEnt="currentEnt" :altSearch="altSearch"
-                             :project="project"
-                             @select:altConcept="markAlternative" @select:alternative="toggleAltSearch"
-                             @select:ICD="markICD" @select:OPCS="markOPCS" class="concept-summary"></concept-summary>
+            <tabs v-if="!conceptSynonymSelection">
+              <tab name="Concept">
+                <concept-summary :selectedEnt="currentEnt" :altSearch="altSearch"
+                                 :project="project"
+                                 @select:altConcept="markAlternative" @select:alternative="toggleAltSearch"
+                                 @select:ICD="markICD" @select:OPCS="markOPCS" class="concept-summary"></concept-summary>
+              </tab>
+              <tab name="Relations" v-if="((project || {}).relations || []).length > 0">
+                <relation-annotation-task-container :available-relations="project.relations" :entities="ents"
+                                                    :project-id="project.id"
+                                                    :document-id="docId" :selected-entity="currentEnt">
+                </relation-annotation-task-container>
+              </tab>
+            </tabs>
           </transition>
           <transition name="slide-left">
             <meta-annotation-task-container v-if="metaAnnotate" :taskIDs="(project || {}).tasks || []"
@@ -230,6 +240,7 @@ import NavBar from '@/components/common/NavBar.vue'
 import TaskBar from '@/components/anns/TaskBar.vue'
 import AddAnnotation from '@/components/anns/AddAnnotation.vue'
 import MetaAnnotationTaskContainer from '@/components/usecases/MetaAnnotationTaskContainer.vue'
+import RelationAnnotationTaskContainer from '@/components/usecases/RelationAnnotationTaskContainer.vue'
 import AnnotationSummary from '@/components/common/AnnotationSummary.vue'
 import CodingAnnotationSummary from '@/components/cc/CodingAnnotationSummary'
 import { Multipane, MultipaneResizer } from 'vue-multipane'
@@ -256,6 +267,7 @@ export default {
     TaskBar,
     AddAnnotation,
     MetaAnnotationTaskContainer,
+    RelationAnnotationTaskContainer,
     AnnotationSummary,
     CodingAnnotationSummary,
     Multipane,
@@ -387,7 +399,7 @@ export default {
       if (this.validatedDocuments.indexOf(this.currentDoc.id) === -1) {
         payload['update'] = 1
       }
-      this.$http.post('/api/prepare-documents/', payload).then(resp => {
+      this.$http.post('/api/prepare-documents/', payload).then(_ => {
         // assuming a 200 is fine here.
         this.fetchEntities()
       }).catch(err => {
@@ -473,7 +485,7 @@ export default {
     markEntity (moveToNext) {
       if (this.currentEnt) {
         this.taskLocked = true
-        this.$http.put(`/api/annotated-entities/${this.currentEnt.id}/`, this.currentEnt).then(resp => {
+        this.$http.put(`/api/annotated-entities/${this.currentEnt.id}/`, this.currentEnt).then(_ => {
           if (moveToNext) {
             if (this.ents.slice(-1)[0].id !== this.currentEnt.id) { this.next() } else { this.currentEnt = null }
           }
@@ -617,7 +629,7 @@ export default {
         subPromises.push(this.$http.post(`/api/submit-document/`, payload))
         this.resubmittingAllDocs = true
         this.loadingDoc = true
-        Promise.all(subPromises).then(resp => {
+        Promise.all(subPromises).then(_ => {
           this.resubmitSuccess = true
           this.loadingDoc = false
           this.resubmittingAllDocs = false
@@ -651,7 +663,7 @@ export default {
         document_ids: [this.currentDoc.id],
         force: true
       }
-      this.$http.post('/api/prepare-documents/', payload).then(resp => {
+      this.$http.post('/api/prepare-documents/', payload).then(_ => {
         this.fetchEntities()
         this.resetModal = false
         this.loadingDoc = false
