@@ -39,12 +39,6 @@ export default {
       return this.entityRelation.relation
     }
   },
-  // data () {
-  //   return {
-  //     startRelClass: 'entity-default',
-  //     endRelClass: 'entity-default'
-  //   }
-  // },
   methods: {
     clear () {
       this.$emit('click:clearRelation', this.entityRelation)
@@ -60,7 +54,7 @@ export default {
     entRelClass (selectedEnt) {
       if (selectedEnt.correct) {
         return 'highlight-task-0'
-      } else if (selectedEnt.incorrect) {
+      } else if (selectedEnt.irrelevant) {
         return 'highlight-task-1'
       } else if (selectedEnt.killed) {
         return 'highlight-task-2'
@@ -96,6 +90,7 @@ export default {
   border-radius: 3px;
   cursor: pointer;
   margin: 5px;
+  padding: 2px;
 }
 
 .entity-default {

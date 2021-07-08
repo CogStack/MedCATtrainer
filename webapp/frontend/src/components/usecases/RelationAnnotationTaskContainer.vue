@@ -56,7 +56,7 @@ export default {
           for (const rel of this.entityRelations) {
             rel.start_entity = resp.data.results.filter(e => e.id === rel.start_entity)[0]
             rel.end_entity = resp.data.results.filter(e => e.id === rel.end_entity)[0]
-            rel.relation = this.availableRelations.filter(r => r.id === rel.relation)[0]
+            rel.relation = this.relations.filter(r => r.id === rel.relation)[0]
           }
         })
       })

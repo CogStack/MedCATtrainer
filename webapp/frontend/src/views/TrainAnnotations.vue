@@ -471,7 +471,7 @@ export default {
       this.currentEnt.killed = 0
       this.currentEnt.alternative = 0
       this.currentEnt.deleted = 0
-      this.currentEnt.irrlevant = 0
+      this.currentEnt.irrelevant = 0
       this.currentEnt[status] = 1
     },
     markCorrect () {
