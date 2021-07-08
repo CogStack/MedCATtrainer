@@ -54,7 +54,7 @@ export default {
     entRelClass (selectedEnt) {
       if (selectedEnt.correct) {
         return 'highlight-task-0'
-      } else if (selectedEnt.irrelevant) {
+      } else if (selectedEnt.deleted) {
         return 'highlight-task-1'
       } else if (selectedEnt.killed) {
         return 'highlight-task-2'
@@ -65,16 +65,16 @@ export default {
       }
     }
   },
-  watch: {
-    'startEnt' () {
+  mounted () {
+    this.$watch('startEnt', () => {
       this.$emit('change:relationEdit', this.entityRelation)
-    },
-    'endEnt' () {
+    })
+    this.$watch('endEnt', () => {
       this.$emit('change:relationEdit', this.entityRelation)
-    },
-    'relation' () {
+    })
+    this.$watch('relation', () => {
       this.$emit('change:relationEdit', this.entityRelation)
-    }
+    })
   }
 }
 </script>
