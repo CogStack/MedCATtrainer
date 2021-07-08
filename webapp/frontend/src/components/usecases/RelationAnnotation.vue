@@ -111,6 +111,12 @@ export default {
 .relation {
   display: inline-block;
   font-weight: bold;
+
+  select {
+    border: 0;
+    border-bottom: 1px solid #45503B;
+    padding: 2px;
+  }
 }
 
 .clear-btn {

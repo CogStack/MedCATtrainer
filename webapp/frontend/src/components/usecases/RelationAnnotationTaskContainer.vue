@@ -105,7 +105,7 @@ export default {
 .add-rel-btn {
   position: absolute;
   right: 10px;
-  top: 50px;
+  top: 72px;
   float: right;
   cursor: pointer;
   opacity: 0.5;
