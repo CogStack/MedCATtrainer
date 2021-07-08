@@ -192,6 +192,7 @@ def create_annotation(source_val, selection_occurrence_index, cui, user, project
         ann_ent.acc = 1
         ann_ent.validated = True
         ann_ent.manually_created = True
+        ann_ent.correct = True
 
         if icd_code:
             ann_ent.icd_code = icd_code
