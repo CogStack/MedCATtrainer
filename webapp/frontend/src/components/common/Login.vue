@@ -46,7 +46,7 @@ export default {
       this.$http.post('/api/api-token-auth/', payload).then(resp => {
         this.$cookie.set('api-token', resp.data.token, { expires: 7 })
         this.$cookie.set('username', this.uname)
-        this.$http.defaults.headers.commLon['Authorization'] = `Token ${this.$cookie.get('api-token')}`
+        this.$http.defaults.headers.common['Authorization'] = `Token ${this.$cookie.get('api-token')}`
         window.removeEventListener('keyup', this.keyup)
         this.$http.get(`/api/users/?username=${this.uname}`).then(resp => {
           if (resp.data.results.length > 0) {
