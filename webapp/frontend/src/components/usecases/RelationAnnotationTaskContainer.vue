@@ -46,6 +46,16 @@ export default {
           id: r.id
         }
       })
+      this.fetchEntityRelations()
+    })
+  },
+  watch: {
+    documentId () {
+      this.fetchEntityRelations()
+    }
+  },
+  methods: {
+    fetchEntityRelations () {
       const url = `/api/entity-relations/?project=${this.projectId}&document=${this.documentId}`
       this.$http.get(url).then(resp => {
         this.entityRelations = resp.data.results
@@ -60,9 +70,7 @@ export default {
           }
         })
       })
-    })
-  },
-  methods: {
+    },
     addNewRelation () {
       this.entityRelations.push({
         user: Number(this.$cookie.get('user-id')),
