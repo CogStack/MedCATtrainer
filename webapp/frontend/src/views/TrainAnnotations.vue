@@ -61,8 +61,7 @@
                                  @select:ICD="markICD" @select:OPCS="markOPCS" class="concept-summary"></concept-summary>
               </tab>
               <tab name="Relations" v-if="((project || {}).relations || []).length > 0 && docId">
-                <relation-annotation-task-container :available-relations="project.relations" :entities="ents"
-                                                    :project-id="project.id"
+                <relation-annotation-task-container :available-relations="project.relations" :project-id="project.id"
                                                     :document-id="docId" :selected-entity="currentEnt">
                 </relation-annotation-task-container>
               </tab>

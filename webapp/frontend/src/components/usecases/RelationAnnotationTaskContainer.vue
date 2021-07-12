@@ -21,7 +21,6 @@ export default {
   props: {
     selectedEntity: Object,
     availableRelations: Array,
-    entities: Array,
     projectId: {
       required: true,
       type: Number
