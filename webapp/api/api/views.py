@@ -162,11 +162,20 @@ class EntityViewSet(viewsets.ModelViewSet):
     serializer_class = EntitySerializer
 
 
+class RelationFilter(drf.FilterSet):
+    id__in = NumInFilter(field_name='id', lookup_expr='in')
+
+    class Meta:
+        model = Relation
+        fields = ['label']
+
+
 class RelationViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get', 'post', 'head']
     queryset = Relation.objects.all()
     serializer_class = RelationSerializer
+    filterset_class = RelationFilter
 
 
 class EntityRelationViewSet(viewsets.ModelViewSet):

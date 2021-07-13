@@ -38,10 +38,8 @@ export default {
     }
   },
   created () {
-    this.$http.get(`/api/relations/`).then(resp => {
-      this.relations = resp.data.results.filter(r => {
-        return this.availableRelations.indexOf(r.id)
-      }).map(r => {
+    this.$http.get(`/api/relations/?id__in=${this.availableRelations}`).then(resp => {
+      this.relations = resp.data.results.map(r => {
         return {
           name: r.label,
           id: r.id
