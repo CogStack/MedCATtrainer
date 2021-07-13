@@ -1,13 +1,15 @@
 <template>
-  <div class="relation-extraction-container">
+  <div @mousedown.stop class="relation-extraction-container">
     <div class="title">Relation Annotations</div>
     <button class="btn btn-default add-rel-btn" @click="addNewRelation">
       <font-awesome-icon icon="plus"></font-awesome-icon>
     </button>
+    <div class="relation-list">
       <relation-annotation v-for="(rel, idx) of entityRelations" :key="idx" :entity-relation="rel"
                            :possible-relations="relations" :selected-ent="selectedEntity"
                            @click:clearRelation="removeRelation" @change:relationEdit="editRelation"
       ></relation-annotation>
+    </div>
   </div>
 </template>
 
@@ -119,5 +121,9 @@ export default {
   &:hover {
     opacity: 1;
   }
+}
+
+.relation-list {
+  overflow-y: auto;
 }
 </style>

@@ -53,14 +53,18 @@
       <div :style="{ flexGrow: 1, width: '375px', minWidth: '425px', maxWidth: '1000px' }">
         <div class="sidebar-container">
           <transition name="slide-left">
-            <tabs v-if="!conceptSynonymSelection">
+            <concept-summary v-if="!conceptSynonymSelection && !hasRelations" :selectedEnt="currentEnt" :altSearch="altSearch"
+                             :project="project" @select:altConcept="markAlternative"
+                             @select:alternative="toggleAltSearch" @select:ICD="markICD" @select:OPCS="markOPCS"
+                             class="concept-summary"></concept-summary>
+            <tabs v-if="!conceptSynonymSelection && hasRelations">
               <tab name="Concept">
                 <concept-summary :selectedEnt="currentEnt" :altSearch="altSearch"
                                  :project="project"
                                  @select:altConcept="markAlternative" @select:alternative="toggleAltSearch"
                                  @select:ICD="markICD" @select:OPCS="markOPCS" class="concept-summary"></concept-summary>
               </tab>
-              <tab name="Relations" v-if="((project || {}).relations || []).length > 0 && docId">
+              <tab name="Relations" v-if="hasRelations && docId">
                 <relation-annotation-task-container :available-relations="project.relations" :project-id="project.id"
                                                     :document-id="docId" :selected-entity="currentEnt">
                 </relation-annotation-task-container>
@@ -68,7 +72,7 @@
             </tabs>
           </transition>
           <transition name="slide-left">
-            <meta-annotation-task-container v-if="metaAnnotate" :taskIDs="(project || {}).tasks || []"
+            <meta-annotation-task-container v-if="metaAnnotate" :taskIDs="hasMetaTasks"
                                             :selectedEnt="currentEnt">
             </meta-annotation-task-container>
           </transition>
@@ -187,9 +191,9 @@
     <modal v-if="docToSubmit" :closable="true" @modal:close="docToSubmit=null" class="summary-modal">
       <h3 slot="header">Submit Document</h3>
       <div slot="body">
-        <annotation-summary v-if="!project.clinical_coding_project" :annos="ents" :currentDoc="currentDoc" :taskIDs="(project || {}).tasks || []"
+        <annotation-summary v-if="!project.clinical_coding_project" :annos="ents" :currentDoc="currentDoc" :taskIDs="hasMetaTasks"
                             @select:AnnoSummaryConcept="selectEntityFromSummary"></annotation-summary>
-        <coding-annotation-summary v-if="project.clinical_coding_project" :annos="ents" :currentDoc="currentDoc" :taskIDs="(project || {}).tasks || []"
+        <coding-annotation-summary v-if="project.clinical_coding_project" :annos="ents" :currentDoc="currentDoc" :taskIDs="hasMetaTasks"
                                    @select:AnnoSummaryConcept="selectEntityFromSummary"></coding-annotation-summary>
 
       </div>
@@ -278,6 +282,14 @@ export default {
     },
     docId: {
       required: false
+    }
+  },
+  computed: {
+    hasRelations () {
+      return ((this.project || {}).relations || []).length > 0
+    },
+    hasMetaTasks () {
+      return (this.project || {}).tasks || []
     }
   },
   data () {

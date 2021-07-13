@@ -83,14 +83,17 @@ class ProjectAnnotateEntitiesViewSet(viewsets.ModelViewSet):
 class AnnotatedEntityFilter(drf.FilterSet):
     id__in = NumInFilter(field_name='id', lookup_expr='in')
 
+    class Meta:
+        model = AnnotatedEntity
+        fields = ['id', 'user', 'project', 'document', 'entity', 'validated',
+                  'deleted']
+
 
 class AnnotatedEntityViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = AnnotatedEntity.objects.all()
     serializer_class = AnnotatedEntitySerializer
     filterset_class = AnnotatedEntityFilter
-    filterset_fields = ['id', 'user', 'project', 'document', 'entity', 'validated',
-                        'deleted']
 
 
 class MetaTaskValueViewSet(viewsets.ModelViewSet):
