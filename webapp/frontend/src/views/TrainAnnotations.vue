@@ -1,5 +1,5 @@
 <template>
-  <div class="container-fluid app-container">
+  <div @click="selectRelation(null)" class="container-fluid app-container">
     <div class="app-header">
       <div class="project-name">
         <span>
@@ -34,8 +34,9 @@
                             @request:nextDocSet="fetchDocuments()" @request:loadDoc="loadDoc"></document-summary>
           <div class="main-viewport">
             <clinical-text :loading="loadingDoc" :text="currentDoc !== null ? currentDoc.text : null"
-                           :currentEnt="currentEnt" :ents="ents" :taskName="taskName" :taskValues="taskValues"
-                           :addAnnos="true"
+                           :current-ent="currentEnt" :ents="ents" :task-name="taskName" :task-values="taskValues"
+                           :addAnnos="true" :current-rel-start-ent="(currentRel || {}).start_entity"
+                           :current-rel-end-ent="(currentRel || {}).end_entity"
                            @select:concept="selectEntity" @select:addSynonym="addSynonym"></clinical-text>
             <div class="taskbar">
               <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt" @select:next="next" @select:back="back"></nav-bar>
@@ -66,7 +67,8 @@
               </tab>
               <tab name="Relations" v-if="hasRelations && docId">
                 <relation-annotation-task-container :available-relations="project.relations" :project-id="project.id"
-                                                    :document-id="docId" :selected-entity="currentEnt">
+                                                    :document-id="docId" :selected-entity="currentEnt"
+                                                    :curr-relation="currentRel" @selected:relation="selectRelation">
                 </relation-annotation-task-container>
               </tab>
             </tabs>
@@ -308,6 +310,7 @@ export default {
       ents: null,
       currentDoc: null,
       currentEnt: null,
+      currentRel: null,
       loadingDoc: false,
       resubmittingAllDocs: false,
       resubmitSuccess: false,
@@ -474,6 +477,9 @@ export default {
       this.conceptSynonymSelection = null
       this.metaAnnotate = this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_ALTERNATIVE ||
         this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_CORRECT
+    },
+    selectRelation (rel) {
+      this.currentRel = rel
     },
     setStatus (status) {
       this.currentEnt.validated = 1

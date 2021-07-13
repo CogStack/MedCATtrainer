@@ -35,6 +35,8 @@ export default {
     ents: Array,
     loading: Boolean,
     currentEnt: Object,
+    currentRelStartEnt: Object,
+    currentRelEndEnt: Object,
     addAnnos: Boolean
   },
   data () {
@@ -68,6 +70,12 @@ export default {
         if (this.ents[i].assignedValues[this.taskName] !== null) {
           let btnIndex = this.taskValues.indexOf(this.ents[i].assignedValues[this.taskName])
           styleClass = `highlight-task-${btnIndex}`
+        }
+
+        if ((this.ents[i] === this.currentRelStartEnt) || (this.ents[i].id === (this.currentRelStartEnt || {}).id)) {
+          styleClass += ' current-rel-start'
+        } else if ((this.ents[i] === this.currentRelEndEnt) || (this.ents[i].id === (this.currentRelEndEnt || {}).id)) {
+          styleClass += ' current-rel-end'
         }
 
         styleClass = this.ents[i] === this.currentEnt ? `${styleClass} highlight-task-selected` : styleClass
@@ -218,4 +226,25 @@ export default {
 .highlight-task-selected {
   font-weight: bold;
 }
+
+.current-rel-start {
+  &::after {
+    content: "START";
+    position: relative;
+    font-size: 12px;
+    top: -4px;
+    left: 1px;
+  }
+}
+
+.current-rel-end {
+  &:after {
+    content: "END";
+    position: relative;
+    font-size: 12px;
+    top: -4px;
+    left: 1px;
+  }
+}
+
 </style>

@@ -7,7 +7,8 @@
     <div class="relation-list">
       <relation-annotation v-for="(rel, idx) of entityRelations" :key="idx" :entity-relation="rel"
                            :possible-relations="relations" :selected-ent="selectedEntity"
-                           @click:clearRelation="removeRelation" @change:relationEdit="editRelation"
+                           :selected-relation="currRelation" @click:clearRelation="removeRelation" @change:relationEdit="editRelation"
+                           @click:selectRelation="selectedRelation(rel, idx)"
       ></relation-annotation>
     </div>
   </div>
@@ -29,7 +30,8 @@ export default {
     },
     documentId: {
       required: true
-    }
+    },
+    currRelation: Object
   },
   data () {
     return {
@@ -102,6 +104,9 @@ export default {
           })
         }
       }
+    },
+    selectedRelation (rel) {
+      this.$emit('selected:relation', rel)
     }
   }
 }

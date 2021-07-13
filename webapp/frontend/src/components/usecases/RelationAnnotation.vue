@@ -1,13 +1,13 @@
 <template>
-  <div class="relation-annotation">
+  <div @click.stop.prevent @click="highlightRelation" :class="{'selected-rel': isSelected}" class="relation-annotation">
     <div class="entity" :class="startEntClass"
-         @click="selectStartEnt">{{(entityRelation.start_entity.value || '______')}}</div>
+         @click="selectStartEnt">{{(entityRelation.start_entity.value || '_________')}}</div>
     <div class="relation">
       <select v-model="entityRelation.relation">
         <option :value="rel" v-for="rel of possibleRelations" :key="rel.id">{{rel.name}}</option>
       </select>
     </div>
-    <div class="entity" :class="endEntClass" @click="selectEndEnt">{{(entityRelation.end_entity.value || '______')}}</div>
+    <div class="entity" :class="endEntClass" @click="selectEndEnt">{{(entityRelation.end_entity.value || '_________')}}</div>
     <button class="btn btn-default clear-btn" @click="clear">
       <font-awesome-icon icon="times"></font-awesome-icon>
     </button>
@@ -20,7 +20,8 @@ export default {
   props: {
     entityRelation: Object,
     possibleRelations: Array,
-    selectedEnt: Object
+    selectedEnt: Object,
+    selectedRelation: Object
   },
   computed: {
     startEnt () {
@@ -37,6 +38,9 @@ export default {
     },
     relation () {
       return this.entityRelation.relation
+    },
+    isSelected () {
+      return this.selectedRelation === this.entityRelation
     }
   },
   methods: {
@@ -63,6 +67,9 @@ export default {
       } else {
         return 'entity-default'
       }
+    },
+    highlightRelation () {
+      this.$emit('click:selectRelation')
     }
   },
   mounted () {
@@ -112,6 +119,10 @@ export default {
     border-bottom: 1px solid #45503B;
     padding: 2px;
   }
+}
+
+.selected-rel {
+  box-shadow: 0 0 5px 3px rgba(0, 0, 0, 0.2)
 }
 
 .clear-btn {
