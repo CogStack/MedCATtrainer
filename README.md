@@ -226,13 +226,13 @@ link to this text span, this informs MedCAT that
 <a name="add-annos"></a>
 #### Additional Annotations 
 MedCAT may miss text spans that are acronyms, abbreviations or misspellings of concepts. Missing annotations can be 
-added to the text by directly highlighting the text span, right clicking, selecting 'Add Annotation', searching for
- concept (via ID, or name), and selecting Add Synonym:
+added to the text by directly highlighting the text span, right clicking, selecting 'Add Term', searching for
+ concept (via ID, or name), and selecting Add Term:
  
 ![](docs/imgs/add-annotation-text.png) -> ![](docs/imgs/add-annotation-menu.png) -> ![](docs/imgs/add-annotation-concept-pick.png) 
 
 Select: 
-- Add Synonym: to add this anno§tation to the text span and link the selected concept
+- Add Term: to add this annotation to the text span and link the selected concept
 - Cancel: (Shortcut esc): to cancel adding the annotation to the text. 
  
 ![](docs/imgs/add-annotation-select-concept.png)
@@ -335,7 +335,7 @@ only appear for concepts that are correct.
 The concept picker is used to:
 - Pick alternative concepts for an existing recognised span
 ![](docs/imgs/pick-alternative-concept.png)
-- Pick a concept during the 'Add Annotation' process.
+- Pick a concept during the 'Add Term' process.
 ![](docs/imgs/add-annotation-concept.png)
 
 The available list of concepts is populated via a MedCAT CDB and indexed to enable fast type-ahead style search. 
