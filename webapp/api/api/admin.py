@@ -421,7 +421,77 @@ def download_projects_with_text(projects: QuerySet):
     return response
 
 
-def _retrieve_project_data(projects: QuerySet):
+def _retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
+    """
+    A function to convert a list of projects and:
+        - their associated documents,
+        - their associated annotations,
+        - their associated Meta annotations and Relation Annotations
+    for serialization.
+    :param projects: the projects to export data for.
+    Output schema is as follows: ((optional) indicates this field isn't required for training a MedCAT model)
+    {
+    "projects": [
+        {
+            "name": "<project_name"  # name of the project
+            "id": "<id>"  # the auto-generated id of the project (optional)
+            "cuis": ["cui_1", "cui_2" ... ]  # the CUI filter for the project, includes those from file / and text-box
+            "documents": [
+                {
+                "id": "<id>"  # the auto-generated id of the document (optional)
+                "name": "<name>"  # the name of the document (optional), but used in stat printing during training
+                "text": "<text>"  # the text of the document
+                "last_modified": "<date time>"  # the last modified-time (optional)
+                "annotations": [{
+                    "id": "<id>"  # the auto-generated id of the document (optional)
+                    "name": "<username string>"  # the user who made the annotation (optional)
+                    "cui": "<cui string>"  # the cui label for this annotation
+                    "value": "<string>"  # the text span for this annotation
+                    "start": <integer>  # the start index of this annotation with respect to the document text
+                    "end": <integer>  # the end index of this annotation with respect to the document text
+                    "validated": <boolean>  # if the annotation has been marked by a human annotator
+                    "correct": <boolean>  # if the text span is correctly linked to the CUI of this annotation
+                    "deleted": <boolean>  # if the text span was incorrectly linked or 'not' linked by MedCAT due to low scores
+                    "alternative": <boolean>  # if the text span was incorrectly linked by MedCAT, then correctly linked by a human annotator
+                    "killed":  <boolean>  # if a human annotator 'terminated' this annotation
+                    "irrelevant": <boolean>  # if a human annotator has marked an annotation as irrelvant (optional)
+                    "acc": <float>  # accuracy provided by MedCAT (optional)
+                    "meta_anns": [
+                        # list of meta annotations if applicable to project
+                        {
+                            "name": <string>  # Meta anno task name, i.e. temporality
+                            "value": <string>  # the selected meta anno task value for, ie. "past" or "present"
+                            "acc":  <float>   # default 1, (optional)
+                            "validated": <boolean>  # Meta annotation has been made by a human annotator, default (true)
+                        },
+                        ... <more meta annotations of the same as above structure>
+                    ]},
+                    ... <more annotations of the same above structure>
+                ]
+                "relations": [
+                    {
+                        "start_entity": <integer>  # id of above annotation that is the start of this relation
+                        "start_entity_value": <string>  # value of the start annotation for this relation
+                        "start_entity_start_idx": <integer>  # start index of text span of start of relation.
+                        "start_entity_end_idx": <integer>  # end index of text span of start of relation.
+                        "end_entity": <integer>  # id of the above annotation that is the end of this relation
+                        "end_entity_value": <string>  # value of the end annotation for this relation
+                        "end_entity_start_idx": <integer>  # strart index of text span of end of relation.
+                        "end_entity_end_idx": <integer>  # end index of text span of end of relation.
+                        "user": <string>  # username of annotator for relation (optional)
+                        "relation": <string>  # label for this relation
+                        "validated": <boolean>  # if the annotation has been validated by a human annotator, default true.
+                    }
+                    ... < more relations of the samve above structure>
+                ]
+
+                ... <more documents of the same above structure>
+            ]
+    ]
+    }
+
+    :return: dict
+    """
     all_projects = {'projects': []}
     for project in projects:
         out = {}
