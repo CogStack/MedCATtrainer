@@ -288,9 +288,6 @@ def upload_deployment_export(filename: str):
                     if f_key_type == 'FK':
                         try:
                             m_v = f_key_model.objects.get(id=remap_dict[str(m_v)].id)
-                        # except KeyError as e:
-                        #     print(e)   # documents... not being available
-                        # try:
                             setattr(m, m_k, m_v)
                         except Exception:
                             errors.append(f'Error attempting to map prop: {m_k} onto with val:{m_v}' +

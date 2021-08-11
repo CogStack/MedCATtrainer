@@ -467,20 +467,14 @@ def submit_document(request):
     if project.cuis is not None and project.cuis:
         cuis = cuis + [str(cui).strip() for cui in project.cuis.split(",")]
 
-    cuis = set(cuis) # Convert to set, only cuis
-    if cuis:
+    cuis = set(cuis)
+    if len(cuis) > 0:  # only append to project cuis filter if there is a filter to begin with.
         anns = AnnotatedEntity.objects.filter(project=project, document=document, validated=True)
-        doc_cuis = [ann.entity.label for ann in anns]
-
-        for cui in doc_cuis:
-            if cui not in cuis:
-                if project.cuis:
-                    project.cuis = project.cuis + "," + str(cui)
-                else:
-                    project.cuis = str(cui)
-                project.save()
-                # Add this cui so we do not repeat things
-                cuis.add(cui)
+        extra_doc_cuis = [ann.entity.label for ann in anns if ann.validated and (ann.correct or ann.alternative) and
+                          ann.entity.label not in cuis]
+        if extra_doc_cuis:
+            project.cuis += ',' + ','.join(extra_doc_cuis)
+            project.save()
 
     return Response({'message': 'Document submited successfully'})
 

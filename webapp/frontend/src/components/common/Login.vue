@@ -1,5 +1,5 @@
 <template>
-  <modal :closable="closable" @modal:close="$emit('login:close')">
+  <modal class="login" :closable="closable" @modal:close="$emit('login:close')">
     <h3 slot="header">Login</h3>
     <div slot="body">
       <form @submit.prevent class="form">
@@ -92,8 +92,14 @@ export default {
 }
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 .login-submit {
   margin-top: 10px;
+}
+
+.login {
+  .modal-container {
+    width: 400px;
+  }
 }
 </style>
