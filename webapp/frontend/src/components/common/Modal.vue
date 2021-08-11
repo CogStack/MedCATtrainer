@@ -40,7 +40,7 @@ export default {
 
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 .close {
   opacity: 0.5;
 
@@ -68,7 +68,7 @@ export default {
 }
 
 .modal-container {
-  width: 400px;
+  width: 550px;
   margin: 0 auto;
   padding: 10px 15px;
   background-color: #fff;
@@ -98,6 +98,8 @@ export default {
 
 .modal-body {
   margin: 20px 0;
+  overflow-y: auto;
+  max-height: 550px;
 }
 
 .modal-footer {

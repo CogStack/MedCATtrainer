@@ -168,10 +168,10 @@
       </div>
     </modal>
 
-    <modal v-if="errors.modal" @modal:close="errors.modal = false">
-      <h3 slot="header" class="text-danger">Error</h3>
-      <div slot="body">
-        <p>{{errors.message}}</p>
+    <modal v-if="errors.modal" @modal:close="errors.modal = false" class="error-modal">
+      <h3 slot="header" class="text-danger">Error: {{errors.message}}</h3>
+      <div slot="body" class="error-body">
+        <p v-if="errors.description.length > 0">{{errors.description}}</p>
         <p v-if="errors.stacktrace">Full Error:</p>
         <p v-if="errors.stacktrace" class="error-stacktrace">{{errors.stacktrace}}</p>
       </div>
@@ -320,6 +320,7 @@ export default {
       errors: {
         modal: false,
         message: '',
+        description: '',
         stacktrace: ''
       },
       summaryModal: false,
@@ -420,6 +421,7 @@ export default {
         this.errors.modal = true
         if (err.response) {
           this.errors.message = err.response.data.message || 'Internal Server Error.'
+          this.errors.description = err.response.data.description || ''
           this.errors.stacktrace = err.response.data.stacktrace
         }
       })
@@ -689,6 +691,7 @@ export default {
         this.errors.modal = true
         if (err.response) {
           this.errors.message = err.response.data.message || 'Internal Server Error.'
+          this.errors.description = err.response.data.description || ''
           this.errors.stacktrace = err.response.data.stacktrace
         }
       })
@@ -780,10 +783,6 @@ export default {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
-}
-
-.taskbar {
-  flex: 0 0 50px;
 }
 
 .nav {

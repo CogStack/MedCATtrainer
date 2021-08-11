@@ -2,6 +2,8 @@ import json
 import os
 import logging
 
+import medcat
+import pkg_resources
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -270,7 +272,16 @@ def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
             cdb = CDB_MAP[cdb_id]
         else:
             cdb_path = project.concept_db.cdb_file.path
-            cdb = CDB.load(cdb_path)
+            try:
+                cdb = CDB.load(cdb_path)
+            except KeyError as ke:
+                mc_v = pkg_resources.get_distribution('medcat').version
+                if int(mc_v.split('.')[0]) > 0:
+                    log.error('Attempted to load MedCAT v0.x model with MCTrainer v1.x')
+                    raise Exception('Attempted to load MedCAT v0.x model with MCTrainer v1.x',
+                                    'Please re-configure this project to use a MedCAT v1.x CDB or consult the '
+                                    'MedCATTrainer Dev team if you believe this should work') from ke
+                raise
             cdb.config.parse_config_file(path=os.getenv("MEDCAT_CONFIG_FILE"))
             CDB_MAP[cdb_id] = cdb
 

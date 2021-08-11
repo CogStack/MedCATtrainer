@@ -329,7 +329,9 @@ def prepare_documents(request):
 
     except Exception as e:
         stack = traceback.format_exc()
-        return Response({'message': 'Internal Server Error', 'stacktrace': stack}, status=500)
+        return Response({'message': e.args[0] if len(e.args) > 0 else 'Internal Server Error',
+                         'description': e.args[1] if len(e.args) > 1 else '',
+                         'stacktrace': stack}, status=500)
     return Response({'message': 'Documents prepared successfully'})
 
 
