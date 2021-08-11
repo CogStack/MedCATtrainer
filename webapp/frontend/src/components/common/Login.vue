@@ -20,6 +20,12 @@
 <script>
 import Modal from '@/components/common/Modal.vue'
 import EventBus from '@/event-bus'
+import axios from 'axios'
+
+const instance = axios.create({
+  baseURL: axios.baseURL,
+  headers: {}
+})
 
 export default {
   name: 'Login',
@@ -43,7 +49,8 @@ export default {
         username: this.uname,
         password: this.password
       }
-      this.$http.post('/api/api-token-auth/', payload).then(resp => {
+
+      instance.post('/api/api-token-auth/', payload, {}).then(resp => {
         this.$cookie.set('api-token', resp.data.token, { expires: 7 })
         this.$cookie.set('username', this.uname)
         this.$http.defaults.headers.common['Authorization'] = `Token ${this.$cookie.get('api-token')}`
