@@ -108,13 +108,63 @@ class Project(PolymorphicModel):
     members = models.ManyToManyField(settings.AUTH_USER_MODEL)
     dataset = models.ForeignKey('Dataset', on_delete=models.CASCADE)
     validated_documents = models.ManyToManyField(Document, default=None, blank=True)
-    cuis = models.TextField(default=None, blank=True)
-    cuis_file = models.FileField(null=True, blank=True,
-                                 help_text='A file containing a JSON formatted list of CUI code strings, '
-                                           'i.e. ["1234567","7654321"]')
 
     def __str__(self):
         return str(self.name)
+
+
+class ProjectAnnotateDocuments(Project):
+    doc_annotations = models.ManyToManyField('DocumentAnnotationTask')
+
+
+class DocumentAnnotationTask(PolymorphicModel):
+    name = models.TextField('name')
+    description = models.TextField('desc', default=None, blank=True)
+
+    def __str__(self):
+        return self.name
+
+
+class DocumentAnnotationClassificationTask(DocumentAnnotationTask):
+    labels = models.ManyToManyField('DocumentAnnotationClassLabel')
+    multi_label = models.BooleanField(help_text='is this task multi or single label. I.e. can annotators'
+                                                ' pick multiple classes simultaneously',
+                                      default=False)
+
+
+class DocumentAnnotationClassLabel(models.Model):
+    label = models.TextField('label')
+
+    def __str__(self):
+        return self.label
+
+
+class DocumentAnnotationRegressionTask(DocumentAnnotationTask):
+    minimum = models.FloatField(help_text='minimum value enterable for this task', null=True, blank=True)
+    maximum = models.FloatField(help_text='maximum value enterable for this task', null=True, blank=True)
+
+
+class DocumentAnnotationValue(PolymorphicModel):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    annotations = models.ManyToManyField('Annotation', default=None, blank=True)
+    project = models.ForeignKey('Project', on_delete=models.CASCADE)
+    document = models.ForeignKey('Document', on_delete=models.CASCADE)
+    doc_anno_task = models.ForeignKey('DocumentAnnotationTask', on_delete=models.CASCADE)
+    acc = models.FloatField(default=1)
+
+
+class DocumentAnnotationClfValue(DocumentAnnotationValue):
+    doc_anno_value = models.ForeignKey('DocumentAnnotationClassLabel', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.project}:{self.document}:{self.doc_anno_task}:{self.doc_anno_value}'
+
+
+class DocumentAnnotationRegValue(DocumentAnnotationValue):
+    doc_anno_value = models.FloatField(default=None, blank=True)
+
+    def __str__(self):
+        return f'{self.project}:{self.document}:{self.doc_anno_task}:{self.doc_anno_value}'
 
 
 class Entity(models.Model):
@@ -159,6 +209,18 @@ class EntityRelation(models.Model):
 
     def __str__(self):
         return f'{self.start_entity} - {self.relation} - {self.end_entity}'
+
+
+class Annotation(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    project = models.ForeignKey('Project', on_delete=models.CASCADE)
+    document = models.ForeignKey('Document', on_delete=models.CASCADE, related_name='annotation')
+    value = models.CharField(max_length=1000)
+    start_ind = models.IntegerField()
+    end_ind = models.IntegerField()
+
+    def __str__(self):
+        return f'{self.value}: Doc:{self.document}:[{self.start_ind}:{self.end_ind}]'
 
 
 class AnnotatedEntity(models.Model):
@@ -211,6 +273,10 @@ class MetaTask(models.Model):
 
 
 class ProjectAnnotateEntities(Project):
+    cuis = models.TextField(default=None, blank=True, null=True)
+    cuis_file = models.FileField(null=True, blank=True,
+                                 help_text='A file containing a JSON formatted list of CUI code strings, '
+                                           'i.e. ["1234567","7654321"]')
     concept_db = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=True,
                                    null=True, default=None)
     vocab = models.ForeignKey('Vocabulary', on_delete=models.SET_NULL, null=True)

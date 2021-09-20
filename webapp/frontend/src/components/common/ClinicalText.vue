@@ -37,13 +37,15 @@ export default {
     currentEnt: Object,
     currentRelStartEnt: Object,
     currentRelEndEnt: Object,
-    addAnnos: Boolean
+    addAnnos: Boolean,
+    cancellableAnnos: Boolean,
+    ctxMenuOption: String
   },
   data () {
     return {
       ctxMenuOptions: [
         {
-          name: 'Add Term'
+          name: this.ctxMenuOption
         }
       ],
       selection: null
@@ -80,7 +82,8 @@ export default {
 
         styleClass = this.ents[i] === this.currentEnt ? `${styleClass} highlight-task-selected` : styleClass
         timeout = this.ents[i] === this.currentEnt && i === 0 ? 500 : timeout
-        let spanText = `<span @click="selectEnt(${i})" class="${styleClass}">${highlightText}</span>`
+        const removeClickHandler = this.cancellableAnnos ? `<font-awesome-icon icon="times" @click=removeAnno(${i}) class="remove-anno-button"></font-awesome-icon>` : ''
+        let spanText = `<span @click="selectEnt(${i})" class="${styleClass}">${removeClickHandler}${highlightText}</span>`
         let precedingText = this.text.slice(start, this.ents[i].start_ind)
         precedingText = precedingText.length !== 0 ? precedingText : ' '
         let wrapNewLines = precedingText.match(/^\n*/g)
@@ -95,10 +98,10 @@ export default {
       }
       // escape '<' '>' that may be interpreted as start/end tags.
       formattedText = formattedText
-        .replace(/<(?!span|br)/g, '&lt')
-        .replace(/&lt(?=\/span>)/g, '<')
+        .replace(/<(?!span|br|font-awesome-icon)/g, '&lt')
+        .replace(/&lt(?=(\/span>|\/font-awesome-icon>))/g, '<')
         .replace(/(?<!")>/g, '&gt')
-        .replace(/(?<=<\/span|br)&gt/g, '>')
+        .replace(/(?<=<\/span|<\/font-awesome-icon|br)&gt/g, '>')
 
       formattedText = this.addAnnos ? `<div @contextmenu.prevent.stop="showCtxMenu($event)">${formattedText}</div>` : `<div>${formattedText}</div>`
       this.scrollIntoView(timeout)
@@ -191,6 +194,9 @@ export default {
     },
     ctxOptionClicked  () {
       this.$emit('select:addSynonym', this.selection)
+    },
+    removeAnno (entIdx) {
+      this.$emit('remove:anno', this.ents[entIdx])
     }
   }
 }
@@ -221,6 +227,7 @@ export default {
   border: 1px solid lightgrey;
   border-radius: 3px;
   cursor: pointer;
+  position: relative;
 }
 
 .highlight-task-selected {
@@ -244,6 +251,19 @@ export default {
     font-size: 12px;
     top: -4px;
     left: 1px;
+  }
+}
+
+.remove-anno-button {
+  left: -7px;
+  top: -7px;
+  display: inline-block;
+  position: absolute;
+  color: $text;
+  font-size: 15px;
+  opacity: .5;
+  &:hover {
+    opacity: 1;
   }
 }
 

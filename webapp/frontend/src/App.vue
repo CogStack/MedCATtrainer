@@ -91,6 +91,7 @@ export default {
 .navbar-brand {
   color: #fff;
   border-bottom: 1px solid transparent;
+  margin-left: 10px;
 
   &:hover {
     color: #fff;

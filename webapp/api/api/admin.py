@@ -1,34 +1,23 @@
 import copy
+import json
 import logging
-import os
 import re
 import tarfile
 from collections import defaultdict
 from datetime import datetime
 from glob import glob
+from io import StringIO
 from typing import Dict, List
 
 import pkg_resources
-from django.contrib.auth.models import User
-from django.db.models import QuerySet, Model
-from django.http import HttpResponse, HttpResponseRedirect
-from io import StringIO
-import json
 from background_task import background
-
 from django.contrib import admin
+from django.contrib.auth.models import User
+from django.db.models import QuerySet
+from django.http import HttpResponse, HttpResponseRedirect
 from rest_framework.exceptions import PermissionDenied
 
-from .models import *
 from .forms import *
-
-admin.site.register(Entity)
-admin.site.register(MetaTaskValue)
-admin.site.register(MetaTask)
-admin.site.register(MetaAnnotation)
-admin.site.register(Vocabulary)
-admin.site.register(Relation)
-admin.site.register(EntityRelation)
 
 
 def reset_project(modeladmin, request, queryset):
@@ -46,15 +35,15 @@ def reset_project(modeladmin, request, queryset):
         project.validated_documents.clear()
 
 
-def download_without_text(modeladmin, request, queryset):
+def download_entity_anno_without_text(modeladmin, request, queryset):
     if not request.user.is_staff:
         raise PermissionDenied
 
     projects = queryset
-    return download_projects_without_text(projects)
+    return download_entity_anno_projects_without_text(projects)
 
 
-def download_projects_without_text(projects):
+def download_entity_anno_projects_without_text(projects):
 
     all_projects_out = {'projects': []}
     for project in projects:
@@ -397,15 +386,15 @@ def upload_deployment_export(filename: str):
     return errs
 
 
-def download(modeladmin, request, queryset):
+def download_entity_anno(modeladmin, request, queryset):
     if not request.user.is_staff:
         raise PermissionDenied
     projects = queryset
-    return download_projects_with_text(projects)
+    return download_entity_anno_projects_with_text(projects)
 
 
-def download_projects_with_text(projects: QuerySet):
-    all_projects = _retrieve_project_data(projects)
+def download_entity_anno_projects_with_text(projects: QuerySet):
+    all_projects = _retrieve_entity_anno_project_data(projects)
 
     sio = StringIO()
     json.dump(all_projects, sio)
@@ -418,7 +407,7 @@ def download_projects_with_text(projects: QuerySet):
     return response
 
 
-def _retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
+def _retrieve_entity_anno_project_data(projects: QuerySet) -> Dict[str, List]:
     """
     A function to convert a list of projects and:
         - their associated documents,
@@ -580,26 +569,39 @@ def _retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
     return all_projects
 
 
-def clone_projects(modeladmin, request, queryset):
+def _clone_project_base(project):
+    project_copy = copy.copy(project)
+    project_copy.id, project_copy.pk = None, None
+    project_copy.name = f'{project.name} (Clone)'
+
+    # Add M2M fields
+    for m in project.members.all():
+        project_copy.members.add(m)
+    # validated documents is reset / not carried over to the cloned project
+
+    project_copy.save()
+    return project_copy
+
+
+def clone_doc_anno_projects(modeladmin, request, queryset):
+    if not request.user.is_staff:
+        raise PermissionDenied
+    projects = queryset
+    for project in projects:
+        _clone_project_base(project)
+
+
+def clone_entity_anno_projects(modeladmin, request, queryset):
     if not request.user.is_staff:
         raise PermissionDenied
 
     projects = queryset
     for project in projects:
-        project_copy = copy.copy(project)
-        project_copy.id = None
-        project_copy.pk = None
-        project_copy.name = f'{project.name} (Clone)'
-        project_copy.save()
-
-        # Add M2M fields
-        for m in project.members.all():
-            project_copy.members.add(m)
+        project_copy = _clone_project_base(project)
         for c in project.cdb_search_filter.all():
             project_copy.cdb_search_filter.add(c)
         for t in project.tasks.all():
             project_copy.tasks.add(t)
-
         project_copy.save()
 
 
@@ -615,12 +617,11 @@ class ReportErrorModelAdminMixin:
 
 class DatasetAdmin(ReportErrorModelAdminMixin, admin.ModelAdmin):
     model = Dataset
-admin.site.register(Dataset, DatasetAdmin)
 
 
 class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
     model = ProjectAnnotateEntities
-    actions = [download, download_without_text, reset_project, clone_projects]
+    actions = [download_entity_anno, download_entity_anno_without_text, reset_project, clone_entity_anno_projects]
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "concept_db":
@@ -633,14 +634,119 @@ class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
             kwargs["queryset"] = ConceptDB.objects.all()
 
         return super(ProjectAnnotateEntitiesAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
-admin.site.register(ProjectAnnotateEntities, ProjectAnnotateEntitiesAdmin)
+
+
+def download_doc_anno(modeladmin, request, queryset):
+    if not request.user.is_staff:
+        raise PermissionDenied
+    all_projects = download_doc_anno_projects(queryset, with_text=True)
+    sio = StringIO()
+    json.dump(all_projects, sio)
+    sio.seek(0)
+
+    f_name = "MedCAT_Doc_Anno_Export_With_Text_{}.json".format(datetime.now().strftime('%Y-%m-%d:%H:%M:%S'))
+    response = HttpResponse(sio, content_type='text/json')
+    response['Content-Disposition'] = 'attachment; filename={}'.format(f_name)
+
+    return response
+
+
+def download_doc_anno_without_text(modeladmin, request, queryset):
+    if not request.user.is_staff:
+        raise PermissionDenied
+    all_projects = download_doc_anno_projects(queryset, with_text=False)
+    sio = StringIO()
+    json.dump(all_projects, sio)
+    sio.seek(0)
+
+    f_name = "MedCAT_Doc_Anno_Export_Without_Text_{}.json".format(datetime.now().strftime('%Y-%m-%d:%H:%M:%S'))
+    response = HttpResponse(sio, content_type='text/json')
+    response['Content-Disposition'] = 'attachment; filename={}'.format(f_name)
+
+    return response
+
+
+def download_doc_anno_projects(projects: QuerySet, with_text: bool):
+    """
+       A function to convert a list of projects and:
+           - their associated documents,
+           - their associated document annotations (rregression and classification annotations)
+           - their associated annotations within the text for each class / regression value
+       for serialization.
+       :param projects: the projects to export data for.
+       Output schema is as follows: ((optional) indicates this field isn't required for training a MedCAT model)
+       {
+       "projects": [
+           {
+               "name": "<project_name"  # name of the project
+               "id": "<id>"  # the auto-generated id of the project (optional)
+               "doc_annos": {
+
+               }
+           }
+
+   """
+
+    all_projects = {'projects': []}
+    for project in projects:
+        out = {}
+        out['name'] = project.name
+        out['id'] = project.id
+        out['documents'] = []
+
+        for doc in project.validated_documents.all():
+            out_doc = {}
+            out_doc['id'] = doc.id
+            out_doc['name'] = doc.name
+            out_doc['text'] = doc.text
+            out_doc['last_modified'] = str(doc.last_modified)
+            out_doc['doc_annos'] = []
+
+            doc_anno_values = DocumentAnnotationValue.objects.filter(project=project, document=doc)
+            doc_anno_tasks = DocumentAnnotationTask.objects.all()
+            for doc_anno_task in doc_anno_tasks:
+                doc_anno = {
+                    'task': doc_anno_task.name,
+                    'values': [],
+                }
+                for val in [val for val in doc_anno_values if val.doc_anno_task.id == doc_anno_task.id]:
+                    readable_value = val.doc_anno_value
+                    if isinstance(readable_value, DocumentAnnotationClassLabel):
+                        readable_value = readable_value.label
+                    val_out = {
+                        'id': val.id,
+                        'user': val.user.username,
+                        'value': readable_value,
+                        'acc': val.acc
+                    }
+
+                    if with_text:
+                        val_out['annotations'] = []
+                        for ann in val.annotations.all():
+                            val_out['annotations'].append({
+                                'id': ann.id,
+                                'user': ann.user.username,
+                                'value': ann.value,
+                                'start': ann.start_ind,
+                                'end': ann.end_ind,
+                            })
+                    doc_anno['values'].append(val_out)
+                if len(doc_anno['values']) > 0:
+                    out_doc['doc_annos'].append(doc_anno)
+            out['documents'].append(out_doc)
+        all_projects['projects'].append(out)
+    return all_projects
+
+
+class ProjectAnnotateDocumentsAdmin(admin.ModelAdmin):
+    model = ProjectAnnotateDocuments
+    actions = [download_doc_anno, download_doc_anno_without_text, clone_doc_anno_projects]
 
 
 class AnnotatedEntityAdmin(admin.ModelAdmin):
     list_display = ('user', 'project', 'entity', 'value', 'deleted', 'validated')
     list_filter = ('user', 'project', 'deleted', 'validated')
     model = AnnotatedEntity
-admin.site.register(AnnotatedEntity, AnnotatedEntityAdmin)
 
 
 @background(schedule=5)
@@ -696,8 +802,6 @@ class ConceptDBAdmin(admin.ModelAdmin):
     model = ConceptDB
     actions = [import_concepts, delete_concepts_from_cdb, reset_cdb_filters]
 
-admin.site.register(ConceptDB, ConceptDBAdmin)
-
 
 def remove_all_concepts(modeladmin, request, queryset):
     Concept.objects.all().delete()
@@ -709,23 +813,43 @@ class ConceptAdmin(admin.ModelAdmin):
     actions = [remove_all_concepts]
 
 
-admin.site.register(Concept, ConceptAdmin)
-admin.site.register(ICDCode)
-admin.site.register(OPCSCode)
-
-
 class ProjectCuiCounterAdmin(admin.ModelAdmin):
     model = ProjectCuiCounter
     list_filter = ('project',)
     list_display = ['entity', 'count', 'project']
-admin.site.register(ProjectCuiCounter, ProjectCuiCounterAdmin)
+
 
 def remove_all_documents(modeladmin, request, queryset):
     Document.objects.all().delete()
+
 
 class DocumentAdmin(admin.ModelAdmin):
     model = Document
     actions = [remove_all_documents]
     list_display = ['name', 'create_time', 'dataset', 'last_modified']
 
+
+admin.site.register(Entity)
+admin.site.register(MetaTaskValue)
+admin.site.register(MetaTask)
+admin.site.register(MetaAnnotation)
+admin.site.register(Vocabulary)
+admin.site.register(Relation)
+admin.site.register(EntityRelation)
+admin.site.register(Annotation)
+admin.site.register(DocumentAnnotationClassificationTask)
+admin.site.register(DocumentAnnotationClassLabel)
+admin.site.register(DocumentAnnotationRegressionTask)
+admin.site.register(DocumentAnnotationClfValue)
+admin.site.register(DocumentAnnotationRegValue)
+
+admin.site.register(Dataset, DatasetAdmin)
+admin.site.register(ProjectAnnotateEntities, ProjectAnnotateEntitiesAdmin)
+admin.site.register(ProjectAnnotateDocuments, ProjectAnnotateDocumentsAdmin)
+admin.site.register(AnnotatedEntity, AnnotatedEntityAdmin)
+admin.site.register(ConceptDB, ConceptDBAdmin)
+admin.site.register(Concept, ConceptAdmin)
+admin.site.register(ICDCode)
+admin.site.register(OPCSCode)
+admin.site.register(ProjectCuiCounter, ProjectCuiCounterAdmin)
 admin.site.register(Document, DocumentAdmin)

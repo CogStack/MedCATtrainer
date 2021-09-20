@@ -35,7 +35,7 @@
           <div class="main-viewport">
             <clinical-text :loading="loadingDoc" :text="currentDoc !== null ? currentDoc.text : null"
                            :current-ent="currentEnt" :ents="ents" :task-name="taskName" :task-values="taskValues"
-                           :addAnnos="true" :current-rel-start-ent="(currentRel || {}).start_entity"
+                           :addAnnos="true" :ctx-menu-option="'Add Term'" :current-rel-start-ent="(currentRel || {}).start_entity"
                            :current-rel-end-ent="(currentRel || {}).end_entity"
                            @select:concept="selectEntity" @select:addSynonym="addSynonym"></clinical-text>
             <div class="taskbar">
@@ -54,11 +54,11 @@
       <div :style="{ flexGrow: 1, width: '375px', minWidth: '425px', maxWidth: '1000px' }">
         <div class="sidebar-container">
           <transition name="slide-left">
-            <concept-summary v-if="!conceptSynonymSelection && !hasRelations" :selectedEnt="currentEnt" :altSearch="altSearch"
+            <concept-summary-sidebar v-if="!conceptSynonymSelection && !hasRelations" :selectedEnt="currentEnt" :altSearch="altSearch"
                              :project="project" @select:altConcept="markAlternative"
                              @select:alternative="toggleAltSearch" @select:ICD="markICD" @select:OPCS="markOPCS"
                              @updated:entityComment="markEntity(false)"
-                             class="concept-summary"></concept-summary>
+                             class="concept-summary"></concept-summary-sidebar>
             <tabs v-if="!conceptSynonymSelection && hasRelations">
               <tab name="Concept">
                 <concept-summary :selectedEnt="currentEnt" :altSearch="altSearch"
@@ -238,17 +238,19 @@
 <script>
 import _ from 'lodash'
 
-import ConceptSummary from '@/components/common/ConceptSummary.vue'
+import ConceptSummary from '@/components/common/ConceptSummarySidebar.vue'
 import DocumentSummary from '@/components/common/DocumentSummary.vue'
 import Modal from '@/components/common/Modal.vue'
 import ClinicalText from '@/components/common/ClinicalText.vue'
 import NavBar from '@/components/common/NavBar.vue'
 import TaskBar from '@/components/anns/TaskBar.vue'
+import ConceptSummarySidebar from '@/components/common/ConceptSummarySidebar'
 import AddAnnotation from '@/components/anns/AddAnnotation.vue'
 import MetaAnnotationTaskContainer from '@/components/usecases/MetaAnnotationTaskContainer.vue'
 import RelationAnnotationTaskContainer from '@/components/usecases/RelationAnnotationTaskContainer.vue'
 import AnnotationSummary from '@/components/common/AnnotationSummary.vue'
 import CodingAnnotationSummary from '@/components/cc/CodingAnnotationSummary'
+import DocumentService from '@/mixins/DocumentService'
 import { Multipane, MultipaneResizer } from 'vue-multipane'
 
 const TASK_NAME = 'Concept Annotation'
@@ -260,11 +262,10 @@ const CONCEPT_IRRELEVANT = 'Irrelevant'
 
 const TASK_VALUES = [CONCEPT_CORRECT, CONCEPT_REMOVED, CONCEPT_KILLED, CONCEPT_ALTERNATIVE, CONCEPT_IRRELEVANT]
 
-const LOAD_NUM_DOC_PAGES = 10 // 30 docs per page, 300 documents
-
 export default {
-  name: 'TrainAnnotations',
+  name: 'EntityAnnotations',
   components: {
+    ConceptSummarySidebar,
     ConceptSummary,
     DocumentSummary,
     Modal,
@@ -279,6 +280,7 @@ export default {
     Multipane,
     MultipaneResizer
   },
+  mixins: [DocumentService],
   props: {
     projectId: {
       required: true
@@ -333,79 +335,9 @@ export default {
     }
   },
   created () {
-    this.fetchData()
+    this.fetchData('/api/project-annotate-entities')
   },
   methods: {
-    fetchData () {
-      this.$http.get(`/api/project-annotate-entities/?id=${this.projectId}`).then(resp => {
-        if (resp.data.count === 0) {
-          this.errors.modal = true
-          this.errors.message = `No project found for project ID: ${this.$route.params.projectId}`
-        } else {
-          this.project = resp.data.results[0]
-          this.validatedDocuments = this.project.validated_documents
-          const loadedDocs = () => {
-            this.docIds = this.docs.map(d => d.id)
-            this.docIdsToDocs = Object.assign({}, ...this.docs.map(item => ({ [item['id']]: item })))
-            const docIdRoute = Number(this.$route.params.docId)
-            if (docIdRoute) {
-              while (!this.docs.map(d => d.id).includes(docIdRoute)) {
-                this.fetchDocuments(0, loadedDocs)
-              }
-              this.loadDoc(this.docIdsToDocs[docIdRoute])
-            } else {
-              // find first unvalidated doc.
-              const ids = _.difference(this.docIds, this.validatedDocuments)
-              if (ids.length > 0) {
-                this.loadDoc(this.docIdsToDocs[ids[0]])
-              } else {
-                // no unvalidated docs and no next doc URL. Go back to first doc
-                this.loadDoc(this.docs[0])
-              }
-            }
-          }
-          this.fetchDocuments(0, loadedDocs)
-        }
-      })
-    },
-    fetchDocuments (numPagesLoaded, finishedLoading) {
-      let params = this.nextDocSetUrl === null ? `?dataset=${this.project.dataset}`
-        : `?${this.nextDocSetUrl.split('?').slice(-1)[0]}`
-
-      this.$http.get(`/api/documents/${params}`).then(resp => {
-        if (resp.data.results.length > 0) {
-          this.docs = resp.data.previous === null ? resp.data.results : this.docs.concat(resp.data.results)
-          this.totalDocs = resp.data.count
-          this.nextDocSetUrl = resp.data.next
-
-          if (this.nextDocSetUrl && numPagesLoaded < LOAD_NUM_DOC_PAGES) {
-            this.fetchDocuments(numPagesLoaded + 1, finishedLoading)
-          } else {
-            if (finishedLoading) {
-              finishedLoading()
-            }
-          }
-        }
-      }).catch(err => {
-        console.error(err)
-        // use error modal to show errors?
-      })
-      return finishedLoading
-    },
-    loadDoc (doc) {
-      this.currentDoc = doc
-      if (String(this.$route.params.docId) !== String(doc.id)) {
-        this.$router.replace({
-          name: this.$route.name,
-          params: {
-            projectId: this.$route.params.projectId,
-            docId: doc.id
-          }
-        })
-      }
-      this.currentEnt = null
-      this.prepareDoc()
-    },
     prepareDoc () {
       this.loadingDoc = true
       let payload = {

@@ -94,7 +94,7 @@ const CONST_PROPS_ORDER = [
 ]
 
 export default {
-  name: 'ConceptSummary',
+  name: 'ConceptSummarySidebar',
   components: {
     ConceptPicker
   },

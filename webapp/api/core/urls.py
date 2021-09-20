@@ -17,49 +17,57 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from rest_framework.authtoken import views as auth_views
 from rest_framework import routers
-import api.views
 
+from api import views
 
 router = routers.DefaultRouter()
-router.register(r'users', api.views.UserViewSet)
-router.register(r'concepts', api.views.ConceptViewSet)
-router.register(r'entities', api.views.EntityViewSet)
-router.register(r'project-annotate-entities', api.views.ProjectAnnotateEntitiesViewSet)
-router.register(r'documents', api.views.DocumentViewSet)
-router.register(r'annotated-entities', api.views.AnnotatedEntityViewSet)
-router.register(r'meta-annotations', api.views.MetaAnnotationViewSet)
-router.register(r'meta-tasks', api.views.MetaTaskViewSet)
-router.register(r'meta-task-values', api.views.MetaTaskValueViewSet)
-router.register(r'relations', api.views.RelationViewSet)
-router.register(r'entity-relations', api.views.EntityRelationViewSet)
-router.register(r'concept-dbs', api.views.ConceptDBViewSet)
-router.register(r'vocabs', api.views.VocabularyViewSet)
-router.register(r'datasets', api.views.DatasetViewSet)
-router.register(r'icd-codes', api.views.ICDCodeViewSet)
-router.register(r'opcs-codes', api.views.OPCSCodeViewSet)
-router.register(r'upload-deployment', api.views.DeploymentUploadViewSet, basename='upload')
+router.register('users', views.UserViewSet)
+router.register('concepts', views.ConceptViewSet)
+router.register('entities', views.EntityViewSet)
+router.register('project-annotate-entities', views.ProjectAnnotateEntitiesViewSet)
+router.register('project-annotate-documents', views.ProjectAnnotateDocumentsViewSet)
+router.register('documents', views.DocumentViewSet)
+router.register('annotations', views.AnnotationViewSet)
+router.register('annotated-entities', views.AnnotatedEntityViewSet)
+router.register('document-annotation-tasks', views.DocumentAnnotationTaskViewSet)
+router.register('document-annotation-cls-labels', views.DocumentAnnotationClassLabelViewSet)
+router.register('document-annotation-values', views.DocumentAnnotationValueViewSet)
+router.register('document-annotation-clf-values', views.DocumentAnnotationClfValueViewSet)
+router.register('document-annotation-reg-values', views.DocumentAnnotationRegValueViewSet)
+router.register('meta-annotations', views.MetaAnnotationViewSet)
+router.register('meta-tasks', views.MetaTaskViewSet)
+router.register('meta-task-values', views.MetaTaskValueViewSet)
+router.register('relations', views.RelationViewSet)
+router.register('entity-relations', views.EntityRelationViewSet)
+router.register('concept-dbs', views.ConceptDBViewSet)
+router.register('vocabs', views.VocabularyViewSet)
+router.register('datasets', views.DatasetViewSet)
+router.register('icd-codes', views.ICDCodeViewSet)
+router.register('opcs-codes', views.OPCSCodeViewSet)
+router.register('upload-deployment', views.DeploymentUploadViewSet, basename='upload')
 
 
 urlpatterns = [
     path('api/', include(router.urls)),
-    path('api/search-concepts/', api.views.ConceptView.as_view()),
-    path('api/search-concept-infos/', api.views.search_concept_infos),
-    path('api/prepare-documents/', api.views.prepare_documents),
+    path('api/search-concepts/', views.ConceptView.as_view()),
+    path('api/search-concept-infos/', views.search_concept_infos),
+    path('api/prepare-documents/', views.prepare_documents),
     path('api/api-token-auth/', auth_views.obtain_auth_token),
     path('admin/', admin.site.urls),
     path('api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    path('api/add-annotation/', api.views.add_annotation),
-    path('api/add-concept/', api.views.add_concept),
-    path('api/submit-document/', api.views.submit_document),
-    path('api/save-models/', api.views.save_models),
-    path('api/get-create-entity/', api.views.get_create_entity),
-    path('api/create-dataset/', api.views.create_dataset),
-    path('api/complete-projects/', api.views.finished_projects),
-    path('api/annotate-text/', api.views.annotate_text),
-    path('api/update-meta-annotation/', api.views.update_meta_annotation),
-    path('api/annotate-text/', api.views.annotate_text),
-    path('api/download-annos/', api.views.download_annos),
-    path('api/download-deployment/', api.views.download_deployment),
-    path('api/behind-rp/', api.views.behind_reverse_proxy),
-    re_path('^.*$', api.views.index, name='index'),  # Match everything else to home
+    path('api/add-annotation/', views.add_annotation),
+    path('api/add-concept/', views.add_concept),
+    path('api/submit-document/', views.submit_ent_anno_document),
+    path('api/submit-doc-anno-document/', views.submit_doc_anno_document),
+    path('api/save-models/', views.save_models),
+    path('api/get-create-entity/', views.get_create_entity),
+    path('api/create-dataset/', views.create_dataset),
+    path('api/complete-projects/', views.finished_projects),
+    path('api/annotate-text/', views.annotate_text),
+    path('api/update-meta-annotation/', views.update_meta_annotation),
+    path('api/annotate-text/', views.annotate_text),
+    path('api/download-annos/', views.download_annos),
+    path('api/download-deployment/', views.download_deployment),
+    path('api/behind-rp/', views.behind_reverse_proxy),
+    re_path('^.*$', views.index, name='index'),  # Match everything else to home
 ]

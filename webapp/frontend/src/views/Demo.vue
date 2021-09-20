@@ -32,7 +32,7 @@
                        :taskName="task" :taskValues="taskValues" @select:concept="selectEntity"></clinical-text>
       </div>
       <div class="sidebar">
-        <concept-summary :selectedEnt="currentEnt" :project="selectedProject"></concept-summary>
+        <concept-summary-sidebar :selectedEnt="currentEnt" :project="selectedProject"></concept-summary-sidebar>
       </div>
     </div>
   </div>
@@ -40,7 +40,7 @@
 
 <script>
 import ClinicalText from '@/components/common/ClinicalText.vue'
-import ConceptSummary from '@/components/common/ConceptSummary'
+import ConceptSummarySidebar from '@/components/common/ConceptSummarySidebar'
 
 const TASK_NAME = 'Concept Anno'
 const VALUES = ['Val']
@@ -49,7 +49,7 @@ export default {
   name: 'Demo',
   components: {
     ClinicalText,
-    ConceptSummary
+    ConceptSummarySidebar
   },
   data () {
     return {

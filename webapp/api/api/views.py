@@ -15,7 +15,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-from .admin import download_projects_with_text, download_projects_without_text, download_deployment_export, \
+from .admin import download_entity_anno_projects_with_text, download_entity_anno_projects_without_text, download_deployment_export, \
     upload_deployment_export
 from .permissions import *
 from .serializers import *
@@ -76,7 +76,21 @@ class ProjectAnnotateEntitiesViewSet(viewsets.ModelViewSet):
             projects = ProjectAnnotateEntities.objects.all()
         else:
             projects = ProjectAnnotateEntities.objects.filter(members=user.id)
+        return projects
 
+
+class ProjectAnnotateDocumentsViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = ProjectAnnotateDocuments.objects.all()
+    serializer_class = ProjectAnnotateDocumentsSerializer
+    filterset_fields = ['members', 'dataset', 'id']
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser:
+            projects = ProjectAnnotateDocuments.objects.all()
+        else:
+            projects = ProjectAnnotateDocuments.objects.filter(members=user.id)
         return projects
 
 
@@ -94,6 +108,79 @@ class AnnotatedEntityViewSet(viewsets.ModelViewSet):
     queryset = AnnotatedEntity.objects.all()
     serializer_class = AnnotatedEntitySerializer
     filterset_class = AnnotatedEntityFilter
+
+
+class AnnotationFilter(drf.FilterSet):
+    id__in = NumInFilter(field_name='id', lookup_expr='in')
+
+    class Meta:
+        model = Annotation
+        fields = ['id']
+
+
+class AnnotationViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Annotation.objects.all()
+    serializer_class = AnnotationSerializer
+    http_method_names = ['get', 'post', 'put', 'delete']
+    filterset_class = AnnotationFilter
+    filterset_fields = ['id', 'project', 'document']
+
+    def create(self, request, *args, **kwargs):
+        doc_annos = DocumentAnnotationValue.objects.get(
+            id=request.data.get('anno_value_id')).annotations.values_list('start_ind', 'end_ind', 'id')
+        new_anno_start = request.data.get('start_ind')
+        new_anno_end = request.data.get('end_ind')
+        overlapping_annos = []
+        for anno in doc_annos:
+            r = set(range(anno[0], anno[1]))
+            if set(range(new_anno_start, new_anno_end)).intersection(r):
+                overlapping_annos.append(anno)
+        for a in overlapping_annos:
+            Annotation.objects.get(id=a[2]).delete()
+        return super().create(request, *args, **kwargs)
+
+
+class DocumentAnnotationTaskViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = DocumentAnnotationTask.objects.all()
+    serializer_class = DocumentAnnotationTaskSerializer
+    filterset_fields = ['id']
+
+
+class DocumentAnnotationClassLabelViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = DocumentAnnotationClassLabel.objects.all()
+    serializer_class = DocumentAnnotationClassLabelSerializer
+
+
+class DocumentAnnotationValueViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = DocumentAnnotationValue.objects.all()
+    http_method_names = ['get']
+    serializer_class = DocumentAnnotationValueSerializer
+    filterset_fields = ['id', 'project', 'document', 'doc_anno_task']
+
+    def destroy(self, request, *args, **kwargs):
+        doc_anno_value = DocumentAnnotationValue.objects.get(pk=kwargs['pk'])
+        annos = Annotation.objects.filter(id__in=list(doc_anno_value.annotations.values_list(flat=True)))
+        for a in annos:
+            a.delete()
+        return super().destroy(request, *args, **kwargs)
+
+
+class DocumentAnnotationClfValueViewSet(DocumentAnnotationValueViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = DocumentAnnotationClfValue.objects.all()
+    http_method_names = ['get', 'post', 'put', 'delete']
+    serializer_class = DocumentAnnotationClfValueSerializer
+
+
+class DocumentAnnotationRegValueViewSet(DocumentAnnotationValueViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = DocumentAnnotationRegValue.objects.all()
+    http_method_names = ['get', 'post', 'put', 'delete']
+    serializer_class = DocumentAnnotationRegValueSerializer
 
 
 class MetaTaskValueViewSet(viewsets.ModelViewSet):
@@ -436,7 +523,7 @@ def add_concept(request):
 
 
 @api_view(http_method_names=['POST'])
-def submit_document(request):
+def submit_ent_anno_document(request):
     # Get project id
     p_id = request.data['project_id']
     d_id = request.data['document_id']
@@ -477,6 +564,21 @@ def submit_document(request):
             project.save()
 
     return Response({'message': 'Document submited successfully'})
+
+
+@api_view(http_method_names=['POST'])
+def submit_doc_anno_document(request):
+    p_id = request.data['project_id']
+    d_id = request.data['document_id']
+
+    project = ProjectAnnotateDocuments.objects.get(id=p_id)
+    doc = Document.objects.filter(id=d_id)
+    if doc.exists():
+        project.validated_documents.set(list(project.validated_documents.values_list('id', flat=True)) + [d_id])
+        project.save()
+        return Response({'message': 'Document submited successfully'})
+    else:
+        return HttpResponseServerError(f"Document with id:{d_id} does not exist")
 
 
 @api_view(http_method_names=['POST'])
@@ -528,9 +630,9 @@ def create_dataset(request):
 @api_view(http_method_names=['GET'])
 def finished_projects(request):
     project_ids = request.GET.get('projects')
-    if project_ids is None:
+    if project_ids is None or len(project_ids) == 0:
         return HttpResponseBadRequest('projects param required')
-    projects = ProjectAnnotateEntities.objects.filter(id__in=project_ids.split(','))
+    projects = Project.objects.filter(id__in=project_ids.split(','))
 
     validated_projects = {}
     for project in projects:
@@ -632,8 +734,8 @@ def download_annos(request):
         return HttpResponseBadRequest('No projects to download annotations')
 
     projects = ProjectAnnotateEntities.objects.filter(id__in=p_ids)
-    out = download_projects_with_text(projects) if with_text_flag else \
-        download_projects_without_text(projects)
+    out = download_entity_anno_projects_with_text(projects) if with_text_flag else \
+        download_entity_anno_projects_without_text(projects)
     return out
 
 

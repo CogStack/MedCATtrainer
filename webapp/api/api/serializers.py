@@ -83,14 +83,83 @@ class ProjectAnnotateEntitiesSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super(ProjectAnnotateEntitiesSerializer, self).to_representation(instance)
         cuis_from_file = json.load(open(instance.cuis_file.path)) if instance.cuis_file else []
-        cui_list = data['cuis'].split(',') + cuis_from_file
+        cui_list = (data.get('cuis') or '').split(',') + cuis_from_file
         data['cuis'] = ','.join(cui_list)
         return data
+
+
+class ProjectAnnotateDocumentsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectAnnotateDocuments
+        fields = '__all__'
 
 
 class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
+        fields = '__all__'
+
+
+class DocumentAnnotationTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentAnnotationTask
+
+    def to_representation(self, instance):
+        if isinstance(instance, DocumentAnnotationClassificationTask):
+            return DocumentAnnotationClassificationTaskSerializer().to_representation(instance)
+        elif isinstance(instance, DocumentAnnotationRegressionTask):
+            return DocumentAnnotationRegressionTaskSerializer().to_representation(instance)
+        else:
+            NotImplementedError("No serializer available for " + str(instance))
+
+
+class DocumentAnnotationClassificationTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentAnnotationClassificationTask
+        fields = '__all__'
+
+
+class DocumentAnnotationClassLabelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentAnnotationClassLabel
+        fields = '__all__'
+
+
+class DocumentAnnotationRegressionTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentAnnotationRegressionTask
+        fields = '__all__'
+
+
+class DocumentAnnotationValueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentAnnotationValue
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        if isinstance(instance, DocumentAnnotationClfValue):
+            return DocumentAnnotationClfValueSerializer().to_representation(instance)
+        elif isinstance(instance, DocumentAnnotationRegValue):
+            return DocumentAnnotationRegValueSerializer().to_representation(instance)
+        else:
+            NotImplementedError("No serializer available for " + str(type(instance)))
+
+
+class DocumentAnnotationClfValueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentAnnotationClfValue
+        fields = '__all__'
+
+
+class DocumentAnnotationRegValueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentAnnotationRegValue
+        fields = '__all__'
+
+
+class AnnotationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Annotation
         fields = '__all__'
 
 

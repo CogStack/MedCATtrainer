@@ -2,11 +2,11 @@
   <div class="full-height project-table">
     <login v-if="!loginSuccessful" @login:success="loggedIn()"></login>
     <transition name="alert"><div class="alert alert-danger" v-if="routeAlert" role="alert">{{routeAlert}}</div></transition>
-    <div class="home-title">Available Projects:</div>
     <div class="table-container">
       <loading-overlay :loading="loadingProjects">
         <p slot="message">Loading Projects...</p>
       </loading-overlay>
+      <div class="home-title">NER+L Projects:</div>
       <table class="table table-hover" v-if="!loadingProjects">
         <thead>
         <tr>
@@ -21,7 +21,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="project of projects" :key="project.id" @click="select(project)" :class="{'focus': project.focus || false}">
+        <tr v-for="project of projects" :key="project.id" @click="select(project, 'entity-annotations')" :class="{'focus': project.focus || false}">
           <td>{{project.id}}</td>
           <td>{{project.name}}</td>
           <td>{{project.description}}</td>
@@ -37,6 +37,29 @@
         </tr>
         </tbody>
       </table>
+      <div class="home-title">Document Annotation Projects:</div>
+      <table class="table table-hover" v-if="!loadingProjects">
+        <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Description</th>
+          <th>Create Time</th>
+          <th>Complete</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="project of docAnnoProjects" :key="project.id" @click="select(project, 'doc-annotations')" :class="{'focus': project.focus || false}">
+          <td>{{project.id}}</td>
+          <td>{{project.name}}</td>
+          <td>{{project.description}}</td>
+          <td>{{(new Date(project.create_time)).toLocaleDateString()}}</td>
+          <td>
+            <font-awesome-icon v-if="project.complete" class="complete-project" icon="check"></font-awesome-icon>
+          </td>
+        </tr>
+        </tbody>
+      </table>
     </div>
     <div>
       <transition name="alert"><div class="alert alert-primary" v-if="saving" role="alert">Saving models</div></transition>
@@ -47,6 +70,7 @@
 </template>
 <script>
 import _ from 'lodash'
+import Vue from 'vue'
 
 import Login from '@/components/common/Login.vue'
 import EventBus from '@/event-bus'
@@ -61,6 +85,7 @@ export default {
   data () {
     return {
       projects: [],
+      docAnnoProjects: [],
       next: null,
       previous: null,
       loginSuccessful: false,
@@ -100,10 +125,11 @@ export default {
       if (this.$cookie.get('api-token')) {
         this.loginSuccessful = true
         this.isAdmin = this.$cookie.get('admin') === 'true'
-        this.fetchProjects()
+        this.fetchNERProjects()
+        this.fetchDocumentAnnoProjects()
       }
     },
-    fetchProjects () {
+    fetchNERProjects () {
       this.loadingProjects = true
       if (this.loginSuccessful) {
         this.$http.get('/api/project-annotate-entities/').then(resp => {
@@ -112,55 +138,72 @@ export default {
             this.fetchPage(resp.data.next)
           } else {
             this.fetchCompletionStatus()
-            this.loadingProjects = false
           }
-        }).catch(() => {
-          this.$cookie.delete('username')
-          this.$cookie.delete('api-token')
-          this.$cookie.delete('admin')
-          this.$cookie.delete('user-id')
-          this.loadingProjects = false
-          this.loginSuccessful = false
-        })
+        }).catch(this.errorLoadingProjects)
       }
     },
-    fetchPage (pageUrl) {
+    fetchDocumentAnnoProjects () {
+      this.loadingProjects = true
+      if (this.loginSuccessful) {
+        this.$http.get('/api/project-annotate-documents/').then(resp => {
+          this.docAnnoProjects = resp.data.results
+          if (resp.data.next) {
+            this.fetchPage(resp.data.next)
+          } else {
+            this.fetchCompletionStatus()
+          }
+        }).catch(this.errorLoadingProjects)
+      }
+    },
+    errorLoadingProjects () {
+      this.$cookie.delete('username')
+      this.$cookie.delete('api-token')
+      this.$cookie.delete('admin')
+      this.$cookie.delete('user-id')
+      this.loadingProjects = false
+      this.loginSuccessful = false
+    },
+    fetchPage (pageUrl, projectsProp) {
       this.$http.get('/' + pageUrl.split('/').slice(-3).join('/')).then(resp => {
-        this.projects = this.projects.concat(resp.data.results)
+        Vue.set(this, projectsProp, this[projectsProp].concat(resp.data.results))
         if (resp.data.next) {
-          this.fetchPage(resp.data.next)
+          this.fetchPage(resp.data.next, projectsProp)
         } else {
           this.fetchCompletionStatus()
         }
       })
     },
     fetchCompletionStatus () {
-      this.$http.get(`/api/complete-projects/?projects=${this.projects.map(p => p.id).join(',')}`)
-        .then(resp => {
-          Object.entries(resp.data.validated_projects).forEach((entry) => {
-            this.$set(_.find(this.projects, proj => proj.id === Number(entry[0])), 'complete', entry[1])
-          })
-          let focusProject = _.findLastIndex(this.projects, proj => proj.complete)
-          if (focusProject !== this.projects.length - 1) {
-            focusProject += 1
-          }
-          this.$set(this.projects[focusProject], 'focus', true)
-          this.loadingProjects = false
-
-          this.$nextTick(function () {
-            const el = document.getElementsByClassName('focus')
-            if (el.length > 0) {
-              el[0].scrollIntoView({
-                block: 'nearest',
-                behavior: 'auto'
-              })
+      if (this.projects.length > 0) {
+        this.$http.get(`/api/complete-projects/?projects=${this.projects.map(p => p.id).join(',')}`)
+          .then(resp => {
+            Object.entries(resp.data.validated_projects).forEach((entry) => {
+              this.$set(_.find(this.projects, proj => proj.id === Number(entry[0])), 'complete', entry[1])
+            })
+            let focusProject = _.findLastIndex(this.projects, proj => proj.complete)
+            if (focusProject !== this.projects.length - 1) {
+              focusProject += 1
             }
+            this.$set(this.projects[focusProject], 'focus', true)
+            this.loadingProjects = false
+
+            this.$nextTick(function () {
+              const el = document.getElementsByClassName('focus')
+              if (el.length > 0) {
+                el[0].scrollIntoView({
+                  block: 'nearest',
+                  behavior: 'auto'
+                })
+              }
+            })
           })
-        })
+      } else {
+        this.loadingProjects = false
+      }
     },
-    select (project) {
+    select (project, routeName) {
       this.$router.push({
-        name: 'train-annotations',
+        name: routeName,
         params: {
           projectId: project.id
         }

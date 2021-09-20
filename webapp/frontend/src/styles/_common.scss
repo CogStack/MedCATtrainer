@@ -47,6 +47,7 @@ $blur-radius: 10px;
 
 @each $i, $col in $task-colors {
   .highlight-task-#{$i} {
+    position: relative;
     background-color: $col;
     border-radius: 3px;
     cursor: pointer;
