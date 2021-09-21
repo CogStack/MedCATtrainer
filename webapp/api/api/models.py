@@ -161,6 +161,7 @@ class AnnotatedEntity(models.Model):
     start_ind = models.IntegerField()
     end_ind = models.IntegerField()
     acc = models.FloatField()
+    comment = models.TextField(null=True, blank=True)
     validated = models.BooleanField(default=False)
     correct = models.BooleanField(default=False)
     alternative = models.BooleanField(default=False)
@@ -218,10 +219,12 @@ class ProjectAnnotateEntities(Project):
                                               help_text='Enable the option to terminate concepts.')
     irrelevant_available = models.BooleanField(default=False,
                                                help_text='Enable the option to add the irrelevant button.')
+    enable_entity_annotation_comments = models.BooleanField(default=False,
+                                                            help_text="Enable to allow annotators to leave comments"
+                                                                      " for each annotation")
     tasks = models.ManyToManyField(MetaTask, blank=True, default=None)
-
     relations = models.ManyToManyField(Relation, blank=True, default=None,
-            help_text='Relations that will be available for this project')
+                                       help_text='Relations that will be available for this project')
 
     def save(self, *args, **kwargs):
         if self.concept_db is None:

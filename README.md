@@ -164,6 +164,7 @@ Annotation projects are used to inspect, validate and improve concepts recognise
 |Restrict Concept Lookup|(Default: False) With this option ticked, restricts the concept lookup (add annotation / alternative concept) to only include those CUIs listed in the above filters (either from CUI / TUI list or uploade 'CUI File' list|
 |Terminate Available|(Default: True) With this option ticked, the option to terminate an annotated concept will appear|
 |Irrelevant Available|(Default: False) With this option ticked, the option to mark an annotated concept as 'irrlevant' will appear|
+|Enable entity annotation comments|(Default: False) With this option ticked, the option to leave a comment for each annotation will appear|
 |Tasks| Select from the list 'Meta Annotation' tasks that will appear once a given annotation has been marked correct.|
 
 Datasets can be uploaded in CSV or XLSX format. Example:

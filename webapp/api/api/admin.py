@@ -453,6 +453,7 @@ def _retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
                     "killed":  <boolean>  # if a human annotator 'terminated' this annotation
                     "irrelevant": <boolean>  # if a human annotator has marked an annotation as irrelvant (optional)
                     "acc": <float>  # accuracy provided by MedCAT (optional)
+                    "comment": "<comment string>" # the text entered by an annotator during annotation (optional)
                     "meta_anns": [
                         # list of meta annotations if applicable to project
                         {
@@ -530,6 +531,8 @@ def _retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
                 out_ann['last_modified'] = str(ann.last_modified)
                 out_ann['manually_created'] = ann.manually_created
                 out_ann['acc'] = ann.acc
+                if ann.comment:
+                    out_ann['comment'] = ann.comment
                 if ann.icd_code:
                     out_ann['icd_code'] = ann.icd_code.code
                 if ann.opcs_code:

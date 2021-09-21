@@ -58,6 +58,10 @@
           <td>Description</td>
           <td class="fit-content" v-html="conceptSummary.Description === 'nan' ? 'n/a' : conceptSummary.Description || 'n/a'"></td>
         </tr>
+        <tr @keyup.stop v-if="(project || {}).enable_entity_annotation_comments">
+          <td>Comment</td>
+          <td><textarea v-model="(selectedEnt || {}).comment" @keyup="updateComment" class="form-control"></textarea></td>
+        </tr>
         </tbody>
       </table>
     </div>
@@ -65,6 +69,7 @@
 </template>
 
 <script>
+import _ from 'lodash'
 import ConceptDetailService from '@/mixins/ConceptDetailService.js'
 import ConceptPicker from '@/components/common/ConceptPicker'
 
@@ -165,7 +170,10 @@ export default {
     },
     selectOPCSCode (item) {
       this.$emit('select:OPCS', item)
-    }
+    },
+    updateComment: _.debounce(function () {
+      this.$emit('updated:entityComment', this.selectedEnt)
+    }, 500)
   },
   mounted () {
     const that = this
@@ -179,11 +187,17 @@ export default {
   },
   watch: {
     'selectedEnt': {
-      handler (newVal) {
-        const that = this
-        that.fetchDetail(newVal, () => {
-          that.cleanProps()
-        })
+      handler (newVal, oldVal) {
+        [newVal, oldVal] = [_.omit(newVal, ['comment']), _.omit(oldVal, ['comment'])]
+        const diff = _.reduce(newVal, function (result, value, key) {
+          return _.isEqual(value, oldVal[key]) ? result : result.concat(key)
+        }, [])
+        if (diff.length > 0) {
+          const that = this
+          that.fetchDetail(newVal, () => {
+            that.cleanProps()
+          })
+        }
       },
       deep: true
     }
