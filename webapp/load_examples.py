@@ -100,7 +100,8 @@ def main(port=9000,
 
 
 if __name__ == '__main__':
-    main(port=8001,
-         cdb_tmp_file='',
-         vocab_tmp_file='',
-         dataset_tmp_file='')
+    main()
+    # main(port=8001,
+    #      cdb_tmp_file='/Users/tom/phd/cattrainer_models/cdb-medmen-v1.dat',
+    #      vocab_tmp_file='/Users/tom/phd/cattrainer_models/vocab-mc-v1.dat',
+    #      dataset_tmp_file='/Users/tom/phd/MedCATtrainer/docs/example_data/cardio.csv')
