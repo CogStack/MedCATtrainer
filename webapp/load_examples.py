@@ -9,9 +9,10 @@ import json
 def main(port=9000,
          cdb_tmp_file='/home/cdb.dat',
          vocab_tmp_file='/home/vocab.dat',
-         dataset_tmp_file='/home/ds.csv'):
+         dataset_tmp_file='/home/ds.csv',
+         initial_wait=15):
     URL = f'http://localhost:{port}/api/'
-    sleep(15)
+    sleep(initial_wait)
 
     print('Checking for default projects / datasets / CDBs / Vocabs')
     while True:
@@ -51,41 +52,8 @@ def main(port=9000,
                 with open(dataset_tmp_file, 'w') as f:
                     f.write(ds.text)
 
-                # Upload CDB and vocab
-                print('Creating CDB / Vocab / Dataset / Project in the Trainer')
-                res_cdb_mk = requests.post(f'{URL}concept-dbs/', headers=headers,
-                                           data={'name': 'api_upload_cdb', 'use_for_training': True},
-                                           files={'cdb_file': open(cdb_tmp_file, 'rb')})
-                cdb_id = json.loads(res_cdb_mk.text)['id']
-                res_vocab_mk = requests.post(f'{URL}vocabs/', headers=headers,
-                                             files={'vocab_file': open(vocab_tmp_file, 'rb')})
-                vocab_id = json.loads(res_vocab_mk.text)['id']
-
-                # Upload the dataset
-                dataset = pd.read_csv(dataset_tmp_file)
-                payload = {
-                    'dataset_name': 'Example Dataset',
-                    'dataset': dataset.loc[:, ['name', 'text']].to_dict(),
-                    'description': f'Example clinical text from the MT Samples corpus https://www.mtsamples.com/'
-                }
-                resp = requests.post(f'{URL}create-dataset/', json=payload, headers=headers)
-                ds_id = json.loads(resp.text)['dataset_id']
-
-                user_id = json.loads(requests.get(f'{URL}users/', headers=headers).text)['results'][0]['id']
-
-                # Create the project
-                payload = {
-                    'name': 'Example Annotation Project - UMLS (Diseases / Symptoms / Findings)',
-                    'description': 'Example projects using example psychiatric clinical notes from '
-                                   'https://www.mtsamples.com/',
-                    'cuis': '',
-                    'dataset': ds_id,
-                    'concept_db': cdb_id,
-                    'vocab': vocab_id,
-                    'members': [user_id]
-                }
-                proj_mk = requests.post(f'{URL}project-annotate-entities/', json=payload, headers=headers)
-                print('Successfully created the example project')
+                ds_dict = pd.read_csv(dataset_tmp_file).loc[:, 'text'].to_dict()
+                create_example_project(URL, headers, cdb_tmp_file, vocab_tmp_file, ds_dict)
 
                 # clean up temp files
                 os.remove(cdb_tmp_file)
@@ -99,9 +67,46 @@ def main(port=9000,
         sleep(5)
 
 
+def create_example_project(url, headers, cdb, vocab, ds_dict):
+    print('Creating CDB / Vocab / Dataset / Project in the Trainer')
+    res_cdb_mk = requests.post(f'{url}concept-dbs/', headers=headers,
+                               data={'name': 'api_upload_cdb', 'use_for_training': True},
+                               files={'cdb_file': open(cdb, 'rb')})
+    cdb_id = json.loads(res_cdb_mk.text)['id']
+    res_vocab_mk = requests.post(f'{url}vocabs/', headers=headers,
+                                 files={'vocab_file': open(vocab, 'rb')})
+    vocab_id = json.loads(res_vocab_mk.text)['id']
+
+    # Upload the dataset
+    payload = {
+        'dataset_name': 'Example Dataset',
+        'dataset': ds_dict,
+        'description': f'Example clinical text from the MT Samples corpus https://www.mtsamples.com/'
+    }
+    resp = requests.post(f'{url}create-dataset/', json=payload, headers=headers)
+    ds_id = json.loads(resp.text)['dataset_id']
+
+    user_id = json.loads(requests.get(f'{url}users/', headers=headers).text)['results'][0]['id']
+
+    # Create the project
+    payload = {
+        'name': 'Example Annotation Project - UMLS (Diseases / Symptoms / Findings)',
+        'description': 'Example projects using example psychiatric clinical notes from '
+                       'https://www.mtsamples.com/',
+        'cuis': '',
+        'dataset': ds_id,
+        'concept_db': cdb_id,
+        'vocab': vocab_id,
+        'members': [user_id]
+    }
+    requests.post(f'{url}project-annotate-entities/', json=payload, headers=headers)
+    print('Successfully created the example project')
+
+
 if __name__ == '__main__':
     main()
-    # main(port=8001,
-    #      cdb_tmp_file='/Users/tom/phd/cattrainer_models/cdb-medmen-v1.dat',
-    #      vocab_tmp_file='/Users/tom/phd/cattrainer_models/vocab-mc-v1.dat',
-    #      dataset_tmp_file='/Users/tom/phd/MedCATtrainer/docs/example_data/cardio.csv')
+    # create_example_project('http://localhost:8001/api/',
+    #                        headers={'Authorization': 'Token 5b8a8622362b68bb6b3fe230313fdbddc3000525'},
+    #                        cdb='/Users/tom/phd/cattrainer_models/cdb-medmen-v1.dat',
+    #                        vocab='/Users/tom/phd/cattrainer_models/vocab-mc-v1.dat',
+    #                        ds_dict=pd.read_csv('/Users/tom/phd/MedCATtrainer/docs/example_data/cardio.csv').loc[:, ['text']].to_dict())
