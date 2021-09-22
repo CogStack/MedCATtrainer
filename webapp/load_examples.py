@@ -105,8 +105,13 @@ def create_example_project(url, headers, cdb, vocab, ds_dict):
 
 if __name__ == '__main__':
     main()
+    # payload = {"username": "admin", "password": "admin"}
+    # resp = requests.post(f"http://localhost:8001/api/api-token-auth/", json=payload)
+    # headers = {
+    #     'Authorization': f'Token {json.loads(resp.text)["token"]}',
+    # }
     # create_example_project('http://localhost:8001/api/',
-    #                        headers={'Authorization': 'Token 5b8a8622362b68bb6b3fe230313fdbddc3000525'},
+    #                        headers=headers,
     #                        cdb='/Users/tom/phd/cattrainer_models/cdb-medmen-v1.dat',
     #                        vocab='/Users/tom/phd/cattrainer_models/vocab-mc-v1.dat',
     #                        ds_dict=pd.read_csv('/Users/tom/phd/MedCATtrainer/docs/example_data/cardio.csv').loc[:, ['text']].to_dict())
