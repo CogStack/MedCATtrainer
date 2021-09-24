@@ -6,7 +6,7 @@ from time import sleep
 import json
 
 
-def main(port=9000,
+def main(port=8000,
          cdb_tmp_file='/home/cdb.dat',
          vocab_tmp_file='/home/vocab.dat',
          dataset_tmp_file='/home/ds.csv',
