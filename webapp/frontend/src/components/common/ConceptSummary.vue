@@ -194,7 +194,7 @@ export default {
         }, [])
         if (diff.length > 0) {
           const that = this
-          that.fetchDetail(newVal, () => {
+          that.fetchDetail(this.selectedEnt, () => {
             that.cleanProps()
           })
         }
