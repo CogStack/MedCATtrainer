@@ -94,6 +94,9 @@ class Document(models.Model):
     text = models.TextField(default="", blank=True)
     dataset = models.ForeignKey('Dataset', on_delete=models.CASCADE)
 
+    class Meta:
+        ordering = ['id']
+
     def __str__(self):
         return str(self.name)
 
@@ -124,6 +127,9 @@ class Entity(models.Model):
 class Relation(models.Model):
     label = models.CharField(max_length=300, unique=True)
 
+    class Meta:
+        ordering = ['id']
+
     def __str__(self):
         return str(self.label)
 
@@ -147,6 +153,9 @@ class EntityRelation(models.Model):
     validated = models.BooleanField(default=False)
     create_time = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['id']
 
     def __str__(self):
         return f'{self.start_entity} - {self.relation} - {self.end_entity}'
@@ -176,6 +185,9 @@ class AnnotatedEntity(models.Model):
     # Should AnnotatedEntity be a polymorphic model?? and there be a specific ClinicalCodingAnnotatedEntity??
     icd_code = models.ForeignKey('ICDCode', on_delete=models.SET_NULL, blank=True, null=True)
     opcs_code = models.ForeignKey('OPCSCode', on_delete=models.SET_NULL, blank=True, null=True)
+
+    class Meta:
+        ordering = ['id']
 
     def __str__(self):
         return str(self.entity)
