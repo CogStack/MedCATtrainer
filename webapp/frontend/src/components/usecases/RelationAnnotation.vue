@@ -3,7 +3,7 @@
     <div class="entity" :class="startEntClass"
          @click="selectStartEnt">{{(entityRelation.start_entity.value || '_________')}}</div>
     <div class="relation">
-      <select v-model="entityRelation.relation">
+      <select @change="relChange">
         <option :value="rel" v-for="rel of possibleRelations" :key="rel.id">{{rel.name}}</option>
       </select>
     </div>
@@ -48,11 +48,11 @@ export default {
       this.$emit('click:clearRelation', this.entityRelation)
     },
     selectStartEnt () {
-      this.entityRelation.start_entity = this.selectedEnt
+      this.$emit('changed:relation', this.entityRelation, 'start_entity', this.selectedEnt)
       this.startRelClass = this.entRelClass(this.selectedEnt)
     },
     selectEndEnt () {
-      this.entityRelation.end_entity = this.selectedEnt
+      this.$emit('changed:relation', this.entityRelation, 'end_entity', this.selectedEnt)
       this.endRelClass = this.entRelClass(this.selectedEnt)
     },
     entRelClass (selectedEnt) {
@@ -70,6 +70,9 @@ export default {
     },
     highlightRelation () {
       this.$emit('click:selectRelation')
+    },
+    relChange (rel) {
+      this.$emit('changed:relation', this.entityRelation, 'relation', rel)
     }
   },
   mounted () {
