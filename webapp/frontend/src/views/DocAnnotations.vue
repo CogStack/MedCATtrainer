@@ -13,14 +13,8 @@
           <span class="divider">|</span>
           <span class="files-remaining">{{ totalDocs - (project !== null ? project.validated_documents.length : 0)}} Remaining</span>
         </h5>
-        <button class="btn btn-default" @click="summaryModal = true">
-          <font-awesome-icon icon="list-alt" class="summary-icon"></font-awesome-icon>
-        </button>
         <button class="btn btn-default" @click="helpModal = true">
           <font-awesome-icon icon="question-circle" class="help-icon"></font-awesome-icon>
-        </button>
-        <button class="btn btn-default" @click="resetModal = true">
-          <font-awesome-icon icon="undo" class="undo-icon"></font-awesome-icon>
         </button>
       </div>
     </div>
@@ -63,7 +57,8 @@
     <modal v-if="helpModal" class="help-modal" :closable="true" @modal:close="helpModal = false">
       <h3 slot="header">{{ project.name }} Annotation Help</h3>
       <div slot="body" class="help-modal-body">
-        <p>Validate each highlighted concept</p>
+        <p>Annotate each document for the associated classification and / or regression tasks.</p>
+        <p>Add Annotations for each classification task class or regression task annotation entry.</p>
         <div>Keyboard Shortcuts</div>
         <table class="table">
           <thead>
@@ -91,15 +86,6 @@
           </tr>
           </tbody>
         </table>
-        <div>
-          <h4>Experimental Features</h4>
-          <button class="btn btn-primary" :disabled="resubmittingAllDocs" @click="submitAll">
-            <span v-if="!resubmittingAllDocs">Re-Submit All Validated Documents</span>
-            <span v-if="resubmittingAllDocs">Submitting...</span>
-          </button>
-          <transition name="alert"><span v-if="resubmitSuccess" class="alert alert-info">
-            Successfully Re-submitted</span></transition>
-        </div>
       </div>
       <div slot="footer">
         <button class="btn btn-primary" @click="helpModal = false">Close</button>
@@ -125,17 +111,6 @@
       </div>
       <div slot="footer">
         <a href="/"><button class="btn btn-primary">MedCATtrainer Home</button></a>
-      </div>
-    </modal>
-
-    <modal v-if="resetModal" :closable="true" @modal:close="resetModal = false" class="reset-modal">
-      <h3 slot="header">Reset Document</h3>
-      <div slot="body">
-        <p class="text-center">Confirm reset of document annotations</p>
-        <p class="text-center">This will clear all current annotations in this document</p>
-      </div>
-      <div slot="footer">
-        <button class="btn btn-primary" @click="confirmReset">Confirm</button>
       </div>
     </modal>
 
@@ -210,11 +185,8 @@ export default {
       docRegTasks: null,
       docClfValues: [],
       docRegValues: [],
-      resubmittingAllDocs: false,
-      resubmitSuccess: false,
       helpModal: false,
       projectCompleteModal: false,
-      resetModal: false,
       errors: {
         modal: false,
         message: '',
@@ -308,8 +280,10 @@ export default {
           const deselectThenSelect = () => {
             this.deselectClass(alreadySelected[0]).then(_ => {
               this.selectClass(task, label)
+            }).catch(_ => {
             })
           }
+
           if (alreadySelected.length > 0) {
             if (alreadySelected !== this.currentDocAnnoValue) {
               this.showAnnotationsForDocAnnoValue(alreadySelected[0]).then(_ => {
@@ -353,12 +327,17 @@ export default {
       if (this.ents.length === 0) {
         return this.confirmedRemoveClfValue(docAnnoValue)
       } else {
-        this.currentDocAnnoValue = docAnnoValue
         this.confirmRemoveClfValModal = true
         return new Promise((resolve, reject) => {
           this.removeClfLabelYes = resolve
           this.removeClfLabelNo = reject
-        }).catch(_ => _) // do nothing on cancelled de-selections
+        }).then(_ => {
+          this.currentDocAnnoValue = docAnnoValue
+        }).catch(err => {
+          this.removeClfLabelNo = undefined
+          this.removeClfLabelYes = undefined
+          throw err
+        })
       }
     },
     confirmedRemoveClfValue (docAnnoValue) {
@@ -375,11 +354,10 @@ export default {
       })
     },
     cancelledRemoveClfValue () {
+      this.confirmRemoveClfValModal = false
       if (this.removeClfLabelNo) {
         this.removeClfLabelNo('cancelled')
-        this.removeClfLabelNo = null
       }
-      this.confirmRemoveClfValModal = false
     },
     updateClfValueAnnotations (docAnnoValue, ents) {
       let payload = {

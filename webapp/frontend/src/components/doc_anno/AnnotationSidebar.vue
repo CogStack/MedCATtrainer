@@ -73,7 +73,7 @@ export default {
     },
     updateRegvalue: _.debounce(function (task) {
       if (!this.isInvalid(task)) {
-        const existingVal = this.regValues.filter(v => v.id === task.id)
+        const existingVal = this.regValues.filter(v => v.doc_anno_task === task.id)
         if (existingVal.length > 0) {
           this.$emit('updated:regTaskValue', existingVal[0])
         } else {
@@ -133,6 +133,8 @@ export default {
 
 .doc-anno-entry {
   padding: 10px;
+  border: 1px solid white;
+  border-radius: 7px;
 }
 
 .doc-anno-title {

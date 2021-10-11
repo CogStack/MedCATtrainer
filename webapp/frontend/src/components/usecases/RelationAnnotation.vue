@@ -93,6 +93,8 @@ export default {
 .relation-annotation {
   text-align: left;
   margin: 5px;
+  border: 1px solid white;
+  border-radius: 7px;
 }
 
 .entity {
@@ -125,7 +127,8 @@ export default {
 }
 
 .selected-rel {
-  box-shadow: 0 0 5px 3px rgba(0, 0, 0, 0.2)
+  border: 1px solid $task-color-0;
+  border-radius: 7px;
 }
 
 .clear-btn {
