@@ -31,3 +31,7 @@ def dataset_from_file(dataset: Dataset):
             document.save()
     else:
         raise Exception("Please make sure the file is either a .csv or .xlsx format")
+
+
+def delete_orphan_docs(dataset: Dataset):
+    Document.objects.filter(dataset__id=dataset.id).delete()

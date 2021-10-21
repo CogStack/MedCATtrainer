@@ -1,15 +1,22 @@
 import os
 
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 
-from api.data_utils import dataset_from_file
+from api.data_utils import dataset_from_file, delete_orphan_docs
 from api.models import Dataset
 
 
 @receiver(post_save, sender=Dataset)
 def save_dataset(sender, instance, **kwargs):
     dataset_from_file(instance)
+
+
+@receiver(pre_save, sender=Dataset)
+def pre_save_dataset(sender, instance, **kwargs):
+    if instance.id:
+        delete_orphan_docs(instance)
+        remove_dataset_file(sender, instance, **kwargs)
 
 
 @receiver(post_delete, sender=Dataset)
