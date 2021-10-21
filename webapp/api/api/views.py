@@ -1,6 +1,7 @@
 import logging
 import re
 import traceback
+from tempfile import NamedTemporaryFile
 
 import pandas as pd
 from django.http import HttpResponseBadRequest, HttpResponseServerError
@@ -511,15 +512,14 @@ def get_create_entity(request):
 
 @api_view(http_method_names=['POST'])
 def create_dataset(request):
-    filename = f'{settings.MEDIA_ROOT}/{request.data["dataset_name"]}.csv'
+    filename = f'{request.data["dataset_name"]}.csv'
     log.debug(request.data['dataset'])
-    pd.DataFrame(request.data['dataset']).to_csv(filename, index=False)
-
     ds = Dataset()
-    ds.original_file = File(open(filename))
     ds.name = request.data['dataset_name']
     ds.description = request.data.get('description', 'n/a')
-    ds.save()
+    with NamedTemporaryFile(mode='r+') as f:
+        pd.DataFrame(request.data['dataset']).to_csv(f, index=False)
+        ds.original_file.save(filename, f)
     log.debug(f'Saved new dataset:{ds.original_file.path}')
     id = ds.id
     return Response({'dataset_id': id})
