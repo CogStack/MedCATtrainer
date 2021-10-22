@@ -59,7 +59,7 @@ export default {
         return {
           name: isDupName ? `${r.pretty_name} : ${r.cui}` : r.pretty_name,
           cui: r.cui,
-          tui: r.tui,
+          type_ids: r.type_ids,
           desc: r.desc,
           icd10: r.icd10,
           opcs4: r.opcs4,
@@ -80,7 +80,7 @@ export default {
               name: `${cuiInfo.code} | ${cuiInfo.desc}\n${concept.cui} | ${concept.pretty_name}`,
               orderKey: cuiInfo.code,
               cui: concept.cui,
-              tui: concept.tui,
+              type_ids: concept.type_ids,
               desc: concept.desc,
               icd10: concept.icd10,
               opcs4: concept.opcs4,

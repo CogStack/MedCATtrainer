@@ -120,8 +120,8 @@ capable of annotating in via an interactive model
 1\. A form to:
 - Select the appropriate project model to view concept annotations for.
 - Clinical text to annotate and display in 2.
-- CUI and TUI filters can be used to only show concepts of interest in 2. For example for a UMLS CDB this could be
- T047 for "Disease or Syndrome". CUI and TUI filters are combined if entries are included in both form inputs.
+- CUI and TypeID filters can be used to only show concepts of interest in 2. For example for a UMLS CDB this could be
+ T047 for "Disease or Syndrome". CUI and TypeID filters are combined if entries are included in both form inputs.
  
 2\. Example clinical text is displayed here, with text spans highlighted in blue. Click any annotation to show linked
 concept DB details in 3.
@@ -277,7 +277,7 @@ Lists the current selected concepts details.
 |--------------| ------------|
 |Annotated Text| The text span linked to the concept|
 |Name          | The linked concept name from within the MedCAT CDB|
-|Term ID       | The higher level group of concepts that this concept sits under. This may be 'N/A' depending if you CDB is complete with TUIs.|
+|Type ID       | The higher level group of concepts that this concept sits under. This may be 'N/A' depending if your CDB has Type IDs or not.|
 |Concept ID    | The unique identifier for this linked concept from the MedCAT CDB.|
 |Accuracy      | The MedCAT found accuracy of the linked concept for this span. Text spans will have an accuracy 1.0, if they are uniquely identified by that name in the CDB|
 |Description   | The MedCAT associated description of the concept. SNOMED-CT does not provide descriptions of concepts, only alternative names whereas UMLS does provide descriptions|

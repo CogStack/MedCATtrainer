@@ -22,7 +22,7 @@ export default {
       this.$http.get(`/api/concepts/?cui=${selectedEnt.cui}`).then(resp => {
         if (selectedEnt && resp.data.results.length > 0) {
           selectedEnt.desc = resp.data.results[0].desc
-          selectedEnt.tui = resp.data.results[0].tui
+          selectedEnt.type_ids = resp.data.results[0].type_ids
           selectedEnt.pretty_name = resp.data.results[0].pretty_name
           selectedEnt.semantic_type = resp.data.results[0].semantic_type
           if (resp.data.results[0].icd10.length > 0) {

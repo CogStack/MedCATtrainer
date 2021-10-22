@@ -61,7 +61,7 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
 
     for ent in ents:
         label = ent._.cui
-        tuis = list(cat.cdb.cui2type_ids.get(label, ''))
+        type_ids = list(cat.cdb.cui2type_ids.get(label, ''))
 
         # Add the concept info to the Concept table if it doesn't exist
         cnt = Concept.objects.filter(cui=label).count()
@@ -71,8 +71,8 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
             concept = Concept()
             concept.pretty_name = pretty_name
             concept.cui = label
-            concept.tui = ','.join(tuis)
-            concept.semantic_type = ','.join([cat.cdb.addl_info['type_id2name'].get(tui, '') for tui in tuis])
+            concept.type_ids = ','.join(type_ids)
+            concept.semantic_type = ','.join([cat.cdb.addl_info['type_id2name'].get(type_id, '') for type_id in type_ids])
             concept.desc = cat.cdb.addl_info['cui2description'].get(label, '')
             concept.synonyms = ",".join(cat.cdb.addl_info['cui2original_names'].get(label, []))
             concept.cdb = project.concept_db

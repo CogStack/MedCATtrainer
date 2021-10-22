@@ -36,9 +36,9 @@
           <td>Name</td>
           <td class="cui-mappings">{{selectedCUI.name.split(':')[0] || 'n/a'}}</td>
         </tr>
-        <tr v-if="selectedCUI.tui !== 'unk' ">
+        <tr v-if="selectedCUI.type_ids !== 'unk' ">
           <td>Type ID</td>
-          <td>{{selectedCUI.tui || 'n/a'}}</td>
+          <td>{{selectedCUI.type_ids || 'n/a'}}</td>
         </tr>
         <tr v-if="selectedCUI.semantic_type">
           <td>Semantic Type</td>

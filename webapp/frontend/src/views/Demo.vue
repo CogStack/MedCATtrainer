@@ -19,8 +19,8 @@
                     rows="3" placeholder="Comma separated list: S-91175000, S-84757009"></textarea>
         </div>
         <div class="form-group">
-          <label>TUI Filter</label>
-          <textarea v-model="tuiFilters" class="form-control" name="tui"
+          <label>Type IDs Filter</label>
+          <textarea v-model="typeIDsFilters" class="form-control" name="type_ids"
                     rows="3" placeholder="Comma separated list: T-00010, T00020"></textarea>
         </div>
         <button @click="annotate()" class="btn btn-primary">Annotate</button>
@@ -57,7 +57,7 @@ export default {
       projects: [],
       selectedProject: {},
       cuiFilters: '',
-      tuiFilters: '',
+      typeIDsFilters: '',
       ents: [],
       currentEnt: {},
       annotatedText: '',

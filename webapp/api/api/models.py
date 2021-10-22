@@ -50,7 +50,7 @@ class Concept(models.Model):
     pretty_name = models.CharField(max_length=300, db_index=True)
     cui = models.CharField(max_length=100, db_index=True, unique=True)
     desc = models.TextField(default="", blank=True)
-    tui = models.CharField(max_length=20)
+    type_ids = models.CharField(max_length=20)
     semantic_type = models.CharField(max_length=200, blank=True, null=True)
     synonyms = models.TextField(default='', blank=True)
     icd10 = models.ManyToManyField(ICDCode, default=None, blank=True, related_name='concept')

@@ -17,7 +17,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 class ConceptSerializer(serializers.ModelSerializer):
     class Meta:
         model = Concept
-        fields = ['pretty_name', 'cui', 'desc', 'tui', 'synonyms', 'semantic_type',
+        fields = ['pretty_name', 'cui', 'desc', 'type_ids', 'synonyms', 'semantic_type',
                   'icd10', 'opcs4', 'id', 'cdb']
 
     def to_representation(self, instance):

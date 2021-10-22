@@ -127,14 +127,14 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
 
 class ConceptFilter(drf.FilterSet):
-    tui__in = TextInFilter(field_name='tui', lookup_expr='in')
+    type_ids__in = TextInFilter(field_name='type_ids', lookup_expr='in')
     cui__in = TextInFilter(field_name='cui', lookup_expr='in')
     cdb__in = NumInFilter(field_name='cdb', lookup_expr='in')
     id__in = NumInFilter(field_name='id', lookup_expr='in')
 
     class Meta:
         model = Concept
-        fields = ['tui', 'cui', 'cdb']
+        fields = ['type_ids', 'cui', 'cdb']
 
 
 class ConceptViewSet(viewsets.ModelViewSet):
@@ -388,7 +388,7 @@ def add_concept(request):
     # TODO These aren't used, but no API in current MedCAT add_name func
     # Add these fields to the add_name func of MedCAT add_name
     desc = request.data['desc']
-    tui = request.data['tui']
+    type_ids = request.data['type_ids']
     s_type = request.data['type']
     synonyms = request.data['synonyms']
 
@@ -426,7 +426,7 @@ def add_concept(request):
         c.cui = cui
         c.pretty_name = name
         c.desc = desc
-        c.tui = tui
+        c.type_ids = type_ids
         c.synonyms = synonyms
         c.semantic_type = s_type
         c.cdb = project.concept_db

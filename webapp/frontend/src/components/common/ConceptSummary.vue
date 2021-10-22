@@ -18,9 +18,9 @@
             </span>
           </td>
         </tr>
-        <tr v-if="conceptSummary['Term ID'] !== 'unk' ">
-          <td>Term ID</td>
-          <td>{{conceptSummary['Term ID'] || 'n/a'}}</td>
+        <tr v-if="conceptSummary['Type IDs'] !== 'unk' ">
+          <td>Type IDs</td>
+          <td>{{conceptSummary['Type IDs'] || 'n/a'}}</td>
         </tr>
         <tr v-if="conceptSummary['Semantic Type']">
           <td>Semantic Type</td>
@@ -81,7 +81,7 @@ const HIDDEN_PROPS = [
 const PROP_MAP = {
   'acc': 'Accuracy',
   'desc': 'Description',
-  'tui': 'Term ID',
+  'type_ids': 'Type IDs',
   'semantic_type': 'Type',
   'cui': 'Concept ID',
   'icd10': 'ICD-10',
@@ -90,7 +90,7 @@ const PROP_MAP = {
 }
 
 const CONST_PROPS_ORDER = [
-  'Name', 'Description', 'Type', 'Term ID', 'Concept ID', 'ICD-10', 'OPCS-4', 'Accuracy'
+  'Name', 'Description', 'Type', 'Type IDs', 'Concept ID', 'ICD-10', 'OPCS-4', 'Accuracy'
 ]
 
 export default {

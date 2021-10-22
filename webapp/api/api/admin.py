@@ -667,9 +667,9 @@ def _import_concepts(id):
             concept = Concept()
             concept.pretty_name = cdb.cui2preferred_name.get(cui, cui)
             concept.cui = cui
-            concept.tui = ','.join(list(cdb.cui2type_ids.get(cui, '')))
-            concept.semantic_type = ','.join([cdb.addl_info['type_id2name'].get(tui, '')
-                                              for tui in list(cdb.cui2type_ids.get(cui, ''))])
+            concept.type_ids = ','.join(list(cdb.cui2type_ids.get(cui, '')))
+            concept.semantic_type = ','.join([cdb.addl_info['type_id2name'].get(type_id, '')
+                                              for type_id in list(cdb.cui2type_ids.get(cui, ''))])
             concept.desc = cdb.addl_info['cui2description'].get(cui, '')
             concept.synonyms = ", ".join(cdb.addl_info['cui2original_names'].get(cui, []))
             concept.cdb = concept_db

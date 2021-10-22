@@ -29,8 +29,8 @@
         <td><input v-model="concept.type" type="text" class="form-control"></td>
       </tr>
       <tr v-if="showAdd">
-        <td>Term ID</td>
-        <td><input v-model="concept.tui" type="text" class="form-control"></td>
+        <td>Type IDs</td>
+        <td><input v-model="concept.type_ids" type="text" class="form-control"></td>
       </tr>
       <tr v-if="showAdd">
         <td>Synonyms</td>
@@ -63,7 +63,7 @@ export default {
         name: '',
         desc: '',
         type: '',
-        tui: '',
+        type_ids: '',
         cui: '',
         synonyms: ''
       },
