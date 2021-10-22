@@ -51,10 +51,18 @@ def download_without_text(modeladmin, request, queryset):
         raise PermissionDenied
 
     projects = queryset
-    return download_projects_without_text(projects)
+    return download_projects_without_text(projects, with_doc_name=False)
 
 
-def download_projects_without_text(projects):
+def download_without_text_with_doc_names(modeladmin, request, queryset):
+    if not request.user.is_staff:
+        raise PermissionDenied
+
+    projects = queryset
+    return download_projects_without_text(projects, with_doc_name=True)
+
+
+def download_projects_without_text(projects, with_doc_name):
 
     all_projects_out = {'projects': []}
     for project in projects:
@@ -75,6 +83,8 @@ def download_projects_without_text(projects):
             out_doc['id'] = doc.id
             out_doc['last_modified'] = str(doc.last_modified)
             out_doc['annotations'] = []
+            if with_doc_name:
+                out_doc['name'] = doc.name
 
             anns = AnnotatedEntity.objects.filter(project=project, document=doc)
 
@@ -620,7 +630,7 @@ admin.site.register(Dataset, DatasetAdmin)
 
 class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
     model = ProjectAnnotateEntities
-    actions = [download, download_without_text, reset_project, clone_projects]
+    actions = [download, download_without_text, download_without_text_with_doc_names, reset_project, clone_projects]
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "concept_db":
