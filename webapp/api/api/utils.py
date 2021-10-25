@@ -282,7 +282,12 @@ def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
                                     'Please re-configure this project to use a MedCAT v1.x CDB or consult the '
                                     'MedCATTrainer Dev team if you believe this should work') from ke
                 raise
-            cdb.config.parse_config_file(path=os.getenv("MEDCAT_CONFIG_FILE"))
+
+            custom_config = os.getenv("MEDCAT_CONFIG_FILE")
+            if custom_config is not None and os.path.exists(custom_config):
+                cdb.config.parse_config_file(path=custom_config)
+            else:
+                log.info("No MEDCAT_CONFIG_FILE env var set to valid path, using default config available on CDB")
             CDB_MAP[cdb_id] = cdb
 
         if vocab_id in VOCAB_MAP:
