@@ -5,4 +5,4 @@ django-polymorphic~=3.0
 djangorestframework~=3.10
 django-background-tasks~=1.2
 xlrd~=1.2
-medcat==1.1.1
+medcat~=1.2
