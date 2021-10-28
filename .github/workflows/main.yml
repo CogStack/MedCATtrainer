@@ -3,8 +3,10 @@ name: build
 on:
   push:
     branches: [ master ]
+    tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ master ]
+
 
 jobs:
   # run tests / lint / etc. before building container image?
@@ -17,15 +19,20 @@ jobs:
         with:
           ref: 'master'
 
+      - name: Release Tag
+        if: github.ref != 'refs/heads/main'
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Non Prod Tag
+        if: github.ref == 'refs/heads/main'
+        run: echo "RELEASE_VERSION=latest" >> $GITHUB_ENV
       - name: Build
         run: |
-          docker build -t cogstacksystems/medcat-trainer:latest webapp/.
-          docker build -t cogstacksystems/medcat-trainer-nginx:latest nginx/.
-
+          docker build -t cogstacksystems/medcat-trainer:{{ env.RELEASE_VERSION }} webapp/.
+          docker build -t cogstacksystems/medcat-trainer-nginx:{{ env.RELEASE_VERSION }}  nginx/.
       - name: Run Django Tests
         run: |
           # run tests
-          docker run --rm cogstacksystems/medcat-trainer:latest python manage.py test
+          docker run --rm cogstacksystems/medcat-trainer:{{ env.RELEASE_VERSION }} python manage.py test
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -35,5 +42,5 @@ jobs:
 
       - name: Push to DockerHub
         run: |
-          docker push cogstacksystems/medcat-trainer:latest
-          docker push cogstacksystems/medcat-trainer-nginx:latest
+          docker push cogstacksystems/medcat-trainer:{{ env.RELEASE_VERSION }}
+          docker push cogstacksystems/medcat-trainer-nginx:{{ env.RELEASE_VERSION }}
