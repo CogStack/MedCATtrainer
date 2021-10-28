@@ -20,14 +20,13 @@ jobs:
 
       - name: Build
         run: |
-          docker build -t medcat-trainer:latest webapp/.
-          docker build -t medcat-trainer-nginx:latest nginx/.
+          docker build -t cogstacksystems/medcat-trainer:latest webapp/.
+          docker build -t cogstacksystems/medcat-trainer-nginx:latest nginx/.
 
       - name: Run Django Tests
         run: |
           # run tests
-          docker run -ti --rm medcat-trainer:latest bash
-          python /home/manage.py test
+          docker run --rm cogstacksystems/medcat-trainer:latest python manage.py test
 
   push:
     runs-on: ubuntu-latest
@@ -41,5 +40,5 @@ jobs:
 
       - name: Push to DockerHub
         run: |
-          docker push medcat-trainer:latest
-          docker push medcat-trainer-nginx:latest
+          docker push cogstacksystems/medcat-trainer:latest
+          docker push cogstacksystems/medcat-trainer-nginx:latest
