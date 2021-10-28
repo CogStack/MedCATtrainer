@@ -13,6 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout master
+        uses: actions/checkout@v2
+        with:
+          ref: 'master'
+
       - name: Build
         run: |
           docker build -t medcat-trainer:latest webapp/.
