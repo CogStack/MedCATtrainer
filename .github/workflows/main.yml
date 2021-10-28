@@ -26,13 +26,17 @@ jobs:
         if: github.ref == 'refs/heads/master'
         run: echo "RELEASE_VERSION=latest" >> $GITHUB_ENV
       - name: Build
+        env:
+          IMAGE_TAG: ${{ env.RELEASE_VERSION }}
         run: |
-          docker build -t cogstacksystems/medcat-trainer:{{ env.RELEASE_VERSION }} webapp/.
-          docker build -t cogstacksystems/medcat-trainer-nginx:{{ env.RELEASE_VERSION }}  nginx/.
+          docker build -t cogstacksystems/medcat-trainer:$IMAGE_TAG webapp/.
+          docker build -t cogstacksystems/medcat-trainer-nginx:$IMAGE_TAG nginx/.
       - name: Run Django Tests
+        env:
+          IMAGE_TAG: ${{ env.RELEASE_VERSION }}
         run: |
           # run tests
-          docker run --rm cogstacksystems/medcat-trainer:{{ env.RELEASE_VERSION }} python manage.py test
+          docker run --rm cogstacksystems/medcat-trainer:$IMAGE_TAG python manage.py test
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -41,6 +45,8 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Push to DockerHub
+        env:
+          IMAGE_TAG: ${{ env.RELEASE_VERSION }}
         run: |
-          docker push cogstacksystems/medcat-trainer:{{ env.RELEASE_VERSION }}
-          docker push cogstacksystems/medcat-trainer-nginx:{{ env.RELEASE_VERSION }}
+          docker push cogstacksystems/medcat-trainer:$IMAGE_TAG
+          docker push cogstacksystems/medcat-trainer-nginx:$IMAGE_TAG
