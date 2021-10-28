@@ -9,9 +9,8 @@ on:
 jobs:
   # run tests / lint / etc. before building container image?
 
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout master
         uses: actions/checkout@v2
@@ -28,10 +27,6 @@ jobs:
           # run tests
           docker run --rm cogstacksystems/medcat-trainer:latest python manage.py test
 
-  push:
-    runs-on: ubuntu-latest
-    needs: [ build ]
-    steps:
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
