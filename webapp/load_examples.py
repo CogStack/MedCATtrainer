@@ -94,6 +94,7 @@ def create_example_project(url, headers, cdb, vocab, ds_dict):
         'description': 'Example projects using example psychiatric clinical notes from '
                        'https://www.mtsamples.com/',
         'cuis': '',
+        'annotation_guideline_link': 'https://docs.google.com/document/d/1xxelBOYbyVzJ7vLlztP2q1Kw9F5Vr1pRwblgrXPS7QM/edit?usp=sharing',
         'dataset': ds_id,
         'concept_db': cdb_id,
         'vocab': vocab_id,

@@ -104,6 +104,10 @@ class Document(models.Model):
 class Project(PolymorphicModel):
     name = models.CharField(max_length=150)
     description = models.TextField(default="", blank=True)
+    annotation_guideline_link = models.TextField(default="", blank=True,
+                                                 help_text="link to an external document (i.e. GoogleDoc, MS Sharepoint)"
+                                                           "outlininng a guide for annotators to follow for this project,"
+                                                           "an example is available here: https://docs.google.com/document/d/1xxelBOYbyVzJ7vLlztP2q1Kw9F5Vr1pRwblgrXPS7QM/edit?usp=sharing")
     create_time = models.DateTimeField(auto_now_add=True)
     members = models.ManyToManyField(settings.AUTH_USER_MODEL)
     dataset = models.ForeignKey('Dataset', on_delete=models.CASCADE)

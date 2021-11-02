@@ -91,8 +91,11 @@
     <modal v-if="helpModal" class="help-modal" :closable="true" @modal:close="helpModal = false">
       <h3 slot="header">{{ project.name }} Annotation Help</h3>
       <div slot="body" class="help-modal-body">
-        <p>Validate each highlighted concept</p>
-        <div>Keyboard Shortcuts</div>
+        <div v-if="project.annotation_guideline_link">
+          <h4>Annotation Guidelines: <a :href="'' + project.annotation_guideline_link + ''">Guideline</a></h4>
+        </div>
+        <br>
+        <h4>Keyboard Shortcuts</h4>
         <table class="table">
           <thead>
             <tr>

@@ -150,6 +150,7 @@ Annotation projects are used to inspect, validate and improve concepts recognise
 |---------|-----------|
 |Name|# Name of the project that appears on the landing page|
 |Description| Example projects', # Description as it appears on the landing page|
+|Annotation guideline link|A link to a GoogleDoc, MS Sharepoint document etc. that provides this projects annotation guidelines|
 |Members    | **list** of users that have access to this project, select the '+' to create new users |
 |Dataset    | The set of documents to be annotated. The dataset tabular schema is described below.  |
 |Validated Documents| Ignore this list. Use of this list is described in the forthcoming advanced administrator user guide|
