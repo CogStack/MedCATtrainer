@@ -665,7 +665,7 @@ def _import_concepts(id):
     for cui in cdb.cui2names.keys():
         if cui not in existing_cuis:
             concept = Concept()
-            concept.pretty_name = cdb.cui2preferred_name.get(cui, cui)
+            concept.pretty_name = cdb.get_name(cui)
             concept.cui = cui
             concept.type_ids = ','.join(list(cdb.cui2type_ids.get(cui, '')))
             concept.semantic_type = ','.join([cdb.addl_info['type_id2name'].get(type_id, '')
