@@ -9,8 +9,11 @@ https://docs.djangoproject.com/en/2.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
-
+import logging
 import os
+import sys
+
+log = logging.getLogger(__name__)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,11 +23,20 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'q$&esydgbn2=#-k5s5i(+^dtxs1@$50_(ln0wuw@zig4m&^m7='
+realm = os.environ.get('ENV', 'non-prod')
+secret_key = os.environ.get('SECRET_KEY')
+if realm == 'prod' and secret_key is None:
+    msg = 'No SECRET_KEY envrionment variable found for prod envrionment. Please add a secret key and re-run'
+    log.error(msg)
+    sys.exit(msg)
+else:
+    log.info('Running non-prod environment, defaulting django SECRET_KEY')
+    SECRET_KEY = 'q$&esydgbn2=#-k5s5i(+^dtxs1@$50_(ln0wuw@zig4m&^m7='
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
+DEBUG = os.environ.get('DEBUG', True)
+if realm == 'prod' and DEBUG:
+    log.warning('Running in prod realm with DEBUG=True, are you sure you want to do that?')
 
 ALLOWED_HOSTS = ['*']
 

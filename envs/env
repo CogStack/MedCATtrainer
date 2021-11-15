@@ -1,1 +1,3 @@
 MEDCAT_CONFIG_FILE=/home/configs/base.txt
+ENV=non-prod
+DEBUG=True

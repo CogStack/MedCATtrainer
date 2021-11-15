@@ -1,0 +1,8 @@
+MEDCAT_CONFIG_FILE=/home/configs/base.txt
+ENV=prod
+
+# SECRET KEY - edit this for prod deployments,
+# SECRET_KEY=
+
+# Django Debug mode should be False for prod
+DEBUG=False
