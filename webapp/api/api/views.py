@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from .admin import download_projects_with_text, download_projects_without_text, download_deployment_export, \
-    upload_deployment_export
+    upload_deployment_export, _import_concepts
 from .permissions import *
 from .serializers import *
 from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
@@ -99,14 +99,14 @@ class AnnotatedEntityViewSet(viewsets.ModelViewSet):
 
 class MetaTaskValueViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ['get', 'head']
+    http_method_names = ['get', 'head', 'post', 'put']
     queryset = MetaTaskValue.objects.all()
     serializer_class = MetaTaskValueSerializer
 
 
 class MetaTaskViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ['get', 'head']
+    http_method_names = ['get', 'head', 'post', 'put']
     queryset = MetaTask.objects.all()
     serializer_class = MetaTaskSerializer
 
@@ -434,6 +434,18 @@ def add_concept(request):
         log.debug(f'Added new concept to concept list:{cui}')
 
     return Response({'message': 'Concept and Annotation added successfully', 'id': id})
+
+
+@api_view(http_method_names=['POST'])
+def import_cdb_concepts(request):
+    user = request.user
+    if not user.is_superuser:
+        return HttpResponseBadRequest('User is not super user, and not allowed to download project outputs')
+    cdb_id = request.data.get('cdb_id')
+    if cdb_id is None or len(ConceptDB.objects.filter(id=cdb_id)) == 0:
+        return HttpResponseBadRequest(f'No CDB found for cdb_id{cdb_id}')
+    _import_concepts(cdb_id)
+    return Response({'message': 'submitted cdb import job.'})
 
 
 @api_view(http_method_names=['POST'])
