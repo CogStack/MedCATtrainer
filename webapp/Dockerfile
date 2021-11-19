@@ -7,14 +7,14 @@ RUN apt-get -y update && \
 
 # Get node and npm
 RUN apt-get install curl && \
-    curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
+    curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
     apt-get install nodejs && \
     npm install -g npm@latest
 
 # Build frontend
 WORKDIR /home/frontend
-#RUN npm install && npm rebuild node-sass && npm run build
-RUN npm install && npm uninstall node-sass && npm install node-sass@4.12.0 && npm run build
+RUN npm install && npm rebuild node-sass && npm run build
+
 # Build backend
 WORKDIR /home/api
 RUN pip install pip --upgrade 
