@@ -479,13 +479,15 @@ def _retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
                 "relations": [
                     {
                         "start_entity": <integer>  # id of above annotation that is the start of this relation
+                        "start_entity_cui": "<string>" # the cui label of the start of this relation
                         "start_entity_value": <string>  # value of the start annotation for this relation
-                        "start_entity_start_idx": <integer>  # start index of text span of start of relation.
-                        "start_entity_end_idx": <integer>  # end index of text span of start of relation.
+                        "start_entity_start_idx": <integer>  # start index of text span of start of relation
+                        "start_entity_end_idx": <integer>  # end index of text span of start of relation
                         "end_entity": <integer>  # id of the above annotation that is the end of this relation
+                        "end_entity_cui": "<string>" # the cui label of the end of this relation
                         "end_entity_value": <string>  # value of the end annotation for this relation
-                        "end_entity_start_idx": <integer>  # strart index of text span of end of relation.
-                        "end_entity_end_idx": <integer>  # end index of text span of end of relation.
+                        "end_entity_start_idx": <integer>  # end index of text span of end of relation
+                        "end_entity_end_idx": <integer>  # end index of text span of end of relation
                         "user": <string>  # username of annotator for relation (optional)
                         "relation": <string>  # label for this relation
                         "validated": <boolean>  # if the annotation has been validated by a human annotator, default true.
@@ -570,10 +572,12 @@ def _retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
             out_rel = {}
             for rel in rels:
                 out_rel['start_entity'] = rel.start_entity.id
-                out_rel['start_entity_value'] = rel.start_entity.value
+                out_rel['start_entity_cui'] = rel.start_entity.cui
+                out_rel['start_entity_value'] = rel.tart_entity.value
                 out_rel['start_entity_start_idx'] = rel.start_entity.start_ind
                 out_rel['start_entity_end_idx'] = rel.start_entity.end_ind
                 out_rel['end_entity'] = rel.end_entity.id
+                out_rel['end_entity_cui'] = rel.end_entity.cui
                 out_rel['end_entity_value'] = rel.end_entity.value
                 out_rel['end_entity_start_idx'] = rel.end_entity.start_ind
                 out_rel['end_entity_end_idx'] = rel.end_entity.end_ind
