@@ -4,6 +4,7 @@ import traceback
 from tempfile import NamedTemporaryFile
 
 import pandas as pd
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseBadRequest, HttpResponseServerError
 from django.shortcuts import render
 from django_filters import rest_framework as drf
@@ -17,7 +18,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from .admin import download_projects_with_text, download_projects_without_text, download_deployment_export, \
-    upload_deployment_export, _import_concepts
+    upload_deployment_export, import_concepts_from_cdb
 from .permissions import *
 from .serializers import *
 from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
@@ -444,7 +445,7 @@ def import_cdb_concepts(request):
     cdb_id = request.data.get('cdb_id')
     if cdb_id is None or len(ConceptDB.objects.filter(id=cdb_id)) == 0:
         return HttpResponseBadRequest(f'No CDB found for cdb_id{cdb_id}')
-    _import_concepts(cdb_id)
+    import_concepts_from_cdb(cdb_id)
     return Response({'message': 'submitted cdb import job.'})
 
 

@@ -1,26 +1,25 @@
 import copy
+import json
 import logging
-import os
 import re
 import tarfile
 from collections import defaultdict
 from datetime import datetime
 from glob import glob
+from io import StringIO
 from typing import Dict, List
 
 import pkg_resources
-from django.contrib.auth.models import User
-from django.db.models import QuerySet, Model
-from django.http import HttpResponse, HttpResponseRedirect
-from io import StringIO
-import json
 from background_task import background
-
 from django.contrib import admin
+from django.contrib.auth.models import User
+from django.db.models import QuerySet
+from django.http import HttpResponse, HttpResponseRedirect
 from rest_framework.exceptions import PermissionDenied
 
-from .models import *
 from .forms import *
+from .models import *
+from .utils import update_concept_model
 
 admin.site.register(Entity)
 admin.site.register(MetaTaskValue)
@@ -658,26 +657,24 @@ admin.site.register(AnnotatedEntity, AnnotatedEntityAdmin)
 
 
 @background(schedule=5)
-def _import_concepts(id):
+def import_concepts_from_cdb(cdb_model_id: int):
     from medcat.cdb import CDB
-    concept_db = ConceptDB.objects.get(id=id)
-    cdb = CDB.load(concept_db.cdb_file.path)
 
+    cdb_model = ConceptDB.objects.get(id=cdb_model_id)
+    cdb = CDB.load(cdb_model.cdb_file.path)
     # Get all existing cuis for this CDB
-    existing_cuis = set(Concept.objects.filter(cdb=id).values_list('cui', flat=True))
+    existing_cuis = set(Concept.objects.filter(cdb=cdb_model_id).values_list('cui', flat=True))
+    all_cuis = set(Concept.objects.all().values_list('cui', flat=True))
 
     for cui in cdb.cui2names.keys():
-        if cui not in existing_cuis:
+        if cui not in all_cuis:
             concept = Concept()
-            concept.pretty_name = cdb.get_name(cui)
             concept.cui = cui
-            concept.type_ids = ','.join(list(cdb.cui2type_ids.get(cui, '')))
-            concept.semantic_type = ','.join([cdb.addl_info['type_id2name'].get(type_id, '')
-                                              for type_id in list(cdb.cui2type_ids.get(cui, ''))])
-            concept.desc = cdb.addl_info['cui2description'].get(cui, '')
-            concept.synonyms = ", ".join(cdb.addl_info['cui2original_names'].get(cui, []))
-            concept.cdb = concept_db
-            concept.save()
+            update_concept_model(concept, cdb_model, cdb)
+        if cui in all_cuis and cui not in existing_cuis:
+            # ui has been added from another CDB. Overwrite here.
+            concept = Concept.objects.get(cui=cui)
+            update_concept_model(concept, cdb_model, cdb)
 
 
 @background(schedule=5)
@@ -696,7 +693,7 @@ def reset_cdb_filters(modeladmin, request, queryset):
 
 def import_concepts(modeladmin, request, queryset):
     for concept_db in queryset:
-        _import_concepts(concept_db.id)
+        import_concepts_from_cdb(concept_db.id)
 
 
 def delete_concepts_from_cdb(modeladmin, request, queryset):
