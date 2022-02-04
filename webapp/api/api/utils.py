@@ -2,12 +2,12 @@ import json
 import os
 import logging
 
-import medcat
 import pkg_resources
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .models import Entity, AnnotatedEntity, Concept, ICDCode, OPCSCode, ProjectAnnotateEntities, ProjectCuiCounter
+from .models import Entity, AnnotatedEntity, Concept, ICDCode, OPCSCode, ProjectAnnotateEntities, ProjectCuiCounter, \
+    ConceptDB
 
 from medcat.cdb import CDB
 from medcat.vocab import Vocab
@@ -61,25 +61,14 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
 
     for ent in ents:
         label = ent._.cui
-        type_ids = list(cat.cdb.cui2type_ids.get(label, ''))
 
         # Add the concept info to the Concept table if it doesn't exist
-        cnt = Concept.objects.filter(cui=label).count()
-        if cnt == 0:
-            pretty_name = cat.cdb.cui2preferred_name.get(label, label)
-
+        if not Concept.objects.filter(cui=label).exists():
             concept = Concept()
-            concept.pretty_name = pretty_name
             concept.cui = label
-            concept.type_ids = ','.join(type_ids)
-            concept.semantic_type = ','.join([cat.cdb.addl_info['type_id2name'].get(type_id, '') for type_id in type_ids])
-            concept.desc = cat.cdb.addl_info['cui2description'].get(label, '')
-            concept.synonyms = ",".join(cat.cdb.addl_info['cui2original_names'].get(label, []))
-            concept.cdb = project.concept_db
-            concept.save()
+            update_concept_model(concept, project.concept_db, cat.cdb)
 
-        cnt = Entity.objects.filter(label=label).count()
-        if cnt == 0:
+        if not Entity.objects.filter(label=label).exists():
             # Create the entity
             entity = Entity()
             entity.label = label
@@ -96,9 +85,9 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
 
         if cui_count_limit < 0 or cui_count <= cui_count_limit:
             if AnnotatedEntity.objects.filter(project=project,
-                                      document=document,
-                                      start_ind=ent.start_char,
-                                      end_ind=ent.end_char).count() == 0:
+                                              document=document,
+                                              start_ind=ent.start_char,
+                                              end_ind=ent.end_char).count() == 0:
                 # If this entity doesn't exist already
                 ann_ent = AnnotatedEntity()
                 ann_ent.user = user
@@ -116,6 +105,18 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
                     ann_ent.validated = True
 
                 ann_ent.save()
+
+
+def update_concept_model(concept: Concept, cdb_model: ConceptDB, cdb: CDB):
+    cui = concept.cui
+    concept.pretty_name = cdb.get_name(cui)
+    concept.type_ids = ','.join(list(cdb.cui2type_ids.get(cui, '')))
+    concept.semantic_type = ','.join([cdb.addl_info['type_id2name'].get(type_id, '')
+                                      for type_id in list(cdb.cui2type_ids.get(cui, ''))])
+    concept.desc = cdb.addl_info['cui2description'].get(cui, '')
+    concept.synonyms = ", ".join(cdb.addl_info['cui2original_names'].get(cui, []))
+    concept.cdb = cdb_model
+    concept.save()
 
 
 def set_icd_info_objects(cdb, concept, cui):
