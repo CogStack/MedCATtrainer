@@ -438,9 +438,10 @@ integrated in a forthcoming release.
 <a name="anno-guidelines"></a>
 # Annotation Guidelines
 Annotation guidelines can assist guiding annotators when annotating texts for a MedCATTrainer project.
+
+Example Guidelines can be found [here](https://docs.google.com/document/d/1xxelBOYbyVzJ7vLlztP2q1Kw9F5Vr1pRwblgrXPS7QM/edit?usp=sharing).
  
-Once an initial guideline has been defined, a pilot project in MedCATTrainer can be used to further 
-refine the guideline.
+An initial guideline can be refined using specific examples from your dataset in a pilot project containing a handful of documents.
 
 <a name="advanced-usage"></a>
 # Advanced Usage
