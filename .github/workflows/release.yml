@@ -1,11 +1,8 @@
-name: build
+name: release-build
 
 on:
   push:
-    branches: [ master ]
     tags: [ 'v*.*.*' ]
-  pull_request:
-    branches: [ master ]
 
 
 jobs:
@@ -20,17 +17,13 @@ jobs:
           ref: 'master'
 
       - name: Release Tag
-        if: github.ref != 'refs/heads/master'
         run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-      - name: Non Prod Tag
-        if: github.ref == 'refs/heads/master'
-        run: echo "RELEASE_VERSION=latest" >> $GITHUB_ENV
       - name: Build
         env:
           IMAGE_TAG: ${{ env.RELEASE_VERSION }}
         run: |
-          docker build -t cogstacksystems/medcat-trainer:$IMAGE_TAG webapp/.
-          docker build -t cogstacksystems/medcat-trainer-nginx:$IMAGE_TAG nginx/.
+          docker build -t cogstacksystems/medcat-trainer:$IMAGE_TAG -t cogstacksystems/medcat-trainer:latest webapp/.
+          docker build -t cogstacksystems/medcat-trainer-nginx:$IMAGE_TAG -t cogstacksystems/medcat-trainer-nginx:latest nginx/.
       - name: Run Django Tests
         env:
           IMAGE_TAG: ${{ env.RELEASE_VERSION }}
@@ -48,5 +41,8 @@ jobs:
         env:
           IMAGE_TAG: ${{ env.RELEASE_VERSION }}
         run: |
-          docker push cogstacksystems/medcat-trainer:$IMAGE_TAG
-          docker push cogstacksystems/medcat-trainer-nginx:$IMAGE_TAG
+          echo 'cogstacksystems/medcat-trainer:$IMAGE_TAG' \
+                'cogstacksystems/medcat-trainer:latest' \
+                'cogstacksystems/medcat-trainer-nginx:$IMAGE_TAG' \
+                'cogstacksystems/medcat-trainer-nginx:latest' \
+                | xargs -n 1 docker push

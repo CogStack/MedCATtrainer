@@ -1,0 +1,24 @@
+name: ci-build
+
+on: [push]
+
+jobs:
+  # run tests / lint / etc. before building container image?
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v2
+
+      - name: Build
+        env:
+          IMAGE_TAG: ${{ env.RELEASE_VERSION }}
+        run: |
+          docker build -t cogstacksystems/medcat-trainer:dev-latest webapp/.
+      - name: Run Django Tests
+        env:
+          IMAGE_TAG: ${{ env.RELEASE_VERSION }}
+        run: |
+          # run tests
+          docker run --rm cogstacksystems/medcat-trainer:dev-latest python manage.py test
