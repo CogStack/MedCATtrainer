@@ -5,8 +5,8 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint",
-    "test:unit": "vue-cli-service test:unit"
+    "test:unit": "vue-cli-service test:unit",
+    "lint": "vue-cli-service lint"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.36",
@@ -15,9 +15,11 @@
     "@fortawesome/vue-fontawesome": "^2.0.6",
     "axios": "^0.24.0",
     "bootstrap": "^4.6.0",
+    "core-js": "^3.21.0",
     "jquery": "^3.6.0",
     "lodash": "^4.17.21",
     "popper.js": "^1.16.1",
+    "sass": "^1.49.7",
     "v-runtime-template": "^1.10.0",
     "vue": "^2.6.14",
     "vue-cookie": "^1.1.4",
@@ -31,19 +33,17 @@
   },
   "devDependencies": {
     "@vue/cli": "^4.5.15",
-    "@vue/cli-plugin-babel": "^3.3.0",
-    "@vue/cli-plugin-eslint": "^4.5.13",
-    "@vue/cli-plugin-unit-mocha": "^4.5.13",
-    "@vue/cli-service": "^3.12.1",
+    "@vue/cli-plugin-babel": "~4.5.15",
+    "@vue/cli-plugin-eslint": "~v5.0.0-alpha.7",
+    "@vue/cli-plugin-unit-mocha": "~4.5.15",
+    "@vue/cli-service": "~4.5.15",
     "@vue/cli-service-global": "^4.5.15",
     "@vue/eslint-config-standard": "^4.0.0",
     "@vue/test-utils": "1.0.0-beta.29",
     "babel-eslint": "^10.1.0",
     "chai": "^4.3.0",
-    "core-js": "^2.6.12",
     "eslint": "^7.32.0",
     "eslint-plugin-vue": "^7.19.1",
-    "node-sass": "^6.0.1",
     "sass-loader": "^10.1.1",
     "vue-template-compiler": "^2.6.14"
   },
