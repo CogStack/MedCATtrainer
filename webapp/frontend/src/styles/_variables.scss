@@ -1,18 +1,19 @@
 // NHS Brand Colours
-// https://www.england.nhs.uk/nhsidentity/identity-guidelines/colours/
+// https://digital.nhs.uk/about-nhs-digital/corporate-information-and-documents/nhs-digital-style-guidelines/how-we-look/colour-palette
 
 @import "node_modules/bootstrap/scss/bootstrap";
 
 
 $theme-colors: (
-    "primary": #005EB8, //NHS Blue
+    "primary": #0072CE, //NHS Bright Blue
+    //"primary": #005EB8, //NHS Blue
     "danger": #DA291C, //NHS Emergency Services Red
     "warning": #768692, // NHS Mid Grey
     "info": #E8EDEE, // NHS Pale Grey
     "success": #009639 // NHS Green
 );
 
-$navbar-bg: #005EB8; // NHS Blue
+$navbar-bg: #0072CE; // NHS Bright Blue
 
 // colour palette - for backgrounds, borders, text-color etc.
 $color-1: #45503B;
@@ -22,12 +23,11 @@ $color-4: #45503B;
 $color-5: #747572;
 
 $background: inherit; //$color-2;
-$text: black;
-$text-highlight: black; //$color-5;
+$text: #212B32; // primary text: NHS Dark Grey
+$text-highlight: #212B32;
 $borders: $color-1;
 
-
-$task-color-0: #005EB8;  // NHS BLUE
+$task-color-0: #0072CE;  // NHS Bright Blue
 $task-color-1: #dc3545;  // NHS Emergency Services Red
 $task-color-2: #8A1538;  // NHS Dark Red
 $task-color-3: #41B6E6;  // NHS Light Blue
