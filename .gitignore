@@ -35,3 +35,6 @@ tmp_*
 db.sqlite3
 nohup.out
 tmp.py
+
+# docs outputs
+docs/_build
