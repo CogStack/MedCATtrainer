@@ -41,8 +41,7 @@ jobs:
         env:
           IMAGE_TAG: ${{ env.RELEASE_VERSION }}
         run: |
-          echo 'cogstacksystems/medcat-trainer:$IMAGE_TAG' \
-                'cogstacksystems/medcat-trainer:latest' \
-                'cogstacksystems/medcat-trainer-nginx:$IMAGE_TAG' \
-                'cogstacksystems/medcat-trainer-nginx:latest' \
-                | xargs -n 1 docker push
+          docker push cogstacksystems/medcat-trainer:$IMAGE_TAG
+          docker push cogstacksystems/medcat-trainer:latest
+          docker push cogstacksystems/medcat-trainer-nginx:$IMAGE_TAG
+          docker push cogstacksystems/medcat-trainer-nginx:latest
