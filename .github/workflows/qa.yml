@@ -1,4 +1,4 @@
-name: ci-build
+name: qa-build
 
 on:
   push:
