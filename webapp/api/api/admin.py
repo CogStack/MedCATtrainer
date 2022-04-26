@@ -664,16 +664,11 @@ def import_concepts_from_cdb(cdb_model_id: int):
     cdb = CDB.load(cdb_model.cdb_file.path)
     # Get all existing cuis for this CDB
     existing_cuis = set(Concept.objects.filter(cdb=cdb_model_id).values_list('cui', flat=True))
-    all_cuis = set(Concept.objects.all().values_list('cui', flat=True))
 
     for cui in cdb.cui2names.keys():
-        if cui not in all_cuis:
+        if cui not in existing_cuis:
             concept = Concept()
             concept.cui = cui
-            update_concept_model(concept, cdb_model, cdb)
-        if cui in all_cuis and cui not in existing_cuis:
-            # ui has been added from another CDB. Overwrite here.
-            concept = Concept.objects.get(cui=cui)
             update_concept_model(concept, cdb_model, cdb)
 
 

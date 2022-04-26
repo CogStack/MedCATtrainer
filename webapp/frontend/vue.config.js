@@ -1,7 +1,6 @@
 module.exports = {
   runtimeCompiler: true,
-  assetsDir: 'static', // For simple configuration of static files in Flask (the "static_folder='client/dist/static'" part in app.py)
-  // needs to change for django-rest to serve up final built files.
+  assetsDir: 'static',
   devServer: {
     proxy: 'http://localhost:8001'
   },
