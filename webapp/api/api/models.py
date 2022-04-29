@@ -98,7 +98,7 @@ class Document(models.Model):
         ordering = ['id']
 
     def __str__(self):
-        return str(self.name)
+        return f'{self.name} | {self.dataset.name} | {self.dataset.id}'
 
 
 class Project(PolymorphicModel):

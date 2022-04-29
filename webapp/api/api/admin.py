@@ -637,6 +637,7 @@ class DatasetAdmin(ReportErrorModelAdminMixin, admin.ModelAdmin):
     model = Dataset
     list_display = ['name', 'create_time', 'description', dataset_document_counts]
 
+
 admin.site.register(Dataset, DatasetAdmin)
 
 
@@ -645,16 +646,16 @@ class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
     actions = [download, download_without_text, download_without_text_with_doc_names, reset_project, clone_projects]
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "concept_db":
-            kwargs["queryset"] = ConceptDB.objects.filter(use_for_training=True)
+        if db_field.name == 'concept_db':
+            kwargs['queryset'] = ConceptDB.objects.filter(use_for_training=True)
         return super(ProjectAnnotateEntitiesAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
-        if db_field.name == "cdb_search_filter":
-            #kwargs["queryset"] = ConceptDB.objects.filter(use_for_training=False)
-            kwargs["queryset"] = ConceptDB.objects.all()
-
+        if db_field.name == 'cdb_search_filter':
+            kwargs['queryset'] = ConceptDB.objects.all()
         return super(ProjectAnnotateEntitiesAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
+
+
 admin.site.register(ProjectAnnotateEntities, ProjectAnnotateEntitiesAdmin)
 
 
