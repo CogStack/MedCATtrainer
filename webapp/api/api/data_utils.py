@@ -26,15 +26,9 @@ def dataset_from_file(dataset: Dataset):
 
         for i, row in enumerate(df.iterrows()):
             row = row[1]
-            text = row['text']
-            if 'name' in df.columns:
-                name = row['name']
-            else:
-                name = f"Doc {i}"
-
             document = Document()
-            document.name = name
-            document.text = text
+            document.name = row['name']
+            document.text = row['text']
             document.dataset = dataset
             document.save()
     else:

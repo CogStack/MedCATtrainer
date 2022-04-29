@@ -42,7 +42,8 @@ Datasets can be uploaded in CSV or XLSX format. Example:
 | Doc 1 | Example document text  |
 | Doc 2 | More example text      |
 
-The name column is optional, and will be auto-generated for each document if not supplied in the upload.
+The **name** column should be the ID (identifier) and unique for that dataset, this is not enforced but recommended for 
+downstream usage of the dataset once annotated. The **text** column is the text to be annotated. 
 Example datasets are supplied under docs/example_data/*.csv
 
 4\. Click 'Save' to store the new project.
