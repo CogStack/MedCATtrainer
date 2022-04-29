@@ -626,8 +626,17 @@ class ReportErrorModelAdminMixin:
             return HttpResponseRedirect(request.path)
 
 
+def dataset_document_counts(dataset):
+    return f'{Document.objects.filter(dataset=dataset).count()}'
+
+
+dataset_document_counts.short_description = 'Document Count'
+
+
 class DatasetAdmin(ReportErrorModelAdminMixin, admin.ModelAdmin):
     model = Dataset
+    list_display = ['name', 'create_time', 'description', dataset_document_counts]
+
 admin.site.register(Dataset, DatasetAdmin)
 
 
@@ -726,12 +735,16 @@ class ProjectCuiCounterAdmin(admin.ModelAdmin):
     list_display = ['entity', 'count', 'project']
 admin.site.register(ProjectCuiCounter, ProjectCuiCounterAdmin)
 
+
 def remove_all_documents(modeladmin, request, queryset):
     Document.objects.all().delete()
+
 
 class DocumentAdmin(admin.ModelAdmin):
     model = Document
     actions = [remove_all_documents]
+    list_filter = ('dataset',)
     list_display = ['name', 'create_time', 'dataset', 'last_modified']
+
 
 admin.site.register(Document, DocumentAdmin)
