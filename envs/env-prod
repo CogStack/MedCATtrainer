@@ -6,3 +6,6 @@ ENV=prod
 
 # Django Debug mode should be False for prod
 DEBUG=False
+
+# Max single dataset size for a single upload
+MAX_DATASET_SIZE=10000
