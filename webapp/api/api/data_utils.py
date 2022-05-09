@@ -4,10 +4,11 @@ from .models import *
 
 _MAX_DATASET_SIZE_DEFAULT = 10000
 
+
 def dataset_from_file(dataset: Dataset):
     df = None
     if '.csv' in dataset.original_file.path:
-        df = pd.read_csv(dataset.original_file.path)
+        df = pd.read_csv(dataset.original_file.path, error_bad_lines=True)
     elif '.xlsx' in dataset.original_file.path:
         df = pd.read_excel(dataset.original_file.path)
 

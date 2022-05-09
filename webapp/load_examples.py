@@ -48,7 +48,7 @@ def main(port=8000,
                 with open(vocab_tmp_file, 'wb') as f:
                     f.write(vocab_file.content)
                 print("Downloading example dataset")
-                ds = requests.get('https://medcattrainer-psych-notes.s3-eu-west-1.amazonaws.com/psych.csv')
+                ds = requests.get('https://raw.githubusercontent.com/CogStack/MedCATtrainer/master/notebook_docs/example_data/psych.csv')
                 with open(dataset_tmp_file, 'w') as f:
                     f.write(ds.text)
 
