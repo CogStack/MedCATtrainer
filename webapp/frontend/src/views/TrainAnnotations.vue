@@ -709,12 +709,14 @@ export default {
 
 <style scoped lang="scss">
 
+$app-header-height: 60px;
+
 .app-header {
   display: flex;
   flex-direction: row;
-  flex: 0 0 70px;
-  line-height: 70px;
-  font-size: 25px;
+  flex: 0 0 $app-header-height;
+  line-height: $app-header-height;
+  font-size: 20px;
   padding: 0 15px;
 }
 
@@ -767,7 +769,7 @@ export default {
 
 .app-container {
   display: flex;
-  height: calc(100% - 71px);
+  height: calc(100% - #{$app-header-height});
   flex-direction: column;
   padding: 5px;
 }
@@ -780,7 +782,7 @@ export default {
 }
 
 .viewport-container {
-  height: calc(100% - 70px);
+  height: calc(100% - 56px);
 }
 
 .main-viewport {

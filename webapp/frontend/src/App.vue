@@ -74,11 +74,12 @@ export default {
 }
 
 .navbar {
-   background-color: $navbar-bg;
+  height: 60px;
+  background-color: $navbar-bg;
 }
 
 .app-name {
-  padding: 5px 10px;
+  padding: 0 10px;
   font-size: 2.25rem;
 
   color: #fff;
@@ -99,9 +100,9 @@ export default {
 }
 
 .link {
-  padding-top: 10px;
+  //padding-top: 10px;
   display:inline-block;
-  height: 35px;
+  height: 25px;
   cursor: pointer;
 
   &:hover {
