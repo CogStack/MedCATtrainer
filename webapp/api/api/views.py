@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 import traceback
 from tempfile import NamedTemporaryFile
@@ -660,5 +661,10 @@ def download_deployment(request):
 
 
 @api_view(http_method_names=['GET'])
-def behind_reverse_proxy(request):
+def behind_reverse_proxy(_):
     return Response(bool(int(os.environ.get('BEHIND_RP', False))))
+
+
+@api_view(http_method_names=['GET'])
+def version(_):
+    return Response(os.environ.get('MCT_VERSION', ':latest'))
