@@ -62,5 +62,6 @@ urlpatterns = [
     path('api/download-annos/', api.views.download_annos),
     path('api/download-deployment/', api.views.download_deployment),
     path('api/behind-rp/', api.views.behind_reverse_proxy),
+    path('api/version/', api.views.version),
     re_path('^.*$', api.views.index, name='index'),  # Match everything else to home
 ]

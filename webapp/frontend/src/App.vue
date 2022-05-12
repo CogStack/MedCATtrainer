@@ -3,6 +3,7 @@
     <nav class="navbar">
       <router-link class="app-name" to="/">Med<img class="icon" src="./assets/cat-logo.png" >AT</router-link>
       <router-link class="navbar-brand" to="/demo">Demo</router-link>
+      <span class="version-id">{{version}}</span>
       <a class="navbar-brand ml-auto small">
         <span @click="loginModal = true">
           <span class="link" v-if="uname === null">Login</span>
@@ -32,7 +33,8 @@ export default {
   data () {
     return {
       loginModal: false,
-      uname: this.$cookie.get('username') || null
+      uname: this.$cookie.get('username') || null,
+      version: ''
     }
   },
   methods: {
@@ -59,6 +61,11 @@ export default {
   },
   beforeDestroy () {
     EventBus.$off('login:success', this.loginSuccessful)
+  },
+  created () {
+    this.$http.get('/api/version/').then(resp => {
+      this.version = resp.data || ''
+    })
   }
 }
 </script>
@@ -118,6 +125,14 @@ export default {
   height: 38px;
   position: relative;
   bottom: 7px;
+}
+
+.version-id {
+  display: inline-block;
+  float: right;
+  font-size: 10px;
+  padding: 0 20px;
+  color: $color-2;
 }
 
 </style>
