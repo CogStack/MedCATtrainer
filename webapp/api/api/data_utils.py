@@ -16,7 +16,7 @@ def dataset_from_file(dataset: Dataset):
 
     if df is not None:
         max_dataset_size = os.environ.get('MAX_DATASET_SIZE', _MAX_DATASET_SIZE_DEFAULT)
-        if df.shape[0] > max_dataset_size:
+        if df.shape[0] > int(max_dataset_size):
             raise(f'Attempting to upload a dataset with {df.shape[0]} rows. The Max dataset size is set to'
                   f' {max_dataset_size}, please reduce the number of rows or contact an admin to increase the max size')
 
