@@ -42,8 +42,7 @@ router.register(r'upload-deployment', api.views.DeploymentUploadViewSet, basenam
 
 urlpatterns = [
     path('api/', include(router.urls)),
-    path('api/search-concepts/', api.views.ConceptView.as_view()),
-    path('api/search-concept-infos/', api.views.search_concept_infos),
+    path('api/search-concepts/', api.views.search_solr),
     path('api/prepare-documents/', api.views.prepare_documents),
     path('api/api-token-auth/', auth_views.obtain_auth_token),
     path('admin/', admin.site.urls),
@@ -63,6 +62,7 @@ urlpatterns = [
     path('api/download-deployment/', api.views.download_deployment),
     path('api/behind-rp/', api.views.behind_reverse_proxy),
     path('api/version/', api.views.version),
+    path('api/concept-db-search-index-created/', api.views.concept_search_index_available),
     path('api/model-loaded/', api.views.model_loaded),
     path('api/cache-model/<int:p_id>/', api.views.cache_model),
     re_path('^.*$', api.views.index, name='index'),  # Match everything else to home

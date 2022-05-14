@@ -17,6 +17,7 @@
           <th>Concepts</th>
           <th>Annotate / Validate</th>
           <th>Complete</th>
+          <th v-if="isAdmin">Concepts Imported</th>
           <th v-if="isAdmin">Model Loaded</th>
           <th v-if="isAdmin">Save Model</th>
         </tr>
@@ -31,6 +32,10 @@
           <td>{{project.require_entity_validation ? 'Annotate' : 'Validate'}}</td>
           <td>
             <font-awesome-icon v-if="project.complete" class="complete-project" icon="check"></font-awesome-icon>
+          </td>
+          <td @click.stop v-if="isAdmin">
+            <font-awesome-icon v-if="cdbSearchIndexStatus[project.cdb_search_filter]" icon="check" class="success"></font-awesome-icon>
+            <font-awesome-icon v-if="!cdbSearchIndexStatus[project.cdb_search_filter]" icon="times" class="danger"></font-awesome-icon>
           </td>
           <td @click.stop v-if="isAdmin">
             <div v-if="cdbLoaded[project.id]">
@@ -104,6 +109,7 @@ export default {
       saving: false,
       routeAlert: false,
       isAdmin: false,
+      cdbSearchIndexStatus: {},
       cdbLoaded: {},
       clearModelModal: false
     }
@@ -149,6 +155,7 @@ export default {
           } else {
             this.fetchCompletionStatus()
             this.fetchCDBsLoaded()
+            this.fetchSearchIndexStatus()
             this.loadingProjects = false
           }
         }).catch(() => {
@@ -223,6 +230,14 @@ export default {
         }, 5000)
       })
     },
+    fetchSearchIndexStatus () {
+      const cdbIds = this.projects.map(p => p.cdb_search_filter[0])
+      this.$http.get(`/api/concept-db-search-index-created/?cdbs=${cdbIds.join(',')}`).then(resp => {
+        this.cdbSearchIndexStatus = resp.data.results
+      }).catch(err => {
+        console.log(err)
+      })
+    },
     select (project) {
       this.$router.push({
         name: 'train-annotations',
@@ -295,8 +310,14 @@ h3 {
   padding: 30px 0;
 }
 
-.complete-project {
+.complete-project, .success {
   color: $success;
+  font-size: 20px;
+}
+
+.danger {
+  color: $danger;
+  font-size: 20px;
 }
 
 .model-up {

@@ -31,7 +31,20 @@ services:
       - "${MCTRAINER_PORT:-8001}:8000"
     depends_on:
       - medcattrainer
+  solr:
+    container_name: mct_solr
+    image: solr:8
+    restart: always
+    expose:
+      - "8983"
+    ports:
+      - 8983:8983
+    volumes:
+      - solr-data:/var/solr
+    command:
+      - -cloud  # solr cloud launches
 volumes:
-      api-media:
-      api-static:
-      api-db:
+  api-media:
+  api-static:
+  api-db:
+  solr-data:

@@ -29,7 +29,23 @@ services:
       - "${MCTRAINER_PORT:-8001}:8000"
     depends_on:
       - medcattrainer
+  solr:
+    container_name: mct_solr
+    image: solr:8
+    restart: always
+    environment:
+      - CONCEPT_SEARCH_SERVICE_HOST=localhost
+      - CONCEPT_SEARCH_SERVICE_PORT=8983
+    expose:
+      - "8983"
+    ports:
+      - 8983:8983
+    volumes:
+      - solr-data:/var/solr
+    command:
+      - -cloud
 volumes:
   api-media:
   api-static:
   api-db:
+  solr-data:
