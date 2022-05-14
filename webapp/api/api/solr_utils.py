@@ -15,8 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 def _cache_solr_collection_schema_types(collection):
-    base_url = f'http://{SOLR_HOST}:{SOLR_PORT}/solr'
-    resp = json.loads(requests.get(f'{base_url}/{collection}/schema').text)
+    url = f'http://{SOLR_HOST}:{SOLR_PORT}/solr/{collection}/schema'
+    logger.info(f'Retrieving solr schema: {url}')
+    resp = json.loads(requests.get(url).text)
     cui_type = [n for n in resp['schema']['fields'] if n['name'] == 'cui'][0]['type']
     # just store cui type for the time being
     SOLR_INDEX_SCHEMA[collection] = {'cui': cui_type}
@@ -37,16 +38,14 @@ def collections_available(cdbs: List[int]):
 
 
 def search_collection(cdbs: List[int], query: str):
-
-    uniq_results_map = {}
     query = query.strip().replace(r'\s+', r'\s').split(' ')
-    if len(query) > 1:
+    if len(query) == 0:
+        return Response({'results': []})
+    query = [f'{query[i]}~1' if i < len(query) - 1 else f'{query[i]}*' for i in range(len(query))]
 
-        query = r'\ '.join([f'{query[i]}^2' if i < len(query) - 1 else f'{query[i]}*' for i in range(len(query))])
-    else:
-        query = f'{query[0]}~'
-
+    res = []
     if len(cdbs) > 0:
+        uniq_results_map = {}
         for cdb in cdbs:
             # TOOD: Consider making async
             cdb_model = ConceptDB.objects.get(id=cdb)
@@ -54,13 +53,15 @@ def search_collection(cdbs: List[int], query: str):
             if collection_name not in SOLR_INDEX_SCHEMA:
                 _cache_solr_collection_schema_types(collection_name)
             try:
-                query_num = int(query)
+                query_num = int(query[0][:-1])
                 query_str = f'cui:{query_num}'
             except ValueError:
-                if SOLR_INDEX_SCHEMA[collection_name]['cui'] == 'plongs':
-                    query_str = f'name:{query}'
-                else:
-                    query_str = f'cui:{query[:-1]} OR name:{query}'
+                if len(query) > 1:  # cannot be a cui if multi-word
+                    query_str = ''.join([f' name:{q}' for q in query])
+                elif SOLR_INDEX_SCHEMA[collection_name]['cui'] != 'plongs':  # single word could be alphanumeric cui
+                    query_str = f'cui:{query[0][:-1]} OR name:{query[0][:-1]} OR name:{query[0]}'
+                else:  # single word, numeric cui.
+                    query_str = f'name:{query[0][:-1]} OR name:{query[0]}'
 
             solr_url = f'http://{SOLR_HOST}:{SOLR_PORT}/solr/{collection_name}/select?q.op=OR&q={query_str}&rows=15'
             logger.info(f'Searching solr collection: {solr_url}')
@@ -72,5 +73,6 @@ def search_collection(cdbs: List[int], query: str):
                 docs = [d for d in resp['response']['docs']]
                 for d in docs:
                     if d['cui'][0] not in uniq_results_map:
-                        uniq_results_map[d['cui'][0]] = {'cui': d['cui'][0], 'pretty_name': d['name'][0]}
-    return Response({'results': list(uniq_results_map.values())})
+                        uniq_results_map[d['cui'][0]] = {'cui': d['cui'][0], 'pretty_name': d['pretty_name'][0]}
+        res = sorted(uniq_results_map.values(), key=lambda r: len(r['pretty_name']))
+    return Response({'results': res})

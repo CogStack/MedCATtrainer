@@ -668,7 +668,7 @@ class AnnotatedEntityAdmin(admin.ModelAdmin):
 admin.site.register(AnnotatedEntity, AnnotatedEntityAdmin)
 
 
-# @background(schedule=5)
+@background(schedule=5)
 def import_concepts_from_cdb(cdb_model_id: int):
     from medcat.cdb import CDB
 
@@ -714,7 +714,11 @@ def import_concepts_from_cdb(cdb_model_id: int):
         while True:
             for i in range(5000):
                 cui, name = next(cui2name_iter)
-                payload.append({'cui': str(cui), 'name': cdb.get_name(cui)})
+                payload.append({
+                    'cui': str(cui),
+                    'pretty_name': cdb.get_name(cui),
+                    'name': re.sub(r'\([\w+\s]+\)', '', cdb.get_name(cui)).strip()
+                })
             _upload_payload(payload, collection_name)
             payload = []
     except StopIteration:
@@ -755,6 +759,7 @@ def reset_cdb_filters(modeladmin, request, queryset):
 
 def import_concepts(modeladmin, request, queryset):
     for concept_db in queryset:
+        logger.info(f'Importing concepts for collection {concept_db.name}_id_{concept_db.id}')
         import_concepts_from_cdb(concept_db.id)
 
 

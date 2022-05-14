@@ -17,6 +17,8 @@ services:
       - ./envs/env
     environment:
       - MCT_VERSION=v2.2.7
+      - CONCEPT_SEARCH_SERVICE_HOST=mct_solr
+      - CONCEPT_SEARCH_SERVICE_PORT=8983
     command: /home/run.sh
   nginx:
     container_name: medcattrainer_nginx

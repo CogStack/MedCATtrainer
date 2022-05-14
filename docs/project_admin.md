@@ -1,9 +1,12 @@
 # Annotation Project Creation
+
+## Creating an Annotation Project 
 Annotation projects are used to inspect, validate and improve concepts recognised & linked by MedCAT.
+They can also be used collect annotations for defined MetaCAT models tasks, and coming soon RelCAT, or relation annotation models.
 
-Using the admin page, a configured superuser can create, edit and delete annotation projects.
+Using the admin page, a configured admin or superuser can create, edit and delete annotation projects.
 
-1\. Navigate to http://localhost:8001/admin/ and select 'Project annotate entities'.
+1\. Navigate to `http://localhost:8001/admin/` or the `http://<hostname>:<port>/admin/` in which you've deployed the Trainer, and select 'Project annotate entities'.
 
 ![Main Menu list](_static/img/project_annotate_entities.png)
 
@@ -25,7 +28,7 @@ Using the admin page, a configured superuser can create, edit and delete annotat
 |CUI File   | (Optional) A JSON formatted list of CUIs. Can be useful if the project should be setup to annotate large CUI lists extracted gathered from introspection of a CDB. **Will be merged with the above 'Cuis' list**| 
 |Concept DB | A MedCAT Concept Database. This should be the resulting file from a call to the function medcat.cdb.CDB.save_dict('name_of_cdb.dat'). Clicking the '+' icon here opens a dialog to upload a CDB file. |
 |vocab      | A MedCAT Vocabulary. This should be the resulting file from a call to the function medcat.cdb.utils.Vocab.save_dict('name_of_vocab.dat'). Clicking the '+' icon here opens a dialog to upload a vocab file.|
-|cdb_search_filter|**list** of CDB IDs that are used to lookup concepts during addition of annotations to a document|
+|cdb_search_filter|CDB ID used to lookup concepts during addition of annotations to a document|
 |Require Entity Validation| (Default: True) With this option ticked, annotations in the interface, that are made by MedCAT will appear 'grey' indicating they have not been validated. Document submission is dependent upon all 'grey' annotations to be marked by a user. Unticked ensures all annotations are marked 'valid' by default|
 |Train Model On Submit| (Default: True) With this option ticked, each document submission trains the configured MedCAT instance with the marked, and added if any, annotations from this document. Unticked, ensures the MedCAT model does not train between submissions.| 
 |Add New Entities|(Default: False) With this option ticked, allows users to add entirely new concepts to the existing MedCAT CDB. False ensures this option is not available to users.|
@@ -34,6 +37,7 @@ Using the admin page, a configured superuser can create, edit and delete annotat
 |Irrelevant Available|(Default: False) With this option ticked, the option to mark an annotated concept as 'irrlevant' will appear|
 |Enable entity annotation comments|(Default: False) With this option ticked, the option to leave a comment for each annotation will appear|
 |Tasks| Select from the list 'Meta Annotation' tasks that will appear once a given annotation has been marked correct.|
+|Relations|Select from the list of 'Relation Annotation' tasks that will appear for a given concept.| 
 
 Datasets can be uploaded in CSV or XLSX format. Example:
 
@@ -42,32 +46,35 @@ Datasets can be uploaded in CSV or XLSX format. Example:
 | Doc 1 | Example document text  |
 | Doc 2 | More example text      |
 
-The **name** column should be the ID (identifier) and unique for that dataset, this is not enforced but recommended for 
-downstream usage of the dataset once annotated. The **text** column is the text to be annotated. 
+The **name** column should be the ID (identifier) and unique for that dataset, the **text** column is the text to be annotated. 
 Example datasets are supplied under docs/example_data/*.csv
 
 4\. Click 'Save' to store the new project.
 
-5\. Navigate to the home screen (http://localhost:8001/admin/), login with your username and password setup previously.
+### Project Home Screen
+
+Navigate to the home screen (`http://localhost:8001/` or `http://<hostname>:<port>/` depending on your deployment), login with your username and password setup previously.
 
 ![](_static/img/login.png)
 
-6\. select your new project to begin annotating documents
+Select your new project to begin annotating documents
 
 ![](_static/img/available-projects.png)
 
-<a name="caveats"></a>
-## Notes
+#### Admin Options
+Admin users have extra options on the home screen:
 
-**NB.** Example Concept and Vocab databses are freely available on MedCAT [github](https://github.com/CogStack/MedCAT).
+1. Concepts Imported - specifies if this projects configured CDB Search Filter has been indexed. This is described in detail below.
+2. Model Loaded - MedCAT models are loaded into memory (a python dict) once a project is loaded. Loading many models with larger trainer deployments can occupy a lot of memory. **Note** Clearing cached models may affect other projects using the same model instance.
+3. Save Model - Write the in memory model to disk - to save the current in memory model state. This option is generally not advised as full model training should be done outside the trainer instance ideally. 
+
+### Notes
+- Example Concept and Vocab databses are freely available on MedCAT [github](https://github.com/CogStack/MedCAT).
 Note. UMLS and SNOMED-CT are licensed products so only these smaller trained concept / vocab databases are made available currently.
-
-More documentation on the creation of UMLS / SNOMED-CT CDBs from respective source data will be released soon.
-
-**NNB.** Tasks allow for the creation of meta-annotations and their associated set of values an annotator can use.
+- More documentation on the creation of UMLS / SNOMED-CT CDBs from respective source data will be released soon.
+- Tasks allow for the creation of meta-annotations and their associated set of values an annotator can use.
 An example 'meta-annotation' could be 'Temporality'. Values could then be 'Past', 'Present', 'Future'.
-
-**NB** **Please NOTE Firefox and IE are currently not supported**. Please use Chrome or Safari.
+- Please NOTE Firefox and IE are currently not supported**. Please use Chrome or Safari.
 
 ## Concept Picker - CDB Concept Import
 The concept picker is used to:
@@ -76,7 +83,7 @@ The concept picker is used to:
 - Pick a concept during the 'Add Term' process.
   ![](_static/img/add-annotation-concept.png)
 
-The available list of concepts is populated via a MedCAT CDB and indexed to enable fast type-ahead style search.
+The available list of concepts is populated via a MedCAT CDB and indexed in a [solr](https://solr.apache.org/) search index to enable fast type-ahead style search.
 
 SNOMED-CT / UMLS built databases can contain thousands if not millions of concepts so this process is executed
 in asynchronous task to ensure the admin page and app are still available for use.
@@ -95,6 +102,13 @@ To make these concepts available to a (or any project):
 
 3\. Select the Concept DB entry, and choose the action 'Import Concept', then press the 'Go' button.
 ![](_static/img/import-concepts.png)
+
+Once the concept imports are complete the solr search services will contain 'collections' that are used by a Django view
+for fast type ahead searching. If you're an admin the project home screen will show if a project has had the selected 
+'CDB Search Filter' imported into solr.
+![](_static/img/concepts-imported-status.png)
+
+The Solr admin interface is available on the default port 8983. User guide [here](https://solr.apache.org/guide/solr/latest/getting-started/solr-admin-ui.html) 
 
 ## Downloading Annotations
 Project annotations can be downloaded with or without the source text, especially important if the source text is

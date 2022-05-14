@@ -315,7 +315,7 @@ def add_annotation(request):
     d_id = request.data['document_id']
     source_val = request.data['source_value']
     sel_occur_idx = int(request.data['selection_occur_idx'])
-    cui = request.data['cui']
+    cui = str(request.data['cui'])
 
     icd_code = request.data.get('icd_code')
     opcs_code = request.data.get('opcs_code')

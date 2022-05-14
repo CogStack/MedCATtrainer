@@ -1,6 +1,7 @@
 module.exports = {
   runtimeCompiler: true,
   assetsDir: 'static',
+  productionSourceMap: true,
   devServer: {
     proxy: 'http://localhost:8001'
   },
