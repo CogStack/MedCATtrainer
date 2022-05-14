@@ -571,12 +571,12 @@ def _retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
             out_rel = {}
             for rel in rels:
                 out_rel['start_entity'] = rel.start_entity.id
-                out_rel['start_entity_cui'] = rel.start_entity.cui
+                out_rel['start_entity_cui'] = rel.start_entity.entity.label
                 out_rel['start_entity_value'] = rel.start_entity.value
                 out_rel['start_entity_start_idx'] = rel.start_entity.start_ind
                 out_rel['start_entity_end_idx'] = rel.start_entity.end_ind
                 out_rel['end_entity'] = rel.end_entity.id
-                out_rel['end_entity_cui'] = rel.end_entity.cui
+                out_rel['end_entity_cui'] = rel.end_entity.entity.label
                 out_rel['end_entity_value'] = rel.end_entity.value
                 out_rel['end_entity_start_idx'] = rel.end_entity.start_ind
                 out_rel['end_entity_end_idx'] = rel.end_entity.end_ind
