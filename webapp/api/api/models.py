@@ -1,5 +1,6 @@
 import os
 
+from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.db import models
 from django.conf import settings
@@ -41,6 +42,22 @@ class ConceptDB(models.Model):
     name = models.CharField(max_length=100, default='', blank=True)
     cdb_file = models.FileField()
     use_for_training = models.BooleanField(default=True)
+
+    def __init__(self, *args, **kwargs):
+        super(ConceptDB, self).__init__(*args, **kwargs)
+        self.__cdb_field_name = None
+
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        inst = super(ConceptDB, cls).from_db(db, field_names, values)
+        inst.__cdb_field_name = [v for f, v in zip(field_names, values) if f == 'cdb_file'][0]
+        return inst
+
+    def save(self, *args, **kwargs):
+        if self.__cdb_field_name is not None and self.__cdb_field_name != self.cdb_file.name:
+            raise ValidationError('Cannot change file path of existing CDB.')
+        else:
+            super(ConceptDB, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.name
