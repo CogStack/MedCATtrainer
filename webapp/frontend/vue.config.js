@@ -4,9 +4,6 @@ module.exports = {
   devServer: {
     proxy: 'http://localhost:8001'
   },
-  configureWebpack: {
-    devtool: 'source-map'
-  },
   css: {
     loaderOptions: {
       sass: {
