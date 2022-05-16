@@ -63,5 +63,7 @@ urlpatterns = [
     path('api/download-deployment/', api.views.download_deployment),
     path('api/behind-rp/', api.views.behind_reverse_proxy),
     path('api/version/', api.views.version),
+    path('api/model-loaded/', api.views.model_loaded),
+    path('api/cache-model/<int:p_id>/', api.views.cache_model),
     re_path('^.*$', api.views.index, name='index'),  # Match everything else to home
 ]

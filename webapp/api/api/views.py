@@ -22,7 +22,8 @@ from .admin import download_projects_with_text, download_projects_without_text, 
     upload_deployment_export, import_concepts_from_cdb
 from .permissions import *
 from .serializers import *
-from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
+from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation, get_cached_medcat, \
+    clear_cached_medcat
 
 # For local testing, put envs
 """
@@ -668,3 +669,26 @@ def behind_reverse_proxy(_):
 @api_view(http_method_names=['GET'])
 def version(_):
     return Response(os.environ.get('MCT_VERSION', ':latest'))
+
+@api_view(http_method_names=['DELETE', 'POST'])
+def cache_model(request, p_id):
+    method = request.method
+    project = ProjectAnnotateEntities.objects.get(id=p_id)
+    cat = get_cached_medcat(CAT_MAP=CAT_MAP, project=project)
+    if method == 'POST':
+        if cat is None:
+            get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
+                       CAT_MAP=CAT_MAP, project=project)
+            return Response({'result': f'Successfully loaded model for project:{p_id}'})
+        else:
+            return Response({'result': f'Model already loaded for project:{p_id}'})
+    else:
+        clear_cached_medcat(CAT_MAP, project)
+        log.info(f'Cleared cached model{p_id}')
+        return Response({'result': f'Cleared cached model:{p_id}'})
+
+
+@api_view(http_method_names=['GET'])
+def model_loaded(_):
+    return Response({p.id: get_cached_medcat(CAT_MAP, p) is not None
+                     for p in ProjectAnnotateEntities.objects.all()})
