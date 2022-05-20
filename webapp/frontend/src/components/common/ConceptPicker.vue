@@ -68,44 +68,16 @@ export default {
         }
       }
 
-      const mapCuiInfoResult = function (infoResults, idsToConcepts, selectedCodeParam) {
-        return _.orderBy(_.flatten(infoResults.map(cuiInfo => {
-          return cuiInfo['concept'].map(conceptId => {
-            const concept = idsToConcepts[conceptId]
-            if (!concept) {
-              // too many concepts to load return null here then filter out of final result.
-              return null
-            }
-            const codeSearchResult = {
-              name: `${cuiInfo.code} | ${cuiInfo.desc}\n${concept.cui} | ${concept.pretty_name}`,
-              orderKey: cuiInfo.code,
-              cui: concept.cui,
-              type_ids: concept.type_ids,
-              desc: concept.desc,
-              icd10: concept.icd10,
-              opcs4: concept.opcs4,
-              semantic_type: concept.semantic_type,
-              synonyms: _.replace(concept.synonyms, new RegExp(',', 'g'), ', ')
-            }
-            codeSearchResult[selectedCodeParam] = cuiInfo.id
-            return codeSearchResult
-          }).filter(i => i !== null)
-        })), ['orderKey'], ['asc'])
-      }
-
       const that = this
       const conceptDbs = Array.from(new Set(this.project.cdb_search_filter.concat(this.project.concept_db))).join(',')
       const searchByTerm = function () {
-        term = term.split(' ').join('\\s')
-        let searchConceptsQueryParams = `search=${term}&cdb__in=${conceptDbs}`
+        let searchConceptsQueryParams = `search=${term}&cdbs=${conceptDbs}`
         that.$http.get(`/api/search-concepts/?${searchConceptsQueryParams}`).then(resp => {
           that.searchResults = filterResults(that.project,
             resp.data.results.map(res => mapResult(res, resp.data.results)))
-          that.searchResults = _.sortBy(that.searchResults, r => r.name.length)
           loading(false)
         })
       }
-
       const filterResults = function (project, results) {
         if (project.restrict_concept_lookup) {
           if (project.cuis) {
@@ -115,42 +87,7 @@ export default {
         }
         return results
       }
-
-      let match = term.match(/^\w?\d{4,}/gmi)
-      if (match) {
-        this.$http.get(`/api/concepts/?cui=${term}`).then(resp => {
-          if (resp.data.results.length > 0) {
-            loading(false)
-            this.searchResults = filterResults(that.project,
-              resp.data.results.map(res => mapResult(res, resp.data.results)))
-          }
-        })
-      } else if (term.match(/^\w\d\d.*/i)) {
-        let searchCdbInfosQueryParams = `code=${term}&cdb=${conceptDbs}`
-        this.$http.get(`/api/search-concept-infos/?${searchCdbInfosQueryParams}`).then(infoResp => {
-          let conceptIds = new Set(_.flatten((infoResp.data['icd_codes'] || []).map(r => r.concept)))
-          _.flatten((infoResp.data['opcs_codes'] || []).map(r => r.concept)).forEach(item => conceptIds.add(item))
-          if (conceptIds > 80) {
-            // only get the first 80...
-            conceptIds = conceptIds.slice(80)
-          }
-          this.$http.get(`/api/concepts/?id__in=${[...conceptIds].join(',')}`).then(resp => {
-            const idsToConcepts = {}
-            for (const r of resp.data.results) {
-              idsToConcepts[r.id] = r
-            }
-            let results = []
-            results = results.concat(mapCuiInfoResult(infoResp.data['icd_codes'] || [],
-              idsToConcepts, 'icdCode'))
-            results = results.concat(mapCuiInfoResult(infoResp.data['opcs_codes'] || [],
-              idsToConcepts, 'opcsCode'))
-            this.searchResults = results
-            loading(false)
-          })
-        })
-      } else {
-        searchByTerm()
-      }
+      searchByTerm()
     }, 400)
   }
 }

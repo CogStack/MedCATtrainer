@@ -1,18 +1,14 @@
 import logging
-import os
-import re
+
 import traceback
 from tempfile import NamedTemporaryFile
 
 import pandas as pd
-from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseBadRequest, HttpResponseServerError
 from django.shortcuts import render
 from django_filters import rest_framework as drf
-from django_filters.rest_framework import DjangoFilterBackend
+
 from medcat.utils.helpers import tkns_from_doc
-from rest_framework import filters
-from rest_framework import generics
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -24,6 +20,8 @@ from .permissions import *
 from .serializers import *
 from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation, get_cached_medcat, \
     clear_cached_medcat
+from .solr_utils import collections_available, search_collection
+from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
 
 # For local testing, put envs
 """
@@ -148,17 +146,6 @@ class ConceptViewSet(viewsets.ModelViewSet):
     filterset_fields = ['cui', 'id', 'cdb']
 
 
-class ConceptView(generics.ListAPIView):
-    http_method_names = ['get', 'post', 'head']
-    queryset = Concept.objects.all()
-    serializer_class = ConceptSerializer
-    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = ['$pretty_name']
-    ordering = ['pretty_name']
-    filterset_class = ConceptFilter
-    filterset_fields = ['cui', 'cdb']
-
-
 class EntityViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get', 'post', 'head']
@@ -257,24 +244,6 @@ class DeploymentUploadViewSet(ViewSet):
         return Response(errs, 200)
 
 
-@api_view(http_method_names=['GET'])
-def search_concept_infos(request):
-    out = {}
-    query = request.GET.get('code', '')
-    cdb_query = request.GET.get('cdb', '')
-    if len(query) >= 3 and len(cdb_query) > 0 and re.match('^\w\d\d', query):
-        if len(query) > 3 and query[3] != '.':
-            query = query[:3] + '.' + query[3:]
-        cdb_query = cdb_query.split(',')
-        icd_codes = ICDCode.objects.filter(cdb__in=cdb_query, code__startswith=query)
-        if len(icd_codes):
-            out['icd_codes'] = [ICDCodeSerializer(i).data for i in icd_codes]
-        opcs_codes = OPCSCode.objects.filter(cdb__in=cdb_query, code__startswith=query)
-        if len(opcs_codes):
-            out['opcs_codes'] = [OPCSCodeSerializer(o).data for o in opcs_codes]
-    return Response(out)
-
-
 @api_view(http_method_names=['POST'])
 def prepare_documents(request):
     # Get the user
@@ -346,7 +315,7 @@ def add_annotation(request):
     d_id = request.data['document_id']
     source_val = request.data['source_value']
     sel_occur_idx = int(request.data['selection_occur_idx'])
-    cui = request.data['cui']
+    cui = str(request.data['cui'])
 
     icd_code = request.data.get('icd_code')
     opcs_code = request.data.get('opcs_code')
@@ -558,7 +527,6 @@ def finished_projects(request):
 
 @api_view(http_method_names=['GET', 'POST'])
 def update_meta_annotation(request):
-
     project_id = request.data['project_id']
     entity_id = request.data['entity_id']
     document_id = request.data['document_id']
@@ -669,6 +637,20 @@ def behind_reverse_proxy(_):
 @api_view(http_method_names=['GET'])
 def version(_):
     return Response(os.environ.get('MCT_VERSION', ':latest'))
+
+
+@api_view(http_method_names=['GET'])
+def concept_search_index_available(request):
+    cdb_ids = request.GET.get('cdbs').split(',')
+    return collections_available(cdb_ids)
+
+
+@api_view(http_method_names=['GET'])
+def search_solr(request):
+    query = request.GET.get('search')
+    cdbs = request.GET.get('cdbs').split(',')
+    return search_collection(cdbs, query)
+
 
 @api_view(http_method_names=['DELETE', 'POST'])
 def cache_model(request, p_id):

@@ -88,6 +88,28 @@ TEMPLATES = [
     },
 ]
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'format': '{levelname} {asctime} {module}.py l:{lineno}:{message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+    }
+}
+
+
 WSGI_APPLICATION = 'core.wsgi.application'
 
 
@@ -160,3 +182,8 @@ STATICFILES_DIRS = [
 
 # BG TASKS
 MAX_RUN_TIME=60*60*10
+
+# Solr Concept Search settings
+SOLR_HOST = os.environ.get('CONCEPT_SEARCH_SERVICE_HOST', 'localhost')
+SOLR_PORT = os.environ.get('CONCEPT_SEARCH_SERVICE_PORT', '8983')
+

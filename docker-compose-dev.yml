@@ -18,6 +18,10 @@ services:
       - "8000"
     env_file:
       - ./envs/env
+    environment:
+      - MCT_VERSION=latest
+      - CONCEPT_SEARCH_SERVICE_HOST=mct_solr  # solr search service container name
+      - CONCEPT_SEARCH_SERVICE_PORT=8983      # solr search service port.
     command: /home/run.sh
   nginx:
     image: medcattrainer-nginx:latest
@@ -31,7 +35,20 @@ services:
       - "${MCTRAINER_PORT:-8001}:8000"
     depends_on:
       - medcattrainer
+  solr:
+    container_name: mct_solr
+    image: solr:8
+    restart: always
+    expose:
+      - "8983"
+    ports:
+      - 8983:8983
+    volumes:
+      - solr-data:/var/solr
+    command:
+      - -cloud  # solr cloud launches
 volumes:
-      api-media:
-      api-static:
-      api-db:
+  api-media:
+  api-static:
+  api-db:
+  solr-data:

@@ -10,6 +10,7 @@ from io import StringIO
 from typing import Dict, List
 
 import pkg_resources
+import requests
 from background_task import background
 from django.contrib import admin
 from django.contrib.auth.models import User
@@ -17,6 +18,7 @@ from django.db.models import QuerySet
 from django.http import HttpResponse, HttpResponseRedirect
 from rest_framework.exceptions import PermissionDenied
 
+from core.settings import SOLR_HOST, SOLR_PORT
 from .forms import *
 from .models import *
 from .utils import update_concept_model
@@ -28,6 +30,8 @@ admin.site.register(MetaAnnotation)
 admin.site.register(Vocabulary)
 admin.site.register(Relation)
 admin.site.register(EntityRelation)
+
+logger = logging.getLogger(__name__)
 
 
 def reset_project(modeladmin, request, queryset):
@@ -639,8 +643,6 @@ class DatasetAdmin(ReportErrorModelAdminMixin, admin.ModelAdmin):
 
 
 admin.site.register(Dataset, DatasetAdmin)
-
-
 class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
     model = ProjectAnnotateEntities
     actions = [download, download_without_text, download_without_text_with_doc_names, reset_project, clone_projects]
@@ -672,14 +674,73 @@ def import_concepts_from_cdb(cdb_model_id: int):
 
     cdb_model = ConceptDB.objects.get(id=cdb_model_id)
     cdb = CDB.load(cdb_model.cdb_file.path)
-    # Get all existing cuis for this CDB
-    existing_cuis = set(Concept.objects.filter(cdb=cdb_model_id).values_list('cui', flat=True))
 
-    for cui in cdb.cui2names.keys():
-        if cui not in existing_cuis:
-            concept = Concept()
-            concept.cui = cui
-            update_concept_model(concept, cdb_model, cdb)
+    collection_name = f'{cdb_model.name}_id_{cdb_model.id}'
+    base_url = f'http://{SOLR_HOST}:{SOLR_PORT}/solr'
+
+    # check if solr collections already exists.
+    url = f'{base_url}/admin/collections?action=LIST'
+    resp = requests.get(url)
+    if resp.status_code != 200:
+        logger.error("Error connecting to Solr to retrieve current collection list")
+        raise Exception("Error connecting to Solr to retrieve current collection list")
+
+    collections = json.loads(resp.text)['collections']
+    if collection_name in collections:
+        # delete collection
+        url = f'{base_url}/admin/collections?action=DELETE&name={collection_name}'
+        requests.get(url)
+
+    # create solr collections.
+    url = f'{base_url}/admin/collections?action=CREATE&name={collection_name}&numShards=1'
+    resp = requests.get(url)
+    if resp.status_code != 200:
+        _solr_error_response(resp, 'Failure creating collection')
+
+    cui2name_iter = iter(cdb.cui2names.items())
+
+    def _upload_payload(data, cn, commit=False):
+        update_url = f'{base_url}/{collection_name}/update'
+        update_url = f'{update_url}?commit=true' if commit else update_url
+        logger.info(f'Uploading {len(data)} to solr collection {cn}')
+        resp = requests.post(update_url, json=data)
+        if resp.status_code == 200:
+            logger.info(f'Successfully uploaded {len(data)} concepts to solr collection {cn}')
+        elif resp.status_code != 200:
+            _solr_error_response(resp, f'error updating {cn}')
+
+    payload = []
+    try:
+        while True:
+            for i in range(5000):
+                cui, name = next(cui2name_iter)
+                payload.append({
+                    'cui': str(cui),
+                    'pretty_name': cdb.get_name(cui),
+                    'name': re.sub(r'\([\w+\s]+\)', '', cdb.get_name(cui)).strip()
+                })
+            _upload_payload(payload, collection_name)
+            payload = []
+    except StopIteration:
+        # upload last update
+        _upload_payload(payload, collection_name, commit=True)
+
+    # get final collection size
+    logger.info(f'Successfully uploaded {cdb_model.name} cuis / names to solr collection {collection_name}')
+
+    resp = requests.get(f'{base_url}/{collection_name}/select?q=*:*&rows=0')
+    logger.info(f'{json.loads(resp.text)["response"]["numFound"]} Concepts now searchable')
+
+
+def _solr_error_response(resp, error_msg):
+    try:
+        error = json.loads(resp.text)['error']
+    except Exception as e:
+        logger.error(f'{error_msg}: unknown error')
+        raise e
+    error_msg = f'{error_msg}: solr error: {error}'
+    logger.error(error_msg)
+    raise Exception(error_msg)
 
 
 @background(schedule=5)
@@ -698,6 +759,7 @@ def reset_cdb_filters(modeladmin, request, queryset):
 
 def import_concepts(modeladmin, request, queryset):
     for concept_db in queryset:
+        logger.info(f'Importing concepts for collection {concept_db.name}_id_{concept_db.id}')
         import_concepts_from_cdb(concept_db.id)
 
 

@@ -262,6 +262,8 @@ def train_medcat(cat, project, document):
 
 
 def get_cached_medcat(CAT_MAP, project):
+    if project.concept_db is None or project.vocab is None:
+        return None
     cdb_id = project.concept_db.id
     vocab_id = project.vocab.id
     cat_id = str(cdb_id) + "-" + str(vocab_id)
