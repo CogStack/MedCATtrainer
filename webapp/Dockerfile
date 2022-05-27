@@ -3,7 +3,10 @@ ADD . /home/
 
 # Update and upgrade everything
 RUN apt-get -y update && \
-    apt-get -y upgrade
+    apt-get -y upgrade \
+
+# install vim as its annoying not to have an editor
+RUN apt-get install vim \
 
 # Get node and npm
 RUN apt-get install curl && \
