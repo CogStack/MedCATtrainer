@@ -6,7 +6,7 @@ RUN apt-get -y update && \
     apt-get -y upgrade
 
 # install vim as its annoying not to have an editor
-RUN apt-get install vim
+RUN apt-get install -y vim
 
 # Get node and npm
 RUN apt-get install curl && \
