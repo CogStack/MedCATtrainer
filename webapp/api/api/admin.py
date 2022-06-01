@@ -777,14 +777,14 @@ class ConceptDBAdmin(admin.ModelAdmin):
 admin.site.register(ConceptDB, ConceptDBAdmin)
 
 
-def remove_all_concepts(modeladmin, request, queryset):
-    Concept.objects.all().delete()
+def delete_selected(modeladmin, request, queryset):
+    queryset.delete()
 
 
 class ConceptAdmin(admin.ModelAdmin):
     model = Concept
     list_filter = ('cdb',)
-    actions = [remove_all_concepts]
+    actions = [delete_selected]
 
 
 admin.site.register(Concept, ConceptAdmin)
