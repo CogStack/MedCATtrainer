@@ -73,6 +73,6 @@ def search_collection(cdbs: List[int], query: str):
                 docs = [d for d in resp['response']['docs']]
                 for d in docs:
                     if d['cui'][0] not in uniq_results_map:
-                        uniq_results_map[d['cui'][0]] = {'cui': d['cui'][0], 'pretty_name': d['pretty_name'][0]}
+                        uniq_results_map[d['cui'][0]] = {'cui': str(d['cui'][0]), 'pretty_name': d['pretty_name'][0]}
         res = sorted(uniq_results_map.values(), key=lambda r: len(r['pretty_name']))
     return Response({'results': res})
