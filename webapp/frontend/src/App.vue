@@ -2,6 +2,7 @@
   <div @login:success="loginSuccessful">
     <nav class="navbar">
       <router-link class="app-name" to="/">Med<img class="icon" src="./assets/cat-logo.png" >AT</router-link>
+      <router-link class="navbar-brand" to="/">Projects</router-link>
       <router-link class="navbar-brand" to="/demo">Demo</router-link>
       <span class="version-id">{{version}}</span>
       <a class="navbar-brand ml-auto small">
@@ -99,6 +100,7 @@ export default {
 .navbar-brand {
   color: #fff;
   border-bottom: 1px solid transparent;
+  margin-left: 20px;
 
   &:hover {
     color: #fff;
