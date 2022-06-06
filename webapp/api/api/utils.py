@@ -279,8 +279,11 @@ def clear_cached_medcat(CAT_MAP, project):
 
 
 def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
-    cdb_id = project.concept_db.id
-    vocab_id = project.vocab.id
+    try:
+        cdb_id = project.concept_db.id
+        vocab_id = project.vocab.id
+    except AttributeError:
+        raise Exception('Failure loading Project Concept Database or Vocabulary. Are these set correctly?')
     cat_id = str(cdb_id) + "-" + str(vocab_id)
 
     if cat_id in CAT_MAP:

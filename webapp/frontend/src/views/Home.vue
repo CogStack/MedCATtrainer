@@ -224,6 +224,7 @@ export default {
         this.fetchCDBsLoaded()
       }).catch(_ => {
         this.modelCacheLoadError = true
+        this.loadingModel = false
         const that = this
         setTimeout(() => {
           that.modelCacheLoadError = false
