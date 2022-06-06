@@ -205,6 +205,12 @@ def create_annotation(source_val, selection_occurrence_index, cui, user, project
         ann_ent.save()
         id = ann_ent.id
 
+    # Add concept detail if neccessary.
+    if not Concept.objects.filter(cui=cui).exists():
+        concept = Concept()
+        concept.cui = cui
+        update_concept_model(concept, project.concept_db, cat.cdb)
+
     return id
 
 
