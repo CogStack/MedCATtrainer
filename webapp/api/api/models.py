@@ -8,6 +8,8 @@ from django.dispatch import receiver
 from medcat.cdb import CDB
 from polymorphic.models import PolymorphicModel
 
+from django.core.validators import RegexValidator
+
 
 STATUS_CHOICES = [
         (0, 'Not Validated'),
@@ -38,8 +40,11 @@ class OPCSCode(models.Model):
         return f'{self.code} | {self.desc}'
 
 
+cdb_name_validator = RegexValidator(r'^[0-9a-zA-Z_-]*$', 'Only alpahanumeric characters, -, _ are allowed for CDB names')
+
+
 class ConceptDB(models.Model):
-    name = models.CharField(max_length=100, default='', blank=True)
+    name = models.CharField(max_length=100, default='', blank=True, validators=[cdb_name_validator])
     cdb_file = models.FileField()
     use_for_training = models.BooleanField(default=True)
 
