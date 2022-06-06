@@ -237,8 +237,7 @@ class MetaTask(models.Model):
 
 
 class ProjectAnnotateEntities(Project):
-    concept_db = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=True,
-                                   null=True, default=None)
+    concept_db = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=False, null=True)
     vocab = models.ForeignKey('Vocabulary', on_delete=models.SET_NULL, null=True)
     cdb_search_filter = models.ManyToManyField('ConceptDB', blank=True, default=None,
                                                related_name='concept_source')
@@ -263,23 +262,6 @@ class ProjectAnnotateEntities(Project):
     tasks = models.ManyToManyField(MetaTask, blank=True, default=None)
     relations = models.ManyToManyField(Relation, blank=True, default=None,
                                        help_text='Relations that will be available for this project')
-
-    def save(self, *args, **kwargs):
-        if self.concept_db is None:
-            # TODO: Fix creation of default CDB
-            try:
-                cdb = CDB()
-                cdb.save_dict('empty_cdb.dat')
-                f = open('empty_cdb.dat', 'rb')
-                cdb_obj = ConceptDB()
-                cdb_obj.name = f'{self.name}_empty_cdb'
-                cdb_obj.cdb_file.save(f'{self.name}_empty_cdb.dat', File(f))
-                cdb_obj.use_for_training = True
-                cdb_obj.save()
-                self.concept_db = cdb_obj
-            except:
-                pass
-        super(ProjectAnnotateEntities, self).save(*args, **kwargs)
 
 
 class MetaAnnotation(models.Model):
