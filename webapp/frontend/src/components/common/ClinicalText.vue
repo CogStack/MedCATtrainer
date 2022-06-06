@@ -225,6 +225,7 @@ export default {
 
 .highlight-task-selected {
   font-weight: bold;
+  font-size: 1.15rem;
 }
 
 .current-rel-start {
