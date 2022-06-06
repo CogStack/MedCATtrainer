@@ -103,7 +103,7 @@ export default {
     selectedEnt: {
       type: Object,
       default () {
-        return {}
+        return null
       }
     },
     altSearch: Boolean
@@ -187,17 +187,11 @@ export default {
   },
   watch: {
     'selectedEnt': {
-      handler (newVal, oldVal) {
-        [newVal, oldVal] = [_.omit(newVal, ['comment']), _.omit(oldVal, ['comment'])]
-        const diff = _.reduce(newVal, function (result, value, key) {
-          return _.isEqual(value, oldVal[key]) ? result : result.concat(key)
-        }, [])
-        if (diff.length > 0) {
-          const that = this
-          that.fetchDetail(this.selectedEnt, () => {
-            that.cleanProps()
-          })
-        }
+      handler () {
+        const that = this
+        that.fetchDetail(this.selectedEnt, () => {
+          that.cleanProps()
+        })
       },
       deep: true
     }
