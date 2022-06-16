@@ -39,7 +39,7 @@ def collections_available(cdbs: List[int]):
 
 def search_collection(cdbs: List[int], query: str):
     query = query.strip().replace(r'\s+', r'\s').split(' ')
-    if len(query) == 0:
+    if len(query) == 1 and query[0] == '':
         return Response({'results': []})
     query = [f'{query[i]}~1' if i < len(query) - 1 else f'{query[i]}*' for i in range(len(query))]
 

@@ -50,7 +50,7 @@ export default {
     searchCUI: _.debounce(function (term, loading) {
       loading(true)
 
-      if (!term) {
+      if (!term || term.trim().length === 0) {
         return
       }
 
@@ -88,7 +88,7 @@ export default {
         return results
       }
       searchByTerm()
-    }, 400)
+    }, 500)
   }
 }
 </script>
