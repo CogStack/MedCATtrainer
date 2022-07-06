@@ -134,6 +134,9 @@ def update_concept_model(concept: Concept, cdb_model: ConceptDB, cdb: CDB):
 
 def _get_or_create_linked_code(mod: Union[ICDCode, OPCSCode], linked_codes: List[Dict],
                                cdb_model: ConceptDB) -> Union[ICDCode, OPCSCode]:
+    """
+    Expects the cui2icd10, cui2opcs4 dicts to include code and name.
+    """
     code_mods = []
     for code in linked_codes:
         if len(mod.objects.filter(code=code['code'])) == 0:
