@@ -77,7 +77,7 @@ def search_collection(cdbs: List[int], query: str):
                     if d['cui'][0] not in uniq_results_map:
                         parsed_doc = {'cui': str(d['cui'][0]), 'pretty_name': d['pretty_name'][0]}
                         if d.get('icd10'):
-                            parsed_doc['opcs4'] = d['icd10'][0]
+                            parsed_doc['icd10'] = d['icd10'][0]
                         if d.get('opcs4'):
                             parsed_doc['opcs4'] = d['opcs4'][0]
                         uniq_results_map[d['cui'][0]] = parsed_doc
