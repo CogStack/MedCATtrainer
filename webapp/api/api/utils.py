@@ -1,6 +1,7 @@
 import json
 import os
 import logging
+from typing import Union, Dict, List
 
 import pkg_resources
 from django.db.models.signals import post_save
@@ -14,11 +15,9 @@ from medcat.vocab import Vocab
 from medcat.cat import CAT
 from medcat.utils.filters import check_filters
 from medcat.utils.helpers import tkns_from_doc
-from medcat.utils.loggers import add_handlers
-from medcat.config import Config
+
 
 log = logging.getLogger('trainer')
-log = add_handlers(log)
 
 
 def remove_annotations(document, project, partial=False):
@@ -117,6 +116,36 @@ def update_concept_model(concept: Concept, cdb_model: ConceptDB, cdb: CDB):
     concept.synonyms = ", ".join(cdb.addl_info['cui2original_names'].get(cui, []))
     concept.cdb = cdb_model
     concept.save()
+
+    # add ICD-10 if available
+    if len(cdb.addl_info['cui2icd10']) > 0:
+        icd_codes = cdb.addl_info['cui2icd10'].get(cui)
+        if icd_codes is not None:
+            icd_codes_mods = _get_or_create_linked_code(ICDCode, icd_codes, cdb_model)
+            concept.icd10.set(icd_codes_mods, clear=True)
+
+    # add OPCS-4 if available
+    if len(cdb.addl_info['cui2opcs4']) > 0:
+        opcs_codes = cdb.addl_info['cui2opcs4'].get(cui)
+        if opcs_codes is not None:
+            opcs_codes_mods = _get_or_create_linked_code(OPCSCode, opcs_codes, cdb_model)
+            concept.opcs4.set(opcs_codes_mods)
+
+
+def _get_or_create_linked_code(mod: Union[ICDCode, OPCSCode], linked_codes: List[Dict],
+                               cdb_model: ConceptDB) -> Union[ICDCode, OPCSCode]:
+    code_mods = []
+    for code in linked_codes:
+        if len(mod.objects.filter(code=code['code'])) == 0:
+            code_mod = mod()
+            code_mod.code = code['code']
+            code_mod.desc = code['name']
+            code_mod.cdb = cdb_model
+            code_mod.save()
+            code_mods.append(code_mod)
+        else:
+            code_mods.append(mod.objects.get(code=code))
+    return code_mods
 
 
 def set_icd_info_objects(cdb, concept, cui):

@@ -31,11 +31,7 @@ env.read_env("/home/ubuntu/projects/MedAnno/MedAnno/env_umls", recurse=False)
 print(os.environ)
 """
 
-from medcat.utils.loggers import add_handlers
-
 log = logging.getLogger('trainer')
-log = add_handlers(log)
-
 
 # Maps between IDs and objects 
 CDB_MAP = {}

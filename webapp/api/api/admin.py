@@ -143,9 +143,7 @@ _dt_fmt = '%Y-%m-%d::%H:%M-%z'
 def download_deployment_export(data_only=False):
     """
     Packages projects, annotations, meta-annotations etc. into a flat list of linked entities,
-    ready to be downloaded and imported into a new trainer instance
-    :param projects:
-    :return: dict:
+    ready to be downloaded and imported into a new trainer instance (Experimental)
     """
     def clean_dict(d, keys=None):
         filter_keys = ['_state', 'id']
@@ -438,7 +436,6 @@ def _retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
         - their associated annotations,
         - their associated Meta annotations and Relation Annotations
     for serialization.
-    :param projects: the projects to export data for.
     Output schema is as follows: ((optional) indicates this field isn't required for training a MedCAT model)
     {
     "projects": [
@@ -503,7 +500,8 @@ def _retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
     ]
     }
 
-    :return: dict
+    Args:
+        projects (QuerySet): the projects to export data for.
     """
     all_projects = {'projects': []}
     for project in projects:
@@ -545,6 +543,11 @@ def _retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
                 out_ann['irrelevant'] = ann.irrelevant
                 out_ann['last_modified'] = str(ann.last_modified)
                 out_ann['manually_created'] = ann.manually_created
+                if ann.icd_code:
+                    out_ann['icd_code'] = {'code': ann.icd_code.code, 'desc': ann.icd_code.desc}
+                if ann.opcs_code:
+                    out_ann['opcs_codes'] = {'code': ann.opcs_code, 'desc': ann.opcs_code.desc}
+
                 out_ann['acc'] = ann.acc
                 if ann.comment:
                     out_ann['comment'] = ann.comment
