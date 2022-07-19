@@ -9,3 +9,7 @@ DEBUG=False
 
 # Max single dataset size for a single upload
 MAX_DATASET_SIZE=10000
+
+# For solr concept search service
+CONCEPT_SEARCH_SERVICE_HOST=mct_solr
+CONCEPT_SEARCH_SERVICE_PORT=8983
