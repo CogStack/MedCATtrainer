@@ -1,6 +1,8 @@
  # Medical <img src="https://github.com/CogStack/MedCATtrainer/blob/master/webapp/frontend/src/assets/cat-logo.png" width=45>oncept Annotation Tool Trainer
 
+[![Build Status](https://github.com/CogStack/MedCATtrainer/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/CogStack/MedCATtrainer/actions/workflows/qa.yml?query=branch%3Amaster)
 [![Build Status](https://github.com/CogStack/MedCATtrainer/actions/workflows/qa.yml/badge.svg?branch=master)](https://github.com/CogStack/MedCATtrainer/actions/workflows/qa.yml?query=branch%3Amaster)
+[![Build Status](https://github.com/CogStack/MedCATtrainer/actions/workflows/release.yml/badge.svg?branch=master)](https://github.com/CogStack/MedCATtrainer/actions/workflows/qa.yml?query=branch%3Amaster)
 [![Documentation Status](https://readthedocs.org/projects/medcattrainer/badge/?version=latest)](https://medcattrainer.readthedocs.io/en/latest/?badge=latest)
 [![Latest release](https://img.shields.io/github/v/release/CogStack/MedCATtrainer)](https://github.com/CogStack/MedCATtrainer/releases/latest)
 

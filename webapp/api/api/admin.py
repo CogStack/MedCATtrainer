@@ -658,6 +658,9 @@ class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == 'cdb_search_filter':
             kwargs['queryset'] = ConceptDB.objects.all()
+        if db_field.name == 'validated_documents':
+            proj = ProjectAnnotateEntities.objects.get(id=int(request.path.split('/')[-3]))
+            kwargs['queryset'] = Document.objects.filter(dataset=proj.dataset.id)
         return super(ProjectAnnotateEntitiesAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
 
 
