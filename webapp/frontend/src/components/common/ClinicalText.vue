@@ -83,10 +83,7 @@ export default {
         let spanText = `<span @click="selectEnt(${i})" class="${styleClass}">${highlightText}</span>`
         let precedingText = this.text.slice(start, this.ents[i].start_ind)
         precedingText = precedingText.length !== 0 ? precedingText : ' '
-        let wrapNewLines = precedingText.match(/^\n*/g)
-        if (wrapNewLines && wrapNewLines[0].length === precedingText.length) {
-          precedingText = precedingText.split('').map(_ => '<br>').join('')
-        }
+        precedingText = precedingText.replaceAll('\n', '<br>')
         start = this.ents[i].end_ind
         formattedText += precedingText + spanText
         if (i === this.ents.length - 1) {
