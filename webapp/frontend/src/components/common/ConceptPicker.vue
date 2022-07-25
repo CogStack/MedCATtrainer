@@ -5,6 +5,7 @@
             :filterable="false"
             :appendToBody="true"
             :options="searchResults"
+            :loading="loadingResults"
             label="cui">
     <template v-slot:option="option">
       <span class="select-option">{{option.name}}</span>
@@ -31,13 +32,14 @@ export default {
       const el = document.getElementById('searchBox')
       el.focus()
       el.value = that.selection
-      that.searchCUI(that.selection, () => true)
+      that.searchCUI(that.selection)
     }, 500)
   },
   data () {
     return {
       selectedCUI: null,
-      searchResults: []
+      searchResults: [],
+      loadingResults: false
     }
   },
   watch: {
@@ -47,10 +49,11 @@ export default {
     'selection': 'selectionChange'
   },
   methods: {
-    searchCUI: _.debounce(function (term, loading) {
-      loading(true)
+    searchCUI: _.debounce(function (term) {
+      this.loadingResults = true
 
       if (!term || term.trim().length === 0) {
+        this.loadingResults = false
         return
       }
 
@@ -73,9 +76,9 @@ export default {
       const searchByTerm = function () {
         let searchConceptsQueryParams = `search=${term}&cdbs=${conceptDbs}`
         that.$http.get(`/api/search-concepts/?${searchConceptsQueryParams}`).then(resp => {
-          that.searchResults = filterResults(that.project,
-            resp.data.results.map(res => mapResult(res, resp.data.results)))
-          loading(false)
+          that.searchResults = filterResults(that.project, resp.data.results.map(res => mapResult(res, resp.data.results)))
+          // loading(false)
+          that.loadingResults = false
         })
       }
       const filterResults = function (project, results) {
