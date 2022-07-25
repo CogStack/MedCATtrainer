@@ -659,8 +659,12 @@ class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
         if db_field.name == 'cdb_search_filter':
             kwargs['queryset'] = ConceptDB.objects.all()
         if db_field.name == 'validated_documents':
-            proj = ProjectAnnotateEntities.objects.get(id=int(request.path.split('/')[-3]))
-            kwargs['queryset'] = Document.objects.filter(dataset=proj.dataset.id)
+            project_id = request.path.replace('/admin/api/projectannotateentities/', '').split('/')[0]
+            try:
+                proj = ProjectAnnotateEntities.objects.get(id=int(project_id))
+                kwargs['queryset'] = Document.objects.filter(dataset=proj.dataset.id)
+            except ValueError:  # a blank project has no validated_documents
+                kwargs['queryset'] = Document.objects.none()
         return super(ProjectAnnotateEntitiesAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
 
 
