@@ -1,3 +1,5 @@
+import re
+
 import pandas as pd
 
 from .models import *
@@ -29,11 +31,20 @@ def dataset_from_file(dataset: Dataset):
             row = row[1]
             document = Document()
             document.name = row['name']
-            document.text = row['text']
+            document.text = sanitise_input(row['text'])
             document.dataset = dataset
             document.save()
     else:
         raise Exception("Please make sure the file is either a .csv or .xlsx format")
+
+
+def sanitise_input(text: str):
+    tags = [('<br>', '\n'), ('</?p>', '\n'), ('<span(?:.*?)?>', ''),
+            ('</span>', ''), ('<div (?:.*?)?>', '\n'), ('</div>', '\n'),
+            ('</?html>', ''), ('</?body>', ''), ('</?head>', '')]
+    for tag, repl in tags:
+        text = re.sub(tag, repl, text)
+    return text
 
 
 def delete_orphan_docs(dataset: Dataset):

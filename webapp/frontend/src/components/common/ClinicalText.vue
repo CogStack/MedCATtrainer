@@ -90,12 +90,6 @@ export default {
           formattedText += this.text.slice(start, this.text.length)
         }
       }
-      // escape '<' '>' that may be interpreted as start/end tags.
-      formattedText = formattedText
-        .replace(/<(?!span|br)/g, '&lt')
-        .replace(/&lt(?=\/span>)/g, '<')
-        .replace(/(?<!")>/g, '&gt')
-        .replace(/(?<=<\/span|br)&gt/g, '>')
 
       formattedText = this.addAnnos ? `<div @contextmenu.prevent.stop="showCtxMenu($event)">${formattedText}</div>` : `<div>${formattedText}</div>`
       this.scrollIntoView(timeout)

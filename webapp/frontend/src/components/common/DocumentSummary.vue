@@ -102,6 +102,7 @@ export default {
   },
   filters: {
     limitText (value) {
+      value = value.trim()
       let splitText = value.split('\n')
       if (splitText.length > 5) {
         return splitText.slice(0, 5).join('\n')
