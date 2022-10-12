@@ -461,7 +461,7 @@ def _retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
                     "deleted": <boolean>  # if the text span was incorrectly linked or 'not' linked by MedCAT due to low scores
                     "alternative": <boolean>  # if the text span was incorrectly linked by MedCAT, then correctly linked by a human annotator
                     "killed":  <boolean>  # if a human annotator 'terminated' this annotation
-                    "irrelevant": <boolean>  # if a human annotator has marked an annotation as irrelvant (optional)
+                    "irrelevant": <boolean>  # if a human annotator has marked an annotation as irrelevant (optional)
                     "acc": <float>  # accuracy provided by MedCAT (optional)
                     "comment": "<comment string>" # the text entered by an annotator during annotation (optional)
                     "meta_anns": [
