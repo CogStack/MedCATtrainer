@@ -27,7 +27,7 @@ ARG SPACY_MODELS="en_core_web_md"
 RUN for SPACY_MODEL in ${SPACY_MODELS}; do python -m spacy download ${SPACY_MODEL}; done
 
 # Copy rest of project
-COPY api load_examples.py run.sh ./
+COPY ./ /home/
 
 WORKDIR /home/api/
 RUN chmod a+x /home/run.sh
