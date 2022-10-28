@@ -22,5 +22,6 @@ RUN npm install && npm run build
 WORKDIR /home/api
 RUN pip install pip --upgrade 
 RUN pip install -r /home/requirements.txt
-RUN python -m spacy download en_core_web_md
+ARG SPACY_MODELS="en_core_web_md"
+RUN for SPACY_MODEL in ${SPACY_MODELS}; do python -m spacy download ${SPACY_MODEL}; done
 RUN chmod a+x /home/run.sh

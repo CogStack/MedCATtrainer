@@ -2,10 +2,12 @@ version: '3.4'
 
 services:
   medcattrainer:
-    image: medcattrainer:latest
     build:
-        network: host
-        context: ./webapp
+      network: host
+      context: ./webapp
+      args:
+        SPACY_MODELS: ${SPACY_MODELS:-en_core_web_md}
+    restart: always
     volumes:
       - ./webapp/api/core:/home/api/core
       - ./webapp/api/api:/home/api/api
@@ -14,39 +16,35 @@ services:
       - api-media:/home/api/media
       - api-static:/home/api/static
       - api-db:/home/api/db
-    expose:
-      - "8000"
     env_file:
       - ./envs/env
     environment:
       - MCT_VERSION=latest
-      - CONCEPT_SEARCH_SERVICE_HOST=mct_solr  # solr search service container name
-      - CONCEPT_SEARCH_SERVICE_PORT=8983      # solr search service port.
     command: /home/run.sh
+
   nginx:
-    image: medcattrainer-nginx:latest
     build:
-        network: host
-        context: ./nginx
+      network: host
+      context: ./nginx
+    restart: always
     volumes:
       - api-media:/home/api/media
       - api-static:/home/api/static
     ports:
-      - "${MCTRAINER_PORT:-8001}:8000"
+      - ${MCTRAINER_PORT:-8001}:8000
     depends_on:
       - medcattrainer
+
   solr:
-    container_name: mct_solr
     image: solr:8
     restart: always
-    expose:
-      - "8983"
     ports:
-      - 8983:8983
+      - ${SOLR_PORT:-8983}:8983
     volumes:
       - solr-data:/var/solr
     command:
-      - -cloud  # solr cloud launches
+      - -cloud
+
 volumes:
   api-media:
   api-static:

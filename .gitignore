@@ -8,6 +8,10 @@
 data/
 tmp/
 *_tmp/
+.idea/
+
+# Configuration
+.env
 
 /webapp/frontend/dist/*
 /webapp/api/media/*
