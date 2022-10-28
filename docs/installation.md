@@ -1,28 +1,35 @@
 # Installation
 MedCATtrainer is a docker-compose packaged Django application.
 
-## Download & Run MedCATTrainer
+## Download from Dockerhub
 Clone the repo, run the default docker-compose file and default env var: 
 ```shell
-$ git clone https://github.com/CogStack/MedCATtrainer
-$ cd MedCATtrainer
-$ docker-compose up</pre>
+git clone https://github.com/CogStack/MedCATtrainer
+cd MedCATtrainer
+docker-compose up</pre>
 ```
 
 This will use the pre-built docker images available on DockerHub. If your internal firewall does on permit access to DockerHub, you can build 
 directly from source.
 
+## MedCAT v0.x models
 If you have MedCAT v0.x models, and want to use the trainer please use the following docker-compose file:
 This refences the latest built image for the trainer that is still compatible with [MedCAT v0.x.](https://pypi.org/project/medcat/0.4.0.6/) and under.
 ```shell
-$ docker-compose -f docker-compose-mc0x.yml up
+docker-compose -f docker-compose-mc0x.yml up
 ```
 
-## Build & run from source
-The above commands runs the latest release of MedCATtrainer, if you'd prefer to build the images from source, use
+## Build images from source
+The above commands runs the latest release of MedCATtrainer, if you'd prefer to build the Docker images from source, use
 ```shell
 $ docker-compose -f docker-compose-dev.yml up
 ```
+
+To change environment variables, such as the exposed host ports and language of spaCy model, use:
+```shell
+cp .env-example .env
+# Set local configuration in .env
+``` 
 
 ## Troubleshooting 
 If the build fails with an error code 137, the virtual machine running the docker
