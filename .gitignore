@@ -8,6 +8,7 @@
 data/
 tmp/
 *_tmp/
+.idea
 
 /webapp/frontend/dist/*
 /webapp/api/media/*
