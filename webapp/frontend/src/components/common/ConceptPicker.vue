@@ -9,6 +9,7 @@
             label="cui">
     <template v-slot:option="option">
       <span class="select-option">{{option.name}}</span>
+      <span class="select-option-cui"> - {{option.cui}}</span>
     </template>
   </v-select>
 </template>
@@ -99,6 +100,10 @@ export default {
 <style scoped lang="scss">
 .select-option {
   white-space: pre-wrap;
+  padding: 3px 0;
+}
+.select-option-cui {
+  opacity: 50%;
   padding: 3px 0;
 }
 </style>
