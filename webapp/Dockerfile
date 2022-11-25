@@ -1,5 +1,4 @@
 FROM python:3.9
-ADD . /home/
 
 # Update and upgrade everything
 RUN apt-get -y update && \
@@ -16,11 +15,19 @@ RUN apt-get install curl && \
 
 # Build frontend
 WORKDIR /home/frontend
+COPY frontend .
 RUN npm install && npm run build
 
-# Build backend
-WORKDIR /home/api
+# Install requirements for backend
+WORKDIR /home/
+COPY requirements.txt .
 RUN pip install pip --upgrade 
-RUN pip install -r /home/requirements.txt
-RUN python -m spacy download en_core_web_md
+RUN pip install -r requirements.txt
+ARG SPACY_MODELS="en_core_web_md"
+RUN for SPACY_MODEL in ${SPACY_MODELS}; do python -m spacy download ${SPACY_MODEL}; done
+
+# Copy rest of project
+COPY ./ /home/
+
+WORKDIR /home/api/
 RUN chmod a+x /home/run.sh

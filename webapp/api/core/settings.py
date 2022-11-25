@@ -184,7 +184,7 @@ STATICFILES_DIRS = [
 MAX_RUN_TIME=60*60*10
 
 # Solr Concept Search settings
-SOLR_HOST = os.environ.get('CONCEPT_SEARCH_SERVICE_HOST', 'localhost')
+SOLR_HOST = os.environ.get('CONCEPT_SEARCH_SERVICE_HOST', 'solr')
 SOLR_PORT = os.environ.get('CONCEPT_SEARCH_SERVICE_PORT', '8983')
 
 SILENCED_SYSTEM_CHECKS = ['admin.E130']
