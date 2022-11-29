@@ -35,7 +35,12 @@
           </td>
           <td @click.stop v-if="isAdmin">
             <font-awesome-icon v-if="cdbSearchIndexStatus[project.cdb_search_filter]" icon="check" class="success"></font-awesome-icon>
-            <font-awesome-icon v-if="!cdbSearchIndexStatus[project.cdb_search_filter]" icon="times" class="danger"></font-awesome-icon>
+            <span :id="'concepts-imported-' + project.id">
+              <font-awesome-icon v-if="!cdbSearchIndexStatus[project.cdb_search_filter]" icon="times" class="danger"></font-awesome-icon>
+            </span>
+            <b-tooltip :target="'concepts-imported-' + project.id" :container="'concepts-imported-' + project.id"
+                       triggers="hover" v-if="!loadingProjects"
+                       title="Project concept search not available. Check the project setup 'CDB search filter' option is set and correctly imported."></b-tooltip>
           </td>
           <td @click.stop v-if="isAdmin">
             <div v-if="cdbLoaded[project.id]">
@@ -78,6 +83,8 @@
         <button class="btn btn-default" @click="clearModelModal = false">Cancel</button>
       </div>
     </modal>
+<!--    <b-tooltip target="concepts-imported" triggers="hover" container="concepts-imported" v-if="!loadingProjects"-->
+<!--               title="Concept search configuration status. If red - check the project setup 'cdb_search_filter' option is set and correctly imported."></b-tooltip>-->
   </div>
 </template>
 <script>

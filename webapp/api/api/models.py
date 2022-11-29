@@ -240,6 +240,9 @@ class ProjectAnnotateEntities(Project):
     concept_db = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=False, null=True)
     vocab = models.ForeignKey('Vocabulary', on_delete=models.SET_NULL, null=True)
     cdb_search_filter = models.ManyToManyField('ConceptDB', blank=True, default=None,
+                                               help_text='The CDB that will be used for concept lookup. '
+                                                         'This specific CDB should have been "imported" '
+                                                         'via the CDB admin screen',
                                                related_name='concept_source')
     require_entity_validation = models.BooleanField(default=True,
                                                     help_text='Entities appear grey and are required to be validated '
