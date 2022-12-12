@@ -13,7 +13,7 @@ Using the admin page, a configured admin or superuser can create, edit and delet
 2\. 'Add Project Annotate Entities'
 
 ![Add Project Annotate Entities button](_static/img/add_project_annotate_entities.png)
-
+project_admin
 3\. Complete the new annotation project form. The table below provides details the purpose of each field:
 
 |Parameter|Description|

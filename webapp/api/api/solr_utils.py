@@ -35,7 +35,11 @@ def collections_available(cdbs: List[int]):
         for col in collections:
             _cache_solr_collection_schema_types(col)
         current_collections_cdb_ids = [c.split('_id_')[-1] for c in collections]
-        return Response({'results': {cdb_id: cdb_id in current_collections_cdb_ids for cdb_id in cdbs}})
+        if len(cdbs):
+            return Response({'results': {cdb_id: cdb_id in current_collections_cdb_ids for cdb_id in cdbs}})
+        else:
+            return Response({'results': {cdb_id: {'imported': False, 'index_name': col}
+                                         for cdb_id, col in zip(current_collections_cdb_ids, collections)}})
     else:
         return HttpResponseServerError('Error requesting solr concept search collection list')
 

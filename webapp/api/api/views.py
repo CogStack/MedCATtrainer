@@ -637,7 +637,8 @@ def version(_):
 
 @api_view(http_method_names=['GET'])
 def concept_search_index_available(request):
-    cdb_ids = request.GET.get('cdbs').split(',')
+    cdb_ids = request.GET.get('cdbs', '').split(',')
+    cdb_ids = [c for c in cdb_ids if len(c)]
     return collections_available(cdb_ids)
 
 
