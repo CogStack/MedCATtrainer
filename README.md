@@ -12,7 +12,7 @@ and Linking (NER+L) model (MedCAT) for biomedical domain text.
 MedCATTrainer was presented at EMNLP/IJCNLP 2019 :tada:
 [here](https://www.aclweb.org/anthology/D19-3024.pdf)
 
-# Document and Discussion
+# Documentation and Discussion
 
 Official docs available [here](https://medcattrainer.readthedocs.io/en/latest/)
 
