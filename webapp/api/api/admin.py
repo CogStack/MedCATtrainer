@@ -642,6 +642,7 @@ dataset_document_counts.short_description = 'Document Count'
 
 class DatasetAdmin(ReportErrorModelAdminMixin, admin.ModelAdmin):
     model = Dataset
+    form = DatasetForm
     list_display = ['name', 'create_time', 'description', dataset_document_counts]
 
 

@@ -72,11 +72,11 @@
     </div>
     <modal v-if="clearModelModal" :closable="true" @modal:close="clearModelModal = false">
       <div slot="header">
-        <h3>Confirm Clear Cache Model</h3>
+        <h3>Confirm Clear Cached Model State</h3>
       </div>
       <div slot="body">
-        Confirm clearing cached MedCAT Model for Project {{clearModelModal}}, this will remove any interim training
-        done (if any). To recover the cached model, re-open the project, and re-submit all documents.
+        Confirm clearing cached MedCAT Model for Project {{clearModelModal}} (any other Projects that use this model). This will remove any interim training
+        done (if any). To recover the cached model, re-open the project(s), and re-submit all documents. If you're unsure you should not clear the model state.
       </div>
       <div slot="footer">
         <button class="btn btn-primary" @click="confirmClearLoadedModel(clearModelModal)">Confirm</button>

@@ -1,15 +1,13 @@
 import os
 
-from django.core.exceptions import ValidationError
-from django.core.files import File
-from django.db import models
+import pandas as pd
 from django.conf import settings
-from django.dispatch import receiver
-from medcat.cdb import CDB
-from polymorphic.models import PolymorphicModel
-
+from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
-
+from django.db import models
+from django.dispatch import receiver
+from django.forms import forms, ModelForm
+from polymorphic.models import PolymorphicModel
 
 STATUS_CHOICES = [
         (0, 'Not Validated'),
@@ -107,6 +105,19 @@ class Dataset(models.Model):
 
     def __str__(self):
         return str(self.name)
+
+
+class DatasetForm(ModelForm):
+    def clean(self):
+        original_file = self.cleaned_data['original_file']
+        if '.csv' in original_file.name:
+            df = pd.read_csv(original_file.file, on_bad_lines='error')
+        elif '.xlsx' in original_file.name:
+            df = pd.read_excel(original_file.file)
+        else:
+            raise forms.ValidationError({'original_file': 'Must be either .csv or .xlsx'})
+        if 'name' not in df.columns or 'text' not in df.columns:
+            raise forms.ValidationError({'original_file': 'Must contain at least a "name" and "text" column'})
 
 
 class Document(models.Model):
