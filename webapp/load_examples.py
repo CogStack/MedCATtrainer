@@ -11,6 +11,12 @@ def main(port=8000,
          vocab_tmp_file='/home/vocab.dat',
          dataset_tmp_file='/home/ds.csv',
          initial_wait=15):
+
+    val = os.environ.get('LOAD_EXAMPLES')
+    if val is not None and val not in ('1', 'true', 't', 'y'):
+        print('Found Env Var LOAD_EXAMPLES is False, not loading example data, cdb, vocab and project')
+        return
+
     URL = f'http://localhost:{port}/api/'
     sleep(initial_wait)
 
@@ -106,13 +112,3 @@ def create_example_project(url, headers, cdb, vocab, ds_dict):
 
 if __name__ == '__main__':
     main()
-    # payload = {"username": "admin", "password": "admin"}
-    # resp = requests.post(f"http://localhost:8001/api/api-token-auth/", json=payload)
-    # headers = {
-    #     'Authorization': f'Token {json.loads(resp.text)["token"]}',
-    # }
-    # create_example_project('http://localhost:8001/api/',
-    #                        headers=headers,
-    #                        cdb='/Users/tom/phd/cattrainer_models/cdb-medmen-v1.dat',
-    #                        vocab='/Users/tom/phd/cattrainer_models/vocab-mc-v1.dat',
-    #                        ds_dict=pd.read_csv('/Users/tom/phd/MedCATtrainer/docs/example_data/cardio.csv').loc[:, ['text']].to_dict())

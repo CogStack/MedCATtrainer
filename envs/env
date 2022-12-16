@@ -8,10 +8,10 @@ ENV=non-prod
 DEBUG=True
 
 ### Load example CDB, Vocab ###
-LOAD_EXAMPLES=1
+LOAD_EXAMPLES=True
 
 ### Dataset conf ###
-UNIQUE_DOC_NAMES_IN_DATASETS=1
+UNIQUE_DOC_NAMES_IN_DATASETS=True
 MAX_DATASET_SIZE=10000
 
 ### Solr Concept Search Conf ###

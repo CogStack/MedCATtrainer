@@ -3,6 +3,7 @@ import re
 import pandas as pd
 
 from .models import *
+from .utils import env_str_to_bool
 
 _MAX_DATASET_SIZE_DEFAULT = 10000
 
@@ -16,9 +17,9 @@ def dataset_from_file(dataset: Dataset):
         raise Exception("Please make sure the file is either a .csv or .xlsx format")
 
     df.columns = [c.lower() for c in df.columns]
-    max_dataset_size = os.environ.get('MAX_DATASET_SIZE', _MAX_DATASET_SIZE_DEFAULT)
+    max_dataset_size = int(os.environ.get('MAX_DATASET_SIZE', _MAX_DATASET_SIZE_DEFAULT))
 
-    if df['name'].nunique() != df.shape[0] and os.environ.get('UNIQUE_DOC_NAMES_IN_DATASETS', True):
+    if df['name'].nunique() != df.shape[0] and env_str_to_bool('UNIQUE_DOC_NAMES_IN_DATASETS', True):
         raise Exception('name column entries must be unique')
 
     if df.shape[0] > int(max_dataset_size):
