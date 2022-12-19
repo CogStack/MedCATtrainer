@@ -83,13 +83,17 @@ export default {
         let spanText = `<span @click="selectEnt(${i})" class="${styleClass}">${highlightText}</span>`
         let precedingText = this.text.slice(start, this.ents[i].start_ind)
         precedingText = precedingText.length !== 0 ? precedingText : ' '
-        precedingText = precedingText.replaceAll('\n', '<br>')
         start = this.ents[i].end_ind
         formattedText += precedingText + spanText
         if (i === this.ents.length - 1) {
           formattedText += this.text.slice(start, this.text.length)
         }
       }
+
+      // escape '<' '>' that may be interpreted as start/end tags, escape inserted span tags.
+      formattedText = formattedText
+        .replace(/<(?!\/?span)/g, '&lt')
+        .replace(/(?<!<span @click="selectEnt\(\d\)".*"|\/span)>/g, '&gt')
 
       formattedText = this.addAnnos ? `<div @contextmenu.prevent.stop="showCtxMenu($event)">${formattedText}</div>` : `<div>${formattedText}</div>`
       this.scrollIntoView(timeout)
