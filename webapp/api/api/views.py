@@ -571,7 +571,6 @@ def annotate_text(request):
 
     project = ProjectAnnotateEntities.objects.get(id=p_id)
 
-
     cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
                      CAT_MAP=CAT_MAP, project=project)
     cat.config.linking['filters']['cuis'] = set(cuis)

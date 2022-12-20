@@ -136,15 +136,25 @@ def import_concepts_to_solr(cdb: CDB, cdb_model: ConceptDB):
                 }
                 # upload icd / opcs codes if available
                 # also expects icd / opcs addl info dicts to include:
-                # {code: <the code>: name: <human readabled desc>}
+                # {code: <the code>: name: <human readable desc>}
                 icd_codes = cdb.addl_info.get('cui2icd10', {}).get(cui, None)
                 if icd_codes is not None:
-                    concept_dct['icd10'] = ', '.join([f'{code["code"]} : {code["name"]}'
-                                                      for code in icd_codes])
+                    try:
+                        concept_dct['icd10'] = ', '.join([f'{code["code"]} : {code["name"]}'
+                                                          for code in icd_codes])
+                    except Exception:
+                        logger.warning(f'Tried to upload ICD codes for cui:{cui} into solr search - '
+                                       f'but encountered icd_codes of the form:{icd_codes}, expected a list of '
+                                       '{code: <the code>: name: <human readable desc>}')
                 opcs_codes = cdb.addl_info.get('cui2opcs4', {}).get(cui, None)
                 if opcs_codes is not None:
-                    concept_dct['opcs4'] = ', '.join([f'{code["code"]} : {code["name"]}'
-                                                      for code in opcs_codes])
+                    try:
+                        concept_dct['opcs4'] = ', '.join([f'{code["code"]} : {code["name"]}'
+                                                          for code in opcs_codes])
+                    except Exception:
+                        logger.warning(f'Tried to upload ICD codes for cui:{cui} into solr search - '
+                                       f'but encountered icd_codes of the form:{opcs_codes}, expected a list of '
+                                       '{code: <the code>: name: <human readable desc>}')
                 payload.append(concept_dct)
             _upload_payload(payload, collection_name)
             payload = []

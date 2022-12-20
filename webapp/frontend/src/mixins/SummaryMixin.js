@@ -42,7 +42,7 @@ export default {
       }
     },
     showInfoCol (info) {
-      return _.some(this.annos, a => a[info])
+      return _.some(this.annos, a => a[info].length > 0)
     },
     enrichMetaAnnos (annos, finishedEnrichmentCallback) {
       const that = this

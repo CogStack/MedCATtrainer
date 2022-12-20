@@ -370,3 +370,13 @@ def save_project_anno(sender, instance, **kwargs):
         instance.cuis = ','.join(set(cui_list) - set(cuis_from_file))
         instance.save()
         post_save.connect(save_project_anno, sender=ProjectAnnotateEntities)
+
+
+def env_str_to_bool(var: str, default: bool):
+    val = os.environ.get(var, default)
+    if isinstance(val, str):
+        if val.lower() in ('1', 'true', 't', 'y'):
+            return True
+        elif val.lower() in ('0', 'false', 'f', 'n'):
+            return False
+    return val

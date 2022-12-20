@@ -13,9 +13,7 @@
         <tr v-for="concept in annos" :key="concept.id" class="summary-body" @click="selectConcept(concept)">
           <td>
             <span>{{leftContext(concept)}}</span>
-            <span :class="highlightClass(concept)">
-              {{concept.value}}
-            </span>
+            <span :class="highlightClass(concept)">{{concept.value}}</span>
             <span>{{rightContext(concept)}}</span>
           </td>
           <td>{{concept.cui}}</td>
