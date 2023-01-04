@@ -1,26 +1,23 @@
 import logging
-
 import traceback
 from tempfile import NamedTemporaryFile
 
-import pandas as pd
 from django.http import HttpResponseBadRequest, HttpResponseServerError
 from django.shortcuts import render
 from django_filters import rest_framework as drf
-
 from medcat.utils.helpers import tkns_from_doc
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-from .admin import download_projects_with_text, download_projects_without_text, download_deployment_export, \
-    upload_deployment_export, import_concepts_from_cdb
+from .admin import download_projects_with_text, download_projects_without_text, \
+    import_concepts_from_cdb, upload_projects_export
 from .permissions import *
 from .serializers import *
-from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation, get_cached_medcat, \
-    clear_cached_medcat
 from .solr_utils import collections_available, search_collection
+from .utils import get_cached_medcat, \
+    clear_cached_medcat
 from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
 
 # For local testing, put envs
@@ -228,16 +225,6 @@ class OPCSCodeViewSet(viewsets.ModelViewSet):
     serializer_class = OPCSCodeSerializer
     filterset_class = OPCSCodeFilter
     filterset_fields = ['code', 'id']
-
-
-class DeploymentUploadViewSet(ViewSet):
-    serializer_class = DeploymentUploadSerializer
-
-    def create(self, request):
-        deployment_upload = request.FILES.get('deployment_file')
-        errs = upload_deployment_export(deployment_upload.file.name)
-        log.info(f'Errors encountered during previous deployment upload\n{errs}')
-        return Response(errs, 200)
 
 
 @api_view(http_method_names=['POST'])
@@ -616,15 +603,6 @@ def download_annos(request):
 
 
 @api_view(http_method_names=['GET'])
-def download_deployment(request):
-    user = request.user
-    if not user.is_superuser:
-        return HttpResponseBadRequest('User is not super user, and not allowed to download a deployment')
-    data_only = request.GET.get('data_only', False)
-    return download_deployment_export(data_only)
-
-
-@api_view(http_method_names=['GET'])
 def behind_reverse_proxy(_):
     return Response(bool(int(os.environ.get('BEHIND_RP', False))))
 
@@ -664,6 +642,14 @@ def cache_model(request, p_id):
         clear_cached_medcat(CAT_MAP, project)
         log.info(f'Cleared cached model{p_id}')
         return Response({'result': f'Cleared cached model:{p_id}'})
+
+
+@api_view(http_method_names=['POST'])
+def upload_deployment(request):
+    deployment_upload = request.data
+    upload_projects_export(deployment_upload)
+    # log.info(f'Errors encountered during previous deployment upload\n{errs}')
+    return Response("successfully uploaded", 200)
 
 
 @api_view(http_method_names=['GET'])

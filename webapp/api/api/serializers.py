@@ -116,11 +116,3 @@ class MetaTaskValueSerializer(serializers.ModelSerializer):
     class Meta:
         model = MetaTaskValue
         fields = '__all__'
-
-
-# Serializers define the API representation.
-class DeploymentUploadSerializer(Serializer):
-    deployment_file = FileField()
-
-    class Meta:
-        fields = ['deployment_file']
