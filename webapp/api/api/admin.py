@@ -1,28 +1,17 @@
 import copy
-import json
 import logging
-import re
-import tarfile
-from collections import defaultdict
 from datetime import datetime
-from glob import glob
 from io import StringIO
 from typing import Dict, List
 
-import pandas as pd
-import pkg_resources
-import requests
 from background_task import background
 from django.contrib import admin
-from django.contrib.auth.models import User
-from django.db.models import QuerySet, Q
+from django.db.models import QuerySet
 from django.http import HttpResponse, HttpResponseRedirect
 from rest_framework.exceptions import PermissionDenied
 
-from core.settings import MEDIA_ROOT
 from .forms import *
 from .models import *
-
 from .solr_utils import import_concepts_to_solr
 
 admin.site.register(Entity)
@@ -140,125 +129,6 @@ def download_projects_without_text(projects, with_doc_name):
 
 
 _dt_fmt = '%Y-%m-%d::%H:%M-%z'
-
-
-def upload_projects_export(medcat_export: Dict):
-    for proj in medcat_export['projects']:
-        p = ProjectAnnotateEntities()
-        p.name = proj['name'] + ' IMPORTED'
-        p.cuis = proj['cuis']
-
-        # ensure current deployment has the neccessary - Entity, MetaTak, Relation, and warn on not present User objects.
-        ent_labels, meta_tasks, rels, unavailable_users, available_users = set(), defaultdict(set), set(), set(), dict()
-        for doc in proj['documents']:
-            for anno in doc['annotations']:
-                ent_labels.add(anno['cui'])
-                for meta_anno in anno['meta_anns'].values():
-                    meta_tasks[meta_anno['name']].add(meta_anno['value'])
-                user_obj = User.objects.filter(username=anno['user']).first()
-                if user_obj is None:
-                    unavailable_users.add(anno['user'])
-                elif anno['user'] not in available_users:
-                    available_users[anno['user']] = user_obj
-            for rel in doc.get('relations', []):
-                rels.add(rel['relation'])
-        # escape - filename
-        ds_file_name = MEDIA_ROOT + '/' + re.sub('/|\.', '_', proj['name'] + '_dataset') + '.csv'
-        names = [doc['name'] for doc in proj['documents']]
-        if len(set(names)) != len(names):  # ensure names are unique for docs
-            names = [f'{i} - {names[i]}' for i in range(len(names))]
-        pd.DataFrame({'name': names,
-                      'text': [doc['text'] for doc in proj['documents']]}).to_csv(ds_file_name)
-        ds_mod = Dataset()
-        ds_mod.original_file.name = ds_file_name
-        ds_mod.save()
-        p.dataset = ds_mod
-        p.save()
-
-        for u in unavailable_users:
-            logger.warning(f'Username: {u} - not present in this trainer deployment.')
-        for ent_lab in ent_labels:
-            ent = Entity.objects.filter(label=ent_lab).first()
-            if ent is None:
-                ent = Entity()
-                ent.label = ent_lab
-                ent.save()
-        for task in meta_tasks:
-            if MetaTask.objects.filter(name=task).first() is None:
-                m_task = MetaTask()
-                m_task.name = task
-                m_task.save()
-        for rel in rels:
-            if Relation.objects.filter(label=rel).first() is None:
-                r = Relation()
-                r.label = rel
-                r.save()
-
-        for doc in proj['documents']:
-            doc_mod = Document.objects.filter(Q(dataset=ds_mod) & Q(text=doc['text'])).first()
-            annos = []
-            for anno in doc['annotations']:
-                a = AnnotatedEntity()
-                a.user = available_users[anno['user']]
-                a.project = p
-                a.document = doc_mod
-                e = Entity.objects.get(label=anno['cui'])
-                a.entity = e
-                a.value = anno['value']
-                a.start_ind = anno['start']
-                a.end_ind = anno['end']
-                a.validated = anno['validated']
-                a.correct = anno['correct']
-                a.deleted = anno['deleted']
-                a.alternative = anno['alternative']
-                a.killed = anno['killed']
-                a.irrelevant = anno.get('irrelevant', False)  # Added later - so False by default for compatibility
-                if anno.get('last_modified') is not None:
-                    try:
-                        a.last_modified = datetime.strptime(anno['last_modified'], '%Y-%m-%d:%H:%M:%S%z')
-                    except ValueError:
-                        a.last_modified = datetime.now()
-                if anno.get('create_time') is not None:
-                    try:
-                        a.create_time = datetime.strptime(anno['create_time'], '%Y-%m-%d:%H:%M:%S%z')
-                    except ValueError:
-                        a.create_time = datetime.now()
-                a.comment = anno.get('comment')
-                a.manually_created = anno['manually_created']
-
-                a.acc = anno['acc']
-                a.save()
-                annos.append(a)
-                for task_name, meta_anno in anno['meta_anns'].items():
-                    m_a = MetaAnnotation()
-                    m_a.annotated_entity = a
-                    m_a = MetaTask.objects.get(name=task_name)
-                    m_a.validated = meta_anno['validated']
-                    m_a.save()
-                    # missing acc on the model
-            anno_to_doc_ind = {a.start_ind: a for a in annos}
-
-            for relation in doc.get('relations', []):
-                er = EntityRelation()
-                er.user = available_users[relation['user']]
-                er.project = p
-                er.document = doc_mod
-                er.relation = Relation.objects.get(label=relation['relation'])
-                er.validated = er.validated
-                # link relations with start and end anno ents
-                er.start_entity = anno_to_doc_ind[relation['start_entity_start_idx']]
-                er.end_entity = anno_to_doc_ind[relation['end_entity_start_idx']]
-                try:
-                    er.create_time = datetime.strptime(relation['create_time'], '%Y-%m-%d:%H:%M:%S%z')
-                except ValueError:
-                    er.create_time = datetime.now()
-                try:
-                    er.last_modified = datetime.strptime(relation['last_modified_time'], '%Y-%m-%d:%H:%M:%S%z')
-                except ValueError:
-                    er.last_modified = datetime.now()
-                er.save()
-        logger.info(f"Finished annotation import for project {proj['name']}")
-    logger.info('Finished importing all projects')
 
 
 def download(modeladmin, request, queryset):
@@ -612,3 +482,10 @@ class DocumentAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Document, DocumentAdmin)
+
+
+class ExportedProjectAdmin(admin.ModelAdmin):
+    model = ExportedProject
+
+
+admin.site.register(ExportedProject, ExportedProjectAdmin)
