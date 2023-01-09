@@ -7,9 +7,13 @@ ENV=prod
 # Django Debug mode should be False for prod
 DEBUG=False
 
-# Max single dataset size for a single upload
+### Load example CDB, Vocab ###
+LOAD_EXAMPLES=True
+
+### Dataset conf ###
+UNIQUE_DOC_NAMES_IN_DATASETS=True
 MAX_DATASET_SIZE=10000
 
-# For solr concept search service
-CONCEPT_SEARCH_SERVICE_HOST=mct_solr
+### Solr Concept Search Conf ###
+CONCEPT_SEARCH_SERVICE_HOST=solr
 CONCEPT_SEARCH_SERVICE_PORT=8983

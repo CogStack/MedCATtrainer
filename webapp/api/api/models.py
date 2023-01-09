@@ -289,6 +289,13 @@ class MetaAnnotation(models.Model):
         return str(self.annotated_entity)
 
 
+class ExportedProject(models.Model):
+    trainer_export_file = models.FileField(help_text='Previously exported MedCATtrainer .json file')
+
+    def __str__(self):
+        return self.trainer_export_file.name
+
+
 @receiver(models.signals.post_delete, sender=ConceptDB)
 def auto_delete_cdb_file_on_delete(sender, instance, **kwargs):
     _remove_file(instance, 'cdb_file')

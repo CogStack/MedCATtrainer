@@ -1,26 +1,17 @@
 import copy
-import json
 import logging
-import re
-import tarfile
-from collections import defaultdict
 from datetime import datetime
-from glob import glob
 from io import StringIO
 from typing import Dict, List
 
-import pkg_resources
-import requests
 from background_task import background
 from django.contrib import admin
-from django.contrib.auth.models import User
 from django.db.models import QuerySet
 from django.http import HttpResponse, HttpResponseRedirect
 from rest_framework.exceptions import PermissionDenied
 
 from .forms import *
 from .models import *
-
 from .solr_utils import import_concepts_to_solr
 
 admin.site.register(Entity)
@@ -140,274 +131,6 @@ def download_projects_without_text(projects, with_doc_name):
 _dt_fmt = '%Y-%m-%d::%H:%M-%z'
 
 
-def download_deployment_export(data_only=False):
-    """
-    Packages projects, annotations, meta-annotations etc. into a flat list of linked entities,
-    ready to be downloaded and imported into a new trainer instance (Experimental)
-    """
-    def clean_dict(d, keys=None):
-        filter_keys = ['_state', 'id']
-        if keys is not None:
-            filter_keys += keys
-        return {k: v for k, v in d.items() if k not in filter_keys}
-
-    def extract_model_dict(model, date_keys: List[str]=None, m2m_fields: List[str]=None):
-        date_keys = date_keys if date_keys else []
-        m2m_fields = m2m_fields if m2m_fields else []
-        out_dict = {}
-        for m in model.objects.all():
-            m_dict = {k: v.strftime(_dt_fmt) if k in date_keys else v for k, v in clean_dict(m.__dict__).items()}
-            for k in m2m_fields:
-                m_dict[k] = [m2m_f['id'] for m2m_f in getattr(model.objects.get(id=m.id), k).values()]
-            out_dict[m.id] = m_dict
-        return out_dict
-
-    user_keys = ['username', 'first_name', 'last_name', 'email', 'is_staff', 'is_active']
-    users_map = {u.id: {k: v for k, v in u.__dict__.items() if k in user_keys} for u in User.objects.all()}
-
-    project_anno_map = extract_model_dict(ProjectAnnotateEntities, ['create_time'],
-                                          ['members', 'validated_documents', 'cdb_search_filter', 'tasks'])
-    project_anno_map = {p_id: dict(p_val, **{'members': [v['id'] for v in
-                                                         ProjectAnnotateEntities.objects.get(id=p_id).members.values()]})
-                        for p_id, p_val in project_anno_map.items()}
-    project_cui_file_map = {p.cuis_file.path: p.id for p in
-                            ProjectAnnotateEntities.objects.exclude(cuis_file__exact="")}
-
-    annos_map = extract_model_dict(AnnotatedEntity, ['last_modified', 'create_time'])
-    document_map = extract_model_dict(Document, ['create_time', 'last_modified'])
-    meta_anno_tasks_map = extract_model_dict(MetaTask, [], ['values'])
-    meta_anno_values_map = extract_model_dict(MetaTaskValue)
-    meta_annos_map = extract_model_dict(MetaAnnotation)
-    dataset_filename_map = {d.original_file.path: d.id for d in Dataset.objects.all()}
-    dataset_map = extract_model_dict(Dataset, ['create_time'])
-    entities_map = extract_model_dict(Entity)
-
-    # concepts table is intentionally ignored: [ {'cdb': 2 i.e. the id} ]
-    cdbs_imported = list(Concept.objects.values('cdb').distinct())
-    cdbs = extract_model_dict(ConceptDB)
-    cdbs_file_map = {c.cdb_file.path: c.id for c in ConceptDB.objects.all()}
-
-    vocabs = extract_model_dict(Vocabulary)
-    vocab_file_map = {v.vocab_file.path: v.id for v in Vocabulary.objects.all()}
-
-    # tar gz, the entire thing
-    export = {
-        'users': users_map,
-        'projects': project_anno_map,
-        'annos': annos_map,
-        'meta_annos': meta_annos_map,
-        'meta_anno_tasks': meta_anno_tasks_map,
-        'meta_anno_values': meta_anno_values_map,
-        'dataset_map': dataset_map,
-        'datasets_file_to_id': dataset_filename_map,
-        'documents_map': document_map,
-        'entities_map': entities_map,
-        'cdbs_imported': cdbs_imported,
-        'cdbs': cdbs,
-        'cdb_files_to_id': cdbs_file_map,
-        'vocabs': vocabs,
-        'vocabs_file_to_id': vocab_file_map,
-        'project_cui_file_to_id': project_cui_file_map,
-        'medcat_version': [p.version for p in pkg_resources.working_set if p.project_name == 'medcat'][0],
-        'medcattrainer_version': '1.0'  # TODO: source from setup.py?
-    }
-
-    filename = 'mc_trainer_deployment_export.tar.gz'
-    try:
-        # write everything to a tar.gz
-        with tarfile.open(filename, 'w:gz') as tar:
-            json.dump(export, open('data.json', 'w'))
-            tar.add('data.json')
-            if not data_only:
-                for d_path in dataset_filename_map.keys():
-                    tar.add(d_path, arcname=f'datasets/{d_path.split("/")[-1]}')
-                for cdb_file_path in cdbs_file_map.keys():
-                    tar.add(cdb_file_path, arcname=f'cdbs/{cdb_file_path.split("/")[-1]}')
-                for vocab_file_path in vocab_file_map.keys():
-                    tar.add(vocab_file_path, arcname=f'vocabs/{vocab_file_path.split("/")[-1]}')
-                for project_cui_file_path in project_cui_file_map.keys():
-                    tar.add(project_cui_file_path, arcname=f'project_cui_files/{project_cui_file_path.split("/")[-1]}')
-
-        # clean up
-        os.remove('data.json')
-        file_loaded = open(filename, 'rb')
-        response = HttpResponse(file_loaded.read(), content_type='application/x-gzip')
-        file_loaded.close()
-        response['Content-Type'] = 'application/octet-stream'
-        # response['Content-Length'] = str(os.stat(filename).st_size)
-        response['Content-Encoding'] = 'tar'
-        response['Content-Disposition'] = 'attachment; filename={}'.format(filename)
-        return response
-    finally:
-        try:
-            os.remove(filename)
-        except FileNotFoundError:
-            pass
-
-
-def upload_deployment_export(filename: str):
-    prfx = f'{settings.MEDIA_ROOT}/prev_deployment'
-    with tarfile.open(filename, 'r:gz') as f:
-        os.makedirs(prfx, exist_ok=True)
-        f.extractall(prfx)
-
-    dep_map = json.load(open(f'{prfx}/data.json'))
-
-    # check medcat major version is consistent
-    curr_ver = [p.version for p in pkg_resources.working_set if p.project_name == 'medcat'][0]
-    compatible_mc_ver = curr_ver.split('.')[0] == dep_map['medcat_version'].split('.')[0]
-
-    def _remap_model_data(model, dep_map_key, time_fields=None, foreign_key_fields=None,
-                          file_names=None, file_name_attr='', filename_map_prev_id=None,
-                          idempotent_model_save=True):
-        remapped_models = {}
-        mappings = dep_map[dep_map_key]
-
-        time_fields = time_fields if time_fields else []
-        foreign_key_fields = foreign_key_fields if foreign_key_fields else []
-
-        errors = [f'Errors for: {model}']
-        # fileField mappings
-        filename_map_prev_id = filename_map_prev_id if filename_map_prev_id else {}
-        file_names = file_names if file_names else []
-        for file_path in file_names:
-            m = model()
-            setattr(m, file_name_attr, file_path)
-            file_name = file_path.split('/')[-1]
-            prev_model_id = [v for k, v in filename_map_prev_id.items() if k.split('/')[-1] == file_name][0]
-            remapped_models[str(prev_model_id)] = m
-            del mappings[str(prev_model_id)][file_name_attr]
-
-        for prev_model_id, model_data in mappings.items():
-            m = model() if prev_model_id not in remapped_models else remapped_models[prev_model_id]
-            f_key_fields = [f[0] for f in foreign_key_fields]
-            vals_to_set = {}
-            for m_k, m_v in model_data.items():
-                m_k = re.sub(r'_id$', '', m_k)
-                if 'polymorphic_ctype' in m_k or 'project_ptr' == m_k or m_v is None:
-                    continue
-                if m_k not in f_key_fields:
-                    if m_k in time_fields:
-                        m_v = datetime.strptime(m_v, _dt_fmt)
-                    try:
-                        setattr(m, m_k, m_v)
-                    except Exception:
-                        errors.append(f'Error setting prop: {m_k} onto with val:{m_v},' +
-                                      'has this prop been removed / changed?')
-                else:
-                    _, f_key_model, f_key_type, remap_dict = foreign_key_fields[f_key_fields.index(m_k)]
-                    if f_key_type == 'FK':
-                        try:
-                            m_v = f_key_model.objects.get(id=remap_dict[str(m_v)].id)
-                            setattr(m, m_k, m_v)
-                        except Exception:
-                            errors.append(f'Error attempting to map prop: {m_k} onto with val:{m_v}' +
-                                          f'as foreign key from {f_key_model}. Has this prop been removed / changed?')
-                    elif f_key_type == 'M2M':
-                        try:
-                            vals_to_set[m_k] = f_key_model.objects.filter(id__in=[remap_dict[str(v)].id for v in m_v])
-                        except KeyError as e:
-                            errors.append(f'Error attempting to map prop: {m_k} onto with val:{m_v}' +
-                                          f'as M2M key from {f_key_model}. Has this prop been removed / changed?')
-            remapped_models[prev_model_id] = m
-            m.save()
-            if idempotent_model_save:  # Cannot have save signal and m2m fields on a model...
-                for m2m_field, vals in vals_to_set.items():
-                    getattr(m, m2m_field).set(vals)
-                m.save()
-
-        if len(errors) == 1:
-            errors = []
-        return remapped_models, errors
-
-    # User model probably doesn't work without a password
-    errs = []
-
-    cdb_files = [cdb_file for cdb_file in glob(f'{prfx}/cdbs/*')]
-    remapped_cdbs, cdb_errs = _remap_model_data(ConceptDB, 'cdbs', time_fields=[], foreign_key_fields=[],
-                                                file_names=cdb_files, file_name_attr='cdb_file',
-                                                filename_map_prev_id=dep_map['cdb_files_to_id'])
-    errs += cdb_errs
-
-    vocab_files = [vocab_file for vocab_file in glob(f'{prfx}/vocabs/*')]
-    remapped_vocabs, voc_errs = _remap_model_data(Vocabulary, 'vocabs', time_fields=[], foreign_key_fields=[],
-                                                  file_names=vocab_files, file_name_attr='vocab_file',
-                                                  filename_map_prev_id=dep_map['vocabs_file_to_id'])
-    errs += voc_errs
-
-    dataset_files = [dataset_file for dataset_file in glob(f'{prfx}/datasets/*')]
-    remapped_datasets, ds_errs = _remap_model_data(Dataset, 'dataset_map', time_fields=['create_time'], foreign_key_fields=[],
-                                                   file_names=dataset_files, file_name_attr='original_file',
-                                                   filename_map_prev_id=dep_map['datasets_file_to_id'],
-                                                   idempotent_model_save=False)
-    errs += ds_errs
-    # documents will be re-created, by each new dataset. Re-map each old document id to their new id.
-    prev_dataset_id_to_doc_ids = defaultdict(list)
-    prev_dataset_id_to_texts = defaultdict(list)
-    for d_id, ds in dep_map['documents_map'].items():
-        prev_dataset_id_to_doc_ids[str(ds['dataset_id'])].append(d_id)
-        prev_dataset_id_to_texts[str(ds['dataset_id'])].append(ds['text'])
-
-    remapped_documents = {}
-    for prev_ds_id, new_ds in remapped_datasets.items():
-        texts = prev_dataset_id_to_texts[prev_ds_id]
-        prev_doc_ids = prev_dataset_id_to_doc_ids[prev_ds_id]
-        for t, prev_id in zip(texts, prev_doc_ids):
-            docs = Document.objects.filter(dataset=new_ds).filter(text=t)
-            if len(docs) == 1:
-                remapped_documents[prev_id] = docs[0]
-            elif len(docs) > 1:
-                remapped_documents[prev_id] = docs[0]
-                errs.append('DatasetError: Found multiple documents associated with '
-                            f'Prev Dataset:{prev_id}, DocNames:{[d.name for d in docs]}')
-            else:
-                errs.append(f'DatasetError: Cannot find doc, prev_id:{prev_id}')
-
-    remapped_entities, ent_errs = _remap_model_data(Entity, 'entities_map')
-    errs += ent_errs
-
-    # remove any users with same username
-    User.objects.filter(username__in=[u['username'] for u in dep_map['users'].values()]).delete()
-    remapped_users, usr_errs = _remap_model_data(User, 'users')
-    errs += usr_errs
-    for user in remapped_users.values():
-        user.set_password('')
-
-    remapped_meta_values, meta_vals_errs = _remap_model_data(MetaTaskValue, 'meta_anno_values')
-    errs += meta_vals_errs
-    remapped_meta_tasks, meta_tasks_errs = _remap_model_data(MetaTask, 'meta_anno_tasks', time_fields=[],
-                                                             foreign_key_fields=[('values', MetaTaskValue, 'M2M', remapped_meta_values),
-                                                                                 ('default', MetaTaskValue, 'FK', remapped_meta_values)])
-    errs += meta_tasks_errs
-
-    cui_files = [cui_file for cui_file in glob(f'{prfx}/project_cui_files/*')]
-    remapped_projects, projs_errs = _remap_model_data(ProjectAnnotateEntities, 'projects', time_fields=['create_time'],
-                                                      foreign_key_fields=[('dataset', Dataset, 'FK', remapped_datasets),
-                                                                          ('validated_documents', Document, 'M2M', remapped_documents),
-                                                                          ('members', User, 'M2M', remapped_users),
-                                                                          ('concept_db', ConceptDB, 'FK', remapped_cdbs),
-                                                                          ('vocab', Vocabulary, 'FK', remapped_vocabs),
-                                                                          ('cdb_search_filter', ConceptDB, 'M2M', remapped_cdbs),
-                                                                          ('tasks', MetaTask, 'M2M', remapped_meta_tasks)],
-                                                      file_names=cui_files, file_name_attr='cuis_file',
-                                                      filename_map_prev_id=dep_map['project_cui_file_to_id'])
-    errs += projs_errs
-
-    remapped_annotations, annos_errs = _remap_model_data(AnnotatedEntity, 'annos', time_fields=['create_time', 'last_modified'],
-                                                         foreign_key_fields=[('project', Project, 'FK', remapped_projects),
-                                                                             ('user', User, 'FK', remapped_users),
-                                                                             ('document', Document, 'FK', remapped_documents),
-                                                                             ('entity', Entity, 'FK', remapped_entities)])
-    errs += annos_errs
-
-    remapped_meta_annos, meta_anno_errs = _remap_model_data(MetaAnnotation, 'meta_annos', time_fields=[],
-                                                            foreign_key_fields=[('annotated_entity', AnnotatedEntity, 'FK', remapped_annotations),
-                                                                                ('meta_task', MetaTask, 'FK', remapped_meta_tasks),
-                                                                                ('meta_task_value', MetaTaskValue, 'FK', remapped_meta_values)])
-    errs += meta_anno_errs
-    return errs
-
-
 def download(modeladmin, request, queryset):
     if not request.user.is_staff:
         raise PermissionDenied
@@ -522,7 +245,7 @@ def _retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
             out_doc['id'] = doc.id
             out_doc['name'] = doc.name
             out_doc['text'] = doc.text
-            out_doc['last_modified'] = str(doc.last_modified)
+            out_doc['last_modified'] = doc.last_modified.strftime('%Y-%m-%d:%H:%M:%S')
             out_doc['annotations'] = []
 
             anns = AnnotatedEntity.objects.filter(project=project, document=doc)
@@ -541,20 +264,22 @@ def _retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
                 out_ann['alternative'] = ann.alternative
                 out_ann['killed'] = ann.killed
                 out_ann['irrelevant'] = ann.irrelevant
-                out_ann['last_modified'] = str(ann.last_modified)
+                out_ann['create_time'] = ann.create_time
+                out_ann['last_modified'] = ann.last_modified.strftime('%Y-%m-%d:%H:%M:%S')
+                out_ann['comment'] = ann.comment
                 out_ann['manually_created'] = ann.manually_created
-                if ann.icd_code:
-                    out_ann['icd_code'] = {'code': ann.icd_code.code, 'desc': ann.icd_code.desc}
-                if ann.opcs_code:
-                    out_ann['opcs_codes'] = {'code': ann.opcs_code, 'desc': ann.opcs_code.desc}
-
-                out_ann['acc'] = ann.acc
-                if ann.comment:
-                    out_ann['comment'] = ann.comment
-                if ann.icd_code:
-                    out_ann['icd_code'] = ann.icd_code.code
-                if ann.opcs_code:
-                    out_ann['opcs_code'] = ann.opcs_code.code
+                # if ann.icd_code:
+                #     out_ann['icd_code'] = {'code': ann.icd_code.code, 'desc': ann.icd_code.desc}
+                # if ann.opcs_code:
+                #     out_ann['opcs_codes'] = {'code': ann.opcs_code, 'desc': ann.opcs_code.desc}
+                #
+                # out_ann['acc'] = ann.acc
+                # if ann.comment:
+                #     out_ann['comment'] = ann.comment
+                # if ann.icd_code:
+                #     out_ann['icd_code'] = ann.icd_code.code
+                # if ann.opcs_code:
+                #     out_ann['opcs_code'] = ann.opcs_code.code
                 out_ann['meta_anns'] = {}
 
                 # Get MetaAnnotations
@@ -757,3 +482,10 @@ class DocumentAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Document, DocumentAdmin)
+
+
+class ExportedProjectAdmin(admin.ModelAdmin):
+    model = ExportedProject
+
+
+admin.site.register(ExportedProject, ExportedProjectAdmin)
