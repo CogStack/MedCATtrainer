@@ -5,4 +5,4 @@ django-polymorphic~=3.0
 djangorestframework~=3.10
 django-background-tasks~=1.2
 openpyxl~=3.0
-medcat~=1.5
+medcat~=1.6
