@@ -124,6 +124,8 @@ def upload_projects_export(medcat_export: Dict):
                 r.label = rel
                 r.save()
 
+        p.validated_documents = list(Document.objects.filter(dataset=ds_mod))
+
         for doc in proj['documents']:
             doc_mod = Document.objects.filter(Q(dataset=ds_mod) & Q(text=doc['text'])).first()
             annos = []

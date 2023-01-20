@@ -85,13 +85,17 @@ export default {
             this.remove()
             break
           case 2:
-            this.kill()
+            if (this.terminateEnabled) {
+              this.kill()
+            }
             break
           case 3:
             this.alternative()
             break
           case 4:
-            this.irrelevant()
+            if (this.irrelevantEnabled) {
+              this.irrelevant()
+            }
         }
       }
     },

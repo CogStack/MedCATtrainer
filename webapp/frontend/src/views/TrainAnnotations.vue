@@ -597,11 +597,31 @@ export default {
     },
     back () {
       this.selectEntity(this.ents.indexOf(this.currentEnt) - 1)
+      this.selectEntity(this.ents.indexOf(this.currentEnt) - 1)
     },
     submitDoc (docId) {
       if (this.docToSubmit === null) {
-        this.confirmSubmitListenerAdd()
-        this.docToSubmit = docId
+        const annoUpdates = []
+        if (!this.project.require_entity_validation) {
+          this.ents = this.ents.map(ent => {
+            this.$set(ent, 'validated', 1)
+            if (!(ent.killed || ent.alternative || ent.deleted || ent.irrelevant)) {
+              this.$set(ent, 'correct', 1)
+            }
+            annoUpdates.push(this.$http.put(`/api/annotated-entities/${ent.id}/`, ent))
+            return ent
+          })
+        }
+        let that = this
+        if (annoUpdates.length > 1) {
+          Promise.all(annoUpdates).then(_ => {
+            that.confirmSubmitListenerAdd()
+            that.docToSubmit = docId
+          })
+        } else {
+          this.confirmSubmitListenerAdd()
+          this.docToSubmit = docId
+        }
       }
     },
     submitConfirmed () {
