@@ -55,14 +55,15 @@
         <div class="sidebar-container">
           <transition name="slide-left">
             <concept-summary v-if="!conceptSynonymSelection && !hasRelations" :selectedEnt="currentEnt" :altSearch="altSearch"
-                             :project="project" @select:altConcept="markAlternative"
+                             :project="project" :searchFilterDBIndex="searchFilterDBIndex"
+                             @select:altConcept="markAlternative"
                              @select:alternative="toggleAltSearch" @select:ICD="markICD" @select:OPCS="markOPCS"
                              @updated:entityComment="markEntity(false)"
                              class="concept-summary"></concept-summary>
             <tabs v-if="!conceptSynonymSelection && hasRelations">
               <tab name="Concept">
                 <concept-summary :selectedEnt="currentEnt" :altSearch="altSearch"
-                                 :project="project"
+                                 :project="project"  :searchFilterDBIndex="searchFilterDBIndex"
                                  @select:altConcept="markAlternative" @select:alternative="toggleAltSearch"
                                  @select:ICD="markICD" @select:OPCS="markOPCS" class="concept-summary"></concept-summary>
               </tab>
@@ -81,7 +82,7 @@
           </transition>
           <transition name="slide-left">
             <add-annotation v-if="conceptSynonymSelection" :selection="conceptSynonymSelection"
-                         :project="project" :documentId="currentDoc.id"
+                         :project="project" :documentId="currentDoc.id" :searchFilterDBIndex="searchFilterDBIndex"
                          @request:addAnnotationComplete="addAnnotationComplete" class="add-annotation"></add-annotation>
           </transition>
         </div>
@@ -197,9 +198,11 @@
     <modal v-if="docToSubmit" :closable="true" @modal:close="docToSubmit=null" class="summary-modal">
       <h3 slot="header">Submit Document</h3>
       <div slot="body">
-        <annotation-summary v-if="!project.clinical_coding_project" :annos="ents" :currentDoc="currentDoc" :taskIDs="hasMetaTasks"
+        <annotation-summary v-if="!project.clinical_coding_project" :annos="ents" :currentDoc="currentDoc"
+                            :taskIDs="hasMetaTasks" :searchFilterDBIndex="searchFilterDBIndex"
                             @select:AnnoSummaryConcept="selectEntityFromSummary"></annotation-summary>
-        <coding-annotation-summary v-if="project.clinical_coding_project" :annos="ents" :currentDoc="currentDoc" :taskIDs="hasMetaTasks"
+        <coding-annotation-summary v-if="project.clinical_coding_project" :annos="ents" :currentDoc="currentDoc"
+                                   :taskIDs="hasMetaTasks" :searchFilterDBIndex="searchFilterDBIndex"
                                    @select:AnnoSummaryConcept="selectEntityFromSummary"></coding-annotation-summary>
 
       </div>
@@ -310,6 +313,7 @@ export default {
       taskName: TASK_NAME,
       taskValues: TASK_VALUES,
       project: null,
+      searchFilterDBIndex: null,
       validatedDocuments: null,
       ents: null,
       currentDoc: null,
@@ -346,6 +350,7 @@ export default {
           this.errors.message = `No project found for project ID: ${this.$route.params.projectId}`
         } else {
           this.project = resp.data.results[0]
+          this.fetchCDBSearchIndex()
           this.validatedDocuments = this.project.validated_documents
           const loadedDocs = () => {
             this.docIds = this.docs.map(d => d.id)
@@ -394,6 +399,15 @@ export default {
         // use error modal to show errors?
       })
       return finishedLoading
+    },
+    fetchCDBSearchIndex () {
+      if (this.project.cdb_search_filter.length > 0) {
+        this.$http.get(`/api/concept-dbs/${this.project.cdb_search_filter[0]}/`).then(resp => {
+          if (resp.data) {
+            this.searchFilterDBIndex = `${resp.data.name}_id_${this.project.cdb_search_filter}`
+          }
+        })
+      }
     },
     loadDoc (doc) {
       this.currentDoc = doc
@@ -635,6 +649,7 @@ export default {
           proj.validated_documents = this.project.validated_documents.concat(this.currentDoc.id)
         }
         this.project = proj
+        this.fetchCDBSearchIndex()
         this.validatedDocuments = proj.validated_documents
         this.$http.put(`/api/project-annotate-entities/${this.projectId}/`, this.project).then(() => {
           let payload = {

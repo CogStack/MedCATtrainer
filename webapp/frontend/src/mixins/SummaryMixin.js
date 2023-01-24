@@ -6,7 +6,8 @@ export default {
   name: 'SummaryService',
   props: {
     currentDoc: Object,
-    taskIDs: Array
+    taskIDs: Array,
+    searchFilterDBIndex: String
   },
   mixins: [ConceptDetailService, MetaAnnotationService],
   data () {
@@ -25,7 +26,7 @@ export default {
       const that = this
       annos.forEach(anno => {
         if (!anno.pretty_name) {
-          this.fetchDetail(anno)
+          this.fetchDetail(anno, this.searchFilterDBIndex)
         }
       })
       if (this.taskIDs.length > 0) {

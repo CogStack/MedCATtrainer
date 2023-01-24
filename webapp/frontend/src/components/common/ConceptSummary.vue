@@ -56,7 +56,7 @@
         </tr>
         <tr>
           <td>Synonyms</td>
-          <td class="fit-content" v-html="conceptSummary.Synonyms.join('<br>')"></td>
+          <td class="fit-content" v-html="(conceptSummary.Synonyms || []).join('<br>')"></td>
         </tr>
         <tr>
           <td>Description</td>
@@ -111,15 +111,15 @@ export default {
         return null
       }
     },
-    altSearch: Boolean
+    altSearch: Boolean,
+    searchFilterDBIndex: String
   },
   mixins: [ConceptDetailService],
   data () {
     return {
       conceptSummary: {},
       searchResults: [],
-      selectedCUI: null,
-      searchFilterDBIndex: null
+      selectedCUI: null
     }
   },
   methods: {

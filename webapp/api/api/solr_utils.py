@@ -78,7 +78,12 @@ def search_collection(cdbs: List[int], query: str):
                 docs = [d for d in resp['response']['docs']]
                 for d in docs:
                     if d['cui'][0] not in uniq_results_map:
-                        parsed_doc = {'cui': str(d['cui'][0]), 'pretty_name': d['pretty_name'][0]}
+                        parsed_doc = {
+                            'cui': str(d['cui'][0]),
+                            'pretty_name': d['pretty_name'][0],
+                            'type_ids': d['type_ids'],
+                            'synonyms': d['synonyms']
+                        }
                         if d.get('icd10'):
                             parsed_doc['icd10'] = d['icd10'][0]
                         if d.get('opcs4'):
@@ -142,7 +147,6 @@ def drop_collection(cdb_model: ConceptDB):
         logger.info(f'Successfullly dropped concept collection:{collection_name}')
     else:
         logger.warning(f'Error dropping concept collection {collection_name}, error: {resp.text}')
-
 
 
 def ensure_concept_searchable(cui, cdb: CDB, cdb_model: ConceptDB):

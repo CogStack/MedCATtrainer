@@ -38,7 +38,7 @@
         </tr>
         <tr v-if="selectedCUI.type_ids !== 'unk' ">
           <td>Type ID</td>
-          <td>{{selectedCUI.type_ids || 'n/a'}}</td>
+          <td>{{(selectedCUI.type_ids || []).join(', ') || 'n/a'}}</td>
         </tr>
         <tr v-if="selectedCUI.semantic_type">
           <td>Semantic Type</td>
@@ -66,7 +66,7 @@
         </tr>
         <tr>
           <td>Synonyms</td>
-          <td class="fit-content">{{selectedCUI.synonyms || 'n/a'}}</td>
+          <td class="fit-content" v-html="(selectedCUI.synonyms || []).join('<br>') || 'n/a'"></td>
         </tr>
         </tbody>
       </table>
@@ -102,7 +102,8 @@ export default {
   props: {
     selection: Object,
     project: Object,
-    documentId: Number
+    documentId: Number,
+    searchFilterDBIndex: String
   },
   data () {
     return {
@@ -116,7 +117,7 @@ export default {
     enrichCUI (concept) {
       this.selectedCUI = concept
       if (this.selectedCUI.icd10 || this.selectedCUI.opcs4) {
-        this.fetchConcept(this.selectedCUI, () => {
+        this.fetchConcept(this.selectedCUI, this.searchFilterDBIndex, () => {
           if (concept.icdCode) {
             this.selectedCUI.icd10 = this.selectedCUI.icd10.filter(i => i.id === concept.icdCode)
           } else if (concept.opcsCode) {
