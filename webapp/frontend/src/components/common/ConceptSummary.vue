@@ -55,6 +55,10 @@
           <td>{{conceptSummary[taskKey] || 'n/a'}}</td>
         </tr>
         <tr>
+          <td>Synonyms</td>
+          <td class="fit-content" v-html="conceptSummary.Synonyms.join('<br>')"></td>
+        </tr>
+        <tr>
           <td>Description</td>
           <td class="fit-content" v-html="conceptSummary.Description === 'nan' ? 'n/a' : conceptSummary.Description || 'n/a'"></td>
         </tr>
@@ -86,11 +90,12 @@ const PROP_MAP = {
   'cui': 'Concept ID',
   'icd10': 'ICD-10',
   'opcs4': 'OPCS-4',
-  'pretty_name': 'Name'
+  'pretty_name': 'Name',
+  'synonyms': 'Synonyms'
 }
 
 const CONST_PROPS_ORDER = [
-  'Name', 'Description', 'Type', 'Type IDs', 'Concept ID', 'ICD-10', 'OPCS-4', 'Accuracy'
+  'Name', 'Description', 'Type', 'Type IDs', 'Concept ID', 'ICD-10', 'OPCS-4', 'Accuracy', 'Synonyms'
 ]
 
 export default {
