@@ -3,13 +3,13 @@ import _ from 'lodash'
 export default {
   name: 'ConceptDetailService',
   methods: {
-    fetchDetail (selectedEnt, callback) {
+    fetchDetail (selectedEnt, cdbSearchIndex, callback) {
       if (selectedEnt && Object.keys(selectedEnt).length) {
         const queryEntId = selectedEnt.id
         this.$http.get(`/api/entities/${selectedEnt.entity}/`).then(resp => {
           if (selectedEnt && queryEntId === selectedEnt.id) {
             selectedEnt.cui = resp.data.label
-            this.fetchConcept(selectedEnt, callback)
+            this.fetchConcept(selectedEnt, cdbSearchIndex, callback)
           }
         })
       } else {
@@ -18,14 +18,15 @@ export default {
         }
       }
     },
-    fetchConcept (selectedEnt, callback) {
-      this.$http.get(`/api/concepts/?cui=${selectedEnt.cui}`).then(resp => {
-        if (selectedEnt && resp.data.results.length > 0) {
-          selectedEnt.desc = resp.data.results[0].desc
-          selectedEnt.type_ids = resp.data.results[0].type_ids
-          selectedEnt.pretty_name = resp.data.results[0].pretty_name
-          selectedEnt.semantic_type = resp.data.results[0].semantic_type
-          if (resp.data.results[0].icd10.length > 0) {
+    fetchConcept (selectedEnt, cdbSearchIndex, callback) {
+      this.$http.get(`/api/concepts/${cdbSearchIndex}/select?q=cui:${selectedEnt.cui}`).then(resp => {
+        if (selectedEnt && resp.data.response.docs.length > 0) {
+          const docEnt = resp.data.response.docs[0]
+          selectedEnt.desc = docEnt.desc
+          selectedEnt.type_ids = docEnt.type_ids
+          selectedEnt.pretty_name = docEnt.pretty_name[0]
+          selectedEnt.synonyms = docEnt.synonyms
+          if ((docEnt.icd10 || []).length > 0) {
             selectedEnt.icd10 = []
             let that = this
             let getCodes = function (url) {
@@ -39,11 +40,11 @@ export default {
                 }
               })
             }
-            getCodes(`/api/icd-codes/?id__in=${resp.data.results[0].icd10.join(',')}`)
+            getCodes(`/api/icd-codes/?id__in=${docEnt.icd10.join(',')}`)
           } else {
             selectedEnt.icd10 = []
           }
-          if (resp.data.results[0].opcs4.length > 0) {
+          if ((docEnt.opcs4 || []).length > 0) {
             selectedEnt.opcs4 = []
             let that = this
             let getCodes = function (url) {
@@ -57,7 +58,7 @@ export default {
                 }
               })
             }
-            getCodes(`/api/opcs-codes/?id__in=${resp.data.results[0].opcs4.join(',')}`)
+            getCodes(`/api/opcs-codes/?id__in=${docEnt.opcs4.join(',')}`)
           } else {
             selectedEnt.opcs4 = []
           }

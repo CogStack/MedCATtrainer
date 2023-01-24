@@ -66,21 +66,6 @@ class ConceptDB(models.Model):
         return self.name
 
 
-class Concept(models.Model):
-    pretty_name = models.CharField(max_length=300, db_index=True)
-    cui = models.CharField(max_length=100, db_index=True)
-    desc = models.TextField(default="", blank=True)
-    type_ids = models.CharField(max_length=20)
-    semantic_type = models.CharField(max_length=200, blank=True, null=True)
-    synonyms = models.TextField(default='', blank=True)
-    icd10 = models.ManyToManyField(ICDCode, default=None, blank=True, related_name='concept')
-    opcs4 = models.ManyToManyField(OPCSCode, default=None, blank=True, related_name='concept')
-    cdb = models.ForeignKey('ConceptDB', on_delete=models.CASCADE, blank=True, null=True)
-
-    def __str__(self):
-        return str(self.pretty_name)
-
-
 class Vocabulary(models.Model):
     vocab_file = models.FileField()
 

@@ -20,7 +20,7 @@
         </tr>
         <tr v-if="conceptSummary['Type IDs'] !== 'unk' ">
           <td>Type IDs</td>
-          <td>{{conceptSummary['Type IDs'] || 'n/a'}}</td>
+          <td>{{(conceptSummary['Type IDs']|| []).join(', ') || 'n/a'}}</td>
         </tr>
         <tr v-if="conceptSummary['Semantic Type']">
           <td>Semantic Type</td>
@@ -113,7 +113,8 @@ export default {
     return {
       conceptSummary: {},
       searchResults: [],
-      selectedCUI: null
+      selectedCUI: null,
+      searchFilterDBIndex: null
     }
   },
   methods: {
@@ -176,10 +177,6 @@ export default {
     }, 500)
   },
   mounted () {
-    const that = this
-    this.fetchDetail(this.selectedEnt, () => {
-      that.cleanProps()
-    })
     window.addEventListener('keyup', this.keyup)
   },
   beforeDestroy () {
@@ -189,11 +186,26 @@ export default {
     'selectedEnt': {
       handler () {
         const that = this
-        that.fetchDetail(this.selectedEnt, () => {
+        that.fetchDetail(this.selectedEnt, this.searchFilterDBIndex, () => {
           that.cleanProps()
         })
       },
       deep: true
+    },
+    'project': {
+      handler () {
+        let that = this
+        if (this.project.cdb_search_filter.length > 0) {
+          this.$http.get(`/api/concept-dbs/${this.project.cdb_search_filter[0]}/`).then(resp => {
+            if (resp.data) {
+              that.searchFilterDBIndex = `${resp.data.name}_id_${that.project.cdb_search_filter}`
+              this.fetchDetail(this.selectedEnt, this.searchFilterDBIndex, () => {
+                that.cleanProps()
+              })
+            }
+          })
+        }
+      }
     }
   }
 }
