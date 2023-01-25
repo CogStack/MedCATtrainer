@@ -43,11 +43,10 @@ def collections_available(cdbs: List[int]):
         return HttpResponseServerError('Error requesting solr concept search collection list')
 
 
-def search_collection(cdbs: List[int], query: str):
-    query = query.strip().replace(r'\s+', r'\s').split(' ')
+def search_collection(cdbs: List[int], raw_query: str):
+    query = raw_query.strip().replace(r'\s+', r'\s').split(' ')
     if len(query) == 1 and query[0] == '':
         return Response({'results': []})
-    query = [f'{query[i]}~1' if i < len(query) - 1 else f'{query[i]}*' for i in range(len(query))]
 
     res = []
     if len(cdbs) > 0:
@@ -58,15 +57,14 @@ def search_collection(cdbs: List[int], query: str):
             if collection_name not in SOLR_INDEX_SCHEMA:
                 _cache_solr_collection_schema_types(collection_name)
             try:
-                query_num = int(query[0][:-1])
+                query_num = int(query[0])
                 query_str = f'cui:{query_num}'
             except ValueError:
-                if len(query) > 1:  # cannot be a cui if multi-word
-                    query_str = ''.join([f' name:{q}' for q in query])
-                elif SOLR_INDEX_SCHEMA[collection_name]['cui'] != 'plongs':  # single word could be alphanumeric cui
-                    query_str = f'cui:{query[0][:-1]} OR name:{query[0][:-1]} OR name:{query[0]}'
-                else:  # single word, numeric cui.
-                    query_str = f'name:{query[0][:-1]} OR name:{query[0]}'
+                # cannot be a cui if multi-word, OR single word, not a numeric cui
+                query_str = f'name:"{" ".join(query)}"^2 synonyms:"{" ".join(query)}"'
+                if len(query) == 1 and SOLR_INDEX_SCHEMA[collection_name]['cui'] != 'plongs':
+                    # single word, alphanumeric cui type.
+                    query_str = f'cui:{query[0]} ' + query_str
 
             solr_url = f'http://{SOLR_HOST}:{SOLR_PORT}/solr/{collection_name}/select?q.op=OR&q={query_str}&rows=15'
             logger.info(f'Searching solr collection: {solr_url}')
