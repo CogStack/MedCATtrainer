@@ -434,7 +434,7 @@ def import_concepts(modeladmin, request, queryset):
         import_concepts_from_cdb(concept_db.id)
 
 
-def delete_concepts_from_cdb(modeladmin, request, queryset):
+def delete_indexed_concepts(modeladmin, request, queryset):
     for concept_db in queryset:
         drop_collection(concept_db)
         ICDCode.objects.filter(cdb=concept_db).delete()
@@ -447,7 +447,7 @@ admin.site.register(OPCSCode)
 
 class ConceptDBAdmin(admin.ModelAdmin):
     model = ConceptDB
-    actions = [import_concepts, delete_concepts_from_cdb, reset_cdb_filters]
+    actions = [import_concepts, delete_indexed_concepts, reset_cdb_filters]
 
 admin.site.register(ConceptDB, ConceptDBAdmin)
 

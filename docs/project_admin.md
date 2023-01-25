@@ -100,7 +100,7 @@ To make these concepts available to a (or any project):
 2\. Select 'Concept Dbs'
 ![](_static/img/select-concept-dbs.png)
 
-3\. Select the Concept DB entry, and choose the action 'Import Concept', then press the 'Go' button.
+3\. Select the Concept DB entry, and choose the action 'Import concepts', then press the 'Go' button.
 ![](_static/img/import-concepts.png)
 
 Once the concept imports are complete the solr search services will contain 'collections' that are used by a Django view
@@ -108,7 +108,22 @@ for fast type ahead searching. If you're an admin the project home screen will s
 'CDB Search Filter' imported into solr.
 ![](_static/img/concepts-imported-status.png)
 
-The Solr admin interface is available on the default port 8983. User guide [here](https://solr.apache.org/guide/solr/latest/getting-started/solr-admin-ui.html) 
+The Solr admin interface is available on the default port 8983. User guide [here](https://solr.apache.org/guide/solr/latest/getting-started/solr-admin-ui.html)
+
+### Concept Collection Maintenance
+The solr search service is designed to index all concepts and their metadata across any number of MedCAT Concept Databases. 
+By default it is run on the same host as the MedCATtrainer django backend, making it fast to tear down, and upload concept 
+collections, even if the entirety of SNOMED CT or UMLS is indexed. 
+
+To update an index, first delete the outdated concepts from solr via the django admin panel:
+1\. Open the admin app. (http://localhost:8001/admin/)
+
+2\. Select 'Concept Dbs'
+
+3\. Select the Concept DB entry, and choose the action 'Delete ', then press the 'Go' button.
+![](_static/img/delete-indexed-concepts.png)
+
+This will drop the corresponding collection in the solr search service. This can be also be performed in the solr admin UI by default port 8983.
 
 ## Downloading Annotations
 Project annotations can be downloaded with or without the source text, especially important if the source text is
