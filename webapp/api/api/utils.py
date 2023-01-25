@@ -1,13 +1,13 @@
 import json
 import os
 import logging
-from typing import Union, Dict, List
+from typing import Union, Dict, List, Type
 
 import pkg_resources
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .models import Entity, AnnotatedEntity, Concept, ICDCode, OPCSCode, ProjectAnnotateEntities, ProjectCuiCounter, \
+from .models import Entity, AnnotatedEntity, ICDCode, OPCSCode, ProjectAnnotateEntities, ProjectCuiCounter, \
     ConceptDB
 
 from medcat.cdb import CDB
@@ -16,6 +16,7 @@ from medcat.cat import CAT
 from medcat.utils.filters import check_filters
 from medcat.utils.helpers import tkns_from_doc
 
+from .solr_utils import ensure_concept_searchable
 
 log = logging.getLogger('trainer')
 
@@ -61,12 +62,6 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
     for ent in ents:
         label = ent._.cui
 
-        # Add the concept info to the Concept table if it doesn't exist
-        if not Concept.objects.filter(cui=label).exists():
-            concept = Concept()
-            concept.cui = label
-            update_concept_model(concept, project.concept_db, cat.cdb)
-
         if not Entity.objects.filter(label=label).exists():
             # Create the entity
             entity = Entity()
@@ -106,38 +101,10 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
                 ann_ent.save()
 
 
-def update_concept_model(concept: Concept, cdb_model: ConceptDB, cdb: CDB):
-    cui = concept.cui
-    concept.pretty_name = cdb.get_name(cui)
-    concept.type_ids = ','.join(list(cdb.cui2type_ids.get(cui, '')))
-    concept.semantic_type = ','.join([cdb.addl_info['type_id2name'].get(type_id, '')
-                                      for type_id in list(cdb.cui2type_ids.get(cui, ''))])
-    concept.desc = cdb.addl_info['cui2description'].get(cui, '')
-    concept.synonyms = ", ".join(cdb.addl_info['cui2original_names'].get(cui, []))
-    concept.cdb = cdb_model
-    concept.save()
-
-    # add ICD-10 if available
-    if len(cdb.addl_info['cui2icd10']) > 0:
-        icd_codes = cdb.addl_info['cui2icd10'].get(cui)
-        if icd_codes is not None:
-            icd_codes_mods = _get_or_create_linked_code(ICDCode, icd_codes, cdb_model)
-            concept.icd10.set(icd_codes_mods, clear=True)
-
-    # add OPCS-4 if available
-    if len(cdb.addl_info['cui2opcs4']) > 0:
-        opcs_codes = cdb.addl_info['cui2opcs4'].get(cui)
-        if opcs_codes is not None:
-            opcs_codes_mods = _get_or_create_linked_code(OPCSCode, opcs_codes, cdb_model)
-            concept.opcs4.set(opcs_codes_mods)
-
-
-def _get_or_create_linked_code(mod: Union[ICDCode, OPCSCode], linked_codes: List[Dict],
-                               cdb_model: ConceptDB) -> Union[ICDCode, OPCSCode]:
+def _create_linked_codes(mod: Union[Type[ICDCode], Type[OPCSCode]], linked_codes: List[Dict], cdb_model: ConceptDB):
     """
     Expects the cui2icd10, cui2opcs4 dicts to include code and name.
     """
-    code_mods = []
     for code in linked_codes:
         if len(mod.objects.filter(code=code['code'])) == 0:
             code_mod = mod()
@@ -145,20 +112,14 @@ def _get_or_create_linked_code(mod: Union[ICDCode, OPCSCode], linked_codes: List
             code_mod.desc = code['name']
             code_mod.cdb = cdb_model
             code_mod.save()
-            code_mods.append(code_mod)
-        else:
-            code_mods.append(mod.objects.get(code=code))
-    return code_mods
 
 
-def set_icd_info_objects(cdb, concept, cui):
-    objs = get_create_cdb_infos(cdb, concept, cui, 'icd10', 'chapter', 'name', ICDCode)
-    concept.icd10.set(objs)
+def create_linked_icd_codes(codes: List, cdb_model):
+    _create_linked_codes(ICDCode, codes, cdb_model)
 
 
-def set_opcs_info_objects(cdb, concept, cui):
-    objs = get_create_cdb_infos(cdb, concept, cui, 'opcs4', 'code', 'name', OPCSCode)
-    concept.opcs4.set(objs)
+def create_linked_opcs_codes(codes: List, cdb_model):
+    _create_linked_codes(OPCSCode, codes, cdb_model)
 
 
 def get_create_cdb_infos(cdb, concept, cui, cui_info_prop, code_prop, desc_prop, model_clazz):
@@ -237,11 +198,18 @@ def create_annotation(source_val, selection_occurrence_index, cui, user, project
         ann_ent.save()
         id = ann_ent.id
 
-    # Add concept detail if neccessary.
-    if not Concept.objects.filter(cui=cui).exists():
-        concept = Concept()
-        concept.cui = cui
-        update_concept_model(concept, project.concept_db, cat.cdb)
+    # Add concept detail to SOLR search service
+    ensure_concept_searchable(cui, cat.cdb, project.concept_db)
+
+    # upload icd / opcs codes if available
+    # also expects icd / opcs addl info dicts to include:
+    # {code: <the code>: name: <human readable desc>}
+    icd_codes = cat.cdb.addl_info.get('cui2icd10', {}).get(cui, None)
+    if icd_codes is not None:
+        create_linked_icd_codes(icd_codes, project.concept_db)
+    opcs_codes = cat.cdb.addl_info.get('cui2opcs4', {}).get(cui, None)
+    if opcs_codes is not None:
+        create_linked_opcs_codes(opcs_codes, project.concept_db)
 
     return id
 

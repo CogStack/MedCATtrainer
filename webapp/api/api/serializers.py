@@ -14,19 +14,6 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['url', 'username', 'email', 'id', 'is_staff', 'is_superuser']
 
 
-class ConceptSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Concept
-        fields = ['pretty_name', 'cui', 'desc', 'type_ids', 'synonyms', 'semantic_type',
-                  'icd10', 'opcs4', 'id', 'cdb']
-
-    def to_representation(self, instance):
-        data = super(ConceptSerializer, self).to_representation(instance)
-        syns = data['synonyms'].split(', ')
-        data['synonyms'] = data['synonyms'] if len(syns) < 10 else syns[:10]
-        return data
-
-
 class EntitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Entity

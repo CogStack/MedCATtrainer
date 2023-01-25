@@ -68,7 +68,7 @@ export default {
           icd10: r.icd10,
           opcs4: r.opcs4,
           semantic_type: r.semantic_type,
-          synonyms: _.replace(r.synonyms, new RegExp(',', 'g'), ', ')
+          synonyms: r.synonyms
         }
       }
 

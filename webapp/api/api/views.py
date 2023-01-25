@@ -120,25 +120,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
     filterset_fields = ['dataset']
 
 
-class ConceptFilter(drf.FilterSet):
-    type_ids__in = TextInFilter(field_name='type_ids', lookup_expr='in')
-    cui__in = TextInFilter(field_name='cui', lookup_expr='in')
-    cdb__in = NumInFilter(field_name='cdb', lookup_expr='in')
-    id__in = NumInFilter(field_name='id', lookup_expr='in')
-
-    class Meta:
-        model = Concept
-        fields = ['type_ids', 'cui', 'cdb']
-
-
-class ConceptViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated, IsReadOnly]
-    queryset = Concept.objects.all()
-    serializer_class = ConceptSerializer
-    filterset_class = ConceptFilter
-    filterset_fields = ['cui', 'id', 'cdb']
-
-
 class EntityViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get', 'post', 'head']
@@ -374,19 +355,6 @@ def add_concept(request):
                            project=project,
                            document=document,
                            cat=cat)
-
-    # Create a new Concept
-    if Concept.objects.filter(cui=cui).count() == 0:
-        c = Concept()
-        c.cui = cui
-        c.pretty_name = name
-        c.desc = desc
-        c.type_ids = type_ids
-        c.synonyms = synonyms
-        c.semantic_type = s_type
-        c.cdb = project.concept_db
-        c.save()
-        log.debug(f'Added new concept to concept list:{cui}')
 
     return Response({'message': 'Concept and Annotation added successfully', 'id': id})
 

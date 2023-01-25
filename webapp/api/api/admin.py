@@ -12,7 +12,7 @@ from rest_framework.exceptions import PermissionDenied
 
 from .forms import *
 from .models import *
-from .solr_utils import import_concepts_to_solr
+from .solr_utils import import_all_concepts, drop_collection
 
 admin.site.register(Entity)
 admin.site.register(MetaTaskValue)
@@ -420,7 +420,7 @@ def import_concepts_from_cdb(cdb_model_id: int):
     cdb_model = ConceptDB.objects.get(id=cdb_model_id)
     cdb = CDB.load(cdb_model.cdb_file.path)
 
-    import_concepts_to_solr(cdb, cdb_model)
+    import_all_concepts(cdb, cdb_model)
 
 
 def reset_cdb_filters(modeladmin, request, queryset):
@@ -434,33 +434,22 @@ def import_concepts(modeladmin, request, queryset):
         import_concepts_from_cdb(concept_db.id)
 
 
-def delete_concepts_from_cdb(modeladmin, request, queryset):
+def delete_indexed_concepts(modeladmin, request, queryset):
     for concept_db in queryset:
-        Concept.objects.filter(cdb=concept_db).delete()
+        drop_collection(concept_db)
         ICDCode.objects.filter(cdb=concept_db).delete()
         OPCSCode.objects.filter(cdb=concept_db).delete()
 
 
-class ConceptDBAdmin(admin.ModelAdmin):
-    model = ConceptDB
-    actions = [import_concepts, delete_concepts_from_cdb, reset_cdb_filters]
-
-admin.site.register(ConceptDB, ConceptDBAdmin)
-
-
-def delete_selected(modeladmin, request, queryset):
-    queryset.delete()
-
-
-class ConceptAdmin(admin.ModelAdmin):
-    model = Concept
-    list_filter = ('cdb',)
-    actions = [delete_selected]
-
-
-admin.site.register(Concept, ConceptAdmin)
 admin.site.register(ICDCode)
 admin.site.register(OPCSCode)
+
+
+class ConceptDBAdmin(admin.ModelAdmin):
+    model = ConceptDB
+    actions = [import_concepts, delete_indexed_concepts, reset_cdb_filters]
+
+admin.site.register(ConceptDB, ConceptDBAdmin)
 
 
 class ProjectCuiCounterAdmin(admin.ModelAdmin):

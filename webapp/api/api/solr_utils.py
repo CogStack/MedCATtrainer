@@ -4,7 +4,6 @@ import re
 from typing import List
 
 import requests
-from background_task import background
 from django.http import HttpResponseServerError
 from medcat.cdb import CDB
 from rest_framework.response import Response
@@ -44,11 +43,10 @@ def collections_available(cdbs: List[int]):
         return HttpResponseServerError('Error requesting solr concept search collection list')
 
 
-def search_collection(cdbs: List[int], query: str):
-    query = query.strip().replace(r'\s+', r'\s').split(' ')
+def search_collection(cdbs: List[int], raw_query: str):
+    query = raw_query.strip().replace(r'\s+', r'\s').split(' ')
     if len(query) == 1 and query[0] == '':
         return Response({'results': []})
-    query = [f'{query[i]}~1' if i < len(query) - 1 else f'{query[i]}*' for i in range(len(query))]
 
     res = []
     if len(cdbs) > 0:
@@ -59,15 +57,14 @@ def search_collection(cdbs: List[int], query: str):
             if collection_name not in SOLR_INDEX_SCHEMA:
                 _cache_solr_collection_schema_types(collection_name)
             try:
-                query_num = int(query[0][:-1])
+                query_num = int(query[0])
                 query_str = f'cui:{query_num}'
             except ValueError:
-                if len(query) > 1:  # cannot be a cui if multi-word
-                    query_str = ''.join([f' name:{q}' for q in query])
-                elif SOLR_INDEX_SCHEMA[collection_name]['cui'] != 'plongs':  # single word could be alphanumeric cui
-                    query_str = f'cui:{query[0][:-1]} OR name:{query[0][:-1]} OR name:{query[0]}'
-                else:  # single word, numeric cui.
-                    query_str = f'name:{query[0][:-1]} OR name:{query[0]}'
+                # cannot be a cui if multi-word, OR single word, not a numeric cui
+                query_str = f'name:"{" ".join(query)}"^2 synonyms:"{" ".join(query)}"'
+                if len(query) == 1 and SOLR_INDEX_SCHEMA[collection_name]['cui'] != 'plongs':
+                    # single word, alphanumeric cui type.
+                    query_str = f'cui:{query[0]} ' + query_str
 
             solr_url = f'http://{SOLR_HOST}:{SOLR_PORT}/solr/{collection_name}/select?q.op=OR&q={query_str}&rows=15'
             logger.info(f'Searching solr collection: {solr_url}')
@@ -79,7 +76,12 @@ def search_collection(cdbs: List[int], query: str):
                 docs = [d for d in resp['response']['docs']]
                 for d in docs:
                     if d['cui'][0] not in uniq_results_map:
-                        parsed_doc = {'cui': str(d['cui'][0]), 'pretty_name': d['pretty_name'][0]}
+                        parsed_doc = {
+                            'cui': str(d['cui'][0]),
+                            'pretty_name': d['pretty_name'][0],
+                            'type_ids': d['type_ids'],
+                            'synonyms': d['synonyms']
+                        }
                         if d.get('icd10'):
                             parsed_doc['icd10'] = d['icd10'][0]
                         if d.get('opcs4'):
@@ -89,7 +91,7 @@ def search_collection(cdbs: List[int], query: str):
     return Response({'results': res})
 
 
-def import_concepts_to_solr(cdb: CDB, cdb_model: ConceptDB):
+def import_all_concepts(cdb: CDB, cdb_model: ConceptDB):
     collection_name = f'{cdb_model.name}_id_{cdb_model.id}'
     base_url = f'http://{SOLR_HOST}:{SOLR_PORT}/solr'
 
@@ -114,59 +116,95 @@ def import_concepts_to_solr(cdb: CDB, cdb_model: ConceptDB):
 
     cui2name_iter = iter(cdb.cui2names.items())
 
-    def _upload_payload(data, cn, commit=False):
-        update_url = f'{base_url}/{collection_name}/update'
-        update_url = f'{update_url}?commit=true' if commit else update_url
-        logger.info(f'Uploading {len(data)} to solr collection {cn}')
-        resp = requests.post(update_url, json=data)
-        if resp.status_code == 200:
-            logger.info(f'Successfully uploaded {len(data)} concepts to solr collection {cn}')
-        elif resp.status_code != 200:
-            _solr_error_response(resp, f'error updating {cn}')
-
     payload = []
     try:
         while True:
             for i in range(5000):
                 cui, name = next(cui2name_iter)
-                concept_dct = {
-                    'cui': str(cui),
-                    'pretty_name': cdb.get_name(cui),
-                    'name': re.sub(r'\([\w+\s]+\)', '', cdb.get_name(cui)).strip(),
-                }
-                # upload icd / opcs codes if available
-                # also expects icd / opcs addl info dicts to include:
-                # {code: <the code>: name: <human readable desc>}
-                icd_codes = cdb.addl_info.get('cui2icd10', {}).get(cui, None)
-                if icd_codes is not None:
-                    try:
-                        concept_dct['icd10'] = ', '.join([f'{code["code"]} : {code["name"]}'
-                                                          for code in icd_codes])
-                    except Exception:
-                        logger.warning(f'Tried to upload ICD codes for cui:{cui} into solr search - '
-                                       f'but encountered icd_codes of the form:{icd_codes}, expected a list of '
-                                       '{code: <the code>: name: <human readable desc>}')
-                opcs_codes = cdb.addl_info.get('cui2opcs4', {}).get(cui, None)
-                if opcs_codes is not None:
-                    try:
-                        concept_dct['opcs4'] = ', '.join([f'{code["code"]} : {code["name"]}'
-                                                          for code in opcs_codes])
-                    except Exception:
-                        logger.warning(f'Tried to upload ICD codes for cui:{cui} into solr search - '
-                                       f'but encountered icd_codes of the form:{opcs_codes}, expected a list of '
-                                       '{code: <the code>: name: <human readable desc>}')
+                concept_dct = _concept_dct(cui, cdb)
                 payload.append(concept_dct)
-            _upload_payload(payload, collection_name)
+            _upload_payload(f'{base_url}/{collection_name}/update', payload, collection_name)
             payload = []
     except StopIteration:
         # upload last update
-        _upload_payload(payload, collection_name, commit=True)
+        _upload_payload(f'{base_url}/{collection_name}/update', payload, collection_name, commit=True)
 
     # get final collection size
     logger.info(f'Successfully uploaded {cdb_model.name} cuis / names to solr collection {collection_name}')
 
     resp = requests.get(f'{base_url}/{collection_name}/select?q=*:*&rows=0')
     logger.info(f'{json.loads(resp.text)["response"]["numFound"]} Concepts now searchable')
+
+
+def drop_collection(cdb_model: ConceptDB):
+    collection_name = f'{cdb_model.name}_id_{cdb_model.id}'
+    base_url = f'http://{SOLR_HOST}:{SOLR_PORT}/solr'
+    url = f'{base_url}/admin/collections?action=DELETE&name={collection_name}'
+    resp = requests.get(url)
+    if resp.status_code == 200:
+        logger.info(f'Successfullly dropped concept collection:{collection_name}')
+    else:
+        logger.warning(f'Error dropping concept collection {collection_name}, error: {resp.text}')
+
+
+def ensure_concept_searchable(cui, cdb: CDB, cdb_model: ConceptDB):
+    """
+    Adds a single cui and associated metadata is available in the assocaited solr search index.
+    Args:
+        cui: concept unique identifier of the concept to make searchable
+        cdb: the MedCAT CDB where the cui can be found
+        cdb_model: the associated Django model instance for the CDB.
+    """
+    collection = f'{cdb_model.name}_id_{cdb_model.id}'
+    base_url = f'http://{SOLR_HOST}:{SOLR_PORT}/solr'
+    url = f'{base_url}/admin/collections?action=LIST'
+    resp = requests.get(url)
+    if resp.status_code != 200:
+        collections = json.loads(resp.text)['collections']
+        data = _concept_dct(cui, cdb)
+        if collection in collections:
+            _upload_payload(f'{base_url}/{collection}/update', data, collection, commit=True)
+
+
+def _upload_payload(update_url, data, collection, commit=False):
+    update_url = f'{update_url}?commit=true' if commit else update_url
+    logger.info(f'Uploading {len(data)} to solr collection {collection}')
+    resp = requests.post(update_url, json=data)
+    if resp.status_code == 200:
+        logger.info(f'Successfully uploaded {len(data)} concepts to solr collection {collection}')
+    elif resp.status_code != 200:
+        _solr_error_response(resp, f'error updating {collection}')
+
+
+def _concept_dct(cui: str, cdb: CDB):
+    concept_dct = {
+        'cui': str(cui),
+        'pretty_name': cdb.get_name(cui),
+        'name': re.sub(r'\([\w+\s]+\)', '', cdb.get_name(cui)).strip(),
+        'type_ids': list(cdb.cui2type_ids[cui]),
+        'desc': cdb.addl_info.get('cui2description', {}).get(cui, ''),
+        'synonyms': list(cdb.addl_info.get('cui2original_names', {}).get(cui, set())),
+    }
+    icd_codes = cdb.addl_info.get('cui2icd10', {}).get(cui, None)
+    if icd_codes is not None:
+        try:
+            concept_dct['icd10'] = ', '.join([f'{code["code"]} : {code["name"]}'
+                                              for code in icd_codes])
+        except Exception:
+            logger.warning(f'Tried to extract ICD codes for cui:{cui} for concept (solr) search - '
+                           f'but encountered icd_codes of the form:{icd_codes}, expected a list of '
+                           '{code: <the code>, name: <human readable desc>, ...}')
+    opcs_codes = cdb.addl_info.get('cui2opcs4', {}).get(cui, None)
+    if opcs_codes is not None:
+        try:
+            concept_dct['opcs4'] = ', '.join([f'{code["code"]} : {code["name"]}'
+                                              for code in opcs_codes])
+        except Exception:
+            logger.warning(f'Tried to upload OPCS codes for cui:{cui} for concept (solr) search - '
+                           f'but encountered OPCS codes of the form:{opcs_codes}, expected a list of '
+                           '{code: <the code>, name: <human readable desc> ...}')
+
+    return concept_dct
 
 
 def _solr_error_response(resp, error_msg):

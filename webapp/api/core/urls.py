@@ -22,7 +22,6 @@ import api.views
 
 router = routers.DefaultRouter()
 router.register(r'users', api.views.UserViewSet)
-router.register(r'concepts', api.views.ConceptViewSet)
 router.register(r'entities', api.views.EntityViewSet)
 router.register(r'project-annotate-entities', api.views.ProjectAnnotateEntitiesViewSet)
 router.register(r'documents', api.views.DocumentViewSet)

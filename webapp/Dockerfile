@@ -13,21 +13,20 @@ RUN apt-get install curl && \
     apt-get install nodejs && \
     npm install -g npm@latest
 
+# Copy project
+WORKDIR /home
+COPY ./ .
+
 # Build frontend
 WORKDIR /home/frontend
-COPY frontend .
 RUN npm install && npm run build
 
 # Install requirements for backend
 WORKDIR /home/
-COPY requirements.txt .
 RUN pip install pip --upgrade 
 RUN pip install -r requirements.txt
 ARG SPACY_MODELS="en_core_web_md"
 RUN for SPACY_MODEL in ${SPACY_MODELS}; do python -m spacy download ${SPACY_MODEL}; done
-
-# Copy rest of project
-COPY ./ /home/
 
 WORKDIR /home/api/
 RUN chmod a+x /home/run.sh

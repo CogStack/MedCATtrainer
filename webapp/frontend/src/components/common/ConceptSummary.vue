@@ -20,7 +20,7 @@
         </tr>
         <tr v-if="conceptSummary['Type IDs'] !== 'unk' ">
           <td>Type IDs</td>
-          <td>{{conceptSummary['Type IDs'] || 'n/a'}}</td>
+          <td>{{(conceptSummary['Type IDs']|| []).join(', ') || 'n/a'}}</td>
         </tr>
         <tr v-if="conceptSummary['Semantic Type']">
           <td>Semantic Type</td>
@@ -55,6 +55,10 @@
           <td>{{conceptSummary[taskKey] || 'n/a'}}</td>
         </tr>
         <tr>
+          <td>Synonyms</td>
+          <td class="fit-content" v-html="(conceptSummary.Synonyms || []).join('<br>')"></td>
+        </tr>
+        <tr>
           <td>Description</td>
           <td class="fit-content" v-html="conceptSummary.Description === 'nan' ? 'n/a' : conceptSummary.Description || 'n/a'"></td>
         </tr>
@@ -86,11 +90,12 @@ const PROP_MAP = {
   'cui': 'Concept ID',
   'icd10': 'ICD-10',
   'opcs4': 'OPCS-4',
-  'pretty_name': 'Name'
+  'pretty_name': 'Name',
+  'synonyms': 'Synonyms'
 }
 
 const CONST_PROPS_ORDER = [
-  'Name', 'Description', 'Type', 'Type IDs', 'Concept ID', 'ICD-10', 'OPCS-4', 'Accuracy'
+  'Name', 'Description', 'Type', 'Type IDs', 'Concept ID', 'ICD-10', 'OPCS-4', 'Accuracy', 'Synonyms'
 ]
 
 export default {
@@ -106,7 +111,8 @@ export default {
         return null
       }
     },
-    altSearch: Boolean
+    altSearch: Boolean,
+    searchFilterDBIndex: String
   },
   mixins: [ConceptDetailService],
   data () {
@@ -176,10 +182,6 @@ export default {
     }, 500)
   },
   mounted () {
-    const that = this
-    this.fetchDetail(this.selectedEnt, () => {
-      that.cleanProps()
-    })
     window.addEventListener('keyup', this.keyup)
   },
   beforeDestroy () {
@@ -189,11 +191,26 @@ export default {
     'selectedEnt': {
       handler () {
         const that = this
-        that.fetchDetail(this.selectedEnt, () => {
+        that.fetchDetail(this.selectedEnt, this.searchFilterDBIndex, () => {
           that.cleanProps()
         })
       },
       deep: true
+    },
+    'project': {
+      handler () {
+        let that = this
+        if (this.project.cdb_search_filter.length > 0) {
+          this.$http.get(`/api/concept-dbs/${this.project.cdb_search_filter[0]}/`).then(resp => {
+            if (resp.data) {
+              that.searchFilterDBIndex = `${resp.data.name}_id_${that.project.cdb_search_filter}`
+              this.fetchDetail(this.selectedEnt, this.searchFilterDBIndex, () => {
+                that.cleanProps()
+              })
+            }
+          })
+        }
+      }
     }
   }
 }

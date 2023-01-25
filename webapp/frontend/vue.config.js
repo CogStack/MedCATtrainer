@@ -3,7 +3,17 @@ module.exports = {
   assetsDir: 'static',
   productionSourceMap: true,
   devServer: {
-    proxy: 'http://localhost:8001'
+    proxy: {
+      '/api/concepts/*': {
+        target: 'http://localhost:8983/solr',
+        pathRewrite: {
+          '/api/concepts/*': '/'
+        }
+      },
+      '^/api/*': {
+        target: 'http://localhost:8001'
+      }
+    }
   },
   css: {
     loaderOptions: {
