@@ -248,9 +248,12 @@ class ProjectAnnotateEntities(Project):
     add_new_entities = models.BooleanField(default=False,
                                            help_text='Allow the creation of new terms to be added to the CDB')
     restrict_concept_lookup = models.BooleanField(default=False,
-                                                  help_text='Users can only search for concept terms from the list '
-                                                            'configured for the project, i.e. either from the cuis '
-                                                            'or cuis_file lists.')
+                                                  help_text='Users can only search for concept terms from the '
+                                                            'list configured for the project, i.e. either from '
+                                                            'the cuis or cuis_file lists. Checking this when both'
+                                                            'cuis and cuis_file are empty does nothing. If "add new '
+                                                            'entities" is available & added, and cuis or cuis_file'
+                                                            'is non-empty the new CUI will be added.')
     terminate_available = models.BooleanField(default=True,
                                               help_text='Enable the option to terminate concepts.')
     irrelevant_available = models.BooleanField(default=False,

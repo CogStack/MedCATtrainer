@@ -1,22 +1,20 @@
 import json
-import os
 import logging
+import os
 from typing import Union, Dict, List, Type
 
 import pkg_resources
+from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from medcat.cat import CAT
+from medcat.cdb import CDB
+from medcat.utils.filters import check_filters
+from medcat.utils.helpers import tkns_from_doc
+from medcat.vocab import Vocab
 
 from .models import Entity, AnnotatedEntity, ICDCode, OPCSCode, ProjectAnnotateEntities, ProjectCuiCounter, \
     ConceptDB
-
-from medcat.cdb import CDB
-from medcat.vocab import Vocab
-from medcat.cat import CAT
-from medcat.utils.filters import check_filters
-from medcat.utils.helpers import tkns_from_doc
-
-from .solr_utils import ensure_concept_searchable
 
 log = logging.getLogger('trainer')
 
@@ -148,7 +146,8 @@ def _remove_overlap(project, document, start, end):
             ann.delete()
 
 
-def create_annotation(source_val, selection_occurrence_index, cui, user, project, document, cat, icd_code=None,
+def create_annotation(source_val: str, selection_occurrence_index: int, cui: str, user: User,
+                      project: ProjectAnnotateEntities, document, cat: CAT, icd_code=None,
                       opcs_code=None):
     text = document.text
     id = None
@@ -197,9 +196,6 @@ def create_annotation(source_val, selection_occurrence_index, cui, user, project
 
         ann_ent.save()
         id = ann_ent.id
-
-    # Add concept detail to SOLR search service
-    ensure_concept_searchable(cui, cat.cdb, project.concept_db)
 
     # upload icd / opcs codes if available
     # also expects icd / opcs addl info dicts to include:
