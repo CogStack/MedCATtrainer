@@ -159,9 +159,9 @@ def ensure_concept_searchable(cui, cdb: CDB, cdb_model: ConceptDB):
     base_url = f'http://{SOLR_HOST}:{SOLR_PORT}/solr'
     url = f'{base_url}/admin/collections?action=LIST'
     resp = requests.get(url)
-    if resp.status_code != 200:
+    if resp.status_code == 200:
         collections = json.loads(resp.text)['collections']
-        data = _concept_dct(cui, cdb)
+        data = [_concept_dct(cui, cdb)]
         if collection in collections:
             _upload_payload(f'{base_url}/{collection}/update', data, collection, commit=True)
 

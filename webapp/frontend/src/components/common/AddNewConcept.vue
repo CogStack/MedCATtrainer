@@ -100,7 +100,7 @@ export default {
             that.addConceptErr = false
           }, 5000)
         } else {
-          this.addConceptErr = 'Unexpected error adding new concept. Check log for more info.'
+          this.addConceptErr = `Error adding concept:${(err.response.data || {}).err || 'Unknown error: more info in the console'}`
           console.error(err)
           let that = this
           setTimeout(function () {
