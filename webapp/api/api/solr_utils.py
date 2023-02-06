@@ -79,7 +79,7 @@ def search_collection(cdbs: List[int], raw_query: str):
                         parsed_doc = {
                             'cui': str(d['cui'][0]),
                             'pretty_name': d['pretty_name'][0],
-                            'type_ids': d['type_ids'],
+                            'type_ids': d.get('type_ids', []),
                             'synonyms': d['synonyms']
                         }
                         if d.get('icd10'):

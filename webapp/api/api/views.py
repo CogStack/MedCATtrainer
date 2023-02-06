@@ -9,13 +9,13 @@ from medcat.utils.helpers import tkns_from_doc
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.viewsets import ViewSet
+
 
 from .admin import download_projects_with_text, download_projects_without_text, \
     import_concepts_from_cdb, upload_projects_export
 from .permissions import *
 from .serializers import *
-from .solr_utils import collections_available, search_collection
+from .solr_utils import collections_available, search_collection, ensure_concept_searchable
 from .utils import get_cached_medcat, \
     clear_cached_medcat
 from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
@@ -355,6 +355,14 @@ def add_concept(request):
                            project=project,
                            document=document,
                            cat=cat)
+
+    # ensure new concept detail is available in SOLR search service
+    ensure_concept_searchable(cui, cat.cdb, project.concept_db)
+
+    # add to project cuis if required.
+    if (project.cuis or project.cuis_file) and project.restrict_concept_lookup:
+        project.cuis = ','.join(project.cuis.split(',') + [cui])
+        project.save()
 
     return Response({'message': 'Concept and Annotation added successfully', 'id': id})
 
