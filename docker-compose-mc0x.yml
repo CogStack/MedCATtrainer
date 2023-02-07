@@ -1,5 +1,7 @@
 version: '3.4'
 
+# Compose file yml for MedCAT v0.x models. This is a legacy compose services config for older MedCAT models.
+
 services:
   medcattrainer:
     container_name: medcattrainer
