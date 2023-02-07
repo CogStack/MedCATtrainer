@@ -7,7 +7,7 @@ services:
     container_name: medcattrainer
     hostname: medcat
     restart: always
-    image: cogstacksystems/medcat-trainer:v2.5.1
+    image: cogstacksystems/medcat-trainer:v2.5.2
     volumes:
       - ./configs:/home/configs
       - api-media:/home/api/media
@@ -18,12 +18,12 @@ services:
     env_file:
       - ./envs/env-prod
     environment:
-      - MCT_VERSION=v2.5.1
+      - MCT_VERSION=v2.5.2
     command: /home/run.sh
 
   nginx:
     container_name: medcattrainer_nginx
-    image: cogstacksystems/medcat-trainer-nginx:v2.5.1
+    image: cogstacksystems/medcat-trainer-nginx:v2.5.2
     restart: always
     volumes:
       - api-media:/home/api/media
