@@ -3,8 +3,10 @@
 1\.  The container runs a vanilla [django](https://www.djangoproject.com/) app, that upon initially loaded
 will create a defaulted administrator user with details:
 
-    username: **admin**
-    password: **admin**
+<pre>
+    username: admin
+    password: admin
+</pre>
 
 2\. We strongly recommend creating a new admin user before using the trainer in 'production' and storing sensitive
 clinical documents on the trainer. To add a new user navigate to select `http://localhost:8001/admin/` and select 'Users'.
