@@ -25,6 +25,7 @@ services:
       - ${MCTRAINER_PORT:-8001}:8000
     depends_on:
       - medcattrainer
+      - solr
 
   solr:
     image: solr:8
