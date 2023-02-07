@@ -8,7 +8,7 @@ ENV=prod
 DEBUG=False
 
 ### Load example CDB, Vocab ###
-LOAD_EXAMPLES=True
+LOAD_EXAMPLES=0
 
 ### Dataset conf ###
 UNIQUE_DOC_NAMES_IN_DATASETS=True

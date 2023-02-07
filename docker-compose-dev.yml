@@ -1,5 +1,7 @@
 version: '3.4'
 
+# Dev compose yml file for building, running and mounting local git cloned repo.
+
 services:
   medcattrainer:
     build:
@@ -34,6 +36,7 @@ services:
       - ${MCTRAINER_PORT:-8001}:8000
     depends_on:
       - medcattrainer
+      - solr
 
   solr:
     image: solr:8

@@ -1,11 +1,13 @@
 version: '3.4'
 
+# Prod compose file -
+
 services:
   medcattrainer:
     container_name: medcattrainer
     hostname: medcat
     restart: always
-    image: cogstacksystems/medcat-trainer:v2.3.7
+    image: cogstacksystems/medcat-trainer:v2.5.1
     volumes:
       - ./configs:/home/configs
       - api-media:/home/api/media
@@ -16,11 +18,12 @@ services:
     env_file:
       - ./envs/env-prod
     environment:
-      - MCT_VERSION=v2.3.7
+      - MCT_VERSION=v2.5.1
     command: /home/run.sh
+
   nginx:
     container_name: medcattrainer_nginx
-    image: cogstacksystems/medcat-trainer-nginx:v2.3.7
+    image: cogstacksystems/medcat-trainer-nginx:v2.5.1
     restart: always
     volumes:
       - api-media:/home/api/media
@@ -29,6 +32,8 @@ services:
       - "${MCTRAINER_PORT:-8001}:8000"
     depends_on:
       - medcattrainer
+      - solr
+
   solr:
     container_name: mct_solr
     image: solr:8
