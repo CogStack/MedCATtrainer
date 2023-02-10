@@ -93,7 +93,7 @@ export default {
       // escape '<' '>' that may be interpreted as start/end tags, escape inserted span tags.
       formattedText = formattedText
         .replace(/<(?!\/?span)/g, '&lt')
-        .replace(/(?<!<span @click="selectEnt\(\d\)".*"|\/span)>/g, '&gt')
+        .replace(/(?<!<span @click="selectEnt\(\d\d?\d?\d?\)".*"|\/span)>/g, '&gt')
 
       formattedText = this.addAnnos ? `<div @contextmenu.prevent.stop="showCtxMenu($event)">${formattedText}</div>` : `<div>${formattedText}</div>`
       this.scrollIntoView(timeout)
