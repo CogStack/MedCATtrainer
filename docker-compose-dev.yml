@@ -39,6 +39,7 @@ services:
       - solr
 
   solr:
+    container_name: mct_solr
     image: solr:8
     restart: always
     ports:
