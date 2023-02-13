@@ -264,7 +264,7 @@ def _retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
                 out_ann['alternative'] = ann.alternative
                 out_ann['killed'] = ann.killed
                 out_ann['irrelevant'] = ann.irrelevant
-                out_ann['create_time'] = ann.create_time
+                out_ann['create_time'] = ann.create_time.strftime('%Y-%m-%d:%H:%M:%S')
                 out_ann['last_modified'] = ann.last_modified.strftime('%Y-%m-%d:%H:%M:%S')
                 out_ann['comment'] = ann.comment
                 out_ann['manually_created'] = ann.manually_created
