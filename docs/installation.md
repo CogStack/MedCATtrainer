@@ -6,7 +6,7 @@ Clone the repo, run the default docker-compose file and default env var:
 ```shell
 git clone https://github.com/CogStack/MedCATtrainer
 cd MedCATtrainer
-docker-compose up</pre>
+docker-compose up
 ```
 
 This will use the pre-built docker images available on DockerHub. If your internal firewall does on permit access to DockerHub, you can build 
