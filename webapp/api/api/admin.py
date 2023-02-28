@@ -24,6 +24,7 @@ admin.site.register(EntityRelation)
 
 logger = logging.getLogger(__name__)
 
+_dt_fmt = '%Y-%m-%d %H:%M:%S.%f'
 
 def reset_project(modeladmin, request, queryset):
     if not request.user.is_staff:
@@ -126,9 +127,6 @@ def download_projects_without_text(projects, with_doc_name):
     response = HttpResponse(sio, content_type='text/json')
     response['Content-Disposition'] = 'attachment; filename={}'.format(f_name)
     return response
-
-
-_dt_fmt = '%Y-%m-%d::%H:%M-%z'
 
 
 def download(modeladmin, request, queryset):
@@ -245,7 +243,7 @@ def _retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
             out_doc['id'] = doc.id
             out_doc['name'] = doc.name
             out_doc['text'] = doc.text
-            out_doc['last_modified'] = doc.last_modified.strftime('%Y-%m-%d:%H:%M:%S')
+            out_doc['last_modified'] = doc.last_modified.strftime(_dt_fmt)
             out_doc['annotations'] = []
 
             anns = AnnotatedEntity.objects.filter(project=project, document=doc)
@@ -264,8 +262,8 @@ def _retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
                 out_ann['alternative'] = ann.alternative
                 out_ann['killed'] = ann.killed
                 out_ann['irrelevant'] = ann.irrelevant
-                out_ann['create_time'] = ann.create_time.strftime('%Y-%m-%d:%H:%M:%S')
-                out_ann['last_modified'] = ann.last_modified.strftime('%Y-%m-%d:%H:%M:%S')
+                out_ann['create_time'] = ann.create_time.strftime(_dt_fmt)
+                out_ann['last_modified'] = ann.last_modified.strftime(_dt_fmt)
                 out_ann['comment'] = ann.comment
                 out_ann['manually_created'] = ann.manually_created
                 # if ann.icd_code:

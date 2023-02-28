@@ -13,6 +13,7 @@ from .models import *
 from .utils import env_str_to_bool
 
 _MAX_DATASET_SIZE_DEFAULT = 10000
+_dt_fmt = '%Y-%m-%d %H:%M:%S.%f'
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +125,7 @@ def upload_projects_export(medcat_export: Dict):
                 r.label = rel
                 r.save()
 
-        p.validated_documents = list(Document.objects.filter(dataset=ds_mod))
+        p.validated_documents.set(list(Document.objects.filter(dataset=ds_mod)))
 
         for doc in proj['documents']:
             doc_mod = Document.objects.filter(Q(dataset=ds_mod) & Q(text=doc['text'])).first()
@@ -147,12 +148,12 @@ def upload_projects_export(medcat_export: Dict):
                 a.irrelevant = anno.get('irrelevant', False)  # Added later - so False by default for compatibility
                 if anno.get('last_modified') is not None:
                     try:
-                        a.last_modified = datetime.strptime(anno['last_modified'], '%Y-%m-%d:%H:%M:%S%z')
+                        a.last_modified = datetime.strptime(anno['last_modified'], _dt_fmt)
                     except ValueError:
                         a.last_modified = datetime.now()
                 if anno.get('create_time') is not None:
                     try:
-                        a.create_time = datetime.strptime(anno['create_time'], '%Y-%m-%d:%H:%M:%S%z')
+                        a.create_time = datetime.strptime(anno['create_time'], _dt_fmt)
                     except ValueError:
                         a.create_time = datetime.now()
                 a.comment = anno.get('comment')
@@ -181,11 +182,11 @@ def upload_projects_export(medcat_export: Dict):
                 er.start_entity = anno_to_doc_ind[relation['start_entity_start_idx']]
                 er.end_entity = anno_to_doc_ind[relation['end_entity_start_idx']]
                 try:
-                    er.create_time = datetime.strptime(relation['create_time'], '%Y-%m-%d:%H:%M:%S%z')
+                    er.create_time = datetime.strptime(relation['create_time'], _dt_fmt)
                 except ValueError:
                     er.create_time = datetime.now()
                 try:
-                    er.last_modified = datetime.strptime(relation['last_modified_time'], '%Y-%m-%d:%H:%M:%S%z')
+                    er.last_modified = datetime.strptime(relation['last_modified_time'], _dt_fmt)
                 except ValueError:
                     er.last_modified = datetime.now()
                 er.save()
