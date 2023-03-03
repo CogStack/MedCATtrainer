@@ -16,7 +16,8 @@
         <tr @keyup.stop>
           <td>Concept Lookup</td>
           <td>
-            <concept-picker :project="project" :selection="name" @pickedResult:concept="enrichCUI">
+            <concept-picker :project="project" :selection="name" @pickedResult:concept="enrichCUI"
+                            @picker:opened="conceptPickerState(true)" @picker:closed="conceptPickerState(false)">
             </concept-picker>
           </td>
         </tr>
@@ -110,7 +111,8 @@ export default {
       name: this.selection.selStr,
       prevText: this.selection.prevText,
       nextText: this.selection.nextText,
-      selectedCUI: null
+      selectedCUI: null,
+      conceptPickerOpen: false
     }
   },
   methods: {
@@ -149,9 +151,17 @@ export default {
       this.$emit('request:addAnnotationComplete')
     },
     keyup (e) {
-      if (e.keyCode === 27) {
+      if (e.keyCode === 27) { // esc key
         this.cancel()
+      } else if (e.keyCode === 13 && !this.conceptPickerOpen) { // enter key
+        this.submit()
       }
+    },
+    conceptPickerState (val) {
+      const that = this
+      window.setTimeout(function () {
+        that.conceptPickerOpen = val
+      }, 50)
     },
     newConceptSelected () {
       this.selectedCUI = null

@@ -37,12 +37,14 @@
                            :current-ent="currentEnt" :ents="ents" :task-name="taskName" :task-values="taskValues"
                            :addAnnos="true" :current-rel-start-ent="(currentRel || {}).start_entity"
                            :current-rel-end-ent="(currentRel || {}).end_entity"
-                           @select:concept="selectEntity" @select:addSynonym="addSynonym"></clinical-text>
+                           @select:concept="selectEntity" @select:addSynonym="addSynonym"
+                           @pick:concept="conceptPickerState"></clinical-text>
             <div class="taskbar">
               <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt" @select:next="next" @select:back="back"></nav-bar>
               <task-bar class="tasks" :taskLocked="taskLocked" :ents="ents" :altSearch="altSearch"
                         :submitLocked="docToSubmit !== null" :terminateEnabled="(project || {}).terminate_available"
                         :irrelevantEnabled="(project || {}).irrelevant_available"
+                        :conceptSelection="conceptSynonymSelection"
                         @select:remove="markRemove" @select:correct="markCorrect"
                         @select:kill="markKill" @select:alternative="toggleAltSearch"
                         @select:irrelevant="markIrrelevant" @submit="submitDoc"></task-bar>
@@ -325,6 +327,7 @@ export default {
       helpModal: false,
       projectCompleteModal: false,
       resetModal: false,
+      conceptPickerOpen: true,
       errors: {
         modal: false,
         message: '',
@@ -606,6 +609,9 @@ export default {
         that.metaAnnotate = false
       }, 50)
     },
+    conceptPickerState (val) {
+      this.conceptPickerOpen = val
+    },
     next () {
       this.selectEntity(this.ents.indexOf(this.currentEnt) + 1)
     },
@@ -706,6 +712,8 @@ export default {
     keyup (e) {
       if (e.keyCode === 13 && this.docToSubmit && !this.submitConfirmedLoading) {
         this.submitConfirmed()
+      } else if (e.keyCode === 27 && this.docToSubmit) {
+        this.docToSubmit = null
       }
     },
     confirmSubmitListenerRemove () {
