@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:3.10
 
 # Update and upgrade everything
 RUN apt-get -y update && \
