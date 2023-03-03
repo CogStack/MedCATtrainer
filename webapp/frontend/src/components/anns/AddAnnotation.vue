@@ -150,7 +150,7 @@ export default {
     cancel () {
       this.$emit('request:addAnnotationComplete')
     },
-    keyup (e) {
+    keydown (e) {
       if (e.keyCode === 27) { // esc key
         this.cancel()
       } else if (e.keyCode === 13 && !this.conceptPickerOpen) { // enter key
@@ -161,7 +161,7 @@ export default {
       const that = this
       window.setTimeout(function () {
         that.conceptPickerOpen = val
-      }, 50)
+      }, 100)
     },
     newConceptSelected () {
       this.selectedCUI = null
@@ -171,10 +171,10 @@ export default {
     }
   },
   mounted () {
-    window.addEventListener('keyup', this.keyup)
+    window.addEventListener('keydown', this.keydown)
   },
   beforeDestroy () {
-    window.removeEventListener('keyup', this.keyup)
+    window.removeEventListener('keydown', this.keydown)
   }
 }
 </script>
