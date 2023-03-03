@@ -121,7 +121,7 @@ export default {
       const anchor = selection.anchorNode
       const focus = selection.focusNode
 
-      if (selStr.length > 0 && focus !== null) {
+      if (selStr.length > 0 && focus !== null && focus.data) {
         let nextText = focus.data.slice(selection.focusOffset)
         let nextSibling = focus.nextSibling || focus.parentElement.nextSibling
         let priorText = anchor.data.slice(0, selection.anchorOffset)

@@ -68,7 +68,7 @@ export default {
       }
       return true
     },
-    keyup  (e) {
+    keydown (e) {
       if (e.keyCode === 13 && !this.conceptSelection) {
         if (!this.submitDisabled()) {
           this.ignoreSubmit()
@@ -101,10 +101,10 @@ export default {
       }
     },
     listenSubmit () {
-      window.addEventListener('keyup', this.keyup)
+      window.addEventListener('keydown', this.keydown)
     },
     ignoreSubmit () {
-      window.removeEventListener('keyup', this.keyup)
+      window.removeEventListener('keydown', this.keydown)
     }
   },
   mounted () {

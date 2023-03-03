@@ -706,7 +706,7 @@ export default {
         })
       }
     },
-    keyup (e) {
+    keydown (e) {
       if (e.keyCode === 13 && this.docToSubmit && !this.submitConfirmedLoading) {
         this.submitConfirmed()
       } else if (e.keyCode === 27 && this.docToSubmit) {
@@ -714,10 +714,10 @@ export default {
       }
     },
     confirmSubmitListenerRemove () {
-      window.removeEventListener('keyup', this.keyup)
+      window.removeEventListener('keydown', this.keydown)
     },
     confirmSubmitListenerAdd () {
-      window.addEventListener('keyup', this.keyup)
+      window.addEventListener('keydown', this.keydown)
     },
     confirmReset () {
       this.loadingDoc = true
