@@ -2,9 +2,7 @@
   <div @click="selectRelation(null)" class="container-fluid app-container">
     <div class="app-header">
       <div class="project-name">
-        <span>
-          <h4>{{ project === null ? '' : project.name }}</h4>
-        </span>
+        <h4>{{ project === null ? '' : project.name }}</h4>
       </div>
 
       <div class="meta">
@@ -616,7 +614,6 @@ export default {
       this.selectEntity(this.ents.indexOf(this.currentEnt) + 1)
     },
     back () {
-      this.selectEntity(this.ents.indexOf(this.currentEnt) - 1)
       this.selectEntity(this.ents.indexOf(this.currentEnt) - 1)
     },
     submitDoc (docId) {
