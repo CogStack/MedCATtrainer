@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 _dt_fmt = '%Y-%m-%d %H:%M:%S.%f'
 
+
 def reset_project(modeladmin, request, queryset):
     if not request.user.is_staff:
         raise PermissionDenied

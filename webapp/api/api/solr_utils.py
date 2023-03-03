@@ -1,7 +1,7 @@
 import json
 import logging
 import re
-from typing import List
+from typing import List, Dict
 
 import requests
 from django.http import HttpResponseServerError
@@ -43,11 +43,29 @@ def collections_available(cdbs: List[int]):
         return HttpResponseServerError('Error requesting solr concept search collection list')
 
 
+def _process_result_repsonse(resp: Dict):
+    uniq_results_map = {}
+    docs = [d for d in resp['response']['docs']]
+    for d in docs:
+        if d['cui'][0] not in uniq_results_map:
+            parsed_doc = {
+                'cui': str(d['cui'][0]),
+                'pretty_name': d['pretty_name'][0],
+                'type_ids': d.get('type_ids', []),
+                'synonyms': d['synonyms']
+            }
+            if d.get('icd10'):
+                parsed_doc['icd10'] = d['icd10'][0]
+            if d.get('opcs4'):
+                parsed_doc['opcs4'] = d['opcs4'][0]
+            uniq_results_map[d['cui'][0]] = parsed_doc
+    return uniq_results_map
+
+
 def search_collection(cdbs: List[int], raw_query: str):
     query = raw_query.strip().replace(r'\s+', r'\s').split(' ')
     if len(query) == 1 and query[0] == '':
         return Response({'results': []})
-
     res = []
     if len(cdbs) > 0:
         uniq_results_map = {}
@@ -69,24 +87,20 @@ def search_collection(cdbs: List[int], raw_query: str):
             solr_url = f'http://{SOLR_HOST}:{SOLR_PORT}/solr/{collection_name}/select?q.op=OR&q={query_str}&rows=15'
             logger.info(f'Searching solr collection: {solr_url}')
             resp = json.loads(requests.get(solr_url).text)
+
             if 'error' in resp:
                 return HttpResponseServerError(f'Concept Search Index {collection_name} not available, '
                                                f'import concept DB first before trying to search it.')
+            elif len(resp['response']['docs']) == 0:
+                # try with wildcards at the end of the entire query, rather than each token
+                fallback_query = f'name:{" ".join(query)}* synonyms:{" ".join(query)}*'
+                solr_url = f'http://{SOLR_HOST}:{SOLR_PORT}/solr/{collection_name}/select?q.op=OR&q={fallback_query}&rows=15'
+                logger.info(f'Searching solr collection with fall back query at url: {solr_url}')
+                resp = json.loads(requests.get(solr_url).text)
+                uniq_results_map.update(_process_result_repsonse(resp))
             else:
-                docs = [d for d in resp['response']['docs']]
-                for d in docs:
-                    if d['cui'][0] not in uniq_results_map:
-                        parsed_doc = {
-                            'cui': str(d['cui'][0]),
-                            'pretty_name': d['pretty_name'][0],
-                            'type_ids': d.get('type_ids', []),
-                            'synonyms': d['synonyms']
-                        }
-                        if d.get('icd10'):
-                            parsed_doc['icd10'] = d['icd10'][0]
-                        if d.get('opcs4'):
-                            parsed_doc['opcs4'] = d['opcs4'][0]
-                        uniq_results_map[d['cui'][0]] = parsed_doc
+                uniq_results_map.update(_process_result_repsonse(resp))
+
         res = sorted(uniq_results_map.values(), key=lambda r: len(r['pretty_name']))
     return Response({'results': res})
 

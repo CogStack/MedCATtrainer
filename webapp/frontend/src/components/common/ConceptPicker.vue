@@ -6,7 +6,9 @@
             :appendToBody="true"
             :options="searchResults"
             :loading="loadingResults"
-            label="cui">
+            label="cui"
+            @open="$emit('picker:opened')"
+            @close="$emit('picker:closed')">
     <template v-slot:option="option">
       <span class="select-option">{{option.name}}</span>
       <span class="select-option-cui"> - {{option.cui}}</span>
@@ -34,7 +36,7 @@ export default {
       el.focus()
       el.value = that.selection
       that.searchCUI(that.selection)
-    }, 500)
+    }, 150)
   },
   data () {
     return {
