@@ -14,7 +14,7 @@ echo "from django.contrib.auth import get_user_model
 User = get_user_model()
 if User.objects.count() == 0:
     User.objects.create_superuser('admin', 'admin@example.com', 'admin')
-" | python manage.py shell
+" | python /home/api/manage.py shell
 
 if [ $LOAD_EXAMPLES ]; then
   python /home/load_examples.py &
