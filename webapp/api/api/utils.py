@@ -221,7 +221,7 @@ def train_medcat(cat, project, document):
             cui = ann.entity.label
             # Indices for this annotation
             spacy_entity = tkns_from_doc(spacy_doc=spacy_doc, start=ann.start_ind, end=ann.end_ind)
-            # This will add the concept if it doesn't exist and if it 
+            # This will add the concept if it doesn't exist and if it
             #does just link the new name to the concept, if the namee is
             #already linked then it will just train.
             manually_created = False

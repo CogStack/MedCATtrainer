@@ -19,6 +19,7 @@
 import VRuntimeTemplate from 'v-runtime-template'
 import VueSimpleContextMenu from 'vue-simple-context-menu'
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
+import _ from 'lodash'
 
 export default {
   name: 'ClinicalText',
@@ -80,8 +81,14 @@ export default {
 
         styleClass = this.ents[i] === this.currentEnt ? `${styleClass} highlight-task-selected` : styleClass
         timeout = this.ents[i] === this.currentEnt && i === 0 ? 500 : timeout
-        let spanText = `<span @click="selectEnt(${i})" class="${styleClass}">${highlightText}</span>`
-        let precedingText = this.text.slice(start, this.ents[i].start_ind)
+
+        let removeButtonEl = ''
+        if (this.ents[i].manually_created) {
+          removeButtonEl = `<font-awesome-icon icon="times" class="remove-new-anno" @click="removeNewAnno(${i})"></font-awesome-icon>`
+        }
+        let spanText = `<span @click="selectEnt(${i})" class="${styleClass}">${_.escape(highlightText)}${removeButtonEl}</span>`
+
+        let precedingText = _.escape(this.text.slice(start, this.ents[i].start_ind))
         precedingText = precedingText.length !== 0 ? precedingText : ' '
         start = this.ents[i].end_ind
         formattedText += precedingText + spanText
@@ -91,9 +98,9 @@ export default {
       }
 
       // escape '<' '>' that may be interpreted as start/end tags, escape inserted span tags.
-      formattedText = formattedText
-        .replace(/<(?!\/?span)/g, '&lt')
-        .replace(/(?<!<span @click="selectEnt\(\d\d?\d?\d?\)".*"|\/span)>/g, '&gt')
+      // formattedText = formattedText
+      //   .replace(/<(?!\/?span|font-awesome-icon)/g, '&lt')
+      //   .replace(/(?<!<span @click="selectEnt\(\d\d?\d?\d?\)".*"|\/span)>/g, '&gt')
 
       formattedText = this.addAnnos ? `<div @contextmenu.prevent.stop="showCtxMenu($event)">${formattedText}</div>` : `<div>${formattedText}</div>`
       this.scrollIntoView(timeout)
@@ -186,6 +193,9 @@ export default {
     },
     ctxOptionClicked  () {
       this.$emit('select:addSynonym', this.selection)
+    },
+    removeNewAnno (idx) {
+      this.$emit('remove:newAnno', idx)
     }
   }
 }
@@ -241,6 +251,15 @@ export default {
     top: -4px;
     left: 1px;
   }
+}
+
+.remove-new-anno {
+  font-size: 15px;
+  color: $task-color-1;
+  cursor: pointer;
+  position: relative;
+  //right: -5px;
+  top: -5px;
 }
 
 </style>
