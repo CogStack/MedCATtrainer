@@ -602,6 +602,11 @@ export default {
     removeNewAnno (i) {
       let entToRemove = this.ents[i]
       this.$http.delete(`/api/annotated-entities/${entToRemove.id}/`).then(_ => {
+        if (i === this.ents.length - 1) {
+          this.back()
+        } else {
+          this.next()
+        }
         this.ents.splice(i, 1)
       })
     },
