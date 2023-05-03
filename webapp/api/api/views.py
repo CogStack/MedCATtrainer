@@ -18,8 +18,7 @@ from .medcat_utils import ch2pt_from_pt2ch
 from .permissions import *
 from .serializers import *
 from .solr_utils import collections_available, search_collection, ensure_concept_searchable
-from .utils import get_cached_medcat, \
-    clear_cached_medcat
+from .utils import get_cached_medcat, clear_cached_medcat
 from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
 
 # For local testing, put envs
