@@ -3,6 +3,7 @@ import axios from 'axios'
 import VueCookie from 'vue-cookie'
 import { Tabs, Tab } from 'vue-tabs-component'
 import BootstrapVue from 'bootstrap-vue'
+import VueTree from '@ssthouse/vue-tree-chart'
 
 import App from './App.vue'
 import router from './router'
@@ -19,6 +20,7 @@ import '@/assets/main.css'
 
 Vue.component('tabs', Tabs)
 Vue.component('tab', Tab)
+Vue.component('vue-tree', VueTree)
 Vue.use(BootstrapVue)
 Vue.use(VueCookie);
 

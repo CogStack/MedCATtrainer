@@ -5,6 +5,7 @@ from tempfile import NamedTemporaryFile
 from django.http import HttpResponseBadRequest, HttpResponseServerError
 from django.shortcuts import render
 from django_filters import rest_framework as drf
+from medcat.cdb import CDB
 from medcat.utils.helpers import tkns_from_doc
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
@@ -632,3 +633,35 @@ def upload_deployment(request):
 def model_loaded(_):
     return Response({p.id: get_cached_medcat(CAT_MAP, p) is not None
                      for p in ProjectAnnotateEntities.objects.all()})
+
+
+@api_view(http_method_names=['GET'])
+def cdb_cui_children(request, cdb_id):
+    parent_cui = request.GET.get('parent_cui')
+    if cdb_id not in CDB_MAP:
+        cdb_obj = ConceptDB.objects.get(id=cdb_id)
+        cdb = CDB.load(cdb_obj.cdb_file.path)
+        CDB_MAP[cdb_id] = cdb
+    cdb = CDB_MAP[cdb_id]
+
+    # root SNOMED CT code: 138875005
+    # root UMLS code: CUI:
+    # root level ICD term:
+    # root level OPCS term:
+
+    if cdb.addl_info.get('pt2ch') is None:
+        return HttpResponseBadRequest('Requested MedCAT CDB model does not include parent2child metadata to'
+                                      ' explore a concept hierarchy')
+    root_term = {
+        'cui': '138875005',
+        'pretty_name': cdb.cui2preferred_name['138875005']
+    }
+    if parent_cui is None:
+        return Response({'results': [root_term]})
+    else:
+        try:
+            child_concepts = [{'cui': cui, 'pretty_name': cdb.cui2preferred_name[cui]}
+                              for cui in cdb.addl_info.get('pt2ch')[parent_cui]]
+            return Response({'results': child_concepts})
+        except KeyError:
+            return Response({'results': []})

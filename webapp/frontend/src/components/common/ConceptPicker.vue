@@ -26,7 +26,11 @@ export default {
     vSelect
   },
   props: {
-    project: Object,
+    // project: Object,
+    restrict_concept_lookup: Boolean,
+    cui_filter: Array,
+    cdb_search_filter: Array,
+    concept_db: Number,
     selection: String
   },
   created () {
@@ -75,19 +79,19 @@ export default {
       }
 
       const that = this
-      const conceptDbs = Array.from(new Set(this.project.cdb_search_filter.concat(this.project.concept_db))).join(',')
+      const conceptDbs = Array.from(new Set(this.cdb_search_filter.concat(this.concept_db))).join(',')
       const searchByTerm = function () {
         let searchConceptsQueryParams = `search=${term}&cdbs=${conceptDbs}`
         that.$http.get(`/api/search-concepts/?${searchConceptsQueryParams}`).then(resp => {
-          that.searchResults = filterResults(that.project, resp.data.results.map(res => mapResult(res, resp.data.results)))
+          that.searchResults = filterResults(resp.data.results.map(res => mapResult(res, resp.data.results)))
           // loading(false)
           that.loadingResults = false
         })
       }
-      const filterResults = function (project, results) {
-        if (project.restrict_concept_lookup) {
-          if (project.cuis) {
-            let cuis = project.cuis.split(',').map(c => c.trim())
+      const filterResults = function (results) {
+        if (that.restrict_concept_lookup) {
+          if (that.cui_filter) {
+            let cuis = that.cui_filter.split(',').map(c => c.trim())
             results = results.filter(r => cuis.indexOf(r.cui) !== -1)
           }
         }

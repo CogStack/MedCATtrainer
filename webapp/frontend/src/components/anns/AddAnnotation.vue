@@ -16,7 +16,11 @@
         <tr @keyup.stop>
           <td>Concept Lookup</td>
           <td>
-            <concept-picker :project="project" :selection="name" @pickedResult:concept="enrichCUI"
+            <concept-picker :restrict_concept_lookup="project.restrict_concept_lookup"
+                            :cui_filter="project.cuis"
+                            :cdb_search_filter="project.cdb_search_filter"
+                            :concept_db="project.concept_db"
+                            :selection="name" @pickedResult:concept="enrichCUI"
                             @picker:opened="conceptPickerState(true)" @picker:closed="conceptPickerState(false)">
             </concept-picker>
           </td>
