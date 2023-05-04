@@ -17,6 +17,7 @@ import 'vue-simple-context-menu/dist/vue-simple-context-menu.css'
 import '@/plugins/fontawesome'
 import '@/assets/main.css'
 
+Vue.component('vue-tree', VueTree)
 Vue.use(VueSimpleContextMenu)
 
 Vue.use(BootstrapVue)
