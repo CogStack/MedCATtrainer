@@ -3,7 +3,7 @@ import pickle
 import traceback
 from tempfile import NamedTemporaryFile
 
-from django.http import HttpResponseBadRequest, HttpResponseServerError
+from django.http import HttpResponseBadRequest, HttpResponseServerError, HttpResponse
 from django.shortcuts import render
 from django_filters import rest_framework as drf
 from medcat.cdb import CDB
@@ -12,17 +12,16 @@ from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-
+from core.settings import MEDIA_ROOT
 from .admin import download_projects_with_text, download_projects_without_text, \
-    import_concepts_from_cdb, upload_projects_export
-from .medcat_utils import ch2pt_from_pt2ch
     import_concepts_from_cdb, upload_projects_export, retrieve_project_data
+from .medcat_utils import ch2pt_from_pt2ch, get_all_ch, dedupe_preserve_order
 from .metrics import ProjectMetrics
 from .permissions import *
 from .serializers import *
 from .solr_utils import collections_available, search_collection, ensure_concept_searchable
-from .utils import get_cached_medcat, clear_cached_medcat
-from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
+from .utils import get_cached_medcat, clear_cached_medcat, get_medcat, add_annotations, \
+    remove_annotations, train_medcat, create_annotation
 
 # For local testing, put envs
 """
@@ -765,6 +764,14 @@ def generate_concept_filter(request):
             CDB_MAP[cdb_id] = cdb
         cdb = CDB_MAP[cdb_id]
         # get all children from 'parent' concepts above.
-
-
-
+        final_filter = []
+        for cui in cuis:
+            final_filter += get_all_ch(cui, cdb)
+        final_filter = dedupe_preserve_order(final_filter)
+        with open(MEDIA_ROOT + '/filter.json', 'w+') as f:
+            json.dump(final_filter, f)
+            response = HttpResponse(f, content_type='text/json')
+            response['Content-Disposition'] = 'attachment; filename=filter.json'
+            return response
+        # return Response({'filter': final_filter})
+    return HttpResponseBadRequest('Missing either cuis or cdb_id param. Cannot generate filter.')

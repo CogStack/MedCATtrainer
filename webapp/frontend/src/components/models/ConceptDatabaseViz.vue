@@ -16,11 +16,11 @@
         :direction="'vertical'"
         ref="tree">
         <template v-slot:node="{ node, collapsed }">
-          <div @click="getData(node)" class="node" :style="{ border: collapsed ? '2px solid grey' : '' }">
+          <div @click="getData(node)" class="node">
             {{ node.pretty_name }} - {{ node.cui }}
-            <div class="form-check">
-              <input type="checkbox" @click="toggleNodeCheck(node)"/>
-            </div>
+            <button @click.stop.prevent class="btn btn-outline select-node-btn" @click="selectNode(node)">
+              <font-awesome-icon icon="chevron-right"></font-awesome-icon>
+            </button>
           </div>
         </template>
       </vue-tree>
@@ -45,7 +45,7 @@ export default {
       cdbData: {},
       nodeCuis: [],
       loading: false,
-      treeConfig: { nodeWidth: 100, nodeHeight: 100, levelHeight: 200 },
+      treeConfig: { nodeWidth: 100, nodeHeight: 150, levelHeight: 150 },
       zoomSetting: 0
     }
   },
@@ -84,8 +84,8 @@ export default {
         })
       }
     },
-    toggleNodeCheck (node) {
-      this.$emit('change:checkedNodes', node)
+    selectNode (node) {
+      this.$emit('select:node', node)
     },
     onScroll (e) {
       if (this.zoomSetting < e.scrollY) {
@@ -114,12 +114,14 @@ export default {
           this.identifier = 'cui'
         })
       }
+      this.nodeCuis.push(node.name)
+      this.loading = false
     }
   }
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .mc-tree-container {
   flex: 1 1 auto;
   overflow-y: auto;
@@ -139,21 +141,28 @@ export default {
 }
 
 .node {
-  width: 250px;
+  width: 260px;
   padding: 3px;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
   justify-content: center;
   font-size: .8rem;
-  color: white;
-  background-color: #45503B;
+  color: $color-2;
+  background-color: $task-color-0;
   border-radius: 3px;
   margin: 3px;
+  box-shadow: 0 5px 5px -5px $task-color-0;
 }
 
 .zoom-controls {
   position: absolute;
   right: 0;
+}
+
+.select-node-btn {
+  position: absolute;
+  right: 0;
+  width: 20px;
 }
 </style>
