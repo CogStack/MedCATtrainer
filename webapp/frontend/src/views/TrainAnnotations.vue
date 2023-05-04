@@ -36,7 +36,7 @@
                            :addAnnos="true" :current-rel-start-ent="(currentRel || {}).start_entity"
                            :current-rel-end-ent="(currentRel || {}).end_entity"
                            @select:concept="selectEntity" @select:addSynonym="addSynonym"
-                           @pick:concept="conceptPickerState"></clinical-text>
+                           @pick:concept="conceptPickerState" @remove:newAnno="removeNewAnno"></clinical-text>
             <div class="taskbar">
               <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt" @select:next="next" @select:back="back"></nav-bar>
               <task-bar class="tasks" :taskLocked="taskLocked" :ents="ents" :altSearch="altSearch"
@@ -598,6 +598,17 @@ export default {
           this.fetchEntities(newEnt.id)
         })
       }
+    },
+    removeNewAnno (i) {
+      let entToRemove = this.ents[i]
+      this.$http.delete(`/api/annotated-entities/${entToRemove.id}/`).then(_ => {
+        if (i === this.ents.length - 1) {
+          this.back()
+        } else {
+          this.next()
+        }
+        this.ents.splice(i, 1)
+      })
     },
     addSynonym (selection) {
       this.conceptSynonymSelection = null
