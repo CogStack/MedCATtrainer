@@ -3,7 +3,7 @@
     <div class="entity" :class="startEntClass"
          @click="selectStartEnt">{{(entityRelation.start_entity.value || '_________')}}</div>
     <div class="relation">
-      <select @change="relChange">
+      <select @change="relChange" v-model="relChoice">
         <option :value="rel" v-for="rel of possibleRelations" :key="rel.id">{{rel.name}}</option>
       </select>
     </div>
@@ -15,6 +15,8 @@
 </template>
 
 <script>
+import _ from 'lodash'
+
 export default {
   name: 'RelationAnnotation',
   props: {
@@ -22,6 +24,15 @@ export default {
     possibleRelations: Array,
     selectedEnt: Object,
     selectedRelation: Object
+  },
+  data () {
+    return {
+      relChoice: Object
+    }
+  },
+  created () {
+    this.relChoice = _.find(this.possibleRelations, v => v.id === this.entityRelation.relation) ||
+      this.possibleRelations[0]
   },
   computed: {
     startEnt () {
@@ -71,20 +82,9 @@ export default {
     highlightRelation () {
       this.$emit('click:selectRelation')
     },
-    relChange (rel) {
-      this.$emit('changed:relation', this.entityRelation, 'relation', rel)
+    relChange () {
+      this.$emit('changed:relation', this.entityRelation, 'relation', this.relChoice)
     }
-  },
-  mounted () {
-    this.$watch('startEnt', () => {
-      this.$emit('change:relationEdit', this.entityRelation)
-    })
-    this.$watch('endEnt', () => {
-      this.$emit('change:relationEdit', this.entityRelation)
-    })
-    this.$watch('relation', () => {
-      this.$emit('change:relationEdit', this.entityRelation)
-    })
   }
 }
 </script>
