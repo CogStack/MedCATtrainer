@@ -108,8 +108,9 @@ export default {
     selectedRelation (rel) {
       this.$emit('selected:relation', rel)
     },
-    relationChanged (rel, prop, value) {
-      rel[prop] = value
+    relationChanged (rel, prop, val) {
+      this.$set(rel, prop, val)
+      this.editRelation(rel)
     }
   }
 }
