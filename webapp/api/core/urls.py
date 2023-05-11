@@ -67,5 +67,6 @@ urlpatterns = [
     path('api/generate-concept-filter-json/', api.views.generate_concept_filter_flat_json),
     path('api/generate-concept-filter/', api.views.generate_concept_filter),
     path('api/metrics/', api.views.metrics),
+    path('api/concept-path/', api.views.cdb_concept_path),
     re_path('^.*$', api.views.index, name='index'),  # Match everything else to home
 ]
