@@ -7,17 +7,28 @@
           <option :value="cdb" v-for="cdb of cdbs" :key="cdb.id">{{cdb.name}}</option>
         </select>
       </div>
-      <div class="form-group">
+      <div v-if="selectedConceptDB" class="form-group">
         <concept-picker :restrict_concept_lookup="false"
-                        :cui_filter="''"
+                        :cui_filter="[]"
                         :cdb_search_filter="[selectedConceptDB.id]"
                         :concept_db="selectedConceptDB.id"
-                        :selection="name" @pickedResult:concept="pickedResult">
+                        @pickedResult:concept="pickedResult">
         </concept-picker>
+      </div>
+      <div>
+        <div>Concept Filter Summary</div>
+        <p>All nodes under these parent level terms</p>
+        <div v-for="node of checkedNodes" :key="node.name">
+          {{node.value}}
+        </div>
       </div>
     </div>
     <div class="view-port">
-      <concept-database-viz v-if="selectedConceptDB !== null" :cdb="selectedConceptDB"></concept-database-viz>
+      <concept-database-viz v-if="selectedConceptDB !== null" :cdb="selectedConceptDB"
+                            :checkedNodes="checkedNodes"
+                            :selectedCui="selectedCui"
+                            @change:checkedNodes="changedCheckedNodes">
+      </concept-database-viz>
     </div>
   </div>
 </template>
@@ -32,7 +43,9 @@ export default {
   data () {
     return {
       cdbs: [],
-      selectedConceptDB: null
+      selectedConceptDB: null,
+      checkedNodes: [],
+      selectedCui: null
     }
   },
   created () {
@@ -53,8 +66,17 @@ export default {
     getCDBs(baseUrl)
   },
   methods: {
-    pickedResult () {
-      //
+    pickedResult (res) {
+      // picked result is used to search upwards to find path to root. via backend...
+      this.selectedCui = res.cui
+    },
+    changedCheckedNodes (nodeToggled) {
+      const idxOf = this.checkedNodes.indexOf(nodeToggled)
+      if (idxOf === -1) {
+        this.checkedNodes.push(nodeToggled)
+      } else {
+        this.checkedNodes.splice(idxOf, 1)
+      }
     }
   }
 }

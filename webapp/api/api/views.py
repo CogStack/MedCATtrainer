@@ -14,6 +14,7 @@ from rest_framework.response import Response
 
 from .admin import download_projects_with_text, download_projects_without_text, \
     import_concepts_from_cdb, upload_projects_export
+from .medcat_utils import ch2pt_from_pt2ch
 from .permissions import *
 from .serializers import *
 from .solr_utils import collections_available, search_collection, ensure_concept_searchable
@@ -652,16 +653,66 @@ def cdb_cui_children(request, cdb_id):
     if cdb.addl_info.get('pt2ch') is None:
         return HttpResponseBadRequest('Requested MedCAT CDB model does not include parent2child metadata to'
                                       ' explore a concept hierarchy')
-    root_term = {
-        'cui': '138875005',
-        'pretty_name': cdb.cui2preferred_name['138875005']
-    }
-    if parent_cui is None:
-        return Response({'results': [root_term]})
-    else:
-        try:
+
+    # currently assumes this is using the SNOMED CT terminology
+    try:
+        root_term = {
+            'cui': '138875005',
+            'pretty_name': cdb.cui2preferred_name['138875005']
+        }
+        if parent_cui is None:
+            return Response({'results': [root_term]})
+        else:
             child_concepts = [{'cui': cui, 'pretty_name': cdb.cui2preferred_name[cui]}
                               for cui in cdb.addl_info.get('pt2ch')[parent_cui]]
             return Response({'results': child_concepts})
-        except KeyError:
-            return Response({'results': []})
+    except KeyError:
+        return Response({'results': []})
+
+
+@api_view(http_method_names=['GET'])
+def cdb_concept_path(request):
+    cdb_id = request.GET.get('cdb_id')
+    if cdb_id not in CDB_MAP:
+        cdb_obj = ConceptDB.objects.get(id=cdb_id)
+        cdb = CDB.load(cdb_obj.cdb_file.path)
+        CDB_MAP[cdb_id] = cdb
+    cdb = CDB_MAP[cdb_id]
+    cui = request.GET.get('cui')
+
+    ch2pt = cdb.addl_info.get('ch2pt') or ch2pt_from_pt2ch(cdb)
+    # Again only SNOMED CT is supported
+    # 'cui': '138875005',
+    try:
+        top_level_parent_node = '138875005'
+
+        def find_parents(cui, curr_node_path=None):
+            concept_dct = {'cui': cui, 'pretty_name': cdb.cui2preferred_name[cui], 'node_id': cui}
+            if curr_node_path is not None:
+                concept_dct['children'] = curr_node_path
+            parents = cdb.addl_info['ch2pt'][cui]
+            parent_concepts_dcts = [{'cui': p, 'pretty_name': cdb.cui2preferred_name[p], 'node_id': p}
+                                    for p in parents]
+            parent_concepts_dcts[0]['children'] = [concept_dct]
+            links = [{'parent': p, 'child': cui} for p in parents]
+            return parents, parent_concepts_dcts, links
+
+        path = []
+        all_links = []
+        parent_cui_stack = []
+        while cui != top_level_parent_node:
+            parent_cuis, parent_concepts_dcts, links = find_parents(cui)
+            path += parent_concepts_dcts
+            all_links += links
+            parent_cui_stack += parent_cuis
+            cui = parent_cuis.pop(0)
+            # make the parent cuis the cuis to check and parse further parents for
+
+
+        return Response({
+            'results': {
+
+            }
+        })
+    except KeyError:
+        return Response({'results': []})

@@ -26,7 +26,6 @@ export default {
     vSelect
   },
   props: {
-    // project: Object,
     restrict_concept_lookup: Boolean,
     cui_filter: Array,
     cdb_search_filter: Array,

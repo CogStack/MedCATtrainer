@@ -1,28 +1,48 @@
 <template>
   <div class="mc-tree-container">
+    <loading-overlay :loading="loading">
+      <div slot="message">Retrieving Concept Tree...</div>
+    </loading-overlay>
     <div class="mc-tree-view">
       <vue-tree
         style="width: 1500px; height: 1000px;"
         :dataset="cdbData"
-        :config="treeConfig">
-<!--        <template v-slot:node="{ node, collapsed }">-->
-<!--          <div @click="getData(node)" class="node" :style="{ border: collapsed ? '2px solid grey' : '' }">-->
-<!--            <span style="padding: 4px 0; font-weight: bold;" >{{ node.value }}</span>-->
-<!--          </div>-->
-<!--        </template>-->
+        :config="treeConfig"
+        :direction="'horizontal'">
+        <template v-slot:node="{ node, collapsed }">
+          <div @click="getData(node)" class="node" :style="{ border: collapsed ? '2px solid grey' : '' }">
+            {{ node.value }}
+            <div class="form-check">
+              <input type="checkbox" @click="toggleNodeCheck(node)"/>
+            </div>
+          </div>
+        </template>
       </vue-tree>
     </div>
   </div>
 </template>
 
 <script>
+import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
+
 export default {
   name: 'ConceptDatabaseViz',
+  components: { LoadingOverlay },
   props: {
-    cdb: Object
+    cdb: Object,
+    selectedCui: String
+  },
+  data () {
+    return {
+      CDB: {},
+      cdbData: {},
+      nodeCuis: [],
+      loading: false,
+      treeConfig: { nodeWidth: 100, nodeHeight: 100, levelHeight: 200 }
+    }
   },
   created () {
-    // get root term and first layer? of nodes?
+    this.loading = true
     this.$http.get(`api/model-concept-children/${this.cdb.id}/`).then(resp => {
       const rootTerm = resp.data.results[0]
       this.cdbData = {
@@ -32,14 +52,6 @@ export default {
       }
       this.getData(this.cdbData)
     })
-  },
-  data () {
-    return {
-      CDB: {},
-      cdbData: {},
-      nodeCuis: [],
-      treeConfig: { nodeWidth: 100, nodeHeight: 100, levelHeight: 200 }
-    }
   },
   methods: {
     getData (node) {
@@ -55,6 +67,19 @@ export default {
         })
       }
       this.nodeCuis.push(node.name)
+      this.loading = false
+    },
+    toggleNodeCheck (node) {
+      this.$emit('change:checkedNodes', node)
+    }
+  },
+  watch: {
+    selectedCui (newVal) {
+      if (newVal) {
+        this.$http.get(`api/concept-path/?${newVal}`).then(res => {
+          //
+        })
+      }
     }
   }
 }
@@ -80,14 +105,16 @@ export default {
 }
 
 .node {
-  width: 100px;
+  width: 250px;
   padding: 3px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: flex-start;
   justify-content: center;
+  font-size: .8rem;
   color: white;
   background-color: #45503B;
   border-radius: 3px;
+  margin: 3px;
 }
 </style>
