@@ -62,7 +62,9 @@ urlpatterns = [
     path('api/model-loaded/', api.views.model_loaded),
     path('api/cache-model/<int:p_id>/', api.views.cache_model),
     path('api/upload-deployment/', api.views.upload_deployment),
+    path('api/cache_model/<int:cdb_id>', api.views.cache_model),
     path('api/model-concept-children/<int:cdb_id>/', api.views.cdb_cui_children),
     path('api/concept-path/', api.views.cdb_concept_path),
+    path('api/generate-concept-filter/', api.views.generate_concept_filter),
     re_path('^.*$', api.views.index, name='index'),  # Match everything else to home
 ]

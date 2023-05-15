@@ -631,6 +631,15 @@ def upload_deployment(request):
 
 
 @api_view(http_method_names=['GET'])
+def cache_model(_, cdb_id):
+    if cdb_id not in CDB_MAP:
+        cdb_obj = ConceptDB.objects.get(id=cdb_id)
+        cdb = CDB.load(cdb_obj.cdb_file.path)
+        CDB_MAP[cdb_id] = cdb
+    return Response("success", 200)
+
+
+@api_view(http_method_names=['GET'])
 def model_loaded(_):
     return Response({p.id: get_cached_medcat(CAT_MAP, p) is not None
                      for p in ProjectAnnotateEntities.objects.all()})
@@ -672,47 +681,67 @@ def cdb_cui_children(request, cdb_id):
 
 @api_view(http_method_names=['GET'])
 def cdb_concept_path(request):
-    cdb_id = request.GET.get('cdb_id')
+    cdb_id = int(request.GET.get('cdb_id'))
     if cdb_id not in CDB_MAP:
         cdb_obj = ConceptDB.objects.get(id=cdb_id)
         cdb = CDB.load(cdb_obj.cdb_file.path)
         CDB_MAP[cdb_id] = cdb
     cdb = CDB_MAP[cdb_id]
+    if not cdb.addl_info.get('ch2pt'):
+        cdb.addl_info['ch2pt'] = ch2pt_from_pt2ch(cdb)
     cui = request.GET.get('cui')
 
-    ch2pt = cdb.addl_info.get('ch2pt') or ch2pt_from_pt2ch(cdb)
     # Again only SNOMED CT is supported
     # 'cui': '138875005',
     try:
         top_level_parent_node = '138875005'
 
         def find_parents(cui, curr_node_path=None):
-            concept_dct = {'cui': cui, 'pretty_name': cdb.cui2preferred_name[cui], 'node_id': cui}
+            concept_dct = {'cui': cui, 'pretty_name': cdb.cui2preferred_name[cui]}
             if curr_node_path is not None:
                 concept_dct['children'] = curr_node_path
-            parents = cdb.addl_info['ch2pt'][cui]
-            parent_concepts_dcts = [{'cui': p, 'pretty_name': cdb.cui2preferred_name[p], 'node_id': p}
+            else:
+                concept_dct['complete'] = True
+            parents = list(cdb.addl_info['ch2pt'][cui])
+            parent_concepts_dcts = [{'cui': p, 'pretty_name': cdb.cui2preferred_name[p], 'children': [concept_dct]}
                                     for p in parents]
-            parent_concepts_dcts[0]['children'] = [concept_dct]
             links = [{'parent': p, 'child': cui} for p in parents]
             return parents, parent_concepts_dcts, links
 
-        path = []
+        # path = []
         all_links = []
         parent_cui_stack = []
+        curr_node_path = None
         while cui != top_level_parent_node:
-            parent_cuis, parent_concepts_dcts, links = find_parents(cui)
-            path += parent_concepts_dcts
+            parent_cuis, parent_concepts_dcts, links = find_parents(cui, curr_node_path=curr_node_path)
+            curr_node_path = parent_concepts_dcts
             all_links += links
             parent_cui_stack += parent_cuis
             cui = parent_cuis.pop(0)
-            # make the parent cuis the cuis to check and parse further parents for
 
-
+        # de-dupe parent child relations from multi-parent relations... ?
+        # example foot-mark: 276472000
         return Response({
             'results': {
-
+                'node_path': curr_node_path[0],
+                'links': all_links
             }
         })
     except KeyError:
         return Response({'results': []})
+
+
+@api_view(http_method_names=['POST'])
+def generate_concept_filter(request):
+    cuis = request.data.get('cuis')
+    cdb_id = request.data.get('cdb_id')
+    if cuis is not None and cdb_id is not None:
+        if cdb_id not in CDB_MAP:
+            cdb_obj = ConceptDB.objects.get(id=cdb_id)
+            cdb = CDB.load(cdb_obj.cdb_file.path)
+            CDB_MAP[cdb_id] = cdb
+        cdb = CDB_MAP[cdb_id]
+        # get all children from 'parent' concepts above.
+
+
+

@@ -19,7 +19,10 @@
         <div>Concept Filter Summary</div>
         <p>All nodes under these parent level terms</p>
         <div v-for="node of checkedNodes" :key="node.name">
-          {{node.value}}
+          {{node.pretty_name}} - {{node.cui}}
+        </div>
+        <div>
+          <button class="btn btn-primary" @click="exportFilter">Export Filter</button>
         </div>
       </div>
     </div>
@@ -77,6 +80,12 @@ export default {
       } else {
         this.checkedNodes.splice(idxOf, 1)
       }
+    },
+    exportFilter () {
+      const payload = this.checkedNodes.map(r => r.cui)
+      this.$http.post(`/api/generate-concept-filter/`, { 'cuis': payload }).then(resp => {
+        console.debug(resp.data)
+      })
     }
   }
 }

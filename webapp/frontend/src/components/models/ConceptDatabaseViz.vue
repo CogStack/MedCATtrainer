@@ -1,5 +1,10 @@
 <template>
   <div class="mc-tree-container">
+    <div class="zoom-controls">
+      <button class="btn btn-default" @click="zoomIn"><font-awesome-icon icon="plus"></font-awesome-icon></button>
+      <button  class="btn btn-default" @click="zoomOut"><font-awesome-icon icon="minus"></font-awesome-icon></button>
+      <button class="btn btn-default" @click="resetZoom">1:1</button>
+    </div>
     <loading-overlay :loading="loading">
       <div slot="message">Retrieving Concept Tree...</div>
     </loading-overlay>
@@ -8,10 +13,11 @@
         style="width: 1500px; height: 1000px;"
         :dataset="cdbData"
         :config="treeConfig"
-        :direction="'horizontal'">
+        :direction="'vertical'"
+        ref="tree">
         <template v-slot:node="{ node, collapsed }">
           <div @click="getData(node)" class="node" :style="{ border: collapsed ? '2px solid grey' : '' }">
-            {{ node.value }}
+            {{ node.pretty_name }} - {{ node.cui }}
             <div class="form-check">
               <input type="checkbox" @click="toggleNodeCheck(node)"/>
             </div>
@@ -24,6 +30,7 @@
 
 <script>
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
+import _ from 'lodash'
 
 export default {
   name: 'ConceptDatabaseViz',
@@ -38,7 +45,8 @@ export default {
       cdbData: {},
       nodeCuis: [],
       loading: false,
-      treeConfig: { nodeWidth: 100, nodeHeight: 100, levelHeight: 200 }
+      treeConfig: { nodeWidth: 100, nodeHeight: 100, levelHeight: 200 },
+      zoomSetting: 0
     }
   },
   created () {
@@ -46,38 +54,64 @@ export default {
     this.$http.get(`api/model-concept-children/${this.cdb.id}/`).then(resp => {
       const rootTerm = resp.data.results[0]
       this.cdbData = {
-        value: `${rootTerm.pretty_name} - ${rootTerm.cui}`,
-        name: rootTerm.cui,
+        pretty_name: rootTerm.pretty_name,
+        cui: rootTerm.cui,
         _key: rootTerm.cui
       }
       this.getData(this.cdbData)
     })
   },
+  mounted () {
+    this.debouncedScroll = _.debounce(this.onScroll, 100)
+    window.addEventListener('scroll', this.debouncedScroll)
+  },
+  beforeDestroy () {
+    window.removeEventListener('scroll', this.debouncedScroll)
+  },
   methods: {
     getData (node) {
-      if (this.nodeCuis.indexOf(node.name) === -1) {
-        this.$http.get(`api/model-concept-children/${this.cdb.id}/?parent_cui=${node.name}`).then(resp => {
+      if (this.nodeCuis.indexOf(node.cui) === -1 || node.complete) {
+        this.$http.get(`api/model-concept-children/${this.cdb.id}/?parent_cui=${node.cui}`).then(resp => {
           this.$set(node, 'children', resp.data.results.map(r => {
             return {
-              value: `${r.pretty_name} - ${r.cui}`,
-              name: r.cui,
+              pretty_name: r.pretty_name,
+              cui: r.cui,
               _key: r.cui
             }
           }))
+          this.nodeCuis.push(node.cui)
+          this.loading = false
         })
       }
-      this.nodeCuis.push(node.name)
-      this.loading = false
     },
     toggleNodeCheck (node) {
       this.$emit('change:checkedNodes', node)
+    },
+    onScroll (e) {
+      if (this.zoomSetting < e.scrollY) {
+        this.zoomOut()
+      } else {
+        this.zoomIn()
+      }
+      this.zoomSetting = e.scrollY
+    },
+    zoomOut () {
+      this.$refs.tree.zoomOut()
+    },
+    zoomIn () {
+      this.$refs.tree.zoomIn()
+    },
+    resetZoom () {
+      this.$refs.tree.restoreScale()
     }
   },
   watch: {
     selectedCui (newVal) {
       if (newVal) {
-        this.$http.get(`api/concept-path/?${newVal}`).then(res => {
-          //
+        this.$http.get(`api/concept-path/?cdb_id=${this.cdb.id}&cui=${newVal}`).then(resp => {
+          this.cdbData.children = resp.data.results['node_path'].children
+          this.cdbData.links = resp.data.results['links']
+          this.identifier = 'cui'
         })
       }
     }
@@ -116,5 +150,10 @@ export default {
   background-color: #45503B;
   border-radius: 3px;
   margin: 3px;
+}
+
+.zoom-controls {
+  position: absolute;
+  right: 0;
 }
 </style>
