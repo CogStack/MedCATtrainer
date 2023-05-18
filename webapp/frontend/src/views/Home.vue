@@ -19,6 +19,12 @@
           <th>Complete</th>
           <th v-if="isAdmin">Concepts Imported</th>
           <th v-if="isAdmin">Model Loaded</th>
+          <th v-if="isAdmin">
+            Metrics
+            <button class="btn btn-outline-primary load-metrics" @click="loadMetrics" v-if="selectedProjects.length > 0">
+              <font-awesome-icon icon="chevron-right"></font-awesome-icon>
+            </button>
+          </th>
           <th v-if="isAdmin">Save Model</th>
         </tr>
         </thead>
@@ -55,6 +61,14 @@
                 <font-awesome-icon v-if="loadingModel === project.id" icon="spinner" spin></font-awesome-icon>
               </button>
             </div>
+          </td>
+          <td @click.stop v-if="isAdmin">
+            <button class="btn"
+                    :class="{'btn-primary': selectedProjects.indexOf(project) !== -1, 'btn-outline-primary': selectedProjects.indexOf(project) === -1}"
+                    @click="selectProject(project)">
+<!--              <font-awesome-icon icon="times" class="selected-project" v-if="selectedProjects.indexOf(project) !== -1"></font-awesome-icon>-->
+              <font-awesome-icon icon="fa-chart-pie"></font-awesome-icon>
+            </button>
           </td>
           <td @click.stop v-if="isAdmin">
             <button class="btn btn-outline-primary" :disabled="saving" @click="saveModel(project.id)"><font-awesome-icon icon="save"></font-awesome-icon></button>
@@ -118,7 +132,8 @@ export default {
       isAdmin: false,
       cdbSearchIndexStatus: {},
       cdbLoaded: {},
-      clearModelModal: false
+      clearModelModal: false,
+      selectedProjects: []
     }
   },
   created () {
@@ -238,6 +253,21 @@ export default {
         }, 5000)
       })
     },
+    selectProject (project) {
+      if (this.selectedProjects.indexOf(project) !== -1) {
+        this.selectedProjects.splice(this.selectedProjects.indexOf(project), 1)
+      } else {
+        this.selectedProjects.push(project)
+      }
+    },
+    loadMetrics () {
+      this.$router.push({
+        name: 'metrics',
+        query: {
+          projectIds: this.selectedProjects.map(p => p.id).join(',')
+        }
+      })
+    },
     fetchSearchIndexStatus () {
       const cdbIds = _.uniq(this.projects.map(p => p.cdb_search_filter[0]))
       this.$http.get(`/api/concept-db-search-index-created/?cdbs=${cdbIds.join(',')}`).then(resp => {
@@ -335,13 +365,25 @@ h3 {
   }
 }
 
-.clear-model-cache {
+.clear-model-cache, {
   font-size: 15px;
   color: $task-color-2;
   cursor: pointer;
   position: absolute;
   right: -5px;
   top: -5px;
+}
+
+.selected-project {
+  font-size: 15px;
+  color: green;
+  position: relative;
+  right: -40px;
+  top: -10px;
+}
+
+.load-metrics {
+  padding: 0 5px;
 }
 
 </style>

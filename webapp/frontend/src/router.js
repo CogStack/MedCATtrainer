@@ -4,6 +4,7 @@ import Home from './views/Home.vue'
 import TrainAnnotations from './views/TrainAnnotations.vue'
 import Demo from './views/Demo.vue'
 import ConceptDatabase from './views/ConceptDatabase'
+import Metrics from './views/Metrics'
 
 Vue.use(Router)
 
@@ -14,11 +15,14 @@ export default new Router({
     {
       path: '/train-annotations/:projectId/:docId?',
       name: 'train-annotations',
-      // route level code-splitting
-      // this generates a separate chunk (about.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
       component: TrainAnnotations,
       props: true
+    },
+    {
+      path: '/metrics/',
+      name: 'metrics',
+      component: Metrics,
+      query: true
     },
     {
       path: '/demo',

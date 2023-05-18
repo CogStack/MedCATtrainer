@@ -1,4 +1,5 @@
 import logging
+import pickle
 import traceback
 from tempfile import NamedTemporaryFile
 
@@ -15,6 +16,8 @@ from rest_framework.response import Response
 from .admin import download_projects_with_text, download_projects_without_text, \
     import_concepts_from_cdb, upload_projects_export
 from .medcat_utils import ch2pt_from_pt2ch
+    import_concepts_from_cdb, upload_projects_export, retrieve_project_data
+from .metrics import ProjectMetrics
 from .permissions import *
 from .serializers import *
 from .solr_utils import collections_available, search_collection, ensure_concept_searchable
@@ -29,7 +32,7 @@ env.read_env("/home/ubuntu/projects/MedAnno/MedAnno/env_umls", recurse=False)
 print(os.environ)
 """
 
-log = logging.getLogger('trainer')
+logger = logging.getLogger(__name__)
 
 # Maps between IDs and objects 
 CDB_MAP = {}
@@ -285,8 +288,8 @@ def add_annotation(request):
     icd_code = request.data.get('icd_code')
     opcs_code = request.data.get('opcs_code')
 
-    log.debug("Annotation being added")
-    log.debug(str(request.data))
+    logger.debug("Annotation being added")
+    logger.debug(str(request.data))
 
     # Get project and the right version of cat
     user = request.user
@@ -309,7 +312,7 @@ def add_annotation(request):
                            cat=cat,
                            icd_code=icd_code,
                            opcs_code=opcs_code)
-    log.debug('Annotation added.')
+    logger.debug('Annotation added.')
     return Response({'message': 'Annotation added successfully', 'id': id})
 
 
@@ -337,7 +340,7 @@ def add_concept(request):
 
     if cui in cat.cdb.cui2names:
         err_msg = f'Cannot add a concept "{name}" with cui:{cui}. CUI already linked to {cat.cdb.cui2names[cui]}'
-        log.error(err_msg)
+        logger.error(err_msg)
         return Response({'err': err_msg}, 400)
 
     spacy_doc = cat(document.text)
@@ -457,14 +460,14 @@ def get_create_entity(request):
 @api_view(http_method_names=['POST'])
 def create_dataset(request):
     filename = f'{request.data["dataset_name"]}.csv'
-    log.debug(request.data['dataset'])
+    logger.debug(request.data['dataset'])
     ds = Dataset()
     ds.name = request.data['dataset_name']
     ds.description = request.data.get('description', 'n/a')
     with NamedTemporaryFile(mode='r+') as f:
         pd.DataFrame(request.data['dataset']).to_csv(f, index=False)
         ds.original_file.save(filename, f)
-    log.debug(f'Saved new dataset:{ds.original_file.path}')
+    logger.debug(f'Saved new dataset:{ds.original_file.path}')
     id = ds.id
     return Response({'dataset_id': id})
 
@@ -496,7 +499,7 @@ def update_meta_annotation(request):
     annotation = AnnotatedEntity.objects.filter(project= project_id, entity=entity_id, document=document_id)[0]
     annotation.correct = True
     annotation.validated = True
-    log.debug(annotation)
+    logger.debug(annotation)
 
     annotation.save()
 
@@ -505,7 +508,7 @@ def update_meta_annotation(request):
 
     meta_annotation_list = MetaAnnotation.objects.filter(annotated_entity = annotation)
 
-    log.debug(meta_annotation_list)
+    logger.debug(meta_annotation_list)
 
     if len(meta_annotation_list) > 0:
         meta_annotation = meta_annotation_list[0]
@@ -519,7 +522,7 @@ def update_meta_annotation(request):
         meta_annotation.meta_task = meta_task
         meta_annotation.meta_task_value = meta_task_value
 
-    log.debug(meta_annotation)
+    logger.debug(meta_annotation)
     meta_annotation.save()
 
     return Response({'meta_annotation': 'added meta annotation'})
@@ -617,7 +620,7 @@ def cache_model(request, p_id):
             return Response({'result': f'Model already loaded for project:{p_id}'})
     else:
         clear_cached_medcat(CAT_MAP, project)
-        log.info(f'Cleared cached model{p_id}')
+        logger.info(f'Cleared cached model{p_id}')
         return Response({'result': f'Cleared cached model:{p_id}'})
 
 
@@ -625,7 +628,7 @@ def cache_model(request, p_id):
 def upload_deployment(request):
     deployment_upload = request.data
     upload_projects_export(deployment_upload)
-    # log.info(f'Errors encountered during previous deployment upload\n{errs}')
+    # logger.info(f'Errors encountered during previous deployment upload\n{errs}')
     return Response("successfully uploaded", 200)
 
 
@@ -642,6 +645,19 @@ def cache_model(_, cdb_id):
 def model_loaded(_):
     return Response({p.id: get_cached_medcat(CAT_MAP, p) is not None
                      for p in ProjectAnnotateEntities.objects.all()})
+
+
+@api_view(http_method_names=['GET'])
+def metrics(request):
+    p_ids = request.GET.get('projectIds').split(',')
+    projects = ProjectAnnotateEntities.objects.filter(id__in=p_ids)
+    # assume projects all use the same model for eval purposes.
+    cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
+                     CAT_MAP=CAT_MAP, project=projects[0])
+    project_data = retrieve_project_data(projects)
+    metrics = ProjectMetrics(project_data, cat)
+    report_output = metrics.generate_report()
+    return Response({'results': report_output})
 
 
 @api_view(http_method_names=['GET'])
