@@ -229,7 +229,7 @@
       </div>
     </modal>
     <modal v-if="resetModal" :closable="true" @modal:close="resetModal = false" class="reset-modal">
-      <h3 slot="header§">Reset Document</h3>
+      <h3 slot="header">Reset Document</h3>
       <div slot="body">
         <p class="text-center">Confirm reset of document annotations</p>
         <p class="text-center">This will clear all current annotations in this document</p>

@@ -62,5 +62,6 @@ urlpatterns = [
     path('api/model-loaded/', api.views.model_loaded),
     path('api/cache-model/<int:p_id>/', api.views.cache_model),
     path('api/upload-deployment/', api.views.upload_deployment),
+    path('api/metrics/', api.views.metrics),
     re_path('^.*$', api.views.index, name='index'),  # Match everything else to home
 ]

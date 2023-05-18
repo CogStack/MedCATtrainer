@@ -138,7 +138,7 @@ def download(modeladmin, request, queryset):
 
 
 def download_projects_with_text(projects: QuerySet):
-    all_projects = _retrieve_project_data(projects)
+    all_projects = retrieve_project_data(projects)
 
     sio = StringIO()
     json.dump(all_projects, sio)
@@ -151,7 +151,7 @@ def download_projects_with_text(projects: QuerySet):
     return response
 
 
-def _retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
+def retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
     """
     A function to convert a list of projects and:
         - their associated documents,
