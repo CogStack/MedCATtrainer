@@ -1,32 +1,58 @@
+# Optimised multi-stage docker build for cogstacksystems/medcat-trainer
+# https://github.com/CogStack/MedCATtrainer/
+
+# First stage: Build Vue.js frontend using node base image
+# Copy only /home/frontend/dist into next stage - saves ~450MB
+FROM node:16-slim as node_image
+WORKDIR /home
+COPY ./frontend /home/frontend
+RUN cd /home/frontend \
+    && npm install -g npm@latest \
+    && npm install \
+    && npm run build
+
+
+# Second (Final) stage
 FROM python:3.10
 
-# Update and upgrade everything
-RUN apt-get -y update && \
-    apt-get -y upgrade
+# Create a non-root user to install and run app
+RUN groupadd -g 999 appuser \
+    && useradd --create-home -r -u 999 -g appuser appuser
 
-# install vim as its annoying not to have an editor
-RUN apt-get -y install vim
+# Let the non-root user own the /home directory
+RUN chown appuser:appuser /home
 
-# Get node and npm
-RUN apt-get install curl && \
-    curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
-    apt-get install nodejs && \
-    npm install -g npm@latest
+# Switch to non-root user for rest of the build
+USER appuser
 
-# Copy project
+# Append to path to avoid pip complaining
+ENV PATH=$PATH:/home/appuser/.local/bin
+
+# Set working directory to /home. Everything will be copied/installed here. 
 WORKDIR /home
-COPY ./ .
 
-# Build frontend
-WORKDIR /home/frontend
-RUN npm install && npm run build
+# Copy requirements.txt and install requirements for backend
+COPY --chown=appuser:appuser requirements.txt requirements.txt
 
-# Install requirements for backend
-WORKDIR /home/
-RUN pip install pip --upgrade 
-RUN pip install -r requirements.txt
+# Don't cache pip packages - saves ~900MB
 ARG SPACY_MODELS="en_core_web_md"
-RUN for SPACY_MODEL in ${SPACY_MODELS}; do python -m spacy download ${SPACY_MODEL}; done
+RUN pip install pip --upgrade --no-cache-dir \
+    && pip install -r requirements.txt --no-cache-dir \
+    && rm requirements.txt \
+    && for SPACY_MODEL in ${SPACY_MODELS}; do python -m spacy download ${SPACY_MODEL}; done
 
-WORKDIR /home/api/
-RUN chmod a+x /home/run.sh
+# Copy over only the files and folders that are required
+# This creates multiple layers but avoids copying entire frontend into this layer
+COPY --chown=appuser:appuser load_examples.py run.sh ./
+COPY --chown=appuser:appuser ./api ./api
+COPY --from=node_image --chown=appuser:appuser /home/frontend/dist /home/frontend/dist
+
+# Make run.sh executable
+RUN chmod a+x run.sh
+
+# Expose port 8000 - although this can also be done in docker-compose/helm
+EXPOSE 8000
+
+# Set default CMD. This can be overridden in docker-compose/helm.
+# run.sh has been edited to fix path to manage.py
+CMD run.sh
