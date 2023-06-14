@@ -456,6 +456,17 @@ def get_create_entity(request):
 
 @api_view(http_method_names=['POST'])
 def create_dataset(request):
+    """
+    Upload a dataset and kick off document creation for each Doc. The dataset should be dict of form:
+    {
+        'name': ['name1', 'name2', 'name3', ... ],
+        'text': ['text1...', 'text2...', 'text3...', ... ]
+    }
+    Args:
+        request: the HTTP request
+    Response:
+        An HTTP resonse with the id of the created dataset
+    """
     filename = f'{request.data["dataset_name"]}.csv'
     logger.debug(request.data['dataset'])
     ds = Dataset()
