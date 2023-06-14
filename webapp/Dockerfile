@@ -8,9 +8,9 @@ RUN apt-get -y update && \
 RUN apt-get -y install vim
 
 # Get node and npm
-RUN apt-get install curl && \
+RUN apt-get -y install curl && \
     curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
-    apt-get install nodejs && \
+    apt-get -y install nodejs && \
     npm install -g npm@latest
 
 # Copy project
