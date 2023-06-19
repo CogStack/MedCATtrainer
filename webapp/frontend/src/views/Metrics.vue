@@ -7,14 +7,14 @@
       <loading-overlay :loading="loading">
         <span>Calculating Metrics...</span>
       </loading-overlay>
-      <tabs class="viewport">
-        <tab name="User Stats" class="user-stats">
+      <b-tabs class="viewport">
+        <b-tab title="User Stats" class="user-stats">
           <b-table striped hover small :items="userStats.items" :fields="userStats.fields"></b-table>
-        </tab>
-        <tab name="Annotations" class="anno-summary">
+        </b-tab>
+        <b-tab title="Annotations" class="anno-summary">
           <b-table striped hover small :items="annoSummary.items" :fields="annoSummary.fields"></b-table>
-        </tab>
-        <tab name="Concept Summary" class="concept-summary">
+        </b-tab>
+        <b-tab title="Concept Summary" class="concept-summary">
           <b-table striped hover small :items="conceptSummary.items" :fields="conceptSummary.fields">
             <template #cell(cui_f1)="data">
               <div v-html="data.value"></div>
@@ -41,11 +41,11 @@
               </button>
             </template>
           </b-table>
-        </tab>
-        <tab v-if="metaAnnsSummary.items" name="Meta Anns">
+        </b-tab>
+        <b-tab v-if="metaAnnsSummary.items" name="Meta Anns">
           <b-table striped hover small :items="metaAnnsSummary.items" :fields="metaAnnsSummary.fields" class="meta-anno-summary"></b-table>
-        </tab>
-      </tabs>
+        </b-tab>
+      </b-tabs>
     </div>
     <modal class="summary-modal" v-if="predictedResults" :closable="true" @modal:close="predictedResults = null">
       <h3 slot="header">{{predictionResultsTitle}}</h3>
@@ -70,8 +70,8 @@
 </template>
 
 <script>
-import Modal from '@/components/common/Modal'
-import AnnoResult from '@/components/anns/AnnoResult'
+import Modal from '@/components/common/Modal.vue'
+import AnnoResult from '@/components/anns/AnnoResult.vue'
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 
 export default {
