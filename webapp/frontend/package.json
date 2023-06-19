@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "test:unit": "vue-cli-service test:unit",
-    "lint": "vue-cli-service lint"
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "lint": "eslint --ext .js,.vue --ignore-path .gitignore --fix src"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.1.1",
@@ -17,7 +17,7 @@
     "axios": "^0.24.0",
     "bootstrap": "^4.6.0",
     "bootstrap-vue": "^2.23.1",
-    "core-js": "^3.21.0",
+    "cache-loader": "^4.1.0",
     "jquery": "^3.6.0",
     "lodash": "^4.17.21",
     "popper.js": "^1.16.1",
@@ -30,56 +30,14 @@
     "vue-select": "^3.16.0",
     "vue-sidebar-menu": "^4.8.1",
     "vue-simple-context-menu": "^3.4.2",
-    "vue-splitpane": "^1.0.6",
-    "vue-tabs-component": "^1.5.0"
+    "vue-splitpane": "^1.0.6"
   },
   "devDependencies": {
-    "@vue/cli": "^4.5.15",
-    "@vue/cli-plugin-babel": "~4.5.15",
-    "@vue/cli-plugin-eslint": "~v5.0.0-alpha.7",
-    "@vue/cli-plugin-unit-mocha": "~5.0.8",
-    "@vue/cli-service": "~4.5.19",
-    "@vue/cli-service-global": "^4.5.19",
-    "@vue/eslint-config-standard": "^4.0.0",
-    "@vue/test-utils": "1.0.0-beta.29",
-    "babel-eslint": "^10.1.0",
+    "@vitejs/plugin-vue": "^1.6.1",
     "chai": "^4.3.0",
-    "eslint": "^7.32.0",
-    "eslint-plugin-vue": "^7.19.1",
-    "sass-loader": "^10.1.1",
-    "vue-template-compiler": "^2.6.14"
-  },
-  "eslintConfig": {
-    "root": true,
-    "env": {
-      "node": true
-    },
-    "extends": [
-      "plugin:vue/essential",
-      "@vue/standard"
-    ],
-    "rules": {},
-    "parserOptions": {
-      "parser": "babel-eslint"
-    },
-    "overrides": [
-      {
-        "files": [
-          "**/__tests__/*.{j,t}s?(x)"
-        ],
-        "env": {
-          "mocha": true
-        }
-      }
-    ]
-  },
-  "postcss": {
-    "plugins": {
-      "autoprefixer": {}
-    }
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions"
-  ]
+    "eslint": "^8.42.0",
+    "eslint-plugin-vue": "^8.7.1",
+    "vite": "^2.5.4",
+    "vite-plugin-vue2": "1.9.0"
+  }
 }

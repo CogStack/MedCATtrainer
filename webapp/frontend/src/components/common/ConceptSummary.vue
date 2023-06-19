@@ -79,7 +79,7 @@
 <script>
 import _ from 'lodash'
 import ConceptDetailService from '@/mixins/ConceptDetailService.js'
-import ConceptPicker from '@/components/common/ConceptPicker'
+import ConceptPicker from '@/components/common/ConceptPicker.vue'
 
 const HIDDEN_PROPS = [
   'value', 'project', 'document', 'start_ind', 'end_ind',

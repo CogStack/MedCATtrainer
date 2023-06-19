@@ -3,14 +3,15 @@ import Router from 'vue-router'
 import Home from './views/Home.vue'
 import TrainAnnotations from './views/TrainAnnotations.vue'
 import Demo from './views/Demo.vue'
-import ConceptDatabase from './views/ConceptDatabase'
+import Metrics from './views/Metrics.vue'
+import ConceptDatabase from './views/ConceptDatabase.vue'
 import Metrics from './views/Metrics'
 
 Vue.use(Router)
 
 export default new Router({
   mode: 'history',
-  base: process.env.BASE_URL,
+  // base: process.env.BASE_URL,
   routes: [
     {
       path: '/train-annotations/:projectId/:docId?',
