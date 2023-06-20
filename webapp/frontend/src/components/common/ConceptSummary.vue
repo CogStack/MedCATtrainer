@@ -58,7 +58,7 @@
           <td>Synonyms</td>
           <td class="fit-content" v-html="(conceptSummary.Synonyms || []).join('<br>')"></td>
         </tr>
-        <tr>
+        <tr v-if="(conceptSummary['Description'] || []).length > 0">
           <td>Description</td>
           <td class="fit-content" v-html="conceptSummary.Description === 'nan' ? 'n/a' : conceptSummary.Description || 'n/a'"></td>
         </tr>
@@ -243,7 +243,7 @@ export default {
     box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
 
     > td {
-      padding: 10px 15px;
+      padding: 5px 10px;
       vertical-align: top;
 
       &:first-child {
@@ -252,7 +252,7 @@ export default {
 
       &.fit-content {
         display: inline-block;
-        max-height: 250px;
+        max-height: 150px;
         overflow-y: auto;
         width: 100%;
       }
