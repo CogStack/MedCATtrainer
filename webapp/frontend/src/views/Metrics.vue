@@ -182,6 +182,10 @@ $metrics-header-height: 42px;
 
 .viewport {
   height: 100%;
+
+  .tab-content {
+    height: 100%;
+  }
 }
 
 .tabs-component-panels {
