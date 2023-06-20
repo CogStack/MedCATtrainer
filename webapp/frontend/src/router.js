@@ -5,13 +5,12 @@ import TrainAnnotations from './views/TrainAnnotations.vue'
 import Demo from './views/Demo.vue'
 import Metrics from './views/Metrics.vue'
 import ConceptDatabase from './views/ConceptDatabase.vue'
-import Metrics from './views/Metrics'
+import Metrics from './views/Metrics.vue'
 
 Vue.use(Router)
 
 export default new Router({
   mode: 'history',
-  // base: process.env.BASE_URL,
   routes: [
     {
       path: '/train-annotations/:projectId/:docId?',
