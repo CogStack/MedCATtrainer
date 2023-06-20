@@ -8,10 +8,7 @@ RUN apt-get update -y && \
 RUN apt-get install -y vim
 
 # Get node and npm
-RUN apt-get install curl && \
-    curl -sL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs && apt-get install -y npm  && \
-    npm install -g npm@latest
+RUN apt install -y nodejs && apt-get install -y npm && npm install -g npm@latest
 
 # Copy project
 WORKDIR /home
