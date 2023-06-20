@@ -15,6 +15,8 @@ from medcat.utils.meta_cat.data_utils import prepare_from_json, encode_category_
 from medcat.utils.meta_cat.ml_utils import create_batch_piped_data
 from torch import nn
 
+_dt_fmt = '%Y-%m-%d %H:%M:%S.%f'
+
 logger = logging.getLogger(__name__)
 
 
@@ -83,9 +85,9 @@ class ProjectMetrics(object):
         concept_count_df['count_variations_ratio'] = round(concept_count_df['concept_count'] /
                                                            concept_count_df['variations'], 3)
         if self.cat:
-            fps,fns,tps,cui_prec,cui_rec,cui_f1,cui_counts,examples = self.cat._logger.info_stats(data=self.mct_export,
-                                                                                            use_project_filters=True,
-                                                                                            extra_cui_filter=extra_cui_filter)
+            fps, fns, tps, cui_prec, cui_rec, cui_f1, cui_counts, examples = self.cat._print_stats(data=self.mct_export,
+                                                                                                   use_project_filters=True,
+                                                                                                   extra_cui_filter=extra_cui_filter)
             concept_count_df['fps'] = concept_count_df['cui'].map(fps)
             concept_count_df['fns'] = concept_count_df['cui'].map(fns)
             concept_count_df['tps'] = concept_count_df['cui'].map(tps)
@@ -99,7 +101,11 @@ class ProjectMetrics(object):
                                 'tp': 'tp_examples'})
             concept_count_df = concept_count_df.merge(examples_df, how='left', on='cui').fillna(0)
 
-        return concept_count_df
+        # brittle - probably shouldn't rely on cat._print_stats ...
+        concept_summary = concept_count_df.to_dict('records')
+        # convert sets to lists
+        concept_summary = [{k: list(v) if isinstance(v, set) else v for k, v in row.items()} for row in concept_summary]
+        return concept_summary
 
     def user_stats(self, by_user: bool = True):
         """
@@ -304,11 +310,14 @@ class ProjectMetrics(object):
         else:
             anno_df = self.annotation_df()
 
+        anno_df['last_modified'] = anno_df['last_modified'].dt.strftime(_dt_fmt)
+        anno_df.fillna('-', inplace=True)
+
         meta_anns_summary = None
         if meta_ann:
             meta_anns_summary = self.meta_anns_concept_summary().to_dict('records')
 
         return {'user_stats': self.user_stats().to_dict('records'),
-                'concept_summary': self.concept_summary().to_dict('records'),
+                'concept_summary': self.concept_summary(),
                 'annotation_summary': anno_df.to_dict('records'),
                 'meta_anno_summary': meta_anns_summary}
