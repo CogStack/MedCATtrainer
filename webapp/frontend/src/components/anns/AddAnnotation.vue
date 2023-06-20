@@ -236,7 +236,7 @@ $button-height: 50px;
         width: 100px;
       }
 
-      padding: 10px 15px;
+      padding: 7px 10px;
       vertical-align: top;
       color: $text;
 
