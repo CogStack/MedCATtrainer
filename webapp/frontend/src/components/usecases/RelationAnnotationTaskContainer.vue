@@ -16,7 +16,7 @@
 
 <script>
 import _ from 'lodash'
-import RelationAnnotation from '@/components/usecases/RelationAnnotation'
+import RelationAnnotation from '@/components/usecases/RelationAnnotation.vue'
 
 export default {
   name: 'RelationAnnotationTaskContainer',

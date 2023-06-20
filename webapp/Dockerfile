@@ -1,17 +1,14 @@
 FROM python:3.10
 
 # Update and upgrade everything
-RUN apt-get -y update && \
-    apt-get -y upgrade
+RUN apt-get update -y && \
+    apt-get upgrade -y
 
 # install vim as its annoying not to have an editor
-RUN apt-get -y install vim
+RUN apt-get install -y vim
 
 # Get node and npm
-RUN apt-get -y install curl && \
-    curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
-    apt-get -y install nodejs && \
-    npm install -g npm@latest
+RUN apt install -y nodejs && apt-get install -y npm && npm install -g npm@latest
 
 # Copy project
 WORKDIR /home

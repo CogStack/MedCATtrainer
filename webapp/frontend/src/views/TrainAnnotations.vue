@@ -60,20 +60,20 @@
                              @select:alternative="toggleAltSearch" @select:ICD="markICD" @select:OPCS="markOPCS"
                              @updated:entityComment="markEntity(false)"
                              class="concept-summary"></concept-summary>
-            <tabs v-if="!conceptSynonymSelection && hasRelations">
-              <tab name="Concept">
+            <b-tabs v-if="!conceptSynonymSelection && hasRelations">
+              <b-tab title="Concept">
                 <concept-summary :selectedEnt="currentEnt" :altSearch="altSearch"
                                  :project="project"  :searchFilterDBIndex="searchFilterDBIndex"
                                  @select:altConcept="markAlternative" @select:alternative="toggleAltSearch"
                                  @select:ICD="markICD" @select:OPCS="markOPCS" class="concept-summary"></concept-summary>
-              </tab>
-              <tab name="Relations" v-if="hasRelations && docId">
+              </b-tab>
+              <b-tab title="Relations" v-if="hasRelations && docId">
                 <relation-annotation-task-container :available-relations="project.relations" :project-id="project.id"
                                                     :document-id="docId" :selected-entity="currentEnt"
                                                     :curr-relation="currentRel" @selected:relation="selectRelation">
                 </relation-annotation-task-container>
-              </tab>
-            </tabs>
+              </b-tab>
+            </b-tabs>
           </transition>
           <transition name="slide-left">
             <meta-annotation-task-container v-if="metaAnnotate" :taskIDs="hasMetaTasks"
@@ -254,7 +254,7 @@ import AddAnnotation from '@/components/anns/AddAnnotation.vue'
 import MetaAnnotationTaskContainer from '@/components/usecases/MetaAnnotationTaskContainer.vue'
 import RelationAnnotationTaskContainer from '@/components/usecases/RelationAnnotationTaskContainer.vue'
 import AnnotationSummary from '@/components/common/AnnotationSummary.vue'
-import CodingAnnotationSummary from '@/components/cc/CodingAnnotationSummary'
+import CodingAnnotationSummary from '@/components/cc/CodingAnnotationSummary.vue'
 import { Multipane, MultipaneResizer } from 'vue-multipane'
 
 const TASK_NAME = 'Concept Annotation'

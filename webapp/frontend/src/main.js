@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import axios from 'axios'
 import VueCookie from 'vue-cookie'
-import { Tabs, Tab } from 'vue-tabs-component'
+import VueSimpleContextMenu from 'vue-simple-context-menu'
 import BootstrapVue from 'bootstrap-vue'
 
 import App from './App.vue'
@@ -11,14 +11,13 @@ import 'bootstrap'
 
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
-import 'vue-simple-context-menu/dist/vue-simple-context-menu.css'
 import 'vue-select/dist/vue-select.css'
+import 'vue-simple-context-menu/dist/vue-simple-context-menu.css'
 
 import '@/plugins/fontawesome'
 import '@/assets/main.css'
 
-Vue.component('tabs', Tabs)
-Vue.component('tab', Tab)
+Vue.use(VueSimpleContextMenu)
 Vue.use(BootstrapVue)
 Vue.use(VueCookie);
 

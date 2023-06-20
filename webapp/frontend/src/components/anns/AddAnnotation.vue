@@ -90,8 +90,8 @@
 
 <script>
 import ConceptDetailService from '@/mixins/ConceptDetailService.js'
-import ConceptPicker from '@/components/common/ConceptPicker'
-import AddNewConcept from '@/components/common/AddNewConcept'
+import ConceptPicker from '@/components/common/ConceptPicker.vue'
+import AddNewConcept from '@/components/common/AddNewConcept.vue'
 
 export default {
   name: 'AddAnnotation',

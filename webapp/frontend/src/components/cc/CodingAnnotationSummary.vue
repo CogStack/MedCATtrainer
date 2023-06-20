@@ -35,9 +35,9 @@
 </template>
 
 <script>
-import SummaryMixin from '@/mixins/SummaryMixin'
-import CodingSummaryTable from '@/components/cc/CodingSummaryTable'
-import LoadingOverlay from '@/components/common/LoadingOverlay'
+import SummaryMixin from '@/mixins/SummaryMixin.js'
+import CodingSummaryTable from '@/components/cc/CodingSummaryTable.vue'
+import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 
 const PRIORITY_TASK_NAME = 'Priority'
 const PRIMARY = 'Primary'

@@ -40,7 +40,7 @@
 
 <script>
 import ClinicalText from '@/components/common/ClinicalText.vue'
-import ConceptSummary from '@/components/common/ConceptSummary'
+import ConceptSummary from '@/components/common/ConceptSummary.vue'
 
 const TASK_NAME = 'Concept Anno'
 const VALUES = ['Val']
