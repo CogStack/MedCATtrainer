@@ -5,7 +5,7 @@
     </div>
     <div class="viewport-full-height">
       <loading-overlay :loading="loading">
-        <span>Calculating Metrics...</span>
+        <span slot="message">Calculating Metrics...</span>
       </loading-overlay>
       <b-tabs class="viewport">
         <b-tab title="User Stats" class="user-stats">
@@ -26,23 +26,24 @@
               <div v-html="data.value"></div>
             </template>
             <template #cell(tps)="data">
-              <button v-if="data.item.tps > 0" class="btn btn-outline-success res-btn" @click="openExamples('tp_examples', data.item)">
+              <button class="btn btn-outline-success res-btn" :disabled="data.item.tps === 0"
+                      @click="openExamples('tp_examples', data.item)">
                 {{data.item.tps}}
               </button>
-              <span v-if="data.item.tps === 0">{{data.item.tps}}</span>
-
+<!--              <span v-if="data.item.tps === 0">{{data.item.tps}}</span>-->
             </template>
             <template #cell(fns)="data">
-              <button v-if="data.item.fns > 0" class="btn btn-outline-warning res-btn" @click="openExamples('fn_examples', data.item)">
+              <button class="btn btn-outline-warning res-btn" :disabled="data.item.fns === 0"
+                      @click="openExamples('fn_examples', data.item)">
                 {{data.item.fns}}
               </button>
-              <span v-if="data.item.fns === 0">{{data.item.fns}}</span>
+<!--              <span v-if="data.item.fns === 0">{{data.item.fns}}</span>-->
             </template>
             <template #cell(fps)="data">
-              <button v-if="data.item.fps > 0" class="btn btn-outline-danger res-btn" @click="openExamples('fp_examples', data.item)">
+              <button class="btn btn-outline-danger res-btn" :disabled="data.item.fps === 0" @click="openExamples('fp_examples', data.item)">
                 {{data.item.fps}}
               </button>
-              <span v-if="data.item.fps === 0">{{data.item.fps}}</span>
+<!--              <span v-if="data.item.fps === 0">{{data.item.fps}}</span>-->
             </template>
           </b-table>
         </b-tab>
@@ -226,8 +227,8 @@ $metrics-header-height: 42px;
 
 .gradient-fill {
   height: 25px;
+  padding: 0 1px;
   background-image: linear-gradient(to right, #32ab60, #E8EDEE);
-  //border: 1px solid #32ab60;
   box-shadow: 0 5px 5px -5px #32ab60;
 }
 
