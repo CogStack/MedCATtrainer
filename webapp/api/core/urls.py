@@ -52,7 +52,6 @@ urlpatterns = [
     path('api/save-models/', api.views.save_models),
     path('api/get-create-entity/', api.views.get_create_entity),
     path('api/create-dataset/', api.views.create_dataset),
-    path('api/complete-projects/', api.views.finished_projects),
     path('api/update-meta-annotation/', api.views.update_meta_annotation),
     path('api/annotate-text/', api.views.annotate_text),
     path('api/download-annos/', api.views.download_annos),
