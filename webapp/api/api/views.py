@@ -569,8 +569,10 @@ def download_annos(request):
         return HttpResponseBadRequest('No projects to download annotations')
 
     projects = ProjectAnnotateEntities.objects.filter(id__in=p_ids)
+
+    with_doc_name = request.GET.get('with_doc_name', False)
     out = download_projects_with_text(projects) if with_text_flag else \
-        download_projects_without_text(projects)
+        download_projects_without_text(projects, with_doc_name)
     return out
 
 
