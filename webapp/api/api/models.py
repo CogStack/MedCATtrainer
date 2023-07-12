@@ -120,6 +120,11 @@ class Document(models.Model):
 
 
 class Project(PolymorphicModel):
+    PROJECT_STATUSES = [
+        ("A", "Annotating"),
+        ("D", "Discontinued (Fail)"),
+        ("C", "Complete"),
+    ]
     name = models.CharField(max_length=150)
     description = models.TextField(default="", blank=True)
     annotation_guideline_link = models.TextField(default="", blank=True,
@@ -134,6 +139,13 @@ class Project(PolymorphicModel):
     cuis_file = models.FileField(null=True, blank=True,
                                  help_text='A file containing a JSON formatted list of CUI code strings, '
                                            'i.e. ["1234567","7654321"]')
+    annotation_classification = models.BooleanField(default=False, help_text="If these project annotations are suitable"
+                                                                             " for training a general purpose model. If"
+                                                                             " in doubt uncheck this.")
+    project_locked = models.BooleanField(default=False, help_text="If this project is locked and cannot or should "
+                                                                  "not be touched any further.")
+    project_status = models.CharField(max_length=1, choices=PROJECT_STATUSES, default="A",
+                                      help_text="The status of the project to indicate the readiness")
 
     def __str__(self):
         return str(self.name)
