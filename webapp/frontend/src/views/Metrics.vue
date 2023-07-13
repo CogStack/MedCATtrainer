@@ -15,7 +15,94 @@
           <b-table striped hover small :items="annoSummary.items" :fields="annoSummary.fields"></b-table>
         </b-tab>
         <b-tab title="Concept Summary" class="concept-summary">
-          <b-table striped hover small :items="conceptSummary.items" :fields="conceptSummary.fields">
+          <b-table striped hover small :items="conceptSummary.items" :fields="conceptSummary.fields" id="concepts-sum-tbl">
+            <template #head(concept)="data">
+              <div id="concept-head">Concept</div>
+              <b-tooltip target="concept-head"
+                         triggers="hover"
+                         container="concepts-sum-tbl"
+                         title=""></b-tooltip>
+            </template>
+            <template #head(concept_count)="data">
+              <div id="concept-count-head">Concept Count</div>
+              <b-tooltip target="concept-count-head"
+                         triggers="hover"
+                         container="concepts-sum-tbl"
+                         title="Number of occurrences across the projects"></b-tooltip>
+            </template>
+            <template #head(variations)="data">
+              <div id="variations-head"># Vars</div>
+              <b-tooltip target="variations-head"
+                         triggers="hover"
+                         container="concepts-sum-tbl"
+                         title="The count of unique variations for a concept"></b-tooltip>
+            </template>
+            <template #head(variation_values)="data">
+              <div id="variations-values-head">Variations</div>
+              <b-tooltip target="variations-values-head"
+                         triggers="hover"
+                         container="concepts-sum-tbl"
+                         title="The unique set of variations for a concept"></b-tooltip>
+            </template>
+            <template #head(count_variations_ratio)="data">
+              <div id="variations-ratio-head">Variations Ratio</div>
+              <b-tooltip target="variations-ratio-head"
+                         triggers="hover"
+                         container="concepts-sum-tbl"
+                         title="The ratio of number of annotations and the number of variations of a concept"></b-tooltip>
+            </template>
+            <template #head(cui)="data">
+              <div id="cui-head">CUI</div>
+              <b-tooltip target="cui-head"
+                         triggers="hover"
+                         container="concepts-sum-tbl"
+                         title="The Concept Unique Identifier"></b-tooltip>
+            </template>
+            <template #head(cui_f1)="data">
+              <div id="cui-f1-head">F1</div>
+              <b-tooltip target="cui-f1-head"
+                         triggers="hover"
+                         container="concepts-sum-tbl"
+                         title="The harmonic mean of the recall and precision scores"></b-tooltip>
+            </template>
+            <template #head(cui_prec)="data">
+              <div id="cui-prec-head">Prec</div>
+              <b-tooltip target="cui-prec-head"
+                         triggers="hover"
+                         container="concepts-sum-tbl"
+                         title="The precision scores of a concept."></b-tooltip>
+            </template>
+            <template #head(cui_rec)="data">
+              <div id="cui-rec-head">Rec</div>
+              <b-tooltip target="cui-rec-head"
+                         triggers="hover"
+                         container="concepts-sum-tbl"
+                         title="The recall scores of a concept."></b-tooltip>
+            </template>
+            <template #head(tps)="data">
+              <div id="tps-head">TPs</div>
+              <b-tooltip target="tps-head"
+                         triggers="hover"
+                         container="concepts-sum-tbl"
+                         title="True positives - concept examples that are annotated and predicted by the model"></b-tooltip>
+            </template>
+            <template #head(fns)="data">
+              <div id="fns-head">FNs</div>
+              <b-tooltip target="fns-head"
+                         triggers="hover"
+                         container="concepts-sum-tbl"
+                         title="False negatives - concept examples that annotated but not predicted by the model"></b-tooltip>
+            </template>
+            <template #head(fps)="data">
+              <div id="fps-head">FPs</div>
+              <b-tooltip target="fps-head"
+                         triggers="hover"
+                         container="concepts-sum-tbl"
+                         title="False positives - concept examples that are predicted but not annotated"></b-tooltip>
+            </template>
+            <template #cell(variation_values)="data">
+              <div>{{data.item.value.join(', ')}}</div>
+            </template>
             <template #cell(cui_f1)="data">
               <div v-html="data.value"></div>
             </template>
@@ -30,20 +117,17 @@
                       @click="openExamples('tp_examples', data.item)">
                 {{data.item.tps}}
               </button>
-<!--              <span v-if="data.item.tps === 0">{{data.item.tps}}</span>-->
             </template>
             <template #cell(fns)="data">
               <button class="btn btn-outline-warning res-btn" :disabled="data.item.fns === 0"
                       @click="openExamples('fn_examples', data.item)">
                 {{data.item.fns}}
               </button>
-<!--              <span v-if="data.item.fns === 0">{{data.item.fns}}</span>-->
             </template>
             <template #cell(fps)="data">
               <button class="btn btn-outline-danger res-btn" :disabled="data.item.fps === 0" @click="openExamples('fp_examples', data.item)">
                 {{data.item.fps}}
               </button>
-<!--              <span v-if="data.item.fps === 0">{{data.item.fps}}</span>-->
             </template>
           </b-table>
         </b-tab>
@@ -121,8 +205,10 @@ export default {
       },
       conceptSummary: {
         fields: [
-          { key: 'concept_count', label: 'Count', sortable: true },
-          { key: 'concept_name', label: 'Concept', sortable: true },
+          { key: 'concept_name', sortable: true },
+          { key: 'concept_count', sortable: true },
+          { key: 'variations', sortable: true },
+          { key: 'variation_values', label: ''},
           { key: 'count_variations_ratio', label: 'Variation Ratio', sortable: true },
           { key: 'cui', label: 'CUI' },
           { key: 'cui_f1', label: 'F1', sortable: true, formatter: this.perfFormatter },
