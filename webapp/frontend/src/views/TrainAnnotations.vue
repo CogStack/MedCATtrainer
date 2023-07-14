@@ -485,6 +485,15 @@ export default {
           this.metaAnnotate = this.currentEnt && (this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_ALTERNATIVE ||
             this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_CORRECT)
           this.loadingDoc = false
+          if (this.$route.query.annoStart && this.$route.query.annoEnd) {
+            const ent = _.find(this.ents, e => {
+              return Number(this.$route.query.annoStart) === e.start_ind &
+                Number(this.$route.query.annoEnd) === e.end_ind
+            })
+            if (ent) {
+              this.currentEnt = ent
+            }
+          }
         }
       })
     },

@@ -648,7 +648,18 @@ def model_loaded(_):
 def metrics(request):
     p_ids = request.GET.get('projectIds').split(',')
     projects = ProjectAnnotateEntities.objects.filter(id__in=p_ids)
-    # assume projects all use the same model for eval purposes.
+
+    # provide warning of inconsistent models used or for models that are not loaded.
+    p_cdbs = set(p.concept_db for p in projects)
+    if len(p_cdbs) > 1:
+        logger.warning('Inconsistent CDBs used in the generation of metrics - should use the same CDB for '
+                       f'consistent results - found {[cdb.name for cdb in p_cdbs]} - metrics will only use the first'
+                       f' CDB {projects[0].concept_db.name}')
+    for p_cdb in p_cdbs:
+        if p_cdb not in CDB_MAP:
+            logger.warning(f'CDB {p_cdb.name} not in CDB_MAP cache - this will now be loaded - '
+                           f'and will not show intermediary training status')
+
     cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
                      CAT_MAP=CAT_MAP, project=projects[0])
     project_data = retrieve_project_data(projects)
