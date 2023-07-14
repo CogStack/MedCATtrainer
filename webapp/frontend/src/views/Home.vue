@@ -13,10 +13,14 @@
                v-if="!loadingProjects"
                @row-selected="select">
         <template #head(metrics)="data">
-          Metrics
+          <div id="metrics-head">Metrics</div>
           <button class="btn btn-outline-primary load-metrics" @click="loadMetrics" v-if="selectedProjects.length > 0">
             <font-awesome-icon icon="chevron-right"></font-awesome-icon>
           </button>
+          <b-tooltip target="metrics-head"
+                     triggers="hover"
+                     container="projectTable"
+                     title="Access the metrics view for a single or group of projects"></b-tooltip>
         </template>
         <template #head(cuis)="">
           <div id="cuis-header">Concepts</div>
@@ -119,7 +123,7 @@
       <transition name="alert"><div class="alert alert-danger" v-if="modelSavedError" role="alert">Error saving model</div></transition>
       <transition name="alert"><div class="alert alert-primary" v-if="loadingModel" role="alert">Loading model</div></transition>
       <transition name="alert"><div class="alert alert-danger" v-if="modelCacheLoadError" role="alert">Error loading MedCAT model for project</div></transition>
-      <transition name="alert"><div class="alert alert-danger" v-if="projectLockedWarning" role="alert">Unable load a locked project. Unlock via /admin/</div></transition>
+      <transition name="alert"><div class="alert alert-danger" v-if="projectLockedWarning" role="alert">Unable load a locked project. Contact your CogStack administrator to unlock</div></transition>
     </div>
     <modal v-if="clearModelModal" :closable="true" @modal:close="clearModelModal = false">
       <div slot="header">
@@ -174,7 +178,6 @@ export default {
           'anno_class',
           'cdb_search_filter',
           'model_loaded',
-          'metrics',
           'save_model'
         ]
       },

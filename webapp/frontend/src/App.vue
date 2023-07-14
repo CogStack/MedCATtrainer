@@ -109,7 +109,6 @@ export default {
 }
 
 .link {
-  //padding-top: 10px;
   display:inline-block;
   height: 25px;
   cursor: pointer;

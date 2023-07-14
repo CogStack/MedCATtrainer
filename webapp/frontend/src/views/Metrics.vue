@@ -136,9 +136,24 @@
         </b-tab>
       </b-tabs>
     </div>
-    <modal class="summary-modal" v-if="predictedResults" :closable="true" @modal:close="predictedResults = null">
-      <h3 slot="header">{{predictionResultsTitle}}</h3>
+    <modal class="summary-modal" v-if="modalData.results" :closable="true" @modal:close="clearModalData">
+      <h3 slot="header">{{modalData.title}}</h3>
       <div slot="body">
+        <div v-if="modalData.type === 'fp'">
+          <p>False positive model predictions can be the result of:</p>
+          <ul>
+            <li>Alternative model predictions that are overlapping with other concepts</li>
+            <li>Genuine missed annotations by an annotator.</li>
+          </ul>
+          <p>Clicking through these annotations will not highlight this annotation as it doesn't exist in the dataset </p>
+        </div>
+        <div v-if="modalData.type === 'fn'">
+          <p>False negative model predictions can be the result of:</p>
+          <ul>
+            <li>An model mistake that marked an annotation 'correct' where it should be incorrect</li>
+            <li>An annotator mistake that marked an annotation 'correct' where it should be incorrect</li>
+          </ul>
+        </div>
         <table class="table table-hover">
           <thead>
             <tr>
@@ -150,7 +165,7 @@
             </tr>
           </thead>
           <tbody>
-            <anno-result v-for="(res, key) of predictedResults" :key="key" :result="res"></anno-result>
+            <anno-result v-for="(res, key) of modalData.results" :key="key" :result="res" :type="modalData.type"></anno-result>
           </tbody>
         </table>
       </div>
@@ -222,21 +237,34 @@ export default {
       metaAnnsSummary: {
         fields: []
       },
-      predictedResults: null,
-      predictionResultsTitle: null
+      modalData: {
+        results: null,
+        title: null,
+        type: null
+      }
     }
   },
   methods: {
+    clearModalData () {
+      this.modalData = {
+        results: null,
+        title: null,
+        type: null
+      }
+    },
     openExamples (exampleType, item) {
       if (exampleType === 'tp_examples') {
-        this.predictionResultsTitle = 'True Positive Model Predictions'
+        this.modalData.title = 'True Positive Model Predictions'
+        this.modalData.type = 'tp'
       } else if (exampleType === 'fp_examples') {
-        this.predictionResultsTitle = 'False Positive Model Predictions'
+        this.modalData.title = 'False Positive Model Predictions'
+        this.modalData.type = 'fp'
       } else {
-        this.predictionResultsTitle = 'False Negative Model Predictions'
+        this.modalData.title = 'False Negative Model Predictions'
+        this.modalData.type = 'fn'
       }
       const idx = this.conceptSummary.items.indexOf(item)
-      this.predictedResults = this.conceptSummary.items[idx][exampleType]
+      this.modalData.results = this.conceptSummary.items[idx][exampleType]
     },
     perfFormatter (value) {
       let txtColorClass = 'good-perf'
@@ -295,7 +323,6 @@ $metrics-header-height: 42px;
 
 .concept-summary {
   overflow-y: auto;
-  height: 100%
 }
 
 .meta-anno-summary {
