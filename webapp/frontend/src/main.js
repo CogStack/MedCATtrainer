@@ -3,7 +3,6 @@ import axios from 'axios'
 import VueCookie from 'vue-cookie'
 import VueSimpleContextMenu from 'vue-simple-context-menu'
 import BootstrapVue from 'bootstrap-vue'
-import VueTree from '@ssthouse/vue-tree-chart'
 
 import App from './App.vue'
 import router from './router'
@@ -19,7 +18,7 @@ import '@/plugins/fontawesome'
 import '@/assets/main.css'
 
 Vue.use(VueSimpleContextMenu)
-Vue.component('vue-tree', VueTree)
+
 Vue.use(BootstrapVue)
 Vue.use(VueCookie);
 

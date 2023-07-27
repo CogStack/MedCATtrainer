@@ -15,13 +15,13 @@ from rest_framework.response import Response
 from core.settings import MEDIA_ROOT
 from .admin import download_projects_with_text, download_projects_without_text, \
     import_concepts_from_cdb, upload_projects_export, retrieve_project_data
-from .medcat_utils import ch2pt_from_pt2ch, get_all_ch, dedupe_preserve_order
+from .medcat_utils import ch2pt_from_pt2ch, get_all_ch, dedupe_preserve_order, snomed_ct_concept_path
 from .metrics import ProjectMetrics
 from .permissions import *
 from .serializers import *
 from .solr_utils import collections_available, search_collection, ensure_concept_searchable
-from .utils import get_cached_medcat, clear_cached_medcat, get_medcat, add_annotations, \
-    remove_annotations, train_medcat, create_annotation
+from .utils import get_cached_medcat, clear_cached_medcat, get_medcat, get_cached_cdb, \
+    add_annotations, remove_annotations, train_medcat, create_annotation
 
 # For local testing, put envs
 """
@@ -630,10 +630,7 @@ def upload_deployment(request):
 
 @api_view(http_method_names=['GET'])
 def cache_model(_, cdb_id):
-    if cdb_id not in CDB_MAP:
-        cdb_obj = ConceptDB.objects.get(id=cdb_id)
-        cdb = CDB.load(cdb_obj.cdb_file.path)
-        CDB_MAP[cdb_id] = cdb
+    get_cached_cdb(cdb_id, CDB_MAP)
     return Response("success", 200)
 
 
@@ -670,11 +667,7 @@ def metrics(request):
 @api_view(http_method_names=['GET'])
 def cdb_cui_children(request, cdb_id):
     parent_cui = request.GET.get('parent_cui')
-    if cdb_id not in CDB_MAP:
-        cdb_obj = ConceptDB.objects.get(id=cdb_id)
-        cdb = CDB.load(cdb_obj.cdb_file.path)
-        CDB_MAP[cdb_id] = cdb
-    cdb = CDB_MAP[cdb_id]
+    cdb = get_cached_cdb(cdb_id, CDB_MAP)
 
     # root SNOMED CT code: 138875005
     # root UMLS code: CUI:
@@ -687,10 +680,7 @@ def cdb_cui_children(request, cdb_id):
 
     # currently assumes this is using the SNOMED CT terminology
     try:
-        root_term = {
-            'cui': '138875005',
-            'pretty_name': cdb.cui2preferred_name['138875005']
-        }
+        root_term = {'cui': '138875005', 'pretty_name': cdb.cui2preferred_name['138875005']}
         if parent_cui is None:
             return Response({'results': [root_term]})
         else:
@@ -704,53 +694,35 @@ def cdb_cui_children(request, cdb_id):
 @api_view(http_method_names=['GET'])
 def cdb_concept_path(request):
     cdb_id = int(request.GET.get('cdb_id'))
-    if cdb_id not in CDB_MAP:
-        cdb_obj = ConceptDB.objects.get(id=cdb_id)
-        cdb = CDB.load(cdb_obj.cdb_file.path)
-        CDB_MAP[cdb_id] = cdb
-    cdb = CDB_MAP[cdb_id]
+    cdb = get_cached_cdb(cdb_id, CDB_MAP)
     if not cdb.addl_info.get('ch2pt'):
         cdb.addl_info['ch2pt'] = ch2pt_from_pt2ch(cdb)
     cui = request.GET.get('cui')
-
     # Again only SNOMED CT is supported
     # 'cui': '138875005',
-    try:
-        top_level_parent_node = '138875005'
+    result = snomed_ct_concept_path(cui, cdb)
+    return Response({'results': result})
 
-        def find_parents(cui, curr_node_path=None):
-            concept_dct = {'cui': cui, 'pretty_name': cdb.cui2preferred_name[cui]}
-            if curr_node_path is not None:
-                concept_dct['children'] = curr_node_path
-            else:
-                concept_dct['complete'] = True
-            parents = list(cdb.addl_info['ch2pt'][cui])
-            parent_concepts_dcts = [{'cui': p, 'pretty_name': cdb.cui2preferred_name[p], 'children': [concept_dct]}
-                                    for p in parents]
-            links = [{'parent': p, 'child': cui} for p in parents]
-            return parents, parent_concepts_dcts, links
 
-        # path = []
-        all_links = []
-        parent_cui_stack = []
-        curr_node_path = None
-        while cui != top_level_parent_node:
-            parent_cuis, parent_concepts_dcts, links = find_parents(cui, curr_node_path=curr_node_path)
-            curr_node_path = parent_concepts_dcts
-            all_links += links
-            parent_cui_stack += parent_cuis
-            cui = parent_cuis.pop(0)
-
-        # de-dupe parent child relations from multi-parent relations... ?
-        # example foot-mark: 276472000
-        return Response({
-            'results': {
-                'node_path': curr_node_path[0],
-                'links': all_links
-            }
-        })
-    except KeyError:
-        return Response({'results': []})
+@api_view(http_method_names=['POST'])
+def generate_concept_filter_flat_json(request):
+    cuis = request.data.get('cuis')
+    cdb_id = request.data.get('cdb_id')
+    excluded_nodes = request.data.get('excluded_nodes', [])
+    if cuis is not None and cdb_id is not None:
+        cdb = get_cached_cdb(cdb_id, CDB_MAP)
+        # get all children from 'parent' concepts above.
+        final_filter = []
+        for cui in cuis:
+            ch_nodes = get_all_ch(cui, cdb)
+            final_filter += [n for n in ch_nodes if n not in excluded_nodes]
+        final_filter = dedupe_preserve_order(final_filter)
+        with open(MEDIA_ROOT + '/filter.json', 'w+') as f:
+            json.dump(final_filter, f)
+        response = HttpResponse(f, content_type='text/json')
+        response['Content-Disposition'] = 'attachment; filename=filter.json'
+        return response
+    return HttpResponseBadRequest('Missing either cuis or cdb_id param. Cannot generate filter.')
 
 
 @api_view(http_method_names=['POST'])
@@ -758,20 +730,15 @@ def generate_concept_filter(request):
     cuis = request.data.get('cuis')
     cdb_id = request.data.get('cdb_id')
     if cuis is not None and cdb_id is not None:
-        if cdb_id not in CDB_MAP:
-            cdb_obj = ConceptDB.objects.get(id=cdb_id)
-            cdb = CDB.load(cdb_obj.cdb_file.path)
-            CDB_MAP[cdb_id] = cdb
-        cdb = CDB_MAP[cdb_id]
+        cdb = get_cached_cdb(cdb_id, CDB_MAP)
         # get all children from 'parent' concepts above.
-        final_filter = []
+        final_filter = {}
         for cui in cuis:
-            final_filter += get_all_ch(cui, cdb)
-        final_filter = dedupe_preserve_order(final_filter)
-        with open(MEDIA_ROOT + '/filter.json', 'w+') as f:
-            json.dump(final_filter, f)
-            response = HttpResponse(f, content_type='text/json')
-            response['Content-Disposition'] = 'attachment; filename=filter.json'
-            return response
-        # return Response({'filter': final_filter})
+            final_filter[cui] = [{'cui': c, 'pretty_name': cdb.cui2preferred_name[c]} for c in get_all_ch(cui, cdb)
+                                 if c in cdb.cui2preferred_name and c != cui]
+        resp = {'filter_len': sum(len(f) for f in final_filter.values()) + len(final_filter.keys())}
+        if resp['filter_len'] < 10000:
+            # only send across concept filters that are small enough to render
+            resp['filter'] = final_filter
+        return Response(resp)
     return HttpResponseBadRequest('Missing either cuis or cdb_id param. Cannot generate filter.')

@@ -16,14 +16,29 @@
         </concept-picker>
       </div>
       <div class="title">Concept Filter</div>
-      <div class="filter-desc">Selected Nodes:</div>
+      <div class="filter-desc">Selected Concepts:
+        <span class="filter-text">{{filterLen}}</span>
+      </div>
       <div class="selected-nodes">
-        <div class="filter-desc" v-for="node of checkedNodes" :key="node.name">
-          <div class="selected-node">{{node.pretty_name}} - {{node.cui}}</div>
-          <font-awesome-icon icon="times" class="remove-selected-node" @click="removeNode(node)"></font-awesome-icon>
+        <div class="filter-desc" v-for="node of checkedNodes" :key="node.name" @click="toggleNodeChildViz(node.cui)">
+          <font-awesome-icon class="ch-toggle" v-if="nodeChildOpen.indexOf(node.cui) !== -1" icon="chevron-down"/>
+          <font-awesome-icon class="ch-toggle" v-else icon="chevron-right"/>
+          <div class="selected-node">{{node.pretty_name}} <span class="sctid">- {{node.cui}}</span></div>
+          <font-awesome-icon icon="times" class="remove-selected-node" @click.stop @click="removeNode(node)"/>
+          <div v-if="nodeChildOpen.indexOf(node.cui) !== -1" @click.stop class="filter-ch-node" v-for="childNode of generatedFilter[node.cui]"
+               @click="toggleExcludedCUI(childNode.cui)">
+            <div class="node-icon-container">
+              <font-awesome-icon icon="fa-regular fa-square-check" class="ch-node-icon" v-if="excludedNodes.indexOf(childNode.cui) === -1" />
+              <font-awesome-icon icon="fa-regular fa-square" class="ch-node-icon" v-else />
+            </div>
+            <span class="selected-node">
+              {{childNode.pretty_name}} <span class="sctid">- {{childNode.cui}}</span>
+            </span>
+          </div>
         </div>
       </div>
       <div id="concept-filter" class="concept-filter-footer">
+        <button class="btn btn-danger clear-filter" @click="clearFilter">Clear Filter</button>
         <button id="export-filter-btn" class="btn btn-primary export-filter" @click="exportFilter">Export Filter</button>
         <b-tooltip target="export-filter-btn" triggers="hover" container="concept-filter"
                    title="Calculate all child concepts and download as a .json file - to upload into a Trainer project"></b-tooltip>
@@ -52,7 +67,11 @@ export default {
       cdbs: [],
       selectedConceptDB: null,
       checkedNodes: [],
-      selectedCui: ''
+      selectedCui: '',
+      filterLen: 0,
+      generatedFilter: {},
+      nodeChildOpen: [],
+      excludedNodes: []
     }
   },
   created () {
@@ -75,22 +94,70 @@ export default {
   methods: {
     pickedResult (res) {
       // picked result is used to search upwards to find path to root. via backend...
-      this.selectedCui = res.cui
+      if (res) {
+        this.selectedCui = res.cui
+      }
     },
     selectNode (node) {
       const idxOf = this.checkedNodes.indexOf(node)
       if (idxOf === -1) {
         this.checkedNodes.push(node)
+        this.nodeChildOpen.push(node.cui)
+        this.generateFilter()
       }
     },
     removeNode (nodeToggled) {
       const idxOf = this.checkedNodes.indexOf(nodeToggled)
       this.checkedNodes.splice(idxOf, 1)
+      this.generateFilter()
     },
-    exportFilter () {
+    generateFilter () {
       const payload = this.checkedNodes.map(r => r.cui)
       this.$http.post('/api/generate-concept-filter/',
         { 'cuis': payload, 'cdb_id': this.selectedConceptDB.id }).then(resp => {
+        this.generatedFilter = resp.data.filter
+        this.filterLen = resp.data.filter_len
+      })
+    },
+    clearFilter () {
+      this.checkedNodes = []
+      this.filterLen = 0
+      this.generatedFilter = {}
+      this.excludedNodes = []
+      this.nodeChildOpen = []
+    },
+    toggleNodeChildViz (cui) {
+      const idxOf = this.nodeChildOpen.indexOf(cui)
+      if (idxOf === -1) {
+        this.nodeChildOpen.push(cui)
+      } else {
+        this.nodeChildOpen.splice(idxOf, 1)
+      }
+    },
+    toggleExcludedCUI (cui) {
+      const idxOf = this.excludedNodes.indexOf(cui)
+      if (idxOf === -1) {
+        this.excludedNodes.push(cui)
+        this.recalcFilterLen()
+      } else {
+        this.excludedNodes.splice(idxOf, 1)
+        this.recalcFilterLen()
+      }
+    },
+    recalcFilterLen () {
+      this.filterLen = _.keys(this.generatedFilter).concat(
+        _.flatten(_.values(this.generatedFilter))
+          .map(i => i.cui)
+          .filter(i => this.excludedNodes.indexOf(i) === -1)
+      ).length
+    },
+    exportFilter () {
+      const payload = {
+        'cuis': this.checkedNodes.map(r => r.cui),
+        'cdb_id': this.selectedConceptDB.id,
+        'excluded_nodes': this.excludedNodes
+      }
+      this.$http.post('/api/generate-concept-filter-json/', payload).then(resp => {
         const url = window.URL.createObjectURL(new Blob([resp.data]))
         const link = document.createElement('a')
         link.href = url
@@ -122,7 +189,7 @@ export default {
 .l-sidebar {
   display: flex;
   flex-direction: column;
-  flex: 0 0 400px;
+  flex: 0 0 500px;
   height: 100%;
 
   .form-group {
@@ -140,17 +207,52 @@ export default {
     box-shadow: 0 5px 5px -5px rgba(0,0,0,0.2);
   }
 
+  .filter-text {
+    padding: 10px 10px 0 0;
+  }
+
+  .clear-filter {
+    margin: 10px 10px 0 0;
+  }
 
   .export-filter {
     float: right;
-    margin-right: 10px;
-    margin-top: 10px;
+    margin: 10px 10px 0 0;
   }
 }
 
 .selected-node {
   display: inline-block;
-  width: calc(100% - 20px);
+  width: calc(100% - 20px - 25px); /** icons either site **/
+}
+
+.ch-toggle {
+  width: 20px;
+  padding-right: 2px;
+}
+
+.filter-ch-node {
+  padding-left: 15px;
+  margin: 1px;
+  &:hover {
+    box-shadow: rgba(149, 157, 165, 0.2) 0 8px 24px;
+    cursor: pointer;
+  }
+
+  .ch-node-icon {
+    padding-right: 2px;
+  }
+}
+
+.sctid {
+  opacity: .4;
+}
+
+.node-icon-container {
+  display: inline-block;
+  vertical-align: center;
+  font-size: 18px;
+  padding-right: 3px;
 }
 
 .remove-selected-node {

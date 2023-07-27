@@ -14,6 +14,7 @@
         :dataset="cdbData"
         :config="treeConfig"
         :direction="'vertical'"
+        :linkStyle="'straight'"
         ref="tree">
         <template v-slot:node="{ node, collapsed }">
           <div @click="getData(node)" class="node">
@@ -30,11 +31,12 @@
 
 <script>
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
+import VueTree from '@/components/models/VueTree.vue'
 import _ from 'lodash'
 
 export default {
   name: 'ConceptDatabaseViz',
-  components: { LoadingOverlay },
+  components: { LoadingOverlay, VueTree },
   props: {
     cdb: Object,
     selectedCui: String
@@ -45,7 +47,7 @@ export default {
       cdbData: {},
       nodeCuis: [],
       loading: false,
-      treeConfig: { nodeWidth: 100, nodeHeight: 150, levelHeight: 150 },
+      treeConfig: { nodeWidth: 120, nodeHeight: 150, levelHeight: 150 },
       zoomSetting: 0
     }
   },
@@ -72,6 +74,7 @@ export default {
     getData (node) {
       if (this.nodeCuis.indexOf(node.cui) === -1 || node.complete) {
         this.$http.get(`api/model-concept-children/${this.cdb.id}/?parent_cui=${node.cui}`).then(resp => {
+          this.loading = false
           this.$set(node, 'children', resp.data.results.map(r => {
             return {
               pretty_name: r.pretty_name,
@@ -80,7 +83,6 @@ export default {
             }
           }))
           this.nodeCuis.push(node.cui)
-          this.loading = false
         })
       }
     },
@@ -111,10 +113,10 @@ export default {
         this.$http.get(`api/concept-path/?cdb_id=${this.cdb.id}&cui=${newVal}`).then(resp => {
           this.cdbData.children = resp.data.results['node_path'].children
           this.cdbData.links = resp.data.results['links']
-          this.identifier = 'cui'
+          this.cdbData.identifier = 'cui'
         })
       }
-      this.nodeCuis.push(node.name)
+      this.nodeCuis.push(newVal)
       this.loading = false
     }
   }
@@ -150,6 +152,7 @@ export default {
   font-size: .8rem;
   color: $color-2;
   background-color: $task-color-0;
+  opacity: 1;
   border-radius: 3px;
   margin: 3px;
   box-shadow: 0 5px 5px -5px $task-color-0;
