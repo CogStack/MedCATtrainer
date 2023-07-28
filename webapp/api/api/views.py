@@ -717,9 +717,8 @@ def generate_concept_filter_flat_json(request):
             ch_nodes = get_all_ch(cui, cdb)
             final_filter += [n for n in ch_nodes if n not in excluded_nodes]
         final_filter = dedupe_preserve_order(final_filter)
-        with open(MEDIA_ROOT + '/filter.json', 'w+') as f:
-            json.dump(final_filter, f)
-        response = HttpResponse(f, content_type='text/json')
+        filter_json = json.dumps(final_filter)
+        response = HttpResponse(filter_json, content_type='application/json')
         response['Content-Disposition'] = 'attachment; filename=filter.json'
         return response
     return HttpResponseBadRequest('Missing either cuis or cdb_id param. Cannot generate filter.')

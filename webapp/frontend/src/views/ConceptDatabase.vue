@@ -38,8 +38,11 @@
         </div>
       </div>
       <div id="concept-filter" class="concept-filter-footer">
-        <button class="btn btn-danger clear-filter" @click="clearFilter">Clear Filter</button>
-        <button id="export-filter-btn" class="btn btn-primary export-filter" @click="exportFilter">Export Filter</button>
+        <button :disabled="filterLen === 0" class="btn btn-danger clear-filter" @click="clearFilter">Clear Filter</button>
+        <button :disabled="exportingFilter || filterLen === 0" id="export-filter-btn" class="btn btn-primary export-filter" @click="exportFilter">
+          <span v-if="!exportingFilter">Export Filter</span>
+          <font-awesome-icon v-if="exportingFilter" icon="spinner" spin size="xs" />
+        </button>
         <b-tooltip target="export-filter-btn" triggers="hover" container="concept-filter"
                    title="Calculate all child concepts and download as a .json file - to upload into a Trainer project"></b-tooltip>
       </div>
@@ -71,7 +74,8 @@ export default {
       filterLen: 0,
       generatedFilter: {},
       nodeChildOpen: [],
-      excludedNodes: []
+      excludedNodes: [],
+      exportingFilter: false
     }
   },
   created () {
@@ -157,14 +161,14 @@ export default {
         'cdb_id': this.selectedConceptDB.id,
         'excluded_nodes': this.excludedNodes
       }
+      this.exportingFilter = true
       this.$http.post('/api/generate-concept-filter-json/', payload).then(resp => {
-        const url = window.URL.createObjectURL(new Blob([resp.data]))
+        const url = window.URL.createObjectURL(new Blob([JSON.stringify(resp.data)], {type: 'application/json'}))
         const link = document.createElement('a')
         link.href = url
-        link.setAttribute('download',
-          resp.headers['content-disposition'].split('=')[1])
-        document.body.appendChild(link)
+        link.download = resp.headers['content-disposition'].split('=')[1]
         link.click()
+        this.exportingFilter = false
       })
     }
   }
@@ -189,7 +193,7 @@ export default {
 .l-sidebar {
   display: flex;
   flex-direction: column;
-  flex: 0 0 500px;
+  flex: 0 0 450px;
   height: 100%;
 
   .form-group {
