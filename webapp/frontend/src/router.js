@@ -5,8 +5,6 @@ import TrainAnnotations from './views/TrainAnnotations.vue'
 import Demo from './views/Demo.vue'
 import Metrics from './views/Metrics.vue'
 import ConceptDatabase from './views/ConceptDatabase.vue'
-import Metrics from './views/Metrics.vue'
-import ConceptDatabase from './views/ConceptDatabase.vue'
 
 Vue.use(Router)
 
