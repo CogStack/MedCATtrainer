@@ -18,7 +18,6 @@ import '@/plugins/fontawesome'
 import '@/assets/main.css'
 
 Vue.use(VueSimpleContextMenu)
-
 Vue.use(BootstrapVue)
 Vue.use(VueCookie);
 

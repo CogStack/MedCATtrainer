@@ -6,6 +6,7 @@ import Demo from './views/Demo.vue'
 import Metrics from './views/Metrics.vue'
 import ConceptDatabase from './views/ConceptDatabase.vue'
 
+
 Vue.use(Router)
 
 export default new Router({
