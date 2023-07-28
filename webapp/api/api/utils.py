@@ -325,6 +325,14 @@ def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
     return cat
 
 
+def get_cached_cdb(cdb_id: str, CDB_MAP: Dict[str, CDB]) -> CDB:
+    if cdb_id not in CDB_MAP:
+        cdb_obj = ConceptDB.objects.get(id=cdb_id)
+        cdb = CDB.load(cdb_obj.cdb_file.path)
+        CDB_MAP[cdb_id] = cdb
+    return CDB_MAP[cdb_id]
+
+
 @receiver(post_save, sender=ProjectAnnotateEntities)
 def save_project_anno(sender, instance, **kwargs):
     if instance.cuis_file:

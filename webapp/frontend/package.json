@@ -11,8 +11,10 @@
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.1.1",
     "@fortawesome/free-brands-svg-icons": "^6.1.1",
+    "@fortawesome/free-regular-svg-icons": "^6.4.0",
     "@fortawesome/free-solid-svg-icons": "^6.1.1",
-    "@fortawesome/vue-fontawesome": "^2.0.6",
+    "@fortawesome/vue-fontawesome": "^2.0.10",
+    "@ssthouse/vue-tree-chart": "^0.5.4",
     "axios": "^0.24.0",
     "bootstrap": "^4.6.0",
     "bootstrap-vue": "^2.23.1",
@@ -26,7 +28,7 @@
     "vue-cookie": "^1.1.4",
     "vue-multipane": "^0.9.5",
     "vue-router": "^3.5.3",
-    "vue-select": "^3.16.0",
+    "vue-select": "^3.20.0",
     "vue-sidebar-menu": "^4.8.1",
     "vue-simple-context-menu": "^3.4.2",
     "vue-splitpane": "^1.0.6"

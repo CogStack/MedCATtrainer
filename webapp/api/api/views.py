@@ -3,23 +3,25 @@ import pickle
 import traceback
 from tempfile import NamedTemporaryFile
 
-from django.http import HttpResponseBadRequest, HttpResponseServerError
+from django.http import HttpResponseBadRequest, HttpResponseServerError, HttpResponse
 from django.shortcuts import render
 from django_filters import rest_framework as drf
+from medcat.cdb import CDB
 from medcat.utils.helpers import tkns_from_doc
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-
+from core.settings import MEDIA_ROOT
 from .admin import download_projects_with_text, download_projects_without_text, \
     import_concepts_from_cdb, upload_projects_export, retrieve_project_data
+from .medcat_utils import ch2pt_from_pt2ch, get_all_ch, dedupe_preserve_order, snomed_ct_concept_path
 from .metrics import ProjectMetrics
 from .permissions import *
 from .serializers import *
 from .solr_utils import collections_available, search_collection, ensure_concept_searchable
-from .utils import get_cached_medcat, clear_cached_medcat
-from .utils import get_medcat, add_annotations, remove_annotations, train_medcat, create_annotation
+from .utils import get_cached_medcat, clear_cached_medcat, get_medcat, get_cached_cdb, \
+    add_annotations, remove_annotations, train_medcat, create_annotation
 
 # For local testing, put envs
 """
@@ -627,6 +629,12 @@ def upload_deployment(request):
 
 
 @api_view(http_method_names=['GET'])
+def cache_model(_, cdb_id):
+    get_cached_cdb(cdb_id, CDB_MAP)
+    return Response("success", 200)
+
+
+@api_view(http_method_names=['GET'])
 def model_loaded(_):
     return Response({p.id: get_cached_medcat(CAT_MAP, p) is not None
                      for p in ProjectAnnotateEntities.objects.all()})
@@ -656,4 +664,80 @@ def metrics(request):
     return Response({'results': report_output})
 
 
+@api_view(http_method_names=['GET'])
+def cdb_cui_children(request, cdb_id):
+    parent_cui = request.GET.get('parent_cui')
+    cdb = get_cached_cdb(cdb_id, CDB_MAP)
 
+    # root SNOMED CT code: 138875005
+    # root UMLS code: CUI:
+    # root level ICD term:
+    # root level OPCS term:
+
+    if cdb.addl_info.get('pt2ch') is None:
+        return HttpResponseBadRequest('Requested MedCAT CDB model does not include parent2child metadata to'
+                                      ' explore a concept hierarchy')
+
+    # currently assumes this is using the SNOMED CT terminology
+    try:
+        root_term = {'cui': '138875005', 'pretty_name': cdb.cui2preferred_name['138875005']}
+        if parent_cui is None:
+            return Response({'results': [root_term]})
+        else:
+            child_concepts = [{'cui': cui, 'pretty_name': cdb.cui2preferred_name[cui]}
+                              for cui in cdb.addl_info.get('pt2ch')[parent_cui]]
+            return Response({'results': child_concepts})
+    except KeyError:
+        return Response({'results': []})
+
+
+@api_view(http_method_names=['GET'])
+def cdb_concept_path(request):
+    cdb_id = int(request.GET.get('cdb_id'))
+    cdb = get_cached_cdb(cdb_id, CDB_MAP)
+    if not cdb.addl_info.get('ch2pt'):
+        cdb.addl_info['ch2pt'] = ch2pt_from_pt2ch(cdb)
+    cui = request.GET.get('cui')
+    # Again only SNOMED CT is supported
+    # 'cui': '138875005',
+    result = snomed_ct_concept_path(cui, cdb)
+    return Response({'results': result})
+
+
+@api_view(http_method_names=['POST'])
+def generate_concept_filter_flat_json(request):
+    cuis = request.data.get('cuis')
+    cdb_id = request.data.get('cdb_id')
+    excluded_nodes = request.data.get('excluded_nodes', [])
+    if cuis is not None and cdb_id is not None:
+        cdb = get_cached_cdb(cdb_id, CDB_MAP)
+        # get all children from 'parent' concepts above.
+        final_filter = []
+        for cui in cuis:
+            ch_nodes = get_all_ch(cui, cdb)
+            final_filter += [n for n in ch_nodes if n not in excluded_nodes]
+        final_filter = dedupe_preserve_order(final_filter)
+        filter_json = json.dumps(final_filter)
+        response = HttpResponse(filter_json, content_type='application/json')
+        response['Content-Disposition'] = 'attachment; filename=filter.json'
+        return response
+    return HttpResponseBadRequest('Missing either cuis or cdb_id param. Cannot generate filter.')
+
+
+@api_view(http_method_names=['POST'])
+def generate_concept_filter(request):
+    cuis = request.data.get('cuis')
+    cdb_id = request.data.get('cdb_id')
+    if cuis is not None and cdb_id is not None:
+        cdb = get_cached_cdb(cdb_id, CDB_MAP)
+        # get all children from 'parent' concepts above.
+        final_filter = {}
+        for cui in cuis:
+            final_filter[cui] = [{'cui': c, 'pretty_name': cdb.cui2preferred_name[c]} for c in get_all_ch(cui, cdb)
+                                 if c in cdb.cui2preferred_name and c != cui]
+        resp = {'filter_len': sum(len(f) for f in final_filter.values()) + len(final_filter.keys())}
+        if resp['filter_len'] < 10000:
+            # only send across concept filters that are small enough to render
+            resp['filter'] = final_filter
+        return Response(resp)
+    return HttpResponseBadRequest('Missing either cuis or cdb_id param. Cannot generate filter.')

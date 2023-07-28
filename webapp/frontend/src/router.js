@@ -4,6 +4,8 @@ import Home from './views/Home.vue'
 import TrainAnnotations from './views/TrainAnnotations.vue'
 import Demo from './views/Demo.vue'
 import Metrics from './views/Metrics.vue'
+import ConceptDatabase from './views/ConceptDatabase.vue'
+
 
 Vue.use(Router)
 
@@ -26,6 +28,11 @@ export default new Router({
       path: '/demo',
       name: 'demo',
       component: Demo
+    },
+    {
+      path: '/model-explore',
+      name: 'model-explore',
+      component: ConceptDatabase
     },
     {
       path: '*',

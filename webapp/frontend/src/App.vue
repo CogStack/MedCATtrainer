@@ -3,7 +3,8 @@
     <nav class="navbar">
       <router-link class="app-name" to="/">Med<img class="icon" src="./assets/cat-logo.png" >AT</router-link>
       <router-link class="navbar-brand" to="/">Projects</router-link>
-      <router-link class="navbar-brand" to="/demo">Demo</router-link>
+      <router-link class="navbar-brand" to="/model-explore">Concepts</router-link>
+      <router-link class="navbar-brand" to="/demo">Try Model</router-link>
       <span class="version-id">{{version}}</span>
       <a class="navbar-brand ml-auto small">
         <span @click="loginModal = true">

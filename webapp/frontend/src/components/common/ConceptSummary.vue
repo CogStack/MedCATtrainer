@@ -13,7 +13,11 @@
           <td>
             <span v-if="!altSearch">{{conceptSummary['Name'] || 'n/a'}}</span>
             <span v-if="altSearch" class="alt-concept-picker" @keyup.stop>
-              <concept-picker :project="project"  @pickedResult:concept="selectedCorrectCUI"></concept-picker>
+              <concept-picker :restrict_concept_lookup="project.restrict_concept_lookup"
+                              :cui_filter="project.cuis"
+                              :cdb_search_filter="project.cdb_search_filter"
+                              :concept_db="project.concept_db"
+                              @pickedResult:concept="selectedCorrectCUI"></concept-picker>
               <font-awesome-icon class="cancel" icon="times-circle" @click="cancelReassign"></font-awesome-icon>
             </span>
           </td>
