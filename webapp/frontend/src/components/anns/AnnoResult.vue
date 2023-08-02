@@ -39,13 +39,10 @@ export default {
       const matches = [...resTxt.matchAll(regexp)]
       let outText = '<span>'
       for (let match of matches) {
-        if (outText === '<span>') {
-          outText += `${resTxt.slice(0, match.index)}`
-        } else {
-          outText += `${resTxt.slice(matches[matches.indexOf(match) - 1].index + srcVal.length, match.index)}`
-        }
-        outText += `<span class="${highlightClass}" @click="openAnno">${srcVal}</span>`
-        if (matches.length === 1 || match === matches[-1]) {
+        if (match.index === 60) {
+          // this is the match to use - other matches are spurious, and represent other MedCAT AnnoResults.
+          outText = `<span>${resTxt.slice(0, match.index)}`
+          outText += `<span class="${highlightClass}" @click="openAnno">${srcVal}</span>`
           outText += `${resTxt.slice(match.index + srcVal.length)}</span>`
         }
       }
@@ -56,11 +53,7 @@ export default {
     openAnno () {
       const routeData = this.$router.resolve(
         {
-          name: 'train-annotations',
-          params: {
-            projectId: this.result['project id'],
-            docId: this.result['document id'],
-          },
+          path: `/train-annotations/${this.result['project id']}/${this.result['document id']}`,
           query: {
             annoStart: this.result['start'],
             annoEnd: this.result['end']

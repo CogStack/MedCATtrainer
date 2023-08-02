@@ -13,10 +13,11 @@ export default new Router({
   mode: 'history',
   routes: [
     {
-      path: '/train-annotations/:projectId/:docId?',
+      path: '/train-annotations/:projectId/:docId',
       name: 'train-annotations',
       component: TrainAnnotations,
-      props: true
+      props: true,
+      query: true
     },
     {
       path: '/metrics/',

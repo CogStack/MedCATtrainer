@@ -49,7 +49,9 @@ class ProjectMetrics(object):
                     _anns.pop('meta_anns')
                     output = dict()
                     output['project'] = proj['name']
+                    output['project_id'] = proj['id']
                     output['document_name'] = doc['name']
+                    output['document_id'] = doc['id']
                     output.update(_anns)
                     output.update(meta_anns_dict)
                     ann_lst.append(output)
