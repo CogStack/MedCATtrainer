@@ -36,8 +36,18 @@ export default {
     ents: Array,
     loading: String,
     currentEnt: Object,
-    currentRelStartEnt: Object,
-    currentRelEndEnt: Object,
+    currentRelStartEnt: {
+      default () {
+        return {}
+      },
+      type: Object,
+    },
+    currentRelEndEnt: {
+      default () {
+        return {}
+      },
+      type: Object,
+    },
     addAnnos: Boolean
   },
   data () {
@@ -73,9 +83,9 @@ export default {
           styleClass = `highlight-task-${btnIndex}`
         }
 
-        if ((this.ents[i] === this.currentRelStartEnt) || (this.ents[i].id === (this.currentRelStartEnt || {}).id)) {
+        if (this.ents[i] === this.currentRelStartEnt) {
           styleClass += ' current-rel-start'
-        } else if ((this.ents[i] === this.currentRelEndEnt) || (this.ents[i].id === (this.currentRelEndEnt || {}).id)) {
+        } else if (this.ents[i] === this.currentRelEndEnt) {
           styleClass += ' current-rel-end'
         }
 

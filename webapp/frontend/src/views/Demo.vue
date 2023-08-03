@@ -18,21 +18,17 @@
           <textarea v-model="cuiFilters" class="form-control" name="cui"
                     rows="3" placeholder="Comma separated list: S-91175000, S-84757009"></textarea>
         </div>
-        <div class="form-group">
-          <label>Type IDs Filter</label>
-          <textarea v-model="typeIDsFilters" class="form-control" name="type_ids"
-                    rows="3" placeholder="Comma separated list: T-00010, T00020"></textarea>
-        </div>
         <button @click="annotate()" class="btn btn-primary">Annotate</button>
       </form>
     </div>
     <div class="view-port">
       <div class="clinical-text">
-        <clinical-text :loading="loadingDoc" :text="annotatedText" :ents="ents"
+        <clinical-text :loading="loadingMsg" :text="annotatedText" :ents="ents"
                        :taskName="task" :taskValues="taskValues" @select:concept="selectEntity"></clinical-text>
       </div>
       <div class="sidebar">
-        <concept-summary :selectedEnt="currentEnt" :project="selectedProject"></concept-summary>
+        <concept-summary :selectedEnt="currentEnt" :project="selectedProject"
+                         :searchFilterDBIndex="searchFilterDBIndex"></concept-summary>
       </div>
     </div>
   </div>
@@ -57,13 +53,13 @@ export default {
       projects: [],
       selectedProject: {},
       cuiFilters: '',
-      typeIDsFilters: '',
       ents: [],
       currentEnt: {},
       annotatedText: '',
       loadingMsg: null,
       task: TASK_NAME,
-      taskValues: VALUES
+      taskValues: VALUES,
+      searchFilterDBIndex: null
     }
   },
   created () {
@@ -89,7 +85,6 @@ export default {
         project_id: this.selectedProject.id,
         message: this.exampleText,
         cuis: this.cuiFilters,
-        tuis: this.tuiFilters
       }
       this.loadingMsg = 'Annotating Text...'
       this.$http.post('/api/annotate-text/', payload).then(resp => {
@@ -105,6 +100,22 @@ export default {
     },
     selectEntity (entIndex) {
       this.currentEnt = this.ents[entIndex]
+    },
+    fetchCDBSearchIndex () {
+      if (this.selectedProject.cdb_search_filter.length > 0) {
+        this.$http.get(`/api/concept-dbs/${this.selectedProject.cdb_search_filter[0]}/`).then(resp => {
+          if (resp.data) {
+            this.searchFilterDBIndex = `${resp.data.name}_id_${this.selectedProject.cdb_search_filter}`
+          }
+        })
+      }
+    }
+  },
+  watch: {
+    'selectedProject': {
+      handler () {
+        this.fetchCDBSearchIndex()
+      }
     }
   }
 }

@@ -200,22 +200,6 @@ export default {
         })
       },
       deep: true
-    },
-    'project': {
-      handler () {
-        let that = this
-        if (this.project.cdb_search_filter.length > 0) {
-          this.$http.get(`/api/concept-dbs/${this.project.cdb_search_filter[0]}/`).then(resp => {
-            if (resp.data) {
-              // this is a bit hacky - backend should just return the correct CDB search filter
-              that.$set(that, 'searchFilterDBIndex', `${resp.data.name}_id_${that.project.cdb_search_filter}`)
-              this.fetchDetail(this.selectedEnt, this.searchFilterDBIndex, () => {
-                that.cleanProps()
-              })
-            }
-          })
-        }
-      }
     }
   }
 }
