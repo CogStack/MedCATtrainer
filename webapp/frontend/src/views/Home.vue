@@ -93,14 +93,14 @@
         <template #cell(model_loaded)="data">
           <div v-if="cdbLoaded[data.item.id]">
             <button class="btn btn-outline-success model-up">
-              <font-awesome-icon icon="times" class="clear-model-cache" @click="clearLoadedModel(data.item.id)"></font-awesome-icon>
+              <font-awesome-icon icon="times" class="clear-model-cache" @click="clearLoadedModel(data.item.concept_db)"></font-awesome-icon>
               <font-awesome-icon icon="fa-cloud-arrow-up"></font-awesome-icon>
             </button>
           </div>
           <div v-if="!cdbLoaded[data.item.id]">
-            <button class="btn btn-outline-secondary" @click="loadProjectCDB(data.item.id)">
-              <font-awesome-icon v-if="loadingModel !== data.item.id" icon="fa-cloud-arrow-up"></font-awesome-icon>
-              <font-awesome-icon v-if="loadingModel === data.item.id" icon="spinner" spin></font-awesome-icon>
+            <button class="btn btn-outline-secondary" @click="loadProjectCDB(data.item.concept_db)">
+              <font-awesome-icon v-if="loadingModel !== data.item.concept_db" icon="fa-cloud-arrow-up"></font-awesome-icon>
+              <font-awesome-icon v-if="loadingModel === data.item.concept_db" icon="spinner" spin></font-awesome-icon>
             </button>
           </div>
         </template>
@@ -125,13 +125,18 @@
       <transition name="alert"><div class="alert alert-danger" v-if="modelCacheLoadError" role="alert">Error loading MedCAT model for project</div></transition>
       <transition name="alert"><div class="alert alert-danger" v-if="projectLockedWarning" role="alert">Unable load a locked project. Contact your CogStack administrator to unlock</div></transition>
     </div>
+
     <modal v-if="clearModelModal" :closable="true" @modal:close="clearModelModal = false">
       <div slot="header">
         <h3>Confirm Clear Cached Model State</h3>
       </div>
       <div slot="body">
-        Confirm clearing cached MedCAT Model for Project {{clearModelModal}} (any other Projects that use this model). This will remove any interim training
-        done (if any). To recover the cached model, re-open the project(s), and re-submit all documents. If you're unsure you should not clear the model state.
+        <p>Confirm clearing cached MedCAT Model for Concept DB {{clearModelModal}} (and any other Projects that use this model). </p>
+        <p>
+          This will remove any interim training done (if any).
+          To recover the cached model, re-open the project(s), and re-submit all documents.
+          If you're unsure you should not clear the model state.
+        </p>
       </div>
       <div slot="footer">
         <button class="btn btn-primary" @click="confirmClearLoadedModel(clearModelModal)">Confirm</button>
@@ -267,18 +272,18 @@ export default {
         this.cdbLoaded = resp.data
       })
     },
-    clearLoadedModel (projId) {
-      this.clearModelModal = projId
+    clearLoadedModel (cdbId) {
+      this.clearModelModal = cdbId
     },
-    confirmClearLoadedModel (projId) {
+    confirmClearLoadedModel (cdbId) {
       this.clearModelModal = false
-      this.$http.delete(`/api/cache-model/${projId}/`).then(_ => {
+      this.$http.delete(`/api/cache-model/${cdbId}/`).then(_ => {
         this.fetchCDBsLoaded()
       })
     },
-    loadProjectCDB (projId) {
-      this.loadingModel = projId
-      this.$http.post(`api/cache-model/${projId}/`).then(_ => {
+    loadProjectCDB (cdbId) {
+      this.loadingModel = cdbId
+      this.$http.get(`/api/cache-model/${cdbId}/`).then(_ => {
         this.loadingModel = false
         this.fetchCDBsLoaded()
       }).catch(_ => {

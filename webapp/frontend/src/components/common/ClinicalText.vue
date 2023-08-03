@@ -1,7 +1,7 @@
 <template>
   <div class="note-container">
-    <loading-overlay :loading="loading">
-      <div slot="message">Preparing Document...</div>
+    <loading-overlay :loading="loading !== null">
+      <div slot="message">{{loading}}</div>
     </loading-overlay>
     <div v-if="!loading" class="clinical-note">
       <v-runtime-template ref="clinicalText" :template="formattedText"></v-runtime-template>
@@ -34,7 +34,7 @@ export default {
     taskValues: Array,
     task: Object,
     ents: Array,
-    loading: Boolean,
+    loading: String,
     currentEnt: Object,
     currentRelStartEnt: Object,
     currentRelEndEnt: Object,
