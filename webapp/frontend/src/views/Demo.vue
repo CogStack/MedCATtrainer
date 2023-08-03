@@ -61,7 +61,7 @@ export default {
       ents: [],
       currentEnt: {},
       annotatedText: '',
-      loadingDoc: false,
+      loadingMsg: null,
       task: TASK_NAME,
       taskValues: VALUES
     }
@@ -91,9 +91,9 @@ export default {
         cuis: this.cuiFilters,
         tuis: this.tuiFilters
       }
-      this.loadingDoc = true
+      this.loadingMsg = 'Annotating Text...'
       this.$http.post('/api/annotate-text/', payload).then(resp => {
-        this.loadingDoc = false
+        this.loadingMsg = null
         this.ents = resp.data['entities'].map(e => {
           e.assignedValues = {}
           e.assignedValues[this.task] = this.taskValues[0]

@@ -59,7 +59,7 @@ urlpatterns = [
     path('api/version/', api.views.version),
     path('api/concept-db-search-index-created/', api.views.concept_search_index_available),
     path('api/model-loaded/', api.views.model_loaded),
-    path('api/cache_model/<int:cdb_id>', api.views.cache_model),
+    path('api/cache-model/<int:cdb_id>/', api.views.cache_model),
     path('api/upload-deployment/', api.views.upload_deployment),
     path('api/model-concept-children/<int:cdb_id>/', api.views.cdb_cui_children),
     path('api/metrics/', api.views.metrics),

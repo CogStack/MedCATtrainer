@@ -28,10 +28,10 @@
         <div class="app-main">
           <document-summary :docs="docs" :moreDocs="nextDocSetUrl !== null"
                             :validatedDocIds="validatedDocuments"
-                            :selectedDocId="currentDoc !== null ? currentDoc.id : null" :loadingDoc="loadingDoc"
+                            :selectedDocId="currentDoc !== null ? currentDoc.id : null" :loadingDoc="loadingMsg !== null"
                             @request:nextDocSet="fetchDocuments()" @request:loadDoc="loadDoc"></document-summary>
           <div class="main-viewport">
-            <clinical-text :loading="loadingDoc" :text="currentDoc !== null ? currentDoc.text : null"
+            <clinical-text :loading="loadingMsg" :text="currentDoc !== null ? currentDoc.text : null"
                            :current-ent="currentEnt" :ents="ents" :task-name="taskName" :task-values="taskValues"
                            :addAnnos="true" :current-rel-start-ent="(currentRel || {}).start_entity"
                            :current-rel-end-ent="(currentRel || {}).end_entity"
@@ -319,7 +319,7 @@ export default {
       currentDoc: null,
       currentEnt: null,
       currentRel: null,
-      loadingDoc: false,
+      loadingMsg: null,
       resubmittingAllDocs: false,
       resubmitSuccess: false,
       helpModal: false,
@@ -425,25 +425,32 @@ export default {
       this.prepareDoc()
     },
     prepareDoc () {
-      this.loadingDoc = true
-      let payload = {
-        project_id: this.project.id,
-        document_ids: [this.currentDoc.id]
-      }
-      if (this.validatedDocuments.indexOf(this.currentDoc.id) === -1) {
-        payload['update'] = 1
-      }
-      this.$http.post('/api/prepare-documents/', payload).then(_ => {
-        // assuming a 200 is fine here.
-        this.fetchEntities()
-      }).catch(err => {
-        this.errors.modal = true
-        if (err.response) {
-          this.errors.message = err.response.data.message || 'Internal Server Error.'
-          this.errors.description = err.response.data.description || ''
-          this.errors.stacktrace = err.response.data.stacktrace
+      this.loadingMsg = "Loading MedCAT model..."
+      this.$http.get(`/api/cache-model/${this.project.concept_db}/`).then(_ => {
+        this.loadingMsg = "Preparing Document..."
+        let payload = {
+          project_id: this.project.id,
+          document_ids: [this.currentDoc.id]
         }
+        if (this.validatedDocuments.indexOf(this.currentDoc.id) === -1) {
+          payload['update'] = 1
+        }
+        this.$http.post('/api/prepare-documents/', payload).then(_ => {
+          // assuming a 200 is fine here.
+          this.fetchEntities()
+        }).catch(err => {
+          this.errors.modal = true
+          if (err.response) {
+            this.errors.message = err.response.data.message || 'Internal Server Error.'
+            this.errors.description = err.response.data.description || ''
+            this.errors.stacktrace = err.response.data.stacktrace
+          }
+        })
+      }).catch(_ => {
+        this.errors.modal = true
+        this.errors.mesasge = "Internal server error - cannot load MedCAT model. Contact your MedCAT admin quoting this project ID"
       })
+
     },
     fetchEntities (selectedEntId) {
       let params = this.nextEntSetUrl === null ? `?project=${this.projectId}&document=${this.currentDoc.id}`
@@ -484,7 +491,7 @@ export default {
             : this.ents[0]
           this.metaAnnotate = this.currentEnt && (this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_ALTERNATIVE ||
             this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_CORRECT)
-          this.loadingDoc = false
+          this.loadingMsg = null
           if (this.$route.query.annoStart && this.$route.query.annoEnd) {
             const ent = _.find(this.ents, e => {
               return Number(this.$route.query.annoStart) === e.start_ind &
@@ -709,10 +716,10 @@ export default {
         }
         subPromises.push(this.$http.post(`/api/submit-document/`, payload))
         this.resubmittingAllDocs = true
-        this.loadingDoc = true
+        this.loadingMsg = "Submitting document annotations..."
         Promise.all(subPromises).then(_ => {
           this.resubmitSuccess = true
-          this.loadingDoc = false
+          this.loadingMsg = null
           this.resubmittingAllDocs = false
           const that = this
           setTimeout(function () {
@@ -720,7 +727,7 @@ export default {
           }, 10000)
         }).catch(() => {
           this.resubmittingAllDocs = true
-          this.loadingDoc = false
+          this.loadingMsg = null
           this.errors.modal = true
           this.errors.message = 'Failure re-submitting all validated documents: Refresh Project'
         })
@@ -740,7 +747,7 @@ export default {
       window.addEventListener('keydown', this.keydown)
     },
     confirmReset () {
-      this.loadingDoc = true
+      this.loadingMsg = "Resetting document annotations..."
       const payload = {
         project_id: this.project.id,
         document_ids: [this.currentDoc.id],
@@ -749,7 +756,7 @@ export default {
       this.$http.post('/api/prepare-documents/', payload).then(_ => {
         this.fetchEntities()
         this.resetModal = false
-        this.loadingDoc = false
+        this.loadingMsg = null
       }).catch(err => {
         this.resetModal = false
         this.errors.modal = true

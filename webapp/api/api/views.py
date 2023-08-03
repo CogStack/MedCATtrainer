@@ -628,15 +628,20 @@ def upload_deployment(request):
     return Response("successfully uploaded", 200)
 
 
-@api_view(http_method_names=['GET'])
-def cache_model(_, cdb_id):
-    get_cached_cdb(cdb_id, CDB_MAP)
-    return Response("success", 200)
+@api_view(http_method_names=['GET', 'DELETE'])
+def cache_model(request, cdb_id):
+    if request.method == 'GET':
+        get_cached_cdb(cdb_id, CDB_MAP)
+    elif request.method == 'DELETE' and cdb_id in CDB_MAP:
+        del CDB_MAP[cdb_id]
+    else:
+        return Response(f'Invalid method or cdb_id:{cdb_id} is invalid / not loaded', 400)
+    return Response('success', 200)
 
 
 @api_view(http_method_names=['GET'])
 def model_loaded(_):
-    return Response({p.id: get_cached_medcat(CAT_MAP, p) is not None
+    return Response({p.id: False if not p.concept_db else p.concept_db.id in CDB_MAP
                      for p in ProjectAnnotateEntities.objects.all()})
 
 
