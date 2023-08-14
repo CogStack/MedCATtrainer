@@ -1,7 +1,7 @@
 <template>
   <div class="note-container">
-    <loading-overlay :loading="loading">
-      <div slot="message">Preparing Document...</div>
+    <loading-overlay :loading="loading !== null">
+      <div slot="message">{{loading}}</div>
     </loading-overlay>
     <div v-if="!loading" class="clinical-note">
       <v-runtime-template ref="clinicalText" :template="formattedText"></v-runtime-template>
@@ -34,10 +34,20 @@ export default {
     taskValues: Array,
     task: Object,
     ents: Array,
-    loading: Boolean,
+    loading: String,
     currentEnt: Object,
-    currentRelStartEnt: Object,
-    currentRelEndEnt: Object,
+    currentRelStartEnt: {
+      default () {
+        return {}
+      },
+      type: Object,
+    },
+    currentRelEndEnt: {
+      default () {
+        return {}
+      },
+      type: Object,
+    },
     addAnnos: Boolean
   },
   data () {
@@ -73,9 +83,9 @@ export default {
           styleClass = `highlight-task-${btnIndex}`
         }
 
-        if ((this.ents[i] === this.currentRelStartEnt) || (this.ents[i].id === (this.currentRelStartEnt || {}).id)) {
+        if (this.ents[i] === this.currentRelStartEnt) {
           styleClass += ' current-rel-start'
-        } else if ((this.ents[i] === this.currentRelEndEnt) || (this.ents[i].id === (this.currentRelEndEnt || {}).id)) {
+        } else if (this.ents[i] === this.currentRelEndEnt) {
           styleClass += ' current-rel-end'
         }
 
