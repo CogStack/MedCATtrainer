@@ -1,4 +1,4 @@
-FROM python:3.10
+FROM python:3.11
 
 # Update and upgrade everything
 RUN apt-get update -y && \
@@ -9,6 +9,10 @@ RUN apt-get install -y vim
 
 # Get node and npm
 RUN apt install -y nodejs && apt-get install -y npm && npm install -g npm@latest
+
+# Install Rust - for tokenziers dep in medcat.
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
 
 # Copy project
 WORKDIR /home
