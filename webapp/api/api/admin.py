@@ -375,6 +375,8 @@ admin.site.register(Dataset, DatasetAdmin)
 class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
     model = ProjectAnnotateEntities
     actions = [download, download_without_text, download_without_text_with_doc_names, reset_project, clone_projects]
+    list_filter = ('members', 'project_status', 'project_locked', 'annotation_classification')
+    list_display = ['name']
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'concept_db':
