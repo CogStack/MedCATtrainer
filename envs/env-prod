@@ -1,3 +1,7 @@
+### Required for later numpy versions
+OPENBLAS_NUM_THREADS=1
+
+### MedCAT cfg ###
 MEDCAT_CONFIG_FILE=/home/configs/base.txt
 ENV=prod
 
