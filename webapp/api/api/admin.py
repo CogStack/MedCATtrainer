@@ -35,9 +35,6 @@ def reset_project(modeladmin, request, queryset):
         # Remove all annotations and cascade to meta anns
         AnnotatedEntity.objects.filter(project=project).delete()
 
-        # Remove cui_counts
-        ProjectCuiCounter.objects.filter(project=project).delete()
-
         # Set all validated documents to none
         project.validated_documents.clear()
 
@@ -452,13 +449,6 @@ class ConceptDBAdmin(admin.ModelAdmin):
     actions = [import_concepts, delete_indexed_concepts, reset_cdb_filters]
 
 admin.site.register(ConceptDB, ConceptDBAdmin)
-
-
-class ProjectCuiCounterAdmin(admin.ModelAdmin):
-    model = ProjectCuiCounter
-    list_filter = ('project',)
-    list_display = ['entity', 'count', 'project']
-admin.site.register(ProjectCuiCounter, ProjectCuiCounterAdmin)
 
 
 def remove_all_documents(modeladmin, request, queryset):

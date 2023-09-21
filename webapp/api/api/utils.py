@@ -13,7 +13,7 @@ from medcat.utils.filters import check_filters
 from medcat.utils.helpers import tkns_from_doc
 from medcat.vocab import Vocab
 
-from .models import Entity, AnnotatedEntity, ICDCode, OPCSCode, ProjectAnnotateEntities, ProjectCuiCounter, \
+from .models import Entity, AnnotatedEntity, ICDCode, OPCSCode, ProjectAnnotateEntities, \
     ConceptDB
 
 log = logging.getLogger('trainer')
@@ -68,35 +68,27 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
         else:
             entity = Entity.objects.get(label=label)
 
-        cui_count_limit = cat.config.general.get("cui_count_limit", -1)
-        pcc = ProjectCuiCounter.objects.filter(project=project, entity=entity).first()
-        if pcc is not None:
-            cui_count = pcc.count
-        else:
-            cui_count = 1
+        if AnnotatedEntity.objects.filter(project=project,
+                                          document=document,
+                                          start_ind=ent.start_char,
+                                          end_ind=ent.end_char).count() == 0:
+            # If this entity doesn't exist already
+            ann_ent = AnnotatedEntity()
+            ann_ent.user = user
+            ann_ent.project = project
+            ann_ent.document = document
+            ann_ent.entity = entity
+            ann_ent.value = ent.text
+            ann_ent.start_ind = ent.start_char
+            ann_ent.end_ind = ent.end_char
+            ann_ent.acc = ent._.context_similarity
 
-        if cui_count_limit < 0 or cui_count <= cui_count_limit:
-            if AnnotatedEntity.objects.filter(project=project,
-                                              document=document,
-                                              start_ind=ent.start_char,
-                                              end_ind=ent.end_char).count() == 0:
-                # If this entity doesn't exist already
-                ann_ent = AnnotatedEntity()
-                ann_ent.user = user
-                ann_ent.project = project
-                ann_ent.document = document
-                ann_ent.entity = entity
-                ann_ent.value = ent.text
-                ann_ent.start_ind = ent.start_char
-                ann_ent.end_ind = ent.end_char
-                ann_ent.acc = ent._.context_similarity
+            MIN_ACC = cat.config.linking.get('similarity_threshold_trainer', 0.2)
+            if ent._.context_similarity < MIN_ACC:
+                ann_ent.deleted = True
+                ann_ent.validated = True
 
-                MIN_ACC = cat.config.linking.get('similarity_threshold_trainer', 0.2)
-                if ent._.context_similarity < MIN_ACC:
-                    ann_ent.deleted = True
-                    ann_ent.validated = True
-
-                ann_ent.save()
+            ann_ent.save()
 
 
 def _create_linked_codes(mod: Union[Type[ICDCode], Type[OPCSCode]], linked_codes: List[Dict], cdb_model: ConceptDB):
@@ -234,18 +226,6 @@ def train_medcat(cat, project, document):
                           spacy_entity=spacy_entity,
                           negative=ann.deleted,
                           devalue_others=manually_created)
-
-            # Add entity to cui_counter
-            pcc = ProjectCuiCounter.objects.filter(project=project, entity=ann.entity).first()
-            if pcc is not None:
-                pcc.count = pcc.count + 1
-                pcc.save()
-            else:
-                pcc = ProjectCuiCounter()
-                pcc.project = project
-                pcc.entity = ann.entity
-                pcc.count = 1
-                pcc.save()
 
     # Completely remove concept names that the user killed
     killed_anns = AnnotatedEntity.objects.filter(project=project, document=document, killed=True)
