@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/CogStack/MedCATtrainer/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/CogStack/MedCATtrainer/actions/workflows/qa.yml?query=branch%3Amaster)
 [![Build Status](https://github.com/CogStack/MedCATtrainer/actions/workflows/qa.yml/badge.svg?branch=master)](https://github.com/CogStack/MedCATtrainer/actions/workflows/qa.yml?query=branch%3Amaster)
-[![Build Status](https://github.com/CogStack/MedCATtrainer/actions/workflows/release.yml/badge.svg?branch=master)](https://github.com/CogStack/MedCATtrainer/actions/workflows/qa.yml?query=branch%3Amaster)
+[![Build Status](https://github.com/CogStack/MedCATtrainer/actions/workflows/release.yml/badge.svg)](https://github.com/CogStack/MedCATtrainer/actions/workflows/qa.yml)
 [![Documentation Status](https://readthedocs.org/projects/medcattrainer/badge/?version=latest)](https://medcattrainer.readthedocs.io/en/latest/?badge=latest)
 [![Latest release](https://img.shields.io/github/v/release/CogStack/MedCATtrainer)](https://github.com/CogStack/MedCATtrainer/releases/latest)
 
