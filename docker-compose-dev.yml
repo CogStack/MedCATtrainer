@@ -22,7 +22,7 @@ services:
       - ./envs/env
     environment:
       - MCT_VERSION=latest
-    command: /home/run.sh
+    command: /home/scripts/run.sh
 
   nginx:
     build:

@@ -19,7 +19,7 @@ services:
       - ./envs/env-prod
     environment:
       - MCT_VERSION=v2.11.2
-    command: /home/run.sh
+    command: /home/scripts/run.sh
 
   nginx:
     container_name: medcattrainer_nginx
