@@ -30,4 +30,4 @@ ARG SPACY_MODELS="en_core_web_md"
 RUN for SPACY_MODEL in ${SPACY_MODELS}; do python -m spacy download ${SPACY_MODEL}; done
 
 WORKDIR /home/api/
-RUN chmod a+x /home/run.sh
+RUN chmod a+x /home/scripts/run.sh

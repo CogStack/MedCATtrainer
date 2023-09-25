@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# run db backup script before doing anything
+/home/scripts/backup_db.sh
+
 # Collect static files and migrate if needed
 python /home/api/manage.py collectstatic --noinput
 python /home/api/manage.py makemigrations --noinput
@@ -17,7 +20,7 @@ if User.objects.count() == 0:
 " | python manage.py shell
 
 if [ $LOAD_EXAMPLES ]; then
-  python /home/load_examples.py &
+  python /home/scripts/load_examples.py &
 fi
 
 uwsgi --http-timeout 360s --http :8000 --master --chdir /home/api/  --module core.wsgi
