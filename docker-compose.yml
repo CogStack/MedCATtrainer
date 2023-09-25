@@ -12,6 +12,7 @@ services:
       - api-media:/home/api/media
       - api-static:/home/api/static
       - api-db:/home/api/db
+      - api-db-backup:/home/api/db-backup
     env_file:
       - ./envs/env
     environment:
@@ -45,4 +46,6 @@ volumes:
   api-media:
   api-static:
   api-db:
+  api-db-backup:
   solr-data:
+
