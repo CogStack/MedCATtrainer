@@ -22,6 +22,21 @@ services:
       - MCT_VERSION=v2.11.2
     command: /home/scripts/run.sh
 
+  # crontab - for db backup
+  medcattrainer-db-backup:
+    image: cogstacksystems/medcat-trainer:v2.11.2
+    restart: always
+    volumes:
+      - ./configs:/home/configs
+      - api-media:/home/api/media
+      - api-static:/home/api/static
+      - api-db:/home/api/db
+      - api-db-backup:/home/api/db-backup
+    env_file:
+      - ./envs/env
+    entrypoint: /home/scripts/entry.sh
+    command: cron -f -l 2
+
   nginx:
     container_name: medcattrainer_nginx
     image: cogstacksystems/medcat-trainer-nginx:v2.11.2
