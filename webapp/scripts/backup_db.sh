@@ -4,6 +4,10 @@ if [ -n "${DB_BACKUP_DIR}" ] && [ -f "${DB_PATH}" ]; then
   echo "Found backup dir location: ${DB_BACKUP_DIR} and DB_PATH: ${DB_PATH}"
   if [ ! -d "${DB_BACKUP_DIR}" ]; then
     mkdir DB_BACKUP_DIR
+  else
+    # remove backups older than 90 days.
+    echo "Checking age of current backups - removing any older than 90 days.."
+    find ${DB_BACKUP_DIR} -mtime +90 -type f -delete
   fi
   BACKUP_NAME=db-backup-$(date +"%Y-%m-%d__%H-%M-%S").sqlite3
   cp $DB_PATH ${DB_BACKUP_DIR}/${BACKUP_NAME}

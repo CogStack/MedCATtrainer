@@ -26,11 +26,20 @@ or removed from a later version.
 
 ## Backup and Restore
 
+### Backup
 Before updating to a new release, a backup will be created in the `DB_BACKUP_DIR`, as configured in `envs/env`.
+A further crontab runs the same backup script at 10pm every night. This does not cause any downtime and will look like
+this in the logs:
+```shell
+medcattrainer-medcattrainer-db-backup-1  | Found backup dir location: /home/api/db-backup and DB_PATH: /home/api/db/db.sqlite3
+medcattrainer-medcattrainer-db-backup-1  | Backed up existing DB to /home/api/db-backup/db-backup-2023-09-26__23-26-01.sqlite3
+medcattrainer-medcattrainer-db-backup-1  | To restore this backup use $ ./restore.sh /home/api/db-backup/db-backup-2023-09-26__23-26-01.sqlite3
+```
 
-This is automatically done each time the service starts, and any migrations are performed, in the events of a new release
-for example.
+A backup is also automatically performed each time the service starts, and any migrations are performed, in the events of a new release
+introducing a breaking change and corrupting a DB.
 
+### Restore
 If a DB is corrupted or needs to be restored to an existing backed up db use the following commands, whilst the service is running:
 
 ```shell
@@ -48,4 +57,5 @@ Found db-backup-2023-09-25__23-21-39.sqlite3 - y to confirm backup: y  # you'll 
 Restored db-backup-2023-09-25__23-21-39.sqlite3 to /home/db/db.sqlite3
 ```
 
-The `restore_db.sh` scipt will automatically restore the latest db file, if no file is specified.
+The `restore_db.sh` script will automatically restore the latest db file, if no file is specified.
+

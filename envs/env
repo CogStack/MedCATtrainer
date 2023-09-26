@@ -27,3 +27,4 @@ DB_DIR=/home/api/db
 # currently only supports sqlite3 dbs
 DB_PATH=${DB_DIR}/db.sqlite3
 DB_BACKUP_DIR=/home/api/db-backup
+
