@@ -24,3 +24,5 @@ if [ $LOAD_EXAMPLES ]; then
 fi
 
 uwsgi --http-timeout 360s --http :8000 --master --chdir /home/api/  --module core.wsgi
+
+
