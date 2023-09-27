@@ -18,11 +18,12 @@ services:
       - api-media:/home/api/media
       - api-static:/home/api/static
       - api-db:/home/api/db
+      - api-db-backup:/home/api/db-backup
     env_file:
       - ./envs/env
     environment:
       - MCT_VERSION=latest
-    command: /home/run.sh
+    command: /home/scripts/run.sh
 
   nginx:
     build:
@@ -53,4 +54,5 @@ volumes:
   api-media:
   api-static:
   api-db:
+  api-db-backup:
   solr-data:
