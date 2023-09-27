@@ -22,10 +22,7 @@ WORKDIR /home
 COPY ./ .
 
 # copy backup crontab and chmod scripts
-RUN chmod u+x /home/scripts/entry.sh && chmod u+x /home/scripts/crontab &&
-RUN cp /home/scripts/crontab /etc/crontab
-
-RUN chmod 0744 /etc/crontab && chmod u+x /home/app-backend/notify/entry.sh
+RUN chmod u+x /home/scripts/entry.sh && chmod u+x /home/scripts/crontab && cp /home/scripts/crontab /etc/crontab
 
 # Build frontend
 WORKDIR /home/frontend
