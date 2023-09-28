@@ -18,13 +18,16 @@ class ApiConfig(AppConfig):
                         'Attempting to resubmit all currently submitted state documents')
             projects = ProjectAnnotateEntities.objects.all()
             for project in projects:
-                validated_docs = project.validated_documents.all()
-                if len(validated_docs):
-                    for doc in validated_docs:
-                        try:
-                            _submit_document(project, doc)
-                            logger.info("Submitted doc: %s", doc.name)
-                        except Exception as e:
-                            logger.error("Failed to re-submit doc on startup with exception %s", e)
-                logger.info("Finished resubmitting Project %s", project.name)
+                if project.project_status == 'A':
+                    logger.info('Found project %s - in annotating state - resubmitting all validated documents...',
+                                project.name)
+                    validated_docs = project.validated_documents.all()
+                    if len(validated_docs):
+                        for doc in validated_docs:
+                            try:
+                                _submit_document(project, doc)
+                                logger.info("Submitted doc: %s", doc.name)
+                            except Exception as e:
+                                logger.error("Failed to re-submit doc on startup with exception %s", e)
+                    logger.info("Finished resubmitting Project %s", project.name)
         logger.info("MedCATTrainer App API ready...")
