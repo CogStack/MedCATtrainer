@@ -22,7 +22,8 @@ MAX_DATASET_SIZE=10000
 CONCEPT_SEARCH_SERVICE_HOST=solr
 CONCEPT_SEARCH_SERVICE_PORT=8983
 
-### DB backup dir - should be set ideally to a mounted / backed up drive###
+### DB backup dir - should be set ideally to a mounted / backed up drive ###
+# volume mount location, default docker host system volume location, this might be different in /etc/docker/daemon.json
 DB_DIR=/home/api/db
 # currently only supports sqlite3 dbs
 DB_PATH=${DB_DIR}/db.sqlite3
