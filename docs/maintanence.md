@@ -50,7 +50,7 @@ a2489b0c681b   cogstacksystems/medcat-trainer-nginx:v2.11.2   "/docker-entrypoin
 2b250a0975fe   cogstacksystems/medcat-trainer:v2.11.2         "/home/run.sh"           4 days ago   Up 4 days                                                       medcattrainer-medcattrainer-1
 $ docker exec -it 2b250a0975fe bash
 root@2b250a0975fe:/home/api# cd ..
-$ source restore_db.sh db-backup-2023-09-25__23-21-39.sqlite3  # source the restore.sh script
+$ restore_db.sh db-backup-2023-09-25__23-21-39.sqlite3  # run the restore.sh script
 Found backup dir location: /home/api/db-backup, found db path: home/api/db/db.sqlite3
 DB file to restore: db-backup-2023-09-25__23-21-39.sqlite3
 Found db-backup-2023-09-25__23-21-39.sqlite3 - y to confirm backup: y  # you'll need tp confirm this is the correct file to restore.

@@ -23,7 +23,8 @@ CONCEPT_SEARCH_SERVICE_PORT=8983
 
 ### DB backup dir ###
 DB_DIR=/home/api/db
-DB_PATH=${DB_DIR}/db.sqlite3   # currently only supports sqlite3 dbs
+# currently only supports sqlite3 dbs
+DB_PATH=${DB_DIR}/db.sqlite3
 DB_BACKUP_DIR=/home/api/db-backup
 
 # Resubmit all on startup

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # run db backup script before doing anything
-source /home/api/scripts/backup_db.sh
+/home/scripts/backup_db.sh
 
 # Collect static files and migrate if needed
 python /home/api/manage.py collectstatic --noinput
@@ -24,5 +24,3 @@ if [ $LOAD_EXAMPLES ]; then
 fi
 
 uwsgi --http-timeout 360s --http :8000 --master --chdir /home/api/  --module core.wsgi
-
-
