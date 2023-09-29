@@ -382,29 +382,19 @@ def import_cdb_concepts(request):
     return Response({'message': 'submitted cdb import job.'})
 
 
-@api_view(http_method_names=['POST'])
-def submit_document(request):
-    # Get project id
-    p_id = request.data['project_id']
-    d_id = request.data['document_id']
-
-    # Get project and the right version of cat
-    project = ProjectAnnotateEntities.objects.get(id=p_id)
-    document = Document.objects.get(id=d_id)
-
-    cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
-                     CAT_MAP=CAT_MAP, project=project)
-
+def _submit_document(project: ProjectAnnotateEntities, document: Document):
     if project.train_model_on_submit:
         try:
+            cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
+                             CAT_MAP=CAT_MAP, project=project)
             train_medcat(cat, project, document)
         except Exception as e:
             if project.vocab.id:
                 if len(VOCAB_MAP[project.vocab.id].unigram_table) == 0:
-                    return HttpResponseServerError('Vocab is missing the unigram table. On the vocab instance '
+                    return Exception('Vocab is missing the unigram table. On the vocab instance '
                                                    'use vocab.make_unigram_table() to build')
             else:
-                return HttpResponseServerError(e.message)
+                raise e
 
     # Add cuis to filter if they did not exist
     cuis = []
@@ -422,6 +412,22 @@ def submit_document(request):
         if extra_doc_cuis:
             project.cuis += ',' + ','.join(extra_doc_cuis)
             project.save()
+
+
+@api_view(http_method_names=['POST'])
+def submit_document(request):
+    # Get project id
+    p_id = request.data['project_id']
+    d_id = request.data['document_id']
+
+    # Get project and the right version of cat
+    project = ProjectAnnotateEntities.objects.get(id=p_id)
+    document = Document.objects.get(id=d_id)
+
+    try:
+        _submit_document(project, document)
+    except Exception as e:
+        HttpResponseServerError(e.message)
 
     return Response({'message': 'Document submited successfully'})
 

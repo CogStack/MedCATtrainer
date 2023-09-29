@@ -17,4 +17,3 @@ else
   echo "No DB_BACKUP_DIR env var found or DB_PATH . This should be set in env vars. No backups will be created"
   return 0
 fi
-

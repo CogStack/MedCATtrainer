@@ -28,3 +28,5 @@ DB_DIR=/home/api/db
 DB_PATH=${DB_DIR}/db.sqlite3
 DB_BACKUP_DIR=/home/api/db-backup
 
+# Resubmit all on startup
+RESUBMIT_ALL_ON_STARTUP=1
