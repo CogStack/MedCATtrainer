@@ -16,7 +16,7 @@ RUN apt install -y nodejs && apt install -y npm
 # Install Rust - for tokenziers dep in medcat.
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
-RUN apt-get install build-essential g++ clang
+RUN apt-get install -y build-essential g++ clang
 
 # Copy project
 WORKDIR /home
