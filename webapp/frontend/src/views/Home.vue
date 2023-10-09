@@ -243,9 +243,7 @@ export default {
           if (resp.data.next) {
             this.fetchPage(resp.data.next)
           } else {
-            this.fetchCDBsLoaded()
-            this.fetchSearchIndexStatus()
-            this.loadingProjects = false
+            this.postLoadedProjects()
           }
         }).catch(() => {
           this.$cookie.delete('username')
@@ -263,9 +261,14 @@ export default {
         if (resp.data.next) {
           this.fetchPage(resp.data.next)
         } else {
-          this.fetchCDBsLoaded()
+          this.postLoadedProjects()
         }
       })
+    },
+    postLoadedProjects () {
+      this.fetchCDBsLoaded()
+      this.fetchSearchIndexStatus()
+      this.loadingProjects = false
     },
     fetchCDBsLoaded () {
       this.$http.get('/api/model-loaded/').then(resp => {

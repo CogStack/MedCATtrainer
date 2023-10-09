@@ -12,8 +12,8 @@ class ApiConfig(AppConfig):
     def ready(self):
         from api.views import _submit_document
         from api.models import ProjectAnnotateEntities
-        resubmit_all = os.environ.get('RESUBMIT_ALL_ON_STARTUP', False)
-        if resubmit_all:
+        resubmit_all = os.environ.get('RESUBMIT_ALL_ON_STARTUP', None)
+        if resubmit_all is not None and resubmit_all.lower() in ('1', 'y', 'true'):
             logger.info('Found env var RESUBMIT_ALL_ON_STARTUP is True. '
                         'Attempting to resubmit all currently submitted state documents')
             projects = ProjectAnnotateEntities.objects.all()
