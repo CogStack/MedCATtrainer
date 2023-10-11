@@ -46,8 +46,8 @@
           </b-tooltip>
         </template>
         <template #head(anno_class)="">
-          <div id="dataset-header">Annotation Dataset</div>
-          <b-tooltip target="dataset-header"
+          <div id="anno-class-header">Annotation Dataset</div>
+          <b-tooltip target="anno-class-header"
                      triggers="hover"
                      container="projectTable">
             Annotation set classification.
@@ -57,6 +57,15 @@
             <div>
               <font-awesome-icon class="status-cell success" icon="globe"></font-awesome-icon> indicates global annotations are collected suitable for use within a global model.
             </div>
+          </b-tooltip>
+        </template>
+
+        <template #head(progress)="">
+          <div id="progress-header">Progress</div>
+          <b-tooltip target="progress-header"
+                     triggers="hover"
+                     container="projectTable">
+            Number of validated documents / total number of documents configured in the project
           </b-tooltip>
         </template>
         <template #cell(locked)="data">
@@ -376,13 +385,13 @@ export default {
     },
     progressFormatter (value, key, item) {
       let txtColorClass = 'good-perf'
-      if (item['percent_progress'] < 45) {
+      if (item['percent_progress'] < 80) {
         txtColorClass = 'bad-perf'
       }
       return `
-        <div style="position: relative;">
+        <div class="progress-container ${txtColorClass}">
             ${value}
-            <div class="gradient-fill ${txtColorClass}" style="width: calc(${item['percent_progress']}%);"></div>
+            <div class="progress-gradient-fill" style="width: calc(${item['percent_progress']}%);"></div>
         </div>
 
       `
@@ -391,7 +400,7 @@ export default {
 }
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 h3 {
   margin: 10%
 }
@@ -480,7 +489,7 @@ h3 {
   padding-left: 2px;
 }
 
-.gradient-fill {
+.progress-gradient-fill {
   position: absolute;
   z-index: -1;
   top: 0;
