@@ -734,3 +734,23 @@ def generate_concept_filter(request):
             resp['filter'] = final_filter
         return Response(resp)
     return HttpResponseBadRequest('Missing either cuis or cdb_id param. Cannot generate filter.')
+
+
+@api_view(http_method_names=['GET'])
+def project_progress(request):
+    projects = [int(p) for p in request.GET.get('projects', []).split(',')]
+
+    projects2datasets = {p.id: (p, p.dataset) for p in [ProjectAnnotateEntities.objects.filter(id=p_id).first()
+                                                        for p_id in projects]}
+
+    out = {}
+    ds_doc_counts = {}
+    for p, (proj, ds) in projects2datasets.items():
+        val_docs = proj.validated_documents.count()
+        ds_doc_count = ds_doc_counts.get(ds.id)
+        if ds_doc_count is None:
+            ds_doc_count = Document.objects.filter(dataset=ds).count()
+            ds_doc_counts[ds.id] = ds_doc_count
+        out[p] = {'validated_count': val_docs, 'dataset_count': ds_doc_count}
+
+    return Response(out)

@@ -46,8 +46,8 @@
           </b-tooltip>
         </template>
         <template #head(anno_class)="">
-          <div id="dataset-header">Annotation Dataset</div>
-          <b-tooltip target="dataset-header"
+          <div id="anno-class-header">Annotation Dataset</div>
+          <b-tooltip target="anno-class-header"
                      triggers="hover"
                      container="projectTable">
             Annotation set classification.
@@ -57,6 +57,15 @@
             <div>
               <font-awesome-icon class="status-cell success" icon="globe"></font-awesome-icon> indicates global annotations are collected suitable for use within a global model.
             </div>
+          </b-tooltip>
+        </template>
+
+        <template #head(progress)="">
+          <div id="progress-header">Progress</div>
+          <b-tooltip target="progress-header"
+                     triggers="hover"
+                     container="projectTable">
+            Number of validated documents / total number of documents configured in the project
           </b-tooltip>
         </template>
         <template #cell(locked)="data">
@@ -115,6 +124,9 @@
         <template #cell(save_model)="data">
           <button class="btn btn-outline-primary" :disabled="saving" @click="saveModel(data.item.id)"><font-awesome-icon icon="save"></font-awesome-icon></button>
         </template>
+        <template #cell(progress)="data">
+          <div v-html="data.value"></div>
+        </template>
       </b-table>
     </div>
     <div>
@@ -172,7 +184,8 @@ export default {
           { key: 'create_time', label: 'Create Time', sortable: true },
           { key: 'cuis', label: 'Concepts' },
           { key: 'require_entity_validation', label: 'Annotate / Validate' },
-          { key: 'status', label: 'Status' },
+          { key: 'status', label: 'Status', sortable: true },
+          { key: 'progress', label: 'Progress', formatter: this.progressFormatter },
           { key: 'anno_class', label: 'Annotation Classification'},
           { key: 'cdb_search_filter', label: 'Concepts Imported' },
           { key: 'model_loaded', label: 'Model Loaded' },
@@ -268,6 +281,7 @@ export default {
     postLoadedProjects () {
       this.fetchCDBsLoaded()
       this.fetchSearchIndexStatus()
+      this.fetchProjectProgress()
       this.loadingProjects = false
     },
     fetchCDBsLoaded () {
@@ -321,6 +335,16 @@ export default {
         console.log(err)
       })
     },
+    fetchProjectProgress () {
+      const projectIds = this.projects.items.map(p => p.id)
+      this.$http.get(`/api/project-progress/?projects=${projectIds}`).then(resp => {
+        this.projects.items = this.projects.items.map(item => {
+          item['progress'] = `${resp.data[item.id].validated_count} / ${resp.data[item.id].dataset_count}`
+          item['percent_progress'] = Math.ceil((resp.data[item.id].validated_count / resp.data[item.id].dataset_count) * 100)
+          return item
+        })
+      })
+    },
     select (projects) {
       let project = projects[0]
       if (!project.project_locked) {
@@ -358,12 +382,25 @@ export default {
           that.modelSavedError = false
         }, 5000)
       })
+    },
+    progressFormatter (value, key, item) {
+      let txtColorClass = 'good-perf'
+      if (item['percent_progress'] < 80) {
+        txtColorClass = 'bad-perf'
+      }
+      return `
+        <div class="progress-container ${txtColorClass}">
+            ${value}
+            <div class="progress-gradient-fill" style="width: calc(${item['percent_progress']}%);"></div>
+        </div>
+
+      `
     }
   }
 }
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 h3 {
   margin: 10%
 }
@@ -445,6 +482,29 @@ h3 {
 
 .load-metrics {
   padding: 0 5px;
+}
+
+.progress-container {
+  position: relative;
+  padding-left: 2px;
+}
+
+.progress-gradient-fill {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  height: 25px;
+  padding: 0 1px;
+  background-image: linear-gradient(to right, #32ab60, #E8EDEE);
+  box-shadow: 0 5px 5px -5px #32ab60;
+}
+
+.good-perf {
+  color: #E5EBEA;
+}
+
+.bad-perf {
+  color: #45503B;
 }
 
 </style>

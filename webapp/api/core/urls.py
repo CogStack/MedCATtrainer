@@ -57,6 +57,7 @@ urlpatterns = [
     path('api/download-annos/', api.views.download_annos),
     path('api/behind-rp/', api.views.behind_reverse_proxy),
     path('api/version/', api.views.version),
+    path('api/project-progress/', api.views.project_progress),
     path('api/concept-db-search-index-created/', api.views.concept_search_index_available),
     path('api/model-loaded/', api.views.model_loaded),
     path('api/cache-model/<int:cdb_id>/', api.views.cache_model),
