@@ -228,6 +228,8 @@ def retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
         out['name'] = project.name
         out['id'] = project.id
         out['cuis'] = project.cuis
+        out['project_status'] = project.project_status
+        out['project_locked'] = project.project_locked
         out['documents'] = []
 
         if project.cuis_file is not None and project.cuis_file:
