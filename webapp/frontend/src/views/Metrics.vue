@@ -1,11 +1,21 @@
 <template>
   <div class="metrics-view">
     <div class="metrics-header">
-      <h2>Project Metrics: {{(projectIds && projectIds.join(',')) || $route.query.projectIds}}</h2>
+      <div class="title">Metrics Report:
+        <span v-if="!editingName">
+          <span v-if="!reportName" class="no-report-name">n/a</span>
+          <span v-if="reportName" class="completed-report-name">{{reportName}}</span>
+          <font-awesome-icon icon="pencil" class="edit-name-icon" @click="editingName = true"></font-awesome-icon>
+        </span>
+        <span class="report-name-input" v-if="editingName">
+          <b-form-input placeholder="Report name" type="text" v-model="editedReportName"></b-form-input>
+        </span>
+      </div>
+
     </div>
     <div class="viewport-full-height">
       <loading-overlay :loading="loading">
-        <span slot="message">Calculating Metrics...</span>
+        <span slot="message">Loading metrics report...</span>
       </loading-overlay>
       <b-tabs class="viewport">
         <b-tab title="User Stats" class="user-stats">
@@ -182,14 +192,15 @@ export default {
   name: 'Metrics.vue',
   components: { AnnoResult, Modal, LoadingOverlay },
   props: {
-    projectIds: Array
+    reportId: Number
   },
   created () {
-    if (this.projectIds || (this.$route.query && this.$route.query.projectIds)) {
+    if (this.reportId || (this.$route.query && this.$route.query.reportId)) {
       this.loading = true
-      let ids = this.projectIds ? this.projectIds.join(',') : this.$route.query.projectIds
-      this.$http.get(`/api/metrics/?projectIds=${ids}`).then(resp => {
+      let reportId = this.reportId ? this.reportId : this.$route.query.reportId
+      this.$http.get(`/api/metrics/${reportId}/`).then(resp => {
         this.loading = false
+        this.reportName = resp.data.results.report_name || resp.data.results.report_name_generated
         this.$set(this.userStats, 'items', resp.data.results.user_stats)
         this.$set(this.conceptSummary, 'items', resp.data.results.concept_summary)
         this.$set(this.annoSummary, 'items', resp.data.results.annotation_summary)
@@ -200,6 +211,9 @@ export default {
   data () {
     return {
       loading: false,
+      reportName: null,
+      editingName: false,
+      editedReportName: null,
       userStats: {
         fields: [
           { key: 'user', label: 'User', sortable: true },
@@ -276,7 +290,31 @@ export default {
           ${Number(value).toFixed(3)}
         </div>
 `
-    }
+    },
+    saveEditedName () {
+      if (this.editingName && this.editedReportName !== '') {
+        const payload = {
+          report_name: this.editedReportName
+        }
+        this.$http.put(`/api/metrics/${this.reportId}/`, payload).then(_ => {
+          this.reportName = this.editedReportName
+          this.editingName = false
+        })
+      }
+    },
+    keydown (e) {
+      if (e.keyCode === 27 && this.editingName) { // esc key
+        this.editingName = false
+      } else if (e.keyCode === 13 && this.editingName) { // enter key
+        this.saveEditedName()
+      }
+    },
+  },
+  mounted () {
+    window.addEventListener('keydown', this.keydown)
+  },
+  beforeDestroy () {
+    window.removeEventListener('keydown', this.keydown)
   }
 }
 </script>
@@ -299,11 +337,28 @@ $metrics-header-height: 42px;
   padding: 10px;
 }
 
+.no-report-name {
+  color: #768692; // NHS Mid Grey
+}
+
+.completed-report-name {
+  font-style: italic;
+}
+
+.report-name-input {
+  display: inline-block;
+  height: 30px;
+}
+
 .viewport {
   height: 100%;
 
   .tab-content {
     height: 100%;
+
+    .tab-pane {
+      height: calc(100% - 30px);
+    }
   }
 }
 
@@ -343,6 +398,12 @@ $metrics-header-height: 42px;
   padding: 0 1px;
   background-image: linear-gradient(to right, #32ab60, #E8EDEE);
   box-shadow: 0 5px 5px -5px #32ab60;
+}
+
+.edit-name-icon {
+  height: 11px;
+  margin-bottom: 15px;
+  opacity: 0.5;
 }
 
 .res-btn {

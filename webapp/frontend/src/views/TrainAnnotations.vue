@@ -604,7 +604,7 @@ export default {
     },
     addAnnotationComplete (addedAnnotationId) {
       this.conceptSynonymSelection = null
-      if (addedAnnotationId) {
+      if (addedAnnotationId) {f
         this.$http.get(`/api/annotated-entities/${addedAnnotationId}/`).then(resp => {
           let newEnt = resp.data
           newEnt.assignedValues = {}

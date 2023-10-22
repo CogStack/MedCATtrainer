@@ -4,6 +4,7 @@ import Home from './views/Home.vue'
 import TrainAnnotations from './views/TrainAnnotations.vue'
 import Demo from './views/Demo.vue'
 import Metrics from './views/Metrics.vue'
+import MetricsHome from './views/MetricsHome.vue'
 import ConceptDatabase from './views/ConceptDatabase.vue'
 
 
@@ -20,10 +21,15 @@ export default new Router({
       query: true
     },
     {
-      path: '/metrics/',
+      path: '/metrics-reports/',
+      name: 'metrics-reports',
+      component: MetricsHome,
+    },
+    {
+      path: '/metrics/:reportId/',
       name: 'metrics',
       component: Metrics,
-      query: true
+      props: router => ({reportId: parseInt(router.params.reportId)})
     },
     {
       path: '/demo',

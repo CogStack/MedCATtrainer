@@ -1,23 +1,62 @@
+import json
 import logging
 import math
+import os
 import warnings
 from collections import Counter
 from typing import List, Dict
+from background_task import background
 
 import numpy as np
 import pandas as pd
 import torch
+from background_task.models import Task
+from django.contrib.auth.models import User
+from django.db.models import QuerySet
 from medcat.cat import CAT
+from medcat.cdb import CDB
 from medcat.config_meta_cat import ConfigMetaCAT
 from medcat.meta_cat import MetaCAT
 from medcat.tokenizers.meta_cat_tokenizers import TokenizerWrapperBase
 from medcat.utils.meta_cat.data_utils import prepare_from_json, encode_category_values
 from medcat.utils.meta_cat.ml_utils import create_batch_piped_data
+from medcat.vocab import Vocab
 from torch import nn
+
+from api.admin import retrieve_project_data
+from api.models import ProjectAnnotateEntities, ProjectMetrics as AppProjectMetrics
+from core.settings import MEDIA_ROOT
 
 _dt_fmt = '%Y-%m-%d %H:%M:%S.%f'
 
 logger = logging.getLogger(__name__)
+
+
+@background(schedule=1, queue='metrics')
+def calculate_metrics(project_ids: List[int], report_name: str):
+    """
+    Computes metrics in a background task
+    :param projects: list of projects to compute metrics for. Uses the 'first' for the CDB, but
+    should be the same CDB, but will still try and compute metrics regardless
+    :return: computed metrics results
+    """
+    logger.info('Calculating metrics for report: %s', report_name)
+    projects = [ProjectAnnotateEntities.objects.filter(id=p_id).first() for p_id in project_ids]
+    cdb = CDB.load(projects[0].concept_db.cdb_file.path)
+    vocab = Vocab.load(projects[0].vocab.vocab_file.path)
+    cat = CAT(cdb, vocab, config=cdb.config)
+    project_data = retrieve_project_data(projects)
+    metrics = ProjectMetrics(project_data, cat)
+    report = metrics.generate_report()
+    report_file_path = f'{MEDIA_ROOT}/{report_name}.json'
+    json.dump(report, open(report_file_path, 'w'))
+    apm = AppProjectMetrics()
+    apm.report_name_generated = report_name
+    apm.report.name = report_file_path
+    apm.save()
+    apm.projects.set(projects)
+    logger.info('Finished calculating metrics for report: %s, saved results in ProjectMetrics(id=%s)',
+                report_name, apm.id)
 
 
 class ProjectMetrics(object):

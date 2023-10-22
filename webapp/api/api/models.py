@@ -73,15 +73,6 @@ class Vocabulary(models.Model):
         return str(self.vocab_file.name)
 
 
-class MedCATModel(models.Model):
-    name = models.CharField(max_length=100)
-    cdb = models.ForeignKey('ConceptDB', on_delete=models.CASCADE)
-    vocab = models.ForeignKey('Vocabulary', on_delete=models.CASCADE)
-
-    def __str__(self):
-        return str(self.name)
-
-
 class Dataset(models.Model):
     name = models.CharField(max_length=150)
     original_file = models.FileField()
@@ -285,6 +276,18 @@ class ExportedProject(models.Model):
 
     def __str__(self):
         return self.trainer_export_file.name
+
+
+class ProjectMetrics(models.Model):
+    report_name_generated = models.TextField(help_text='report name that links this metrics report to a previously '
+                                                       'ran bg task')
+    report_name = models.TextField(help_text='A user specified report name that should be more user friendly than '
+                                             'the generated one')
+    report = models.FileField(help_text='the outputted metrics for configured')
+    projects = models.ManyToManyField('ProjectAnnotateEntities', null=True, blank=True)
+
+    def __str__(self):
+        return f'generated report name: {self.report_name}, user specified report name:f{self.report_name}'
 
 
 @receiver(models.signals.post_delete, sender=ConceptDB)
