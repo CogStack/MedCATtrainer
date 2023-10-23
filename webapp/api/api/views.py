@@ -654,7 +654,7 @@ def metrics_jobs(request):
             }
         running_reports = [serialize_task(t, 'running') for t in running_metrics_tasks_qs]
         for r, t in zip(running_reports, running_metrics_tasks_qs):
-            if not t.locked_by_pid_running:
+            if t.locked_by is None and t.locked_by_pid_running() is None:
                 r['status'] = 'pending'
 
         comp_reports = [serialize_task(t, 'complete') for t in completed_metrics_tasks]
@@ -692,7 +692,7 @@ def remove_metrics_job(request, report_id: int):
     if report_id in running_metrics_tasks_qs:
         # remove completed task and associated report
         task = running_metrics_tasks_qs[report_id]
-        if task.locked_by_pid_running():
+        if task.locked_by and task.locked_by_pid_running():
             logger.info('Will not kill running process - report ID: %s', report_id)
             return Response(503, 'Unable to remove a running metrics report job. Please wait until it '
                                  'completes then remove.')

@@ -9,8 +9,11 @@
              :select-mode="'single'"
              @row-selected="loadMetrics">
       <template #cell(status)="data">
+        <span v-if="data.item.status == 'pending'">Pending
+          <font-awesome-icon icon="fa-regular fa-clock" class="status-icon"></font-awesome-icon>
+        </span>
         <span v-if="data.item.status == 'running'">Running
-          <font-awesome-icon icon="spinner" spin clas="status-icon"></font-awesome-icon>
+          <font-awesome-icon icon="spinner" spin class="status-icon"></font-awesome-icon>
         </span>
         <span v-if="data.item.status == 'complete'">Complete
           <font-awesome-icon icon="check" class="status-icon success"></font-awesome-icon>
