@@ -14,9 +14,6 @@
                @row-selected="select">
         <template #head(metrics)="data">
           <div id="metrics-head">Metrics</div>
-          <button class="btn btn-outline-primary load-metrics" @click="loadMetrics" v-if="selectedProjects.length > 0">
-            <font-awesome-icon icon="chevron-right"></font-awesome-icon>
-          </button>
           <b-tooltip target="metrics-head"
                      triggers="hover"
                      container="projectTable"
@@ -136,6 +133,17 @@
       <transition name="alert"><div class="alert alert-primary" v-if="loadingModel" role="alert">Loading model</div></transition>
       <transition name="alert"><div class="alert alert-danger" v-if="modelCacheLoadError" role="alert">Error loading MedCAT model for project</div></transition>
       <transition name="alert"><div class="alert alert-danger" v-if="projectLockedWarning" role="alert">Unable load a locked project. Contact your CogStack administrator to unlock</div></transition>
+      <transition name="alert"><div class="alert alert-info " v-if="metricsJobId">
+        Submitted Metrics job {{metricsJobId.metrics_job_id}}. Check the
+        <router-link to="metrics-reports/">/metrics-reports/</router-link>
+        page for your results</div>
+      </transition>
+      <transition name="alert"><div class="alert alert-info submit-report-job-alert" v-if="selectedProjects.length > 0">
+        Submit metrics report run for selected projects
+        <button class="btn btn-outline-primary load-metrics" @click="submitMetricsReportReq">
+          <font-awesome-icon icon="chevron-right"></font-awesome-icon>
+        </button>
+      </div></transition>
     </div>
 
     <modal v-if="clearModelModal" :closable="true" @modal:close="clearModelModal = false">
@@ -208,6 +216,7 @@ export default {
       modelSavedError: false,
       loadingModel: false,
       modelCacheLoadError: false,
+      metricsJobId: null,
       saving: false,
       routeAlert: false,
       isAdmin: false,
@@ -319,12 +328,16 @@ export default {
         this.selectedProjects.push(project)
       }
     },
-    loadMetrics () {
-      this.$router.push({
-        name: 'metrics',
-        query: {
-          projectIds: this.selectedProjects.map(p => p.id).join(',')
-        }
+    submitMetricsReportReq () {
+      const payload = {
+        projectIds: this.selectedProjects.map(p => p.id).join(',')
+      }
+      this.selectedProjects = []
+      this.$http.post('/api/metrics-job/', payload).then(resp => {
+        this.metricsJobId = resp.data
+        setTimeout(() => {
+          this.metricsJobId = null
+        }, 15000)
       })
     },
     fetchSearchIndexStatus () {
@@ -482,6 +495,7 @@ h3 {
 
 .load-metrics {
   padding: 0 5px;
+
 }
 
 .progress-container {
@@ -505,6 +519,10 @@ h3 {
 
 .bad-perf {
   color: #45503B;
+}
+
+.submit-report-job-alert {
+  text-align: right;
 }
 
 </style>

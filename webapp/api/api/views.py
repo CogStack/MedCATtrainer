@@ -1,10 +1,13 @@
 import logging
 import pickle
 import traceback
+from datetime import datetime
 from tempfile import NamedTemporaryFile
 
+from background_task.models import Task, CompletedTask
 from django.http import HttpResponseBadRequest, HttpResponseServerError, HttpResponse
 from django.shortcuts import render
+from django.utils import timezone
 from django_filters import rest_framework as drf
 from medcat.cdb import CDB
 from medcat.utils.helpers import tkns_from_doc
@@ -16,7 +19,7 @@ from core.settings import MEDIA_ROOT
 from .admin import download_projects_with_text, download_projects_without_text, \
     import_concepts_from_cdb, upload_projects_export, retrieve_project_data
 from .medcat_utils import ch2pt_from_pt2ch, get_all_ch, dedupe_preserve_order, snomed_ct_concept_path
-from .metrics import ProjectMetrics
+from .metrics import calculate_metrics
 from .permissions import *
 from .serializers import *
 from .solr_utils import collections_available, search_collection, ensure_concept_searchable
@@ -633,28 +636,106 @@ def model_loaded(_):
                      for p in ProjectAnnotateEntities.objects.all()})
 
 
-@api_view(http_method_names=['GET'])
-def metrics(request):
-    p_ids = request.GET.get('projectIds').split(',')
-    projects = ProjectAnnotateEntities.objects.filter(id__in=p_ids)
+@api_view(http_method_names=['GET', 'POST'])
+def metrics_jobs(request):
+    dt_fmt = '%Y-%m-%d %H:%M:%S'
+    if request.method == 'GET':
+        running_metrics_tasks_qs = Task.objects.filter(queue='metrics')
+        completed_metrics_tasks = CompletedTask.objects.filter(queue='metrics')
 
-    # provide warning of inconsistent models used or for models that are not loaded.
-    p_cdbs = set(p.concept_db for p in projects)
-    if len(p_cdbs) > 1:
-        logger.warning('Inconsistent CDBs used in the generation of metrics - should use the same CDB for '
-                       f'consistent results - found {[cdb.name for cdb in p_cdbs]} - metrics will only use the first'
-                       f' CDB {projects[0].concept_db.name}')
-    for p_cdb in p_cdbs:
-        if p_cdb not in CDB_MAP:
-            logger.warning(f'CDB {p_cdb.name} not in CDB_MAP cache - this will now be loaded - '
-                           f'and will not show intermediary training status')
+        def serialize_task(task, state):
+            return {
+                'report_id': task.id,
+                'report_name_generated': task.verbose_name,
+                'projects': task.verbose_name.split('-')[1].split(','),
+                'created_user': task.creator.username,
+                'create_time': task.run_at.strftime(dt_fmt),
+                'status': state
+            }
+        running_reports = [serialize_task(t, 'running') for t in running_metrics_tasks_qs]
+        for r, t in zip(running_reports, running_metrics_tasks_qs):
+            if t.locked_by is None and t.locked_by_pid_running() is None:
+                r['status'] = 'pending'
 
-    cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
-                     CAT_MAP=CAT_MAP, project=projects[0])
-    project_data = retrieve_project_data(projects)
-    metrics = ProjectMetrics(project_data, cat)
-    report_output = metrics.generate_report()
-    return Response({'results': report_output})
+        comp_reports = [serialize_task(t, 'complete') for t in completed_metrics_tasks]
+        for comp_task, comp_rep in zip(completed_metrics_tasks, comp_reports):
+            pm_obj = ProjectMetrics.objects.filter(report_name_generated=comp_task.verbose_name).first()
+            if pm_obj is not None and pm_obj.report_name is not None:
+                comp_rep['report_name'] = pm_obj.report_name
+        reports = running_reports + comp_reports
+        return Response({'reports': reports})
+    elif request.method == 'POST':
+        now = timezone.now()
+        user = request.user
+        p_ids = request.data.get('projectIds').split(',')
+        projects = ProjectAnnotateEntities.objects.filter(id__in=p_ids)
+
+        # provide warning of inconsistent models used or for models that are not loaded.
+        p_cdbs = set(p.concept_db for p in projects)
+        if len(p_cdbs) > 1:
+            logger.warning('Inconsistent CDBs used in the generation of metrics - should use the same CDB for '
+                           f'consistent results - found {[cdb.name for cdb in p_cdbs]} - metrics will only use the first'
+                           f' CDB {projects[0].concept_db.name}')
+
+        report_name = f'metrics-{"_".join(p_ids)}-{now.strftime(dt_fmt)}'
+        submitted_job = calculate_metrics([p.id for p in projects],
+                                          verbose_name=report_name,
+                                          creator=user,
+                                          report_name=report_name)
+        return Response({'metrics_job_id': submitted_job.id, 'metrics_job_name': report_name})
+
+
+@api_view(http_method_names=['DELETE'])
+def remove_metrics_job(request, report_id: int):
+    running_metrics_tasks_qs = {t.id: t for t in Task.objects.filter(queue='metrics')}
+    completed_metrics_tasks = {t.id: t for t in CompletedTask.objects.filter(queue='metrics')}
+    if report_id in running_metrics_tasks_qs:
+        # remove completed task and associated report
+        task = running_metrics_tasks_qs[report_id]
+        if task.locked_by and task.locked_by_pid_running():
+            logger.info('Will not kill running process - report ID: %s', report_id)
+            return Response(503, 'Unable to remove a running metrics report job. Please wait until it '
+                                 'completes then remove.')
+        else:
+            logger.info('Metrics job deleted - report ID: %s', report_id)
+    elif report_id in completed_metrics_tasks:
+        task = completed_metrics_tasks[report_id]
+        try:
+            pm = ProjectMetrics.objects.filter(report_name_generated=task.verbose_name).first()
+            if os.path.isfile(pm.report.path):
+                os.remove(pm.report.path)
+            pm.delete()
+        except Exception as e:
+            pass
+        task.delete()
+        logger.info('Completed metrics job deleted - report ID: %s', report_id)
+        return Response(200, 'task / report deleted')
+
+
+@api_view(http_method_names=['GET', 'PUT'])
+def view_metrics(request, report_id):
+    if request.method == 'GET':
+        running_pending_report = Task.objects.filter(id=report_id, queue='metrics').first()
+        completed_report = CompletedTask.objects.filter(id=report_id, queue='metrics').first()
+        if running_pending_report is None and completed_report is None:
+            HttpResponseBadRequest(f'Cannot find report_id:{report_id} in either pending, running or complete report lists. ')
+        elif running_pending_report is not None:
+            HttpResponseBadRequest(f'Cannot view a running or pending metrics report with id:{report_id}')
+        pm_obj = ProjectMetrics.objects.filter(report_name_generated=completed_report.verbose_name).first()
+        out = {
+            'results': {
+                'report_name': pm_obj.report_name,
+                'report_name_generated': pm_obj.report_name_generated,
+                **json.load(open(pm_obj.report.path))
+            }
+        }
+        return Response(out)
+    elif request.method == 'PUT':
+        completed_report = CompletedTask.objects.filter(id=report_id, queue='metrics').first()
+        pm_obj = ProjectMetrics.objects.filter(report_name_generated=completed_report.verbose_name).first()
+        pm_obj.report_name = request.data.get('report_name')
+        pm_obj.save()
+        return Response(200)
 
 
 @api_view(http_method_names=['GET'])

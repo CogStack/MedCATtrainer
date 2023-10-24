@@ -122,7 +122,7 @@ def create_example_project(url, headers, cdb, vocab, ds_dict, cdb_name, project_
 if __name__ == '__main__':
     main()
     # main(port=8001,
-    # umls_cdb_tmp_file='/Users/tom/phd/MedCATtrainer/scratch/cdb.dat',
-    # snomed_cdb_tmp_file='/Users/tom/phd/MedCATtrainer/scratch/snomed-cdb.dat',
-    # vocab_tmp_file='/Users/tom/phd/MedCATtrainer/scratch/vocab.dat',
-    # dataset_tmp_file='/Users/tom/phd/MedCATtrainer/scratch/ds.csv')
+    # umls_cdb_tmp_file='/home/cerberus/projects/MedCATtrainer/scratch/cdb.dat',
+    # snomed_cdb_tmp_file='/home/cerberus/projects/MedCATtrainer/scratch/snomed-cdb.dat',
+    # vocab_tmp_file='/home/cerberus/projects/MedCATtrainer/scratch/vocab.dat',
+    # dataset_tmp_file='/home/cerberus/projects/MedCATtrainer/scratch/ds.csv')

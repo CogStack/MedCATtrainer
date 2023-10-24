@@ -472,3 +472,12 @@ class ExportedProjectAdmin(admin.ModelAdmin):
 
 
 admin.site.register(ExportedProject, ExportedProjectAdmin)
+
+
+class ProjectMetricsAdmin(admin.ModelAdmin):
+    model = ProjectMetrics
+    list_display = ('report_name', 'report_name_generated')
+    list_filter = ['projects']
+
+
+admin.site.register(ProjectMetrics, ProjectMetricsAdmin)
