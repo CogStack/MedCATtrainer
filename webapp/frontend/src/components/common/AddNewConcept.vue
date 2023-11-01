@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div @keydown.stop>
     <div class="title">
       Add New Concept
       <div @click="selectNewConcept()" @mousedown.stop class="show-form-button">
