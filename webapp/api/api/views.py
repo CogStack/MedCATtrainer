@@ -352,7 +352,7 @@ def add_concept(request):
         end = start + len(source_val)
         spacy_entity = tkns_from_doc(spacy_doc=spacy_doc, start=start, end=end)
 
-    cat.add_and_train_concept(cui=cui, name=name, spacy_doc=spacy_doc, spacy_entity=spacy_entity)
+    cat.add_and_train_concept(cui=cui, name=name, name_status='P', spacy_doc=spacy_doc, spacy_entity=spacy_entity)
 
     id = create_annotation(source_val=source_val,
                            selection_occurrence_index=sel_occur_idx,
