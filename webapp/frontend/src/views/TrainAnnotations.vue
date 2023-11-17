@@ -266,7 +266,7 @@ const CONCEPT_IRRELEVANT = 'Irrelevant'
 
 const TASK_VALUES = [CONCEPT_CORRECT, CONCEPT_REMOVED, CONCEPT_KILLED, CONCEPT_ALTERNATIVE, CONCEPT_IRRELEVANT]
 
-const LOAD_NUM_DOC_PAGES = 10 // 30 docs per page, 300 documents
+let LOAD_NUM_DOC_PAGES = 10 // 100 docs per page, 1000 documents
 
 export default {
   name: 'TrainAnnotations',
@@ -341,9 +341,15 @@ export default {
     }
   },
   created () {
-    this.fetchData()
+    this.fetchAnnoConf()
   },
   methods: {
+    fetchAnnoConf () {
+      this.$http.get(`/api/anno-conf/`).then(resp => {
+        LOAD_NUM_DOC_PAGES = resp.data['LOAD_NUM_DOC_PAGES'] || LOAD_NUM_DOC_PAGES
+        this.fetchData()
+      })
+    },
     fetchData () {
       this.$http.get(`/api/project-annotate-entities/?id=${this.projectId}`).then(resp => {
         if (resp.data.count === 0) {
