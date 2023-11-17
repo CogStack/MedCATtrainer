@@ -214,6 +214,11 @@ class OPCSCodeViewSet(viewsets.ModelViewSet):
     filterset_fields = ['code', 'id']
 
 
+@api_view(http_method_names=['GET'])
+def get_anno_tool_conf(_):
+    return Response({k: v for k,v in os.environ.items()})
+
+
 @api_view(http_method_names=['POST'])
 def prepare_documents(request):
     # Get the user

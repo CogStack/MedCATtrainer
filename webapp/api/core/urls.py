@@ -40,6 +40,7 @@ router.register(r'opcs-codes', api.views.OPCSCodeViewSet)
 
 urlpatterns = [
     path('api/', include(router.urls)),
+    path('api/anno-conf/', api.views.get_anno_tool_conf),
     path('api/search-concepts/', api.views.search_solr),
     path('api/prepare-documents/', api.views.prepare_documents),
     path('api/api-token-auth/', auth_views.obtain_auth_token),

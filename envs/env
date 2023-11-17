@@ -30,3 +30,6 @@ DB_BACKUP_DIR=/home/api/db-backup
 
 # Resubmit all on startup
 RESUBMIT_ALL_ON_STARTUP=1
+
+# Front end env vars
+LOAD_NUM_DOC_PAGES=10
