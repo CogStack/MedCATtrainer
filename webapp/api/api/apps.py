@@ -16,6 +16,7 @@ class ApiConfig(AppConfig):
         if resubmit_all is not None and resubmit_all.lower() in ('1', 'y', 'true'):
             logger.info('Found env var RESUBMIT_ALL_ON_STARTUP is True. '
                         'Attempting to resubmit all currently submitted state documents')
+
             projects = ProjectAnnotateEntities.objects.all()
             for project in projects:
                 if project.project_status == 'A':

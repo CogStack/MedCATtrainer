@@ -3,6 +3,10 @@
 # run db backup script before doing anything
 /home/scripts/backup_db.sh
 
+# env vars that should only be on for app running...
+TMP_RESUBMIT_ALL_VAR=$RESUBMIT_ALL_ON_STARTUP
+export RESUBMIT_ALL_ON_STARTUP=0
+
 # Collect static files and migrate if needed
 python /home/api/manage.py collectstatic --noinput
 python /home/api/manage.py makemigrations --noinput
@@ -22,5 +26,8 @@ if User.objects.count() == 0:
 if [ $LOAD_EXAMPLES ]; then
   python /home/scripts/load_examples.py &
 fi
+
+# RESET any Env vars to original stat
+export RESUBMIT_ALL_ON_STARTUP=$TMP_RESUBMIT_ALL_VAR
 
 uwsgi --http-timeout 360s --http :8000 --master --chdir /home/api/  --module core.wsgi
