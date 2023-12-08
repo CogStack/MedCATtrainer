@@ -13,7 +13,7 @@ services:
     volumes:
       - ./webapp/api/core:/home/api/core
       - ./webapp/api/api:/home/api/api
-      - ./webapp/run.sh:/home/run.sh
+      - ./webapp/scripts/run.sh:/home/scripts/run.sh
       - ./configs:/home/configs
       - api-media:/home/api/media
       - api-static:/home/api/static

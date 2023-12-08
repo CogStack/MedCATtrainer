@@ -284,7 +284,7 @@ class ProjectMetrics(models.Model):
     report_name = models.TextField(help_text='A user specified report name that should be more user friendly than '
                                              'the generated one')
     report = models.FileField(help_text='the outputted metrics for configured')
-    projects = models.ManyToManyField('ProjectAnnotateEntities', null=True, blank=True)
+    projects = models.ManyToManyField('ProjectAnnotateEntities', blank=True)
 
     def __str__(self):
         return f'generated report name: {self.report_name}, user specified report name:f{self.report_name}'
