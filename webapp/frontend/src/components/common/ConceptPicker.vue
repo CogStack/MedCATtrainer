@@ -32,7 +32,7 @@ export default {
   },
   props: {
     restrict_concept_lookup: Boolean,
-    cui_filter: Array,
+    cui_filter: String,
     cdb_search_filter: Array,
     concept_db: Number,
     selection: String
