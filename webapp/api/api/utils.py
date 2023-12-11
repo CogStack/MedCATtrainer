@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 from typing import Union, Dict, List, Type
 
 import pkg_resources
@@ -138,12 +139,31 @@ def _remove_overlap(project, document, start, end):
             ann.delete()
 
 
+def create_annotations(source_val: str, cui: str, user: User,
+                       project: ProjectAnnotateEntities, document, cat: CAT, icd_code=None,
+                       opcs_code=None) -> List[int]:
+    text = document.text
+    matches = re.finditer(rf'\s?{source_val}\s|\s{source_val}\s?', text)
+    return [_create_annotation(source_val, s_i.start(), cui, user, project,
+                               document, cat, icd_code, opcs_code)
+            for s_i in matches]
+        # idx = text.find(source_val, idx)
+        # if idx != -1:
+        #     # will only match if:
+        #     #   idx is at start OR
+        #     #   prev char of idx is a space indicating EoT, not partial tok AND
+        #     #   we're not at end of text or char after end of idx + anno is a space
+        #     if (idx == 0 or (text[idx - 1] == ' ') and
+        #             len(text) == len(source_val) + idx or
+        #             text[idx + len(source_val) + 1] == ' '):
+        #         all_occurrences_start_idxs.append(idx)
+        #         idx += len(source_val)
+
+
 def create_annotation(source_val: str, selection_occurrence_index: int, cui: str, user: User,
                       project: ProjectAnnotateEntities, document, cat: CAT, icd_code=None,
                       opcs_code=None):
     text = document.text
-    id = None
-
     all_occurrences_start_idxs = []
     idx = 0
     while idx != -1:
@@ -153,7 +173,12 @@ def create_annotation(source_val: str, selection_occurrence_index: int, cui: str
             idx += len(source_val)
 
     start = all_occurrences_start_idxs[selection_occurrence_index]
+    return _create_annotation(source_val, start, cui, user, project, document, cat, icd_code, opcs_code)
 
+
+def _create_annotation(source_val: str, start: int, cui: str, user: User,
+                       project: ProjectAnnotateEntities, document, cat: CAT, icd_code=None,
+                       opcs_code=None):
     if start is not None and len(source_val) > 0 and len(cui) > 0:
         # Remove overlaps
         end = start + len(source_val)
@@ -198,7 +223,6 @@ def create_annotation(source_val: str, selection_occurrence_index: int, cui: str
     opcs_codes = cat.cdb.addl_info.get('cui2opcs4', {}).get(cui, None)
     if opcs_codes is not None:
         create_linked_opcs_codes(opcs_codes, project.concept_db)
-
     return id
 
 

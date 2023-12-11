@@ -24,7 +24,7 @@ from .permissions import *
 from .serializers import *
 from .solr_utils import collections_available, search_collection, ensure_concept_searchable
 from .utils import get_cached_medcat, clear_cached_medcat, get_medcat, get_cached_cdb, \
-    add_annotations, remove_annotations, train_medcat, create_annotation
+    add_annotations, remove_annotations, train_medcat, create_annotation, create_annotations
 
 # For local testing, put envs
 """
@@ -310,6 +310,8 @@ def add_annotation(request):
 
     cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
                      CAT_MAP=CAT_MAP, project=project)
+
+
     id = create_annotation(source_val=source_val,
                            selection_occurrence_index=sel_occur_idx,
                            cui=cui,
@@ -319,9 +321,46 @@ def add_annotation(request):
                            cat=cat,
                            icd_code=icd_code,
                            opcs_code=opcs_code)
-    logger.debug('Annotation added.')
+    logger.debug('Annotation %s added.', source_val)
     return Response({'message': 'Annotation added successfully', 'id': id})
 
+
+@api_view(http_method_names=['POST'])
+def add_all_annotation_instances(request):
+    p_id = request.data['project_id']
+    d_id = request.data['document_id']
+    source_val = request.data['source_value']
+    cui = str(request.data['cui'])
+
+    icd_code = request.data.get('icd_code')
+    opcs_code = request.data.get('opcs_code')
+
+    logger.debug("Annotation being added")
+    logger.debug(str(request.data))
+
+    # Get project and the right version of cat
+    user = request.user
+    project = ProjectAnnotateEntities.objects.get(id=p_id)
+    document = Document.objects.get(id=d_id)
+
+    if icd_code:
+        icd_code = ICDCode.objects.filter(id=icd_code).first()
+    if opcs_code:
+        opcs_code = OPCSCode.objects.filter(id=opcs_code).first()
+
+    cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
+                     CAT_MAP=CAT_MAP, project=project)
+
+    logger.debug('All occurrences of %s Annotation added.', source_val)
+    ids = create_annotations(source_val=source_val,
+                             cui=cui,
+                             user=user,
+                             project=project,
+                             document=document,
+                             cat=cat,
+                             icd_code=icd_code,
+                             opcs_code=opcs_code)
+    return Response({'message': 'Annotations added successfully', 'ids': ids})
 
 @api_view(http_method_names=['POST'])
 def add_concept(request):

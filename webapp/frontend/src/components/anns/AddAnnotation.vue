@@ -76,10 +76,22 @@
         </tbody>
       </table>
     </div>
-    <div v-if="selectedCUI !== null" class="action-buttons">
-      <button @click="submit()" class="btn task-btn-0">
+    <div id="action-buttons" v-if="selectedCUI !== null" class="action-buttons">
+      <b-tooltip target="submit"
+                 triggers="hover"
+                 container="action-buttons"
+                 title="Add only the selected term"></b-tooltip>
+      <button id="submit" @click="submit()" class="btn task-btn-0">
         <font-awesome-icon icon="plus"></font-awesome-icon>
         Add Term
+      </button>
+      <b-tooltip target="submit-all"
+                 triggers="hover"
+                 container="action-buttons"
+                 title="Add all terms with this text content"></b-tooltip>
+      <button id="submit-all" @click="submitAll()" class="btn task-btn-0">
+        <font-awesome-icon icon="plus"></font-awesome-icon>
+        Add All
       </button>
       <button @click="cancel()" class="btn task-btn-1">
         <font-awesome-icon icon="times"></font-awesome-icon>
@@ -148,6 +160,26 @@ export default {
 
       this.$http.post('/api/add-annotation/', payload).then(resp => {
         this.$emit('request:addAnnotationComplete', resp.data.id)
+        this.selectedCUI = null
+      })
+    },
+    submitAll() {
+      const payload = {
+        source_value: this.selection.selStr,
+        document_id: this.documentId,
+        project_id: this.project.id,
+        cui: this.selectedCUI.cui
+      }
+      if (this.selectedCUI.icd10 && this.selectedCUI.icd10.length === 1) {
+        payload.icd_code = this.selectedCUI.icd10[0].id
+      } else if (this.selectedCUI.opcs4 && this.selectedCUI.opcs4.length === 1) {
+        payload.opcs_code = this.selectedCUI.opcs4[0].id
+      }
+
+      this.$http.post('/api/add-annotations/', payload).then(resp => {
+        for (const i of resp.data.ids) {
+          this.$emit('request:addAnnotationComplete', i)
+        }
         this.selectedCUI = null
       })
     },

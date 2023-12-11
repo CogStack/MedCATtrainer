@@ -47,6 +47,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('api/add-annotation/', api.views.add_annotation),
+    path('api/add-annotations/', api.views.add_all_annotation_instances),
     path('api/add-concept/', api.views.add_concept),
     path('api/import-cdb-concepts/', api.views.import_cdb_concepts),
     path('api/submit-document/', api.views.submit_document),
