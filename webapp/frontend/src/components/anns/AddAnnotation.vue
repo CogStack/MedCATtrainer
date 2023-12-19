@@ -159,7 +159,7 @@ export default {
       }
 
       this.$http.post('/api/add-annotation/', payload).then(resp => {
-        this.$emit('request:addAnnotationComplete', resp.data.id)
+        this.$emit('request:addAnnotationsComplete', [resp.data.id])
         this.selectedCUI = null
       })
     },
@@ -177,9 +177,7 @@ export default {
       }
 
       this.$http.post('/api/add-annotations/', payload).then(resp => {
-        for (const i of resp.data.ids) {
-          this.$emit('request:addAnnotationComplete', i)
-        }
+        this.$emit('request:addAnnotationsComplete', resp.data.ids)
         this.selectedCUI = null
       })
     },

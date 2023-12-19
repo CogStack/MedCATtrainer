@@ -83,7 +83,7 @@
           <transition name="slide-left">
             <add-annotation v-if="conceptSynonymSelection" :selection="conceptSynonymSelection"
                          :project="project" :documentId="currentDoc.id" :searchFilterDBIndex="searchFilterDBIndex"
-                         @request:addAnnotationComplete="addAnnotationComplete" class="add-annotation"></add-annotation>
+                         @request:addAnnotationsComplete="addAnnotationsComplete" class="add-annotation"></add-annotation>
           </transition>
         </div>
       </div>
@@ -608,16 +608,18 @@ export default {
         this.markCorrect()
       }
     },
-    addAnnotationComplete (addedAnnotationId) {
+    addAnnotationsComplete (addedAnnotationIds) {
       this.conceptSynonymSelection = null
-      if (addedAnnotationId) {
-        this.$http.get(`/api/annotated-entities/${addedAnnotationId}/`).then(resp => {
-          let newEnt = resp.data
-          newEnt.assignedValues = {}
-          newEnt.assignedValues[TASK_NAME] = CONCEPT_CORRECT
-          this.ents = null
-          this.currentEnt = null
-          this.fetchEntities(newEnt.id)
+      if (addedAnnotationIds.length > 0) {
+        Promise.all(addedAnnotationIds.map(annoId => this.$http.get(
+          `/api/annotated-entities/${annoId}/`))).then(resps => {
+            // use last resp data
+            let newEnt = resps.slice(-1).data
+            newEnt.assignedValues = {}
+            newEnt.assignedValues[TASK_NAME] = CONCEPT_CORRECT
+            this.ents = null
+            this.currentEnt = null
+            this.fetchEntities(newEnt.id)
         })
       }
     },
