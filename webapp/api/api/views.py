@@ -241,8 +241,13 @@ def prepare_documents(request):
         cuis = set([str(cui).strip() for cui in project.cuis.split(",")])
     if project.cuis_file is not None and project.cuis_file:
         # Add cuis from json file if it exists
-        cuis.update(json.load(open(project.cuis_file.path)))
-
+        try:
+            cuis.update(json.load(open(project.cuis_file.path)))
+        except FileNotFoundError:
+            return Response({'message': 'Missing CUI filter file',
+                                   'description': 'Missing CUI filter file, %s, cannot be found on the filesystem, '
+                                                  'but is still set on the project. To fix remove and reset the '
+                                                  'cui filter file' % project.cuis_file}, status=500)
     try:
         for d_id in d_ids:
             document = Document.objects.get(id=d_id)
