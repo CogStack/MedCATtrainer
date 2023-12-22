@@ -18,9 +18,15 @@ python /home/api/manage.py process_tasks --log-std &
 
 # create a new super user, with username and password 'admin'
 echo "from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User, Group, Permission
 User = get_user_model()
 if User.objects.count() == 0:
     User.objects.create_superuser('admin', 'admin@example.com', 'admin')
+    user = User.objects.create_user('username', 'username@example.com', 'password')
+    permissions = Permission.objects.exclude(codename__contains="delete")
+    group = Group.objects.get_or_create(name='user_group')
+    group.permissions.add(permissions)
+    group.user_set.add(user)
 " | python manage.py shell
 
 if [ $LOAD_EXAMPLES ]; then
