@@ -17,13 +17,15 @@ python /home/api/manage.py migrate api --noinput
 python /home/api/manage.py process_tasks --log-std &
 
 # create a new super user, with username and password 'admin'
+# also create a user group `user_group` that prevents users from deleting models
 echo "from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User, Group, Permission
 User = get_user_model()
 if User.objects.count() == 0:
     User.objects.create_superuser('admin', 'admin@example.com', 'admin')
+group, created = Group.objects.get_or_create(name='user_group')
+if created:
     user = User.objects.create_user('username', 'username@example.com', 'password')
-    group = Group.objects.get_or_create(name='user_group')[0]
     group.user_set.add(user)
     permissions = Permission.objects.exclude(codename__contains='delete')
     for p in permissions:
