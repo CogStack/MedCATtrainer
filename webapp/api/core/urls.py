@@ -14,11 +14,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.contrib.auth import views as pw_views
 from django.urls import path, include, re_path
 from rest_framework.authtoken import views as auth_views
 from rest_framework import routers
 import api.views
-
 
 router = routers.DefaultRouter()
 router.register(r'users', api.views.UserViewSet)
@@ -70,5 +70,9 @@ urlpatterns = [
     path('api/concept-path/', api.views.cdb_concept_path),
     path('api/generate-concept-filter-json/', api.views.generate_concept_filter_flat_json),
     path('api/generate-concept-filter/', api.views.generate_concept_filter),
+    path('reset_password/', pw_views.PasswordResetView.as_view(), name ='reset_password'),
+    path('reset_password_sent/', pw_views.PasswordResetDoneView.as_view(), name ='password_reset_done'),
+    path('reset/<uidb64>/<token>', pw_views.PasswordResetConfirmView.as_view(), name ='password_reset_confirm'),
+    path('reset_password_complete/', pw_views.PasswordResetCompleteView.as_view(), name ='password_reset_complete'),
     re_path('^.*$', api.views.index, name='index'),  # Match everything else to home
 ]
