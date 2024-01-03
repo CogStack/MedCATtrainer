@@ -7,14 +7,10 @@
         <input v-model="uname" class="form-control" id="uname">
         <label>Password:</label>
         <input v-model="password" class="form-control" type="password" id="password">
-        <div class="forgotten" @click="forgottenPassword = !forgottenPassword">Forgotten Password</div>
+        <a class="forgotten" href="/reset_password/">Forgotten Password</a>
       </form>
       <span v-if="failed" class="text-danger">Username and/or password incorrect</span>
       <span v-if="failedAdminStatusCheck" class="text-danger">Cannot determine admin status of username</span>
-      <div v-if="forgottenPassword">
-        <label>Fill in the the username field above and click the button below to reset your password.</label>
-        <button class="login-submit btn btn-primary" @click="reset_password()">E-mail New Password</button>
-      </div>
     </div>
     <div slot="footer">
       <button class="login-submit btn btn-primary" @click="login()">Login</button>
@@ -45,8 +41,7 @@ export default {
       uname: '',
       password: '',
       failed: false,
-      failedAdminStatusCheck: false,
-      forgottenPassword: false
+      failedAdminStatusCheck: false
     }
   },
   methods: {
