@@ -7,7 +7,7 @@
         <input v-model="uname" class="form-control" id="uname">
         <label>Password:</label>
         <input v-model="password" class="form-control" type="password" id="password">
-        <a class="forgotten" href="/reset_password/">Forgotten Password</a>
+        <a href="/reset_password/">Forgotten Password</a>
       </form>
       <span v-if="failed" class="text-danger">Username and/or password incorrect</span>
       <span v-if="failedAdminStatusCheck" class="text-danger">Cannot determine admin status of username</span>
@@ -82,13 +82,6 @@ export default {
       if (e.keyCode === 13 && this.uname.length > 0 && this.password.length > 0) {
         this.login()
       }
-    },
-    reset_password () {
-      let payload = {
-        username: this.uname
-      }
-
-      instance.post('/api/api-reset-password/', payload, {})
     }
   },
   created () {
@@ -111,14 +104,5 @@ export default {
   }
 }
 
-.forgotten {
-  cursor:pointer;
-  color:blue;
-  text-decoration:underline;
-}
-
-.forgotten:hover {
-  cursor:pointer;
-}
 
 </style>
