@@ -1,3 +1,4 @@
+import logging
 import os
 
 import pandas as pd
@@ -18,6 +19,9 @@ BOOL_CHOICES = [
         (0, 'False'),
         (1, 'True')
         ]
+
+
+logger = logging.getLogger(__name__)
 
 
 class ICDCode(models.Model):
@@ -57,10 +61,14 @@ class ConceptDB(models.Model):
         return inst
 
     def save(self, *args, **kwargs):
+        from .admin import import_concepts_from_cdb
         if self.__cdb_field_name is not None and self.__cdb_field_name != self.cdb_file.name:
             raise ValidationError('Cannot change file path of existing CDB.')
         else:
             super(ConceptDB, self).save(*args, **kwargs)
+            if self.id is not None:
+                logger.info('New CDB uploaded. Importing concept DB into solr search service in a background task')
+                import_concepts_from_cdb(self.id)
 
     def __str__(self):
         return self.name
