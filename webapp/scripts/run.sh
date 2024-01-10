@@ -19,22 +19,17 @@ python /home/api/manage.py process_tasks --log-std &
 # create a new super user, with username and password 'admin'
 # also create a user group `user_group` that prevents users from deleting models
 echo "from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User, Group, Permission
 User = get_user_model()
 if User.objects.count() == 0:
     User.objects.create_superuser('admin', 'admin@example.com', 'admin')
-group, created = Group.objects.get_or_create(name='user_group')
-if created:
-    user = User.objects.create_user('username', 'username@example.com', 'password')
-    group.user_set.add(user)
-    permissions = Permission.objects.exclude(codename__contains='delete')
-    for p in permissions:
-      group.permissions.add(p)
 " | python manage.py shell
 
 if [ $LOAD_EXAMPLES ]; then
   python /home/scripts/load_examples.py &
 fi
+
+# Creating a default user group that can manage projects and annotate but not delete
+python manage.py shell < /home/scripts/create_group.py
 
 # RESET any Env vars to original stat
 export RESUBMIT_ALL_ON_STARTUP=$TMP_RESUBMIT_ALL_VAR
