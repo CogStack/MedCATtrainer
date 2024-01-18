@@ -75,6 +75,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, "..", "frontend", "dist"),
+            os.path.join(BASE_DIR, "..", "templates", "registration")
             ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -199,6 +200,6 @@ SILENCED_SYSTEM_CHECKS = ['admin.E130']
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = os.environ.get('EMAIL_USER')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASS')
+EMAIL_HOST_USER = 'sutton.adam04@gmail.com'
+EMAIL_HOST_PASSWORD = 'rrwt ohso fpin swhi'
 EMAIL_USE_TLS = True
