@@ -17,6 +17,7 @@ python /home/api/manage.py migrate api --noinput
 python /home/api/manage.py process_tasks --log-std &
 
 # create a new super user, with username and password 'admin'
+# also create a user group `user_group` that prevents users from deleting models
 echo "from django.contrib.auth import get_user_model
 User = get_user_model()
 if User.objects.count() == 0:
@@ -26,6 +27,9 @@ if User.objects.count() == 0:
 if [ $LOAD_EXAMPLES ]; then
   python /home/scripts/load_examples.py &
 fi
+
+# Creating a default user group that can manage projects and annotate but not delete
+python manage.py shell < /home/scripts/create_group.py
 
 # RESET any Env vars to original stat
 export RESUBMIT_ALL_ON_STARTUP=$TMP_RESUBMIT_ALL_VAR
