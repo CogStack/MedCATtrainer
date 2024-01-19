@@ -68,7 +68,7 @@ urlpatterns = [
     path('api/concept-path/', api.views.cdb_concept_path),
     path('api/generate-concept-filter-json/', api.views.generate_concept_filter_flat_json),
     path('api/generate-concept-filter/', api.views.generate_concept_filter),
-    path('reset_password/', pw_views.PasswordResetView.as_view(email_template_name="password_reset_email.html", subject_template_name="password_reset_subject.txt"), name ='reset_password'),
+    path('reset_password/', api.views.ResetPasswordView.as_view(), name ='reset_password'),
     path('reset_password_sent/', pw_views.PasswordResetDoneView.as_view(), name ='password_reset_done'),
     path('reset/<uidb64>/<token>', pw_views.PasswordResetConfirmView.as_view(), name ='password_reset_confirm'),
     path('reset_password_complete/', pw_views.PasswordResetCompleteView.as_view(), name ='password_reset_complete'),
