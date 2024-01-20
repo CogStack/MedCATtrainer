@@ -187,7 +187,7 @@ class ResetPasswordView(PasswordResetView):
         try:
             return super().post(request, *args, **kwargs)
         except SMTPException:
-            return HttpResponseServerError('''SMTP settings have not been configured. <br>
+            return HttpResponseServerError('''SMTP settings are not configured correctly. <br>
                                            Please visit https://medcattrainer.readthedocs.io for more information to resolve this. <br>
                                            You can also ask a question at: https://discourse.cogstack.org/c/medcat/5''')
 
