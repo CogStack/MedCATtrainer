@@ -35,3 +35,8 @@ RESUBMIT_ALL_ON_STARTUP=1
 # Front end env vars
 LOAD_NUM_DOC_PAGES=10
 
+# SMTP EMAIL SETTINGS
+EMAIL_USER=example@example.com
+EMAIL_PASS=tobechanged
+EMAIL_HOST=mail.cogstack.org
+EMAIL_PORT=465
