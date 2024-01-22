@@ -48,6 +48,8 @@ Personal email accounts can be set up by users to do this, or you can contact so
 
 The environment variables required are listed in [Environment Variables.](#(optional)-environment-variables) 
 
+Environment Variables are located in envs/env or envs/env-prod, when those are set webapp/frontend/.env must change "VITE_APP_EMAIL" to 1.
+
 ### (Optional) Environment Variables
 Environment variables are used to configure the app:
 
