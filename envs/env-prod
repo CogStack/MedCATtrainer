@@ -36,7 +36,7 @@ RESUBMIT_ALL_ON_STARTUP=1
 LOAD_NUM_DOC_PAGES=10
 
 # SMTP EMAIL SETTINGS
-EMAIL_USER=example@example.com
-EMAIL_PASS=tobechanged
+EMAIL_USER=example@cogstack.org
+EMAIL_PASS="to be changed"
 EMAIL_HOST=mail.cogstack.org
 EMAIL_PORT=465
