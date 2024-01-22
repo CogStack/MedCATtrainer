@@ -9,11 +9,13 @@ from django.http import HttpResponseBadRequest, HttpResponseServerError, HttpRes
 from django.shortcuts import render
 from django.utils import timezone
 from django_filters import rest_framework as drf
+from django.contrib.auth.views import PasswordResetView
 from medcat.cdb import CDB
 from medcat.utils.helpers import tkns_from_doc
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from smtplib import SMTPException
 
 from core.settings import MEDIA_ROOT
 from .admin import download_projects_with_text, download_projects_without_text, \
@@ -212,6 +214,17 @@ class OPCSCodeViewSet(viewsets.ModelViewSet):
     serializer_class = OPCSCodeSerializer
     filterset_class = OPCSCodeFilter
     filterset_fields = ['code', 'id']
+
+class ResetPasswordView(PasswordResetView):
+    email_template_name = 'password_reset_email.html'
+    subject_template_name = 'password_reset_subject.txt'
+    def post(self, request, *args, **kwargs):
+        try:
+            return super().post(request, *args, **kwargs)
+        except SMTPException:
+            return HttpResponseServerError('''SMTP settings are not configured correctly. <br>
+                                           Please visit https://medcattrainer.readthedocs.io for more information to resolve this. <br>
+                                           You can also ask a question at: https://discourse.cogstack.org/c/medcat/5''')
 
 
 @api_view(http_method_names=['GET'])
