@@ -7,6 +7,7 @@
         <input v-model="uname" class="form-control" id="uname">
         <label>Password:</label>
         <input v-model="password" class="form-control" type="password" id="password">
+        <a v-if="reset_pw" href="/reset_password/">Forgotten Password</a>
       </form>
       <span v-if="failed" class="text-danger">Username and/or password incorrect</span>
       <span v-if="failedAdminStatusCheck" class="text-danger">Cannot determine admin status of username</span>
@@ -40,7 +41,8 @@ export default {
       uname: '',
       password: '',
       failed: false,
-      failedAdminStatusCheck: false
+      failedAdminStatusCheck: false,
+      reset_pw: import.meta.env.VITE_APP_EMAIL === '1',
     }
   },
   methods: {
@@ -102,4 +104,6 @@ export default {
     width: 400px;
   }
 }
+
+
 </style>

@@ -33,3 +33,9 @@ RESUBMIT_ALL_ON_STARTUP=1
 
 # Front end env vars
 LOAD_NUM_DOC_PAGES=10
+
+# SMTP email settings - when settings are configured go to webapp/frontend/.env and set VITE_APP_EMAIL to 1
+EMAIL_USER=example@cogstack.org
+EMAIL_PASS="to be changed"
+EMAIL_HOST=mail.cogstack.org
+EMAIL_PORT=465

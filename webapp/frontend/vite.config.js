@@ -1,9 +1,14 @@
 import { createVuePlugin as vue } from "vite-plugin-vue2";
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 
 // https://vitejs.dev/config/
 const path = require("path");
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  return {
+  define: {
+    __APP_ENV__: JSON.stringify(env.APP_ENV),
+  },
   plugins: [vue()],
   resolve: {
     alias: {
@@ -39,4 +44,5 @@ export default defineConfig({
       }
     }
   }
+}
 })

@@ -40,6 +40,16 @@ On MAC: https://docs.docker.com/docker-for-mac/#memory
 
 On Windows: https://docs.docker.com/docker-for-windows/#resources
 
+### (Optional) SMTP Setup
+
+For password resets and other emailing services email environment variables are required to be set up.
+
+Personal email accounts can be set up by users to do this, or you can contact someone in CogStack for a cogstack no email credentials. 
+
+The environment variables required are listed in [Environment Variables.](#(optional)-environment-variables) 
+
+Environment Variables are located in envs/env or envs/env-prod, when those are set webapp/frontend/.env must change "VITE_APP_EMAIL" to 1.
+
 ### (Optional) Environment Variables
 Environment variables are used to configure the app:
 
@@ -48,6 +58,10 @@ Environment variables are used to configure the app:
 |MEDCAT_CONFIG_FILE|MedCAT config file as described [here](https://github.com/CogStack/MedCAT/blob/master/medcat/config.py)|
 |BEHIND_RP| If you're running MedCATtrainer, use 1, otherwise this defaults to 0 i.e. False|
 |MCTRAINER_PORT|The port to run the trainer app on|
+|EMAIL_USER|Email address which will be used to send users emails regarding password resets|
+|EMAIL_PASS|The password or authentication key which will be used with the email address|
+|EMAIL_HOST|The hostname of the SMTP server which will be used to send email (default: mail.cogstack.org)|
+|EMAIL_PORT|The port that the SMTP server is listening to, common numbers are 25, 465, 587 (default: 465)|
 
 Set these and re-run the docker-compose file.
 
