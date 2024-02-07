@@ -26,7 +26,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 realm = os.environ.get('ENV', 'non-prod')
 secret_key = os.environ.get('SECRET_KEY')
 if realm == 'prod' and secret_key is None:
-    msg = 'No SECRET_KEY envrionment variable found for prod envrionment. Please add a secret key and re-run'
+    msg = 'No SECRET_KEY environment variable found for prod environment. Please add a secret key and re-run'
     log.error(msg)
     sys.exit(msg)
 else:
