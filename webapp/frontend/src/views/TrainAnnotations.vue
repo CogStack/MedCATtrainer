@@ -57,7 +57,7 @@
             <concept-summary v-if="!conceptSynonymSelection && !hasRelations" :selectedEnt="currentEnt" :altSearch="altSearch"
                              :project="project" :searchFilterDBIndex="searchFilterDBIndex"
                              @select:altConcept="markAlternative"
-                             @select:alternative="toggleAltSearch" @select:ICD="markICD" @select:OPCS="markOPCS"
+                             @select:alternative="toggleAltSearch"
                              @updated:entityComment="markEntity(false)"
                              class="concept-summary"></concept-summary>
             <b-tabs v-if="!conceptSynonymSelection && hasRelations">
