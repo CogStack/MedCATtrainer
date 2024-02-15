@@ -65,7 +65,7 @@
                 <concept-summary :selectedEnt="currentEnt" :altSearch="altSearch"
                                  :project="project"  :searchFilterDBIndex="searchFilterDBIndex"
                                  @select:altConcept="markAlternative" @select:alternative="toggleAltSearch"
-                                 @select:ICD="markICD" @select:OPCS="markOPCS" class="concept-summary"></concept-summary>
+                                 class="concept-summary"></concept-summary>
               </b-tab>
               <b-tab title="Relations" v-if="hasRelations && docId">
                 <relation-annotation-task-container :available-relations="project.relations" :project-id="project.id"
@@ -198,13 +198,9 @@
     <modal v-if="docToSubmit" :closable="true" @modal:close="docToSubmit=null" class="summary-modal">
       <h3 slot="header">Submit Document</h3>
       <div slot="body">
-        <annotation-summary v-if="!project.clinical_coding_project" :annos="ents" :currentDoc="currentDoc"
+        <annotation-summary :annos="ents" :currentDoc="currentDoc"
                             :taskIDs="hasMetaTasks" :searchFilterDBIndex="searchFilterDBIndex"
                             @select:AnnoSummaryConcept="selectEntityFromSummary"></annotation-summary>
-        <coding-annotation-summary v-if="project.clinical_coding_project" :annos="ents" :currentDoc="currentDoc"
-                                   :taskIDs="hasMetaTasks" :searchFilterDBIndex="searchFilterDBIndex"
-                                   @select:AnnoSummaryConcept="selectEntityFromSummary"></coding-annotation-summary>
-
       </div>
       <div slot="footer">
         <button class="btn btn-primary" :disabled="submitConfirmedLoading" @click="submitConfirmed()">
@@ -220,12 +216,9 @@
     <modal v-if="summaryModal" :closable="true" @modal:close="summaryModal = false" class="summary-modal">
       <h3 slot="header">Annotation Summary</h3>
       <div slot="body">
-        <annotation-summary v-if="!project.clinical_coding_project" :annos="ents" :currentDoc="currentDoc"
+        <annotation-summary :annos="ents" :currentDoc="currentDoc"
                             :taskIDs="(project || {}).tasks || []"
                             @select:AnnoSummaryConcept="selectEntityFromSummary"></annotation-summary>
-        <coding-annotation-summary v-if="project.clinical_coding_project" :annos="ents"
-                                   :currentDoc="currentDoc" :taskIDs="(project || {}).tasks || []"
-                                   @select:AnnoSummaryConcept="selectEntityFromSummary"></coding-annotation-summary>
       </div>
     </modal>
     <modal v-if="resetModal" :closable="true" @modal:close="resetModal = false" class="reset-modal">
@@ -254,7 +247,6 @@ import AddAnnotation from '@/components/anns/AddAnnotation.vue'
 import MetaAnnotationTaskContainer from '@/components/usecases/MetaAnnotationTaskContainer.vue'
 import RelationAnnotationTaskContainer from '@/components/usecases/RelationAnnotationTaskContainer.vue'
 import AnnotationSummary from '@/components/common/AnnotationSummary.vue'
-import CodingAnnotationSummary from '@/components/cc/CodingAnnotationSummary.vue'
 import { Multipane, MultipaneResizer } from 'vue-multipane'
 
 const TASK_NAME = 'Concept Annotation'
@@ -281,7 +273,6 @@ export default {
     MetaAnnotationTaskContainer,
     RelationAnnotationTaskContainer,
     AnnotationSummary,
-    CodingAnnotationSummary,
     Multipane,
     MultipaneResizer
   },
@@ -591,22 +582,6 @@ export default {
       this.setStatus('irrelevant')
       this.markEntity(true)
       this.metaAnnotate = false
-    },
-    markICD (code) {
-      this.currentEnt.icd_code = code.id
-      if (this.currentEnt.alternative) {
-        this.markEntity(false)
-      } else {
-        this.markCorrect()
-      }
-    },
-    markOPCS (code) {
-      this.currentEnt.opcs_code = code.id
-      if (this.currentEnt.alternative) {
-        this.markEntity(false)
-      } else {
-        this.markCorrect()
-      }
     },
     addAnnotationComplete (addedAnnotationId) {
       this.conceptSynonymSelection = null

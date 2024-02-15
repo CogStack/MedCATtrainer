@@ -94,10 +94,6 @@ def download_projects_without_text(projects, with_doc_name):
                 out_ann['last_modified'] = str(ann.last_modified)
                 out_ann['manually_created'] = ann.manually_created
                 out_ann['acc'] = ann.acc
-                if ann.icd_code:
-                    out_ann['icd_code'] = ann.icd_code.code
-                if ann.opcs_code:
-                    out_ann['opcs_code'] = ann.opcs_code.code
                 out_ann['meta_anns'] = {}
 
                 # Get MetaAnnotations
@@ -267,18 +263,6 @@ def retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
                 out_ann['comment'] = ann.comment
                 out_ann['manually_created'] = ann.manually_created
                 out_ann['acc'] = ann.acc
-                # if ann.icd_code:
-                #     out_ann['icd_code'] = {'code': ann.icd_code.code, 'desc': ann.icd_code.desc}
-                # if ann.opcs_code:
-                #     out_ann['opcs_codes'] = {'code': ann.opcs_code, 'desc': ann.opcs_code.desc}
-                #
-                # out_ann['acc'] = ann.acc
-                # if ann.comment:
-                #     out_ann['comment'] = ann.comment
-                # if ann.icd_code:
-                #     out_ann['icd_code'] = ann.icd_code.code
-                # if ann.opcs_code:
-                #     out_ann['opcs_code'] = ann.opcs_code.code
                 out_ann['meta_anns'] = {}
 
                 # Get MetaAnnotations
@@ -438,12 +422,6 @@ def import_concepts(modeladmin, request, queryset):
 def delete_indexed_concepts(modeladmin, request, queryset):
     for concept_db in queryset:
         drop_collection(concept_db)
-        ICDCode.objects.filter(cdb=concept_db).delete()
-        OPCSCode.objects.filter(cdb=concept_db).delete()
-
-
-admin.site.register(ICDCode)
-admin.site.register(OPCSCode)
 
 
 class ConceptDBAdmin(admin.ModelAdmin):

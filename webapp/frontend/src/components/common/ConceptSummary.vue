@@ -34,22 +34,6 @@
           <td>Concept ID</td>
           <td>{{conceptSummary['Concept ID'] || 'n/a'}}</td>
         </tr>
-        <tr v-if="(conceptSummary['ICD-10'] || []).length > 0">
-          <td>ICD-10</td>
-          <td class="fit-content">
-            <div class="selectable-code" @click="selectICDCode(code)"
-                 v-for="code of conceptSummary['ICD-10']" :key="code.code">
-              <font-awesome-icon v-if="selectedEnt.icd_code === code.id" icon="check" class="selected-code"></font-awesome-icon>
-              {{`${code.code} | ${code.desc}`}}
-            </div>
-          </td>
-        </tr>
-        <tr v-if="(conceptSummary['OPCS-4'] || []).length > 0">
-          <td>OPCS-4</td>
-          <td class="fit-content">
-            <div v-for="code of conceptSummary['OPCS-4']" :key="code.code">{{`${code.code} | ${code.desc}`}}</div>
-          </td>
-        </tr>
         <tr>
           <td>Accuracy</td>
           <td>{{conceptSummary['Accuracy'] ?  conceptSummary['Accuracy'].toFixed(2) : 'n/a'}}</td>
@@ -174,12 +158,6 @@ export default {
       if (this.altSearch && e.keyCode === 27) {
         this.cancelReassign()
       }
-    },
-    selectICDCode (item) {
-      this.$emit('select:ICD', item)
-    },
-    selectOPCSCode (item) {
-      this.$emit('select:OPCS', item)
     },
     updateComment: _.debounce(function () {
       this.$emit('updated:entityComment', this.selectedEnt)
