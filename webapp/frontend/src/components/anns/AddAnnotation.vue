@@ -53,18 +53,6 @@
           <td>Concept ID</td>
           <td >{{selectedCUI.cui || 'n/a'}}</td>
         </tr>
-        <tr v-if="(selectedCUI.icd10 || []).length > 0">
-          <td>ICD-10</td>
-          <td class="fit-content">
-            <div v-for="code of selectedCUI.icd10" :key="code.code">{{`${code.code} | ${code.desc}`}}</div>
-          </td>
-        </tr>
-        <tr v-if="(selectedCUI.opcs4 || []).length > 0">
-          <td>OPCS-4</td>
-          <td class="fit-content">
-            <div v-for="code of selectedCUI.opcs4" :key="code.code">{{`${code.code} | ${code.desc}`}}</div>
-          </td>
-        </tr>
         <tr>
           <td>Description</td>
           <td class="fit-content" v-html="selectedCUI.desc === 'nan' ? 'n/a' : selectedCUI.desc || 'n/a'"></td>
@@ -122,15 +110,6 @@ export default {
   methods: {
     enrichCUI (concept) {
       this.selectedCUI = concept
-      if (this.selectedCUI.icd10 || this.selectedCUI.opcs4) {
-        this.fetchConcept(this.selectedCUI, this.searchFilterDBIndex, () => {
-          if (concept.icdCode) {
-            this.selectedCUI.icd10 = this.selectedCUI.icd10.filter(i => i.id === concept.icdCode)
-          } else if (concept.opcsCode) {
-            this.selectedCUI.opcs4 = this.selectedCUI.opcs4.filter(i => i.id === concept.opcsCode)
-          }
-        })
-      }
     },
     submit () {
       const payload = {
@@ -139,11 +118,6 @@ export default {
         project_id: this.project.id,
         selection_occur_idx: this.selection.selectionOccurrenceIdx,
         cui: this.selectedCUI.cui
-      }
-      if (this.selectedCUI.icd10 && this.selectedCUI.icd10.length === 1) {
-        payload.icd_code = this.selectedCUI.icd10[0].id
-      } else if (this.selectedCUI.opcs4 && this.selectedCUI.opcs4.length === 1) {
-        payload.opcs_code = this.selectedCUI.opcs4[0].id
       }
 
       this.$http.post('/api/add-annotation/', payload).then(resp => {

@@ -53,18 +53,6 @@ class DatasetSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ICDCodeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ICDCode
-        fields = ['code', 'desc', 'id', 'concept']
-
-
-class OPCSCodeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OPCSCode
-        fields = ['code', 'desc', 'id', 'concept']
-
-
 class ProjectAnnotateEntitiesSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectAnnotateEntities

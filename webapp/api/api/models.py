@@ -20,24 +20,6 @@ BOOL_CHOICES = [
         ]
 
 
-class ICDCode(models.Model):
-    code = models.CharField(max_length=10, unique=True)
-    desc = models.CharField(max_length=300)
-    cdb = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=True, null=True)
-
-    def __str__(self):
-        return f'{self.code} | {self.desc}'
-
-
-class OPCSCode(models.Model):
-    code = models.CharField(max_length=10, unique=True)
-    desc = models.CharField(max_length=300)
-    cdb = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=True, null=True)
-
-    def __str__(self):
-        return f'{self.code} | {self.desc}'
-
-
 cdb_name_validator = RegexValidator(r'^[0-9a-zA-Z_-]*$', 'Only alpahanumeric characters, -, _ are allowed for CDB names')
 
 
@@ -196,11 +178,6 @@ class AnnotatedEntity(models.Model):
     irrelevant = models.BooleanField(default=False)
     create_time = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
-
-    # Specific to the Clinical Coding use case - feels hacky being directly on this model.
-    # Should AnnotatedEntity be a polymorphic model?? and there be a specific ClinicalCodingAnnotatedEntity??
-    icd_code = models.ForeignKey('ICDCode', on_delete=models.SET_NULL, blank=True, null=True)
-    opcs_code = models.ForeignKey('OPCSCode', on_delete=models.SET_NULL, blank=True, null=True)
 
     class Meta:
         ordering = ['id']

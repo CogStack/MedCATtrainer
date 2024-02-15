@@ -13,7 +13,7 @@ from medcat.utils.filters import check_filters
 from medcat.utils.helpers import tkns_from_doc
 from medcat.vocab import Vocab
 
-from .models import Entity, AnnotatedEntity, ICDCode, OPCSCode, ProjectAnnotateEntities, \
+from .models import Entity, AnnotatedEntity, ProjectAnnotateEntities, \
     ConceptDB
 
 log = logging.getLogger('trainer')
@@ -91,27 +91,6 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
             ann_ent.save()
 
 
-def _create_linked_codes(mod: Union[Type[ICDCode], Type[OPCSCode]], linked_codes: List[Dict], cdb_model: ConceptDB):
-    """
-    Expects the cui2icd10, cui2opcs4 dicts to include code and name.
-    """
-    for code in linked_codes:
-        if len(mod.objects.filter(code=code['code'])) == 0:
-            code_mod = mod()
-            code_mod.code = code['code']
-            code_mod.desc = code['name']
-            code_mod.cdb = cdb_model
-            code_mod.save()
-
-
-def create_linked_icd_codes(codes: List, cdb_model):
-    _create_linked_codes(ICDCode, codes, cdb_model)
-
-
-def create_linked_opcs_codes(codes: List, cdb_model):
-    _create_linked_codes(OPCSCode, codes, cdb_model)
-
-
 def get_create_cdb_infos(cdb, concept, cui, cui_info_prop, code_prop, desc_prop, model_clazz):
     codes = [c[code_prop] for c in cdb.cui2info.get(cui, {}).get(cui_info_prop, []) if code_prop in c]
     existing_codes = model_clazz.objects.filter(code__in=codes)
@@ -139,8 +118,7 @@ def _remove_overlap(project, document, start, end):
 
 
 def create_annotation(source_val: str, selection_occurrence_index: int, cui: str, user: User,
-                      project: ProjectAnnotateEntities, document, cat: CAT, icd_code=None,
-                      opcs_code=None):
+                      project: ProjectAnnotateEntities, document, cat: CAT):
     text = document.text
     id = None
 
@@ -180,24 +158,8 @@ def create_annotation(source_val: str, selection_occurrence_index: int, cui: str
         ann_ent.validated = True
         ann_ent.manually_created = True
         ann_ent.correct = True
-
-        if icd_code:
-            ann_ent.icd_code = icd_code
-        if opcs_code:
-            ann_ent.opcs_code = opcs_code
-
         ann_ent.save()
         id = ann_ent.id
-
-    # upload icd / opcs codes if available
-    # also expects icd / opcs addl info dicts to include:
-    # {code: <the code>: name: <human readable desc>}
-    icd_codes = cat.cdb.addl_info.get('cui2icd10', {}).get(cui, None)
-    if icd_codes is not None:
-        create_linked_icd_codes(icd_codes, project.concept_db)
-    opcs_codes = cat.cdb.addl_info.get('cui2opcs4', {}).get(cui, None)
-    if opcs_codes is not None:
-        create_linked_opcs_codes(opcs_codes, project.concept_db)
 
     return id
 

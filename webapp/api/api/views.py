@@ -178,42 +178,6 @@ class DatasetViewSet(viewsets.ModelViewSet):
     serializer_class = DatasetSerializer
 
 
-class ICDCodeFilter(drf.FilterSet):
-    code__in = TextInFilter(field_name='code', lookup_expr='in')
-    id__in = NumInFilter(field_name='id', lookup_expr='in')
-
-    class Meta:
-        model = ICDCode
-        fields = ['code', 'id']
-
-
-class OPCSCodeFilter(drf.FilterSet):
-    code__in = TextInFilter(field_name='code', lookup_expr='in')
-    id__in = NumInFilter(field_name='id', lookup_expr='in')
-
-    class Meta:
-        model = OPCSCode
-        fields = ['code', 'id']
-
-
-class ICDCodeViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ['get']
-    queryset = ICDCode.objects.all()
-    serializer_class = ICDCodeSerializer
-    filterset_class = ICDCodeFilter
-    filterset_fields = ['code', 'id']
-
-
-class OPCSCodeViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ['get']
-    queryset = OPCSCode.objects.all()
-    serializer_class = OPCSCodeSerializer
-    filterset_class = OPCSCodeFilter
-    filterset_fields = ['code', 'id']
-
-
 @api_view(http_method_names=['GET'])
 def get_anno_tool_conf(_):
     return Response({k: v for k,v in os.environ.items()})
@@ -297,9 +261,6 @@ def add_annotation(request):
     sel_occur_idx = int(request.data['selection_occur_idx'])
     cui = str(request.data['cui'])
 
-    icd_code = request.data.get('icd_code')
-    opcs_code = request.data.get('opcs_code')
-
     logger.debug("Annotation being added")
     logger.debug(str(request.data))
 
@@ -307,11 +268,6 @@ def add_annotation(request):
     user = request.user
     project = ProjectAnnotateEntities.objects.get(id=p_id)
     document = Document.objects.get(id=d_id)
-
-    if icd_code:
-        icd_code = ICDCode.objects.filter(id=icd_code).first()
-    if opcs_code:
-        opcs_code = OPCSCode.objects.filter(id=opcs_code).first()
 
     cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
                      CAT_MAP=CAT_MAP, project=project)
@@ -321,9 +277,7 @@ def add_annotation(request):
                            user=user,
                            project=project,
                            document=document,
-                           cat=cat,
-                           icd_code=icd_code,
-                           opcs_code=opcs_code)
+                           cat=cat)
     logger.debug('Annotation added.')
     return Response({'message': 'Annotation added successfully', 'id': id})
 
@@ -755,8 +709,6 @@ def cdb_cui_children(request, cdb_id):
 
     # root SNOMED CT code: 138875005
     # root UMLS code: CUI:
-    # root level ICD term:
-    # root level OPCS term:
 
     if cdb.addl_info.get('pt2ch') is None:
         return HttpResponseBadRequest('Requested MedCAT CDB model does not include parent2child metadata to'
