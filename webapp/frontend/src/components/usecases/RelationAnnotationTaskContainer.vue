@@ -119,7 +119,8 @@ export default {
 
 <style scoped lang="scss">
 .relation-extraction-container {
-  max-height: 600px;
+  max-height: 500px;
+  overflow-y: auto;
 }
 
 .add-rel-btn {

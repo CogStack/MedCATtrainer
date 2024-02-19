@@ -83,9 +83,9 @@ export default {
           styleClass = `highlight-task-${btnIndex}`
         }
 
-        if (this.ents[i] === this.currentRelStartEnt) {
+        if (this.ents[i].id === this.currentRelStartEnt.id) {
           styleClass += ' current-rel-start'
-        } else if (this.ents[i] === this.currentRelEndEnt) {
+        } else if (this.ents[i].id === this.currentRelEndEnt.id) {
           styleClass += ' current-rel-end'
         }
 
