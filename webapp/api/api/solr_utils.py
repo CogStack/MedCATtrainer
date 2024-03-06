@@ -187,13 +187,14 @@ def _upload_payload(update_url, data, collection, commit=False):
 
 
 def _concept_dct(cui: str, cdb: CDB):
+    synonyms = list(cdb.addl_info.get('cui2original_names', {}).get(cui, set()))
     concept_dct = {
         'cui': str(cui),
         'pretty_name': cdb.get_name(cui),
         'name': re.sub(r'\([\w+\s]+\)', '', cdb.get_name(cui)).strip(),
         'type_ids': list(cdb.cui2type_ids[cui]),
         'desc': cdb.addl_info.get('cui2description', {}).get(cui, ''),
-        'synonyms': list(cdb.addl_info.get('cui2original_names', {}).get(cui, set())),
+        'synonyms': synonyms if len(synonyms) > 0 else [cdb.get_name(cui)]
     }
     return concept_dct
 
