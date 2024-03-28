@@ -113,6 +113,8 @@ export default {
   padding: 10px 0;
   width: 95%;
   margin: auto;
+  height: calc(100% - 100px);
+  overflow-y: auto;
 }
 
 .status-icon {
