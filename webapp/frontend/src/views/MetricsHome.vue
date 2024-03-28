@@ -8,6 +8,10 @@
              :fields="reports.fields"
              :select-mode="'single'"
              @row-selected="loadMetrics">
+      <template #cell(projects)="data">
+        <div v-html="data.value"></div>
+      </template>
+
       <template #cell(status)="data">
         <span v-if="data.item.status == 'pending'">Pending
           <font-awesome-icon icon="fa-regular fa-clock" class="status-icon"></font-awesome-icon>
@@ -56,6 +60,7 @@ export default {
     return {
       loadingReports: false,
       confDeleteReportModal: null,
+      projects: {},
       reports: {
         items: [],
         fields: [
@@ -63,7 +68,7 @@ export default {
           { key: 'report_name', label: 'Report Name' },
           { key: 'created_user', label: 'Created User' },
           { key: 'create_time', label: 'Create Time' },
-          { key: 'projects', label: 'Projects' },
+          { key: 'projects', label: 'Projects', formatter: this.projectsFormatter },
           { key: 'status', label: 'Status' },
           { key: 'cleanup', label: 'Remove' }
         ]
@@ -80,11 +85,22 @@ export default {
         this.loadingReports = false
         this.reports.items = resp.data.reports.map(i => {
           const item = {...i}
-          item.projects = item.projects.join(', ')
           item.report_name = item.report_name || item.report_name_generated
           return item
         })
+        this.fetchProjects()
         setTimeout(this.pollReportStatus, 10000)
+      })
+    },
+    fetchProjects () {
+      this.reports.items.forEach(item => {
+        item.projects.forEach(projId => {
+          if (!Object.keys(this.projects).includes(projId)) {
+            this.$http.get(`/api/project-annotate-entities/${projId}/`).then(resp => {
+              this.projects[projId] = resp.data
+            })
+          }
+        })
       })
     },
     loadMetrics (rows) {
@@ -103,6 +119,17 @@ export default {
       }).finally(err => {
         this.confDeleteReportModal = null
       })
+    },
+    projectsFormatter (value) {
+      let outEl = ''
+      value.forEach(i => {
+        if (this.projects[i]) {
+          outEl += `<router-link to="train-annotations/${i}/">${this.projects[i].name}</router-link>`
+        } else {
+          outEl += `<div>${i}</div>`
+        }
+      })
+      return `<div>${outEl}</div>`
     }
   }
 }
