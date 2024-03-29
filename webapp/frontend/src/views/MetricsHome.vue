@@ -9,7 +9,7 @@
              :select-mode="'single'"
              @row-selected="loadMetrics">
       <template #cell(projects)="data">
-        <div v-html="data.value"></div>
+        <v-runtime-template :template="data.value"></v-runtime-template>
       </template>
 
       <template #cell(status)="data">
@@ -48,12 +48,13 @@
 </template>
 
 <script>
+import VRuntimeTemplate from 'v-runtime-template'
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 import Modal from '@/components/common/Modal.vue'
 
 export default {
   name: "MetricsHome",
-  components: {Modal, LoadingOverlay },
+  components: {Modal, LoadingOverlay, VRuntimeTemplate,},
   props: {
   },
   data () {
@@ -89,7 +90,7 @@ export default {
           return item
         })
         this.fetchProjects()
-        setTimeout(this.pollReportStatus, 10000)
+        setTimeout(this.pollReportStatus, 5000)
       })
     },
     fetchProjects () {
@@ -124,7 +125,10 @@ export default {
       let outEl = ''
       value.forEach(i => {
         if (this.projects[i]) {
-          outEl += `<router-link to="train-annotations/${i}/">${this.projects[i].name}</router-link>`
+          outEl += `
+          <div>
+            <router-link :to="{ name: 'train-annotations', params: { projectId: '${i}' }}">${this.projects[i].name}</router-link>
+          </div>`
         } else {
           outEl += `<div>${i}</div>`
         }
@@ -147,4 +151,14 @@ export default {
 .status-icon {
   padding-left: 3px;
 }
+
+.project-links {
+  color: #005EB8;
+
+  &:hover {
+    color: #fff;
+    border-bottom: 1px solid #fff;
+  }
+}
+
 </style>
