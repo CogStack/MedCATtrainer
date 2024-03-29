@@ -698,7 +698,7 @@ def remove_metrics_job(request, report_id: int):
             pass
         task.delete()
         logger.info('Completed metrics job deleted - report ID: %s', report_id)
-        return Response(200, 'task / report deleted')
+        return Response('task / report deleted', 200)
 
 
 @api_view(http_method_names=['GET', 'PUT'])

@@ -24,7 +24,8 @@
         </span>
       </template>
       <template #cell(cleanup)="data">
-        <button class="btn btn-outline-danger" @click="confDeleteReportModal = data.item">
+        <button class="btn btn-outline-danger" @click="confDeleteReportModal = data.item"
+                :disabled="data.item.status === 'pending' || data.item.status === 'running'">
           <font-awesome-icon icon="times"></font-awesome-icon>
         </button>
       </template>
@@ -130,7 +131,10 @@ export default {
             <router-link :to="{ name: 'train-annotations', params: { projectId: '${i}' }}">${this.projects[i].name}</router-link>
           </div>`
         } else {
-          outEl += `<div>${i}</div>`
+          outEl += `
+            <div>
+              ${i} <font-awesome-icon icon="spinner" spin></font-awesome-icon>
+            </div>`
         }
       })
       return `<div>${outEl}</div>`
