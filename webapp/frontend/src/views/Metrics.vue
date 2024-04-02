@@ -22,7 +22,15 @@
           <b-table striped hover small :items="userStats.items" :fields="userStats.fields"></b-table>
         </b-tab>
         <b-tab title="Annotations" class="anno-summary">
-          <b-table striped hover small :items="annoSummary.items" :fields="annoSummary.fields"></b-table>
+          <b-table striped hover small :items="annoSummary.items" :fields="annoSummary.fields">
+            <template #cell(status)="data">
+              <div id="status" :class="textColorClass(data.item.status)">
+                {{data.item.status}}
+                <font-awesome-icon icon="check-circle" v-if="['Correct', 'Manually Added', 'Alternative'].includes(data.item.status)"></font-awesome-icon>
+                <font-awesome-icon icon="times-circle" v-if="['Incorrect', 'Terminated', 'Irrelevant'].includes(data.item.status)"></font-awesome-icon>
+              </div>
+            </template>
+          </b-table>
         </b-tab>
         <b-tab title="Concept Summary" class="concept-summary">
           <b-table striped hover small :items="conceptSummary.items" :fields="conceptSummary.fields" id="concepts-sum-tbl">
@@ -203,7 +211,23 @@ export default {
         this.reportName = resp.data.results.report_name || resp.data.results.report_name_generated
         this.$set(this.userStats, 'items', resp.data.results.user_stats)
         this.$set(this.conceptSummary, 'items', resp.data.results.concept_summary)
-        this.$set(this.annoSummary, 'items', resp.data.results.annotation_summary)
+        let anno_summary = resp.data.results.annotation_summary.map(s => {
+          if (s.correct) {
+            s.status = 'Correct'
+          } else if (s.deleted) {
+            s.status = 'Incorrect'
+          } else if (s.alternative) {
+            s.status = 'Alternative'
+          } else if (s.manually_created) {
+            s.status = 'Manually Added'
+          } else if (s.killed) {
+            s.status = 'Terminated'
+          } else if (s.irrelevant) {
+            s.status = 'Irrelevant'
+          }
+          return s
+        })
+        this.$set(this.annoSummary, 'items', anno_summary)
         this.$set(this.metaAnnsSummary, 'items', resp.data.results.meta_anno_summary)
       })
     }
@@ -226,10 +250,10 @@ export default {
           { key: 'document_name', label: 'Doc. Name', sortable: true },
           { key: 'id', label: 'Annotation Id', sortable: true },
           { key: 'user', label: 'User', sortable: true },
-          { key: 'cui', label: 'CUI' },
+          { key: 'cui', label: 'CUI', sortable: true },
           { key: 'concept_name', label: 'Concept', sortable: true },
-          { key: 'value', label: 'text' }
-          // more fields for the validated, killed, correct, incorrect etc.
+          { key: 'value', label: 'text', sortable: true },
+          { key: 'status', label: 'Status', sortable: true }
         ]
       },
       conceptSummary: {
@@ -259,6 +283,15 @@ export default {
     }
   },
   methods: {
+    textColorClass (status) {
+      return {
+        'task-color-text-0': status === 'Correct' || status === 'Manually Added',
+        'task-color-text-1': status === 'Incorrect',
+        'task-color-text-2': status === 'Terminated',
+        'task-color-text-3': status === 'Alternative',
+        'task-color-text-4': status === 'Irrelevant'
+      }
+    },
     clearModalData () {
       this.modalData = {
         results: null,
