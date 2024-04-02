@@ -636,7 +636,7 @@ def metrics_jobs(request):
             return {
                 'report_id': task.id,
                 'report_name_generated': task.verbose_name,
-                'projects': task.verbose_name.split('-')[1].split(','),
+                'projects': task.verbose_name.split('-')[1].split('_'),
                 'created_user': task.creator.username,
                 'create_time': task.run_at.strftime(dt_fmt),
                 'status': state
@@ -698,7 +698,7 @@ def remove_metrics_job(request, report_id: int):
             pass
         task.delete()
         logger.info('Completed metrics job deleted - report ID: %s', report_id)
-        return Response(200, 'task / report deleted')
+        return Response('task / report deleted', 200)
 
 
 @api_view(http_method_names=['GET', 'PUT'])

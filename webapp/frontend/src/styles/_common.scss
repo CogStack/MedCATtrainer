@@ -26,6 +26,12 @@
 $blur-radius: 10px;
 
 @each $i, $col in $task-colors {
+  .task-color-text-#{$i} {
+    color: $col;
+  }
+}
+
+@each $i, $col in $task-colors {
   .task-btn-#{$i} {
     border-color: $col;
     color: $col;
