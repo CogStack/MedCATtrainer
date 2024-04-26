@@ -72,6 +72,9 @@
         <template #cell(create_time)="data">
           {{new Date(data.item.create_time).toLocaleDateString()}}
         </template>
+        <template #cell(last_modified)="data">
+          {{new Date(data.item.last_modified).toLocaleString()}}
+        </template>
         <template #cell(cuis)="data">
           <div class="term-list">{{data.item.cuis.slice(0, 40) || 'All'}}</div>
         </template>
@@ -190,11 +193,12 @@ export default {
           { key: 'name', label: 'Title', sortable: true },
           { key: 'description', label: 'Description' },
           { key: 'create_time', label: 'Create Time', sortable: true },
+          { key: 'last_modified', label: 'Last Modified', sortable: true },
           { key: 'cuis', label: 'Concepts' },
           { key: 'require_entity_validation', label: 'Annotate / Validate' },
           { key: 'status', label: 'Status', sortable: true },
           { key: 'progress', label: 'Progress', formatter: this.progressFormatter },
-          { key: 'anno_class', label: 'Annotation Classification'},
+          { key: 'anno_class', label: 'Annotation Classification', sortable: true },
           { key: 'cdb_search_filter', label: 'Concepts Imported' },
           { key: 'model_loaded', label: 'Model Loaded' },
           { key: 'metrics', label: 'Metrics' },
