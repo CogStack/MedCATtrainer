@@ -158,6 +158,23 @@ def retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
             "name": "<project_name"  # name of the project
             "id": "<id>"  # the auto-generated id of the project (optional)
             "cuis": ["cui_1", "cui_2" ... ]  # the CUI filter for the project, includes those from file / and text-box
+            "meta_anno_defs": [
+                # list of meta annotation tasks configured for this project.
+                {
+                    "name": "Name of meta annotation task",
+                    "values": [
+                        "<first value>",
+                        "<second value>"
+                        ...
+                    ],
+                },
+                ... more meta_annotation tasks configured for this project
+            ],
+            "relation_anno_defs": [
+                "<name1>",
+                "<name2>"
+                ... more relation annotation task names configured for this project
+            ]
             "documents": [
                 {
                 "id": "<id>"  # the auto-generated id of the document (optional)
@@ -226,6 +243,9 @@ def retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
         out['cuis'] = project.cuis
         out['project_status'] = project.project_status
         out['project_locked'] = project.project_locked
+        out['meta_anno_defs'] = [{'name': t.name, 'values': [v.name for v in t.values.all()]}
+                                 for t in project.tasks.all()]
+        out['relation_anno_defs'] = [r.label for r in project.relations.all()]
         out['documents'] = []
 
         if project.cuis_file is not None and project.cuis_file:
