@@ -1,5 +1,3 @@
-version: '3.4'
-
 # Default compose yml file - uses latest build of MedCATtrainer services. Default passwords and example
 # projects are not used.
 
@@ -35,11 +33,13 @@ services:
     command: cron -f -l 2
 
   nginx:
-    image: cogstacksystems/medcat-trainer-nginx:v2.16.0
+    image: nginx
     restart: always
     volumes:
       - api-media:/home/api/media
       - api-static:/home/api/static
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/sites-enabled/:/etc/nginx/sites-enabled
     ports:
       - ${MCTRAINER_PORT:-8001}:8000
     depends_on:

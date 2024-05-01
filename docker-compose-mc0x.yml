@@ -18,12 +18,13 @@ services:
       - ./envs/env-mc0x
     command: /home/run.sh
   nginx:
-    container_name: medcattrainer_nginx
-    image: cogstacksystems/medcat-trainer-nginx:mc-v0.x-latest
+    image: nginx
     restart: always
     volumes:
       - api-media:/home/api/media
       - api-static:/home/api/static
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/sites-enabled/:/etc/nginx/sites-enabled
     ports:
       - "${MCTRAINER_PORT:-8001}:8000"
     depends_on:
