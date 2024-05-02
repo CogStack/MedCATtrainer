@@ -83,6 +83,21 @@ class ProjectAnnotateEntitiesViewSet(viewsets.ModelViewSet):
         return projects
 
 
+class ProjectGroupFilter(drf.FilterSet):
+    id__in = NumInFilter(field_name='id', lookup_expr='in')
+
+    class Meta:
+        model = ProjectGroup
+        fields = ['id', 'name', 'description']
+
+class ProjectGroupViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = ProjectGroup.objects.all()
+    serializer_class = ProjectGroupSerializer
+    filterset_fields = ['id']
+    filterset_class = ProjectGroupFilter
+
+
 class AnnotatedEntityFilter(drf.FilterSet):
     id__in = NumInFilter(field_name='id', lookup_expr='in')
 

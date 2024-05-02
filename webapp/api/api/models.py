@@ -92,6 +92,14 @@ class Document(models.Model):
         return f'{self.name} | {self.dataset.name} | {self.dataset.id}'
 
 
+class ProjectGroup(models.Model):
+    name = models.TextField()
+    description = models.TextField()
+
+    def __str__(self):
+        return self.name
+
+
 class Project(PolymorphicModel):
     PROJECT_STATUSES = [
         ("A", "Annotating"),
@@ -100,6 +108,7 @@ class Project(PolymorphicModel):
     ]
     name = models.CharField(max_length=150)
     description = models.TextField(default="", blank=True)
+    group = models.ForeignKey('ProjectGroup', on_delete=models.SET_NULL, blank=True, null=True)
     annotation_guideline_link = models.TextField(default="", blank=True,
                                                  help_text="link to an external document (i.e. GoogleDoc, MS Sharepoint)"
                                                            "outlininng a guide for annotators to follow for this project,"

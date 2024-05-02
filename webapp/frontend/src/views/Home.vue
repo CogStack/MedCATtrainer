@@ -1,172 +1,184 @@
 <template>
-  <div class="full-height project-table">
-    <login v-if="!loginSuccessful" @login:success="loggedIn()"></login>
-    <transition name="alert"><div class="alert alert-danger" v-if="routeAlert" role="alert">{{routeAlert}}</div></transition>
-    <div class="table-container">
-      <loading-overlay :loading="loadingProjects">
-        <p slot="message">Loading Projects...</p>
-      </loading-overlay>
-      <b-table id="projectTable" hover small :items="projects.items"
-               :fields="isAdmin ? projects.fields : projects.fields.filter(f => projects.adminOnlyFields.indexOf(f.key) === -1)"
-               :select-mode="'single'"
-               selectable
-               v-if="!loadingProjects"
-               @row-selected="select">
-        <template #head(metrics)="data">
-          <div id="metrics-head">Metrics</div>
-          <b-tooltip target="metrics-head"
-                     triggers="hover"
-                     container="projectTable"
-                     title="Access the metrics view for a single or group of projects"></b-tooltip>
-        </template>
-        <template #head(cuis)="">
-          <div id="cuis-header">Concepts</div>
-          <b-tooltip target="cuis-header"
-                     triggers="hover"
-                     container="projectTable"
-                     title="The list of Concept Unique Identifiers (CUIs) to be annotated in a project. 'All' indicates there is no filter"></b-tooltip>
-        </template>
-        <template #head(status)="">
-          <div id="status-header">Project Status</div>
-          <b-tooltip target="status-header"
-                     triggers="hover"
-                     container="projectTable">
-            <div>
-              <font-awesome-icon class="status-cell" icon="pen"></font-awesome-icon> - project is actively annotating
-            </div>
-            <div>
-              <font-awesome-icon class="status-cell danger" icon="times"></font-awesome-icon> - project marked as discontinued (failed)
-            </div>
-            <div>
-              <font-awesome-icon class="status-cell complete-project success" icon="check"></font-awesome-icon> - project is complete
-            </div>
-          </b-tooltip>
-        </template>
-        <template #head(anno_class)="">
-          <div id="anno-class-header">Annotation Dataset</div>
-          <b-tooltip target="anno-class-header"
-                     triggers="hover"
-                     container="projectTable">
-            Annotation set classification.
-            <div>
-              <font-awesome-icon class="status-cell" icon="minus"></font-awesome-icon> indicates 'local' annotations are collected specific to this project's use case / clinical area.
-            </div>
-            <div>
-              <font-awesome-icon class="status-cell success" icon="globe"></font-awesome-icon> indicates global annotations are collected suitable for use within a global model.
-            </div>
-          </b-tooltip>
-        </template>
+  <div class="full-height">
+    <div class="view-bar">
+      <button class="btn btn-outline-primary" @click="projectGroupView = !projectGroupView">
+        <span v-if="projectGroupView">Single Projects</span>
+        <span v-if="!projectGroupView">Project Groups</span>
+      </button>
+    </div>
+    <div v-if="projectGroupView" class="full-height project-group-table">
+      Group View
+    </div>
+    <div v-if="!projectGroupView" class="full-height project-table">
+      <login v-if="!loginSuccessful" @login:success="loggedIn()"></login>
+      <transition name="alert"><div class="alert alert-danger" v-if="routeAlert" role="alert">{{routeAlert}}</div></transition>
+      <div class="table-container">
+        <loading-overlay :loading="loadingProjects">
+          <p slot="message">Loading Projects...</p>
+        </loading-overlay>
+        <b-table id="projectTable" hover small :items="projects.items"
+                 :fields="isAdmin ? projects.fields : projects.fields.filter(f => projects.adminOnlyFields.indexOf(f.key) === -1)"
+                 :select-mode="'single'"
+                 selectable
+                 v-if="!loadingProjects"
+                 @row-selected="select">
+          <template #head(metrics)="data">
+            <div id="metrics-head">Metrics</div>
+            <b-tooltip target="metrics-head"
+                       triggers="hover"
+                       container="projectTable"
+                       title="Access the metrics view for a single or group of projects"></b-tooltip>
+          </template>
+          <template #head(cuis)="">
+            <div id="cuis-header">Concepts</div>
+            <b-tooltip target="cuis-header"
+                       triggers="hover"
+                       container="projectTable"
+                       title="The list of Concept Unique Identifiers (CUIs) to be annotated in a project. 'All' indicates there is no filter"></b-tooltip>
+          </template>
+          <template #head(status)="">
+            <div id="status-header">Project Status</div>
+            <b-tooltip target="status-header"
+                       triggers="hover"
+                       container="projectTable">
+              <div>
+                <font-awesome-icon class="status-cell" icon="pen"></font-awesome-icon> - project is actively annotating
+              </div>
+              <div>
+                <font-awesome-icon class="status-cell danger" icon="times"></font-awesome-icon> - project marked as discontinued (failed)
+              </div>
+              <div>
+                <font-awesome-icon class="status-cell complete-project success" icon="check"></font-awesome-icon> - project is complete
+              </div>
+            </b-tooltip>
+          </template>
+          <template #head(anno_class)="">
+            <div id="anno-class-header">Annotation Dataset</div>
+            <b-tooltip target="anno-class-header"
+                       triggers="hover"
+                       container="projectTable">
+              Annotation set classification.
+              <div>
+                <font-awesome-icon class="status-cell" icon="minus"></font-awesome-icon> indicates 'local' annotations are collected specific to this project's use case / clinical area.
+              </div>
+              <div>
+                <font-awesome-icon class="status-cell success" icon="globe"></font-awesome-icon> indicates global annotations are collected suitable for use within a global model.
+              </div>
+            </b-tooltip>
+          </template>
 
-        <template #head(progress)="">
-          <div id="progress-header">Progress</div>
-          <b-tooltip target="progress-header"
-                     triggers="hover"
-                     container="projectTable">
-            Number of validated documents / total number of documents configured in the project
-          </b-tooltip>
-        </template>
-        <template #cell(locked)="data">
-          <font-awesome-icon v-if="data.item.project_locked" class="status-locked" icon="lock"></font-awesome-icon>
-          <font-awesome-icon v-if="!data.item.project_locked" class="status-unlocked" icon="lock-open"></font-awesome-icon>
-        </template>
-        <template #cell(create_time)="data">
-          {{new Date(data.item.create_time).toLocaleDateString()}}
-        </template>
-        <template #cell(last_modified)="data">
-          {{new Date(data.item.last_modified).toLocaleString()}}
-        </template>
-        <template #cell(cuis)="data">
-          <div class="term-list">{{data.item.cuis.slice(0, 40) || 'All'}}</div>
-        </template>
-        <template #cell(require_entity_validation)="data">
-          {{data.item.require_entity_validation ? 'Annotate' : 'Validate'}}
-        </template>
-        <template #cell(status)="data">
-          <font-awesome-icon v-if="data.item.project_status === 'A'" class="status-cell" icon="pen"></font-awesome-icon>
-          <font-awesome-icon v-if="data.item.project_status === 'D'" class="status-cell danger" icon="times"></font-awesome-icon>
-          <font-awesome-icon v-if="data.item.project_status === 'C'" class="status-cell complete-project success" icon="check"></font-awesome-icon>
-        </template>
-        <template #cell(anno_class)="data">
-          <font-awesome-icon v-if="data.item.annotation_classification" class="status-cell success" icon="globe"></font-awesome-icon>
-          <font-awesome-icon v-if="!data.item.annotation_classification" class="status-cell" icon="minus"></font-awesome-icon>
-        </template>
-        <template #cell(cdb_search_filter)="data">
-          <font-awesome-icon v-if="cdbSearchIndexStatus[data.item.cdb_search_filter]" icon="check" class="success"></font-awesome-icon>
-          <span :id="'concepts-imported-' + data.item.id">
+          <template #head(progress)="">
+            <div id="progress-header">Progress</div>
+            <b-tooltip target="progress-header"
+                       triggers="hover"
+                       container="projectTable">
+              Number of validated documents / total number of documents configured in the project
+            </b-tooltip>
+          </template>
+          <template #cell(locked)="data">
+            <font-awesome-icon v-if="data.item.project_locked" class="status-locked" icon="lock"></font-awesome-icon>
+            <font-awesome-icon v-if="!data.item.project_locked" class="status-unlocked" icon="lock-open"></font-awesome-icon>
+          </template>
+          <template #cell(create_time)="data">
+            {{new Date(data.item.create_time).toLocaleDateString()}}
+          </template>
+          <template #cell(last_modified)="data">
+            {{new Date(data.item.last_modified).toLocaleString()}}
+          </template>
+          <template #cell(cuis)="data">
+            <div class="term-list">{{data.item.cuis.slice(0, 40) || 'All'}}</div>
+          </template>
+          <template #cell(require_entity_validation)="data">
+            {{data.item.require_entity_validation ? 'Annotate' : 'Validate'}}
+          </template>
+          <template #cell(status)="data">
+            <font-awesome-icon v-if="data.item.project_status === 'A'" class="status-cell" icon="pen"></font-awesome-icon>
+            <font-awesome-icon v-if="data.item.project_status === 'D'" class="status-cell danger" icon="times"></font-awesome-icon>
+            <font-awesome-icon v-if="data.item.project_status === 'C'" class="status-cell complete-project success" icon="check"></font-awesome-icon>
+          </template>
+          <template #cell(anno_class)="data">
+            <font-awesome-icon v-if="data.item.annotation_classification" class="status-cell success" icon="globe"></font-awesome-icon>
+            <font-awesome-icon v-if="!data.item.annotation_classification" class="status-cell" icon="minus"></font-awesome-icon>
+          </template>
+          <template #cell(cdb_search_filter)="data">
+            <font-awesome-icon v-if="cdbSearchIndexStatus[data.item.cdb_search_filter]" icon="check" class="success"></font-awesome-icon>
+            <span :id="'concepts-imported-' + data.item.id">
             <font-awesome-icon v-if="!cdbSearchIndexStatus[data.item.cdb_search_filter]" icon="times" class="danger"></font-awesome-icon>
           </span>
-          <b-tooltip :target="'concepts-imported-' + data.item.id" :container="'concepts-imported-' + data.item.id"
-                     triggers="hover"
-                     title="Project concept search not available. Check the project setup 'CDB search filter' option is set and correctly imported."></b-tooltip>
-        </template>
-        <template #cell(model_loaded)="data">
-          <div v-if="cdbLoaded[data.item.id]">
-            <button class="btn btn-outline-success model-up">
-              <font-awesome-icon icon="times" class="clear-model-cache" @click="clearLoadedModel(data.item.concept_db)"></font-awesome-icon>
-              <font-awesome-icon icon="fa-cloud-arrow-up"></font-awesome-icon>
+            <b-tooltip :target="'concepts-imported-' + data.item.id" :container="'concepts-imported-' + data.item.id"
+                       triggers="hover"
+                       title="Project concept search not available. Check the project setup 'CDB search filter' option is set and correctly imported."></b-tooltip>
+          </template>
+          <template #cell(model_loaded)="data">
+            <div v-if="cdbLoaded[data.item.id]">
+              <button class="btn btn-outline-success model-up">
+                <font-awesome-icon icon="times" class="clear-model-cache" @click="clearLoadedModel(data.item.concept_db)"></font-awesome-icon>
+                <font-awesome-icon icon="fa-cloud-arrow-up"></font-awesome-icon>
+              </button>
+            </div>
+            <div v-if="!cdbLoaded[data.item.id]">
+              <button class="btn btn-outline-secondary" @click="loadProjectCDB(data.item.concept_db)">
+                <font-awesome-icon v-if="loadingModel !== data.item.concept_db" icon="fa-cloud-arrow-up"></font-awesome-icon>
+                <font-awesome-icon v-if="loadingModel === data.item.concept_db" icon="spinner" spin></font-awesome-icon>
+              </button>
+            </div>
+          </template>
+          <template #cell(metrics)="data">
+            <button class="btn"
+                    :class="{'btn-primary': selectedProjects.indexOf(data.item) !== -1, 'btn-outline-primary': selectedProjects.indexOf(data.item) === -1}"
+                    @click="selectProject(data.item)">
+              <!--            <font-awesome-icon icon="times" class="selected-project" v-if="selectedProjects.indexOf(data.item) !== -1"></font-awesome-icon>-->
+              <font-awesome-icon icon="fa-chart-pie"></font-awesome-icon>
             </button>
-          </div>
-          <div v-if="!cdbLoaded[data.item.id]">
-            <button class="btn btn-outline-secondary" @click="loadProjectCDB(data.item.concept_db)">
-              <font-awesome-icon v-if="loadingModel !== data.item.concept_db" icon="fa-cloud-arrow-up"></font-awesome-icon>
-              <font-awesome-icon v-if="loadingModel === data.item.concept_db" icon="spinner" spin></font-awesome-icon>
-            </button>
-          </div>
-        </template>
-        <template #cell(metrics)="data">
-          <button class="btn"
-                  :class="{'btn-primary': selectedProjects.indexOf(data.item) !== -1, 'btn-outline-primary': selectedProjects.indexOf(data.item) === -1}"
-                  @click="selectProject(data.item)">
-<!--            <font-awesome-icon icon="times" class="selected-project" v-if="selectedProjects.indexOf(data.item) !== -1"></font-awesome-icon>-->
-            <font-awesome-icon icon="fa-chart-pie"></font-awesome-icon>
+          </template>
+          <template #cell(save_model)="data">
+            <button class="btn btn-outline-primary" :disabled="saving" @click="saveModel(data.item.id)"><font-awesome-icon icon="save"></font-awesome-icon></button>
+          </template>
+          <template #cell(progress)="data">
+            <div v-html="data.value"></div>
+          </template>
+        </b-table>
+      </div>
+      <div>
+        <transition name="alert"><div class="alert alert-primary" v-if="saving" role="alert">Saving models</div></transition>
+        <transition name="alert"><div class="alert alert-primary" v-if="modelSaved" role="alert">Model Successfully saved</div></transition>
+        <transition name="alert"><div class="alert alert-danger" v-if="modelSavedError" role="alert">Error saving model</div></transition>
+        <transition name="alert"><div class="alert alert-primary" v-if="loadingModel" role="alert">Loading model</div></transition>
+        <transition name="alert"><div class="alert alert-danger" v-if="modelCacheLoadError" role="alert">Error loading MedCAT model for project</div></transition>
+        <transition name="alert"><div class="alert alert-danger" v-if="projectLockedWarning" role="alert">Unable load a locked project. Contact your CogStack administrator to unlock</div></transition>
+        <transition name="alert"><div class="alert alert-info " v-if="metricsJobId">
+          Submitted Metrics job {{metricsJobId.metrics_job_id}}. Check the
+          <router-link to="metrics-reports/">/metrics-reports/</router-link>
+          page for your results</div>
+        </transition>
+        <transition name="alert"><div class="alert alert-info submit-report-job-alert" v-if="selectedProjects.length > 0">
+          Submit metrics report run for selected projects
+          <button class="btn btn-outline-primary load-metrics" @click="submitMetricsReportReq">
+            <font-awesome-icon icon="chevron-right"></font-awesome-icon>
           </button>
-        </template>
-        <template #cell(save_model)="data">
-          <button class="btn btn-outline-primary" :disabled="saving" @click="saveModel(data.item.id)"><font-awesome-icon icon="save"></font-awesome-icon></button>
-        </template>
-        <template #cell(progress)="data">
-          <div v-html="data.value"></div>
-        </template>
-      </b-table>
-    </div>
-    <div>
-      <transition name="alert"><div class="alert alert-primary" v-if="saving" role="alert">Saving models</div></transition>
-      <transition name="alert"><div class="alert alert-primary" v-if="modelSaved" role="alert">Model Successfully saved</div></transition>
-      <transition name="alert"><div class="alert alert-danger" v-if="modelSavedError" role="alert">Error saving model</div></transition>
-      <transition name="alert"><div class="alert alert-primary" v-if="loadingModel" role="alert">Loading model</div></transition>
-      <transition name="alert"><div class="alert alert-danger" v-if="modelCacheLoadError" role="alert">Error loading MedCAT model for project</div></transition>
-      <transition name="alert"><div class="alert alert-danger" v-if="projectLockedWarning" role="alert">Unable load a locked project. Contact your CogStack administrator to unlock</div></transition>
-      <transition name="alert"><div class="alert alert-info " v-if="metricsJobId">
-        Submitted Metrics job {{metricsJobId.metrics_job_id}}. Check the
-        <router-link to="metrics-reports/">/metrics-reports/</router-link>
-        page for your results</div>
-      </transition>
-      <transition name="alert"><div class="alert alert-info submit-report-job-alert" v-if="selectedProjects.length > 0">
-        Submit metrics report run for selected projects
-        <button class="btn btn-outline-primary load-metrics" @click="submitMetricsReportReq">
-          <font-awesome-icon icon="chevron-right"></font-awesome-icon>
-        </button>
-      </div></transition>
-    </div>
+        </div></transition>
+      </div>
 
-    <modal v-if="clearModelModal" :closable="true" @modal:close="clearModelModal = false">
-      <div slot="header">
-        <h3>Confirm Clear Cached Model State</h3>
-      </div>
-      <div slot="body">
-        <p>Confirm clearing cached MedCAT Model for Concept DB {{clearModelModal}} (and any other Projects that use this model). </p>
-        <p>
-          This will remove any interim training done (if any).
-          To recover the cached model, re-open the project(s), and re-submit all documents.
-          If you're unsure you should not clear the model state.
-        </p>
-      </div>
-      <div slot="footer">
-        <button class="btn btn-primary" @click="confirmClearLoadedModel(clearModelModal)">Confirm</button>
-        <button class="btn btn-default" @click="clearModelModal = false">Cancel</button>
-      </div>
-    </modal>
+      <modal v-if="clearModelModal" :closable="true" @modal:close="clearModelModal = false">
+        <div slot="header">
+          <h3>Confirm Clear Cached Model State</h3>
+        </div>
+        <div slot="body">
+          <p>Confirm clearing cached MedCAT Model for Concept DB {{clearModelModal}} (and any other Projects that use this model). </p>
+          <p>
+            This will remove any interim training done (if any).
+            To recover the cached model, re-open the project(s), and re-submit all documents.
+            If you're unsure you should not clear the model state.
+          </p>
+        </div>
+        <div slot="footer">
+          <button class="btn btn-primary" @click="confirmClearLoadedModel(clearModelModal)">Confirm</button>
+          <button class="btn btn-default" @click="clearModelModal = false">Cancel</button>
+        </div>
+      </modal>
+    </div >
   </div>
+
 </template>
 <script>
 import _ from 'lodash'
@@ -175,6 +187,7 @@ import Modal from '@/components/common/Modal.vue'
 import Login from '@/components/common/Login.vue'
 import EventBus from '@/event-bus'
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
+
 
 export default {
   name: 'Home',
@@ -211,6 +224,8 @@ export default {
           'save_model'
         ]
       },
+      projectGroups: {},
+      projectGroupView: false,
       projectLockedWarning: false,
       next: null,
       previous: null,
@@ -295,6 +310,7 @@ export default {
       this.fetchCDBsLoaded()
       this.fetchSearchIndexStatus()
       this.fetchProjectProgress()
+      this.fetchProjectGroups()
       this.loadingProjects = false
     },
     fetchCDBsLoaded () {
@@ -362,6 +378,12 @@ export default {
         })
       })
     },
+    fetchProjectGroups () {
+      const projectGroupIds = new Set(this.projects.items.filter(p => p.group !== null).map(p => p.group))
+      this.$http.get(`/api/project-groups/?id__in=${Array.from(projectGroupIds).join(',')}`).then(resp => {
+        this.projectGroups = resp.data.results
+      })
+    },
     select (projects) {
       let project = projects[0]
       if (!project.project_locked) {
@@ -427,7 +449,22 @@ h3 {
   overflow-y: auto;
 }
 
+.view-bar {
+  height: 30px;
+  padding: 5px 0;
+  width: 95%;
+  margin: auto;
+}
+
+.project-group-table {
+  height: calc(100% - 30px);
+  padding: 10px 0;
+  width: 95%;
+  margin: auto;
+}
+
 .project-table {
+  height: calc(100% - 30px);
   padding: 10px 0;
   width: 95%;
   margin: auto;

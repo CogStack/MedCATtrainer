@@ -72,6 +72,12 @@ class ProjectAnnotateEntitiesSerializer(serializers.ModelSerializer):
         return data
 
 
+class ProjectGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectGroup
+        fields = '__all__'
+
+
 class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document

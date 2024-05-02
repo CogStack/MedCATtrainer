@@ -402,6 +402,14 @@ class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
 admin.site.register(ProjectAnnotateEntities, ProjectAnnotateEntitiesAdmin)
 
 
+class ProjectGroupAdmin(admin.ModelAdmin):
+    model = ProjectGroup
+    list_display = ('name', 'description')
+
+
+admin.site.register(ProjectGroup, ProjectGroupAdmin)
+
+
 class AnnotatedEntityAdmin(admin.ModelAdmin):
     list_display = ('user', 'project', 'entity', 'value', 'deleted', 'validated')
     list_filter = ('user', 'project', 'deleted', 'validated')
