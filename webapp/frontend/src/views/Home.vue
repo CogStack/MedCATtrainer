@@ -9,7 +9,7 @@
       </button>
     </div>
     <div v-if="projectGroupView" class="full-height project-group-table">
-      <b-table id="projectGroupTable" hover small :items="projectGroups.items"
+      <b-table id="projectGroupTable" hover :items="projectGroups.items"
                :fields="projectGroups.fields" :select-mode="'single'"
                selectable @row-selected="selectProjectGroup"
                v-if="!loadingProjects">
@@ -17,6 +17,16 @@
           {{new Date(data.item.last_modified).toLocaleString()}}
         </template>
       </b-table>
+      <modal v-if="selectedProjectGroup" :closable="true" @modal:close="selectedProjectGroup = null" class="summary-modal">
+        <div slot="header">
+          <h3>Project Group: {{selectedProjectGroup.name}}</h3>
+          <br>
+          <p>{{selectedProjectGroup.description}}</p>
+        </div>
+        <div slot="body">
+          <project-list :project-items="selectedProjectGroup.items" :is-admin="isAdmin"></project-list>
+        </div>
+      </modal>
     </div>
     <project-list v-if="!projectGroupView" :project-items="projects.items" :is-admin="isAdmin"></project-list>
   </div>
@@ -58,6 +68,7 @@ export default {
       loginSuccessful: false,
       loadingProjects: false,
       isAdmin: false,
+      selectedProjectGroup: null,
     }
   },
   created () {
@@ -158,7 +169,8 @@ export default {
       })
     },
     selectProjectGroup(projectGroups) {
-      this.selectProjectGroup = projectGroups[0]
+      this.selectedProjectGroup = projectGroups[0]
+      this.selectedProjectGroup.items = this.projects.items.filter(p => p.group === this.selectedProjectGroup.id)
     },
   }
 }
