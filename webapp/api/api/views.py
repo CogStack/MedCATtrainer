@@ -19,7 +19,8 @@ from smtplib import SMTPException
 
 from core.settings import MEDIA_ROOT
 from .admin import download_projects_with_text, download_projects_without_text, \
-    import_concepts_from_cdb, upload_projects_export, retrieve_project_data
+    import_concepts_from_cdb
+from .data_utils import upload_projects_export
 from .medcat_utils import ch2pt_from_pt2ch, get_all_ch, dedupe_preserve_order, snomed_ct_concept_path
 from .metrics import calculate_metrics
 from .permissions import *

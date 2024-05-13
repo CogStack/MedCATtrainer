@@ -92,43 +92,45 @@ class Document(models.Model):
         return f'{self.name} | {self.dataset.name} | {self.dataset.id}'
 
 
-class ProjectGroup(models.Model):
-    name = models.TextField()
-    description = models.TextField()
+class ProjectFields(models.Model):
+    class Meta:
+        abstract = True
 
-    def __str__(self):
-        return self.name
-
-
-class Project(PolymorphicModel):
     PROJECT_STATUSES = [
         ("A", "Annotating"),
         ("D", "Discontinued (Fail)"),
         ("C", "Complete"),
     ]
-    name = models.CharField(max_length=150)
-    description = models.TextField(default="", blank=True)
-    group = models.ForeignKey('ProjectGroup', on_delete=models.SET_NULL, blank=True, null=True)
+
+    name = models.CharField(max_length=150, help_text='A name of the annotation project')
+    description = models.TextField(default="", blank=True, help_text='A short description of the annotations to be '
+                                                                     'collected and why')
+    dataset = models.ForeignKey('Dataset', on_delete=models.CASCADE, help_text='The dataset to be annotated.')
     annotation_guideline_link = models.TextField(default="", blank=True,
                                                  help_text="link to an external document (i.e. GoogleDoc, MS Sharepoint)"
-                                                           "outlininng a guide for annotators to follow for this project,"
+                                                           "outlining a guide for annotators to follow for this project,"
                                                            "an example is available here: https://docs.google.com/document/d/1xxelBOYbyVzJ7vLlztP2q1Kw9F5Vr1pRwblgrXPS7QM/edit?usp=sharing")
     create_time = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
-    members = models.ManyToManyField(settings.AUTH_USER_MODEL)
-    dataset = models.ForeignKey('Dataset', on_delete=models.CASCADE)
-    validated_documents = models.ManyToManyField(Document, default=None, blank=True)
-    cuis = models.TextField(default=None, blank=True)
+    cuis = models.TextField(default=None, blank=True, help_text='A list of comma seperated concept unique identifiers (CUIs) to be annotated')
     cuis_file = models.FileField(null=True, blank=True,
                                  help_text='A file containing a JSON formatted list of CUI code strings, '
                                            'i.e. ["1234567","7654321"]')
-    annotation_classification = models.BooleanField(default=False, help_text="If these project annotations are suitable"
-                                                                             " for training a general purpose model. If"
+    annotation_classification = models.BooleanField(default=False, help_text="If these annotations are suitable "
+                                                                             "for training a general purpose model. If"
                                                                              " in doubt uncheck this.")
-    project_locked = models.BooleanField(default=False, help_text="If this project is locked and cannot or should "
+    project_locked = models.BooleanField(default=False, help_text="Locked indicates annotation collection is complete and this dataset should "
                                                                   "not be touched any further.")
     project_status = models.CharField(max_length=1, choices=PROJECT_STATUSES, default="A",
-                                      help_text="The status of the project to indicate the readiness")
+                                      help_text="The status of the annotation collection exercise")
+
+
+class Project(PolymorphicModel, ProjectFields):
+    members = models.ManyToManyField(settings.AUTH_USER_MODEL,
+                                     help_text='The list users that have access to this annotation project')
+    group = models.ForeignKey('ProjectGroup', on_delete=models.SET_NULL, blank=True, null=True,
+                              help_text='The annotation project group that this project is part of')
+    validated_documents = models.ManyToManyField(Document, default=None, blank=True)
 
     def __str__(self):
         return str(self.name)
@@ -223,9 +225,17 @@ class MetaTask(models.Model):
         return str(self.name)
 
 
-class ProjectAnnotateEntities(Project):
-    concept_db = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=False, null=True)
-    vocab = models.ForeignKey('Vocabulary', on_delete=models.SET_NULL, null=True)
+class ProjectAnnotateEntitiesFields(models.Model):
+    """
+    Abstract class for all model fields for ProjectAnnotateEntities models.
+    """
+    class Meta:
+        abstract = True
+
+    concept_db = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=False, null=True,
+                                   help_text='The MedCAT CDB used to annotate / validate')
+    vocab = models.ForeignKey('Vocabulary', on_delete=models.SET_NULL, null=True,
+                              help_text='The MedCAT Vocab used to annotate / validate')
     cdb_search_filter = models.ManyToManyField('ConceptDB', blank=True, default=None,
                                                help_text='The CDB that will be used for concept lookup. '
                                                          'This specific CDB should have been "imported" '
@@ -252,9 +262,35 @@ class ProjectAnnotateEntities(Project):
     enable_entity_annotation_comments = models.BooleanField(default=False,
                                                             help_text="Enable to allow annotators to leave comments"
                                                                       " for each annotation")
-    tasks = models.ManyToManyField(MetaTask, blank=True, default=None)
-    relations = models.ManyToManyField(Relation, blank=True, default=None,
+    tasks = models.ManyToManyField('MetaTask', blank=True, default=None,
+                                   help_text='The set of MetaAnnotation tasks configured for this project')
+    relations = models.ManyToManyField('Relation', blank=True, default=None,
                                        help_text='Relations that will be available for this project')
+
+
+class ProjectAnnotateEntities(Project, ProjectAnnotateEntitiesFields):
+    """
+    Class for any single ProjectAnnotateEntities model fields that should not be inherited by ProjectGroup
+    In practise its unlikely further fields are needed.
+    """
+    pass
+
+
+class ProjectGroup(ProjectFields, ProjectAnnotateEntitiesFields):
+    administrators = models.ManyToManyField(settings.AUTH_USER_MODEL,
+                                            help_text="The set of users that will have visibility of all "
+                                                      "projects in this project group", related_name='administrators')
+    annotators = models.ManyToManyField(settings.AUTH_USER_MODEL,
+                                        help_text="The set of users that will each be provided an annotation project",
+                                        related_name='annotators')
+    cdb_search_filter = models.ManyToManyField('ConceptDB', blank=True, default=None,
+                                               help_text='The CDB that will be used for concept lookup. '
+                                                         'This specific CDB should have been "imported" '
+                                                         'via the CDB admin screen',
+                                               related_name='project_group_concept_source')
+
+    def __str__(self):
+        return self.name
 
 
 class MetaAnnotation(models.Model):
