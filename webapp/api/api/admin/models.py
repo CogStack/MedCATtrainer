@@ -68,7 +68,8 @@ class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
 class ProjectGroupAdmin(admin.ModelAdmin):
     model = ProjectGroup
     list_display = ('name', 'description')
-    fields = (('name', 'description', 'annotation_guideline_link', 'administrators', 'annotators', 'dataset') +
+    fields = (('name', 'description', 'create_associated_projects', 'annotation_guideline_link', 'administrators',
+               'annotators', 'dataset') +
               _PROJECT_FIELDS_ORDER + _PROJECT_ANNO_ENTS_SETTINGS_FIELD_ORDER)
 
     class Meta:
@@ -120,24 +121,25 @@ class ProjectGroupAdmin(admin.ModelAdmin):
         tasks = [get_object_or_404(MetaTask, pk=id) for id in request.POST.getlist('tasks')]
         relations = [get_object_or_404(Relation, pk=id) for id in request.POST.getlist('relations')]
 
-        # create the underlying ProjectAnnotateEntities models
-        if not change:
-            # new ProjectGroup being created
-            for annotator in annotators:
-                self._set_proj_from_group(ProjectAnnotateEntities(), obj, annotator,
-                                          admins, cdb_search_filters, tasks, relations)
-        else:
-            # applying these settings to all previously created projects within this group
-            projs = ProjectAnnotateEntities.objects.filter(group=obj)
-            if len(projs) == len(obj.annotators.all()):
-                for proj, annotator in zip(projs, obj.annotators.all()):
-                   self._set_proj_from_group(proj, obj, annotator, admins, cdb_search_filters,
-                                             tasks, relations)
+        # create the underlying ProjectAnnotateEntities models or edit them
+        if obj.create_associated_projects:
+            if not change:
+                # new ProjectGroup being created
+                for annotator in annotators:
+                    self._set_proj_from_group(ProjectAnnotateEntities(), obj, annotator,
+                                              admins, cdb_search_filters, tasks, relations)
             else:
-                raise ValueError("Attempting to update a ProjectGroup but one or more "
-                                 "of underlying ProjectAnnotateEntities have been removed / or added "
-                                 "manually. To fix, go into each project seperately, or create new projects "
-                                 "and link to the ProjectGroup within ProjectAnnotateEntites page.")
+                # applying these settings to all previously created projects within this group
+                projs = ProjectAnnotateEntities.objects.filter(group=obj)
+                if len(projs) == len(obj.annotators.all()):
+                    for proj, annotator in zip(projs, obj.annotators.all()):
+                       self._set_proj_from_group(proj, obj, annotator, admins, cdb_search_filters,
+                                                 tasks, relations)
+                else:
+                    raise ValueError("Attempting to update a ProjectGroup but one or more "
+                                     "of underlying ProjectAnnotateEntities have been removed / or added "
+                                     "manually. To fix, go into each project separately, or create new projects "
+                                     "and link to the ProjectGroup within ProjectAnnotateEntities page.")
 
 
 class AnnotatedEntityAdmin(admin.ModelAdmin):

@@ -288,6 +288,13 @@ class ProjectGroup(ProjectFields, ProjectAnnotateEntitiesFields):
                                                          'This specific CDB should have been "imported" '
                                                          'via the CDB admin screen',
                                                related_name='project_group_concept_source')
+    create_associated_projects = models.BooleanField(default=True,
+                                                     help_text='This only functions on new Project Group entries. '
+                                                               ' If creating a new Project Group and this is checked, '
+                                                               'it will create a ProjectAnnotateEntities for each'
+                                                               ' annotator. If unchecked it will not create associated'
+                                                               ' ProjectAnnotateEntities instead, leaving the admin to '
+                                                               ' manually configure groups of projects.')
 
     def __str__(self):
         return self.name

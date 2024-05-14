@@ -56,7 +56,7 @@ export default {
       projectGroups: {
         items: [],
         fields: [
-          { key: 'name', label: 'Name' },
+          { key: 'name', label: 'Name', sortable: true },
           { key: 'description', label: 'Description' },
           { key: 'last_modified', label: 'Last Modified', sortable: true }
         ]
@@ -169,8 +169,10 @@ export default {
       })
     },
     selectProjectGroup(projectGroups) {
-      this.selectedProjectGroup = projectGroups[0]
-      this.selectedProjectGroup.items = this.projects.items.filter(p => p.group === this.selectedProjectGroup.id)
+      if (projectGroups.length > 0 && projectGroups[0]) {
+        this.selectedProjectGroup = projectGroups[0]
+        this.selectedProjectGroup.items = this.projects.items.filter(p => p.group === this.selectedProjectGroup.id)
+      }
     },
   }
 }
