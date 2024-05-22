@@ -2,7 +2,7 @@
   <div class="full-height">
     <login v-if="!loginSuccessful" @login:success="loggedIn()"></login>
     <transition name="alert"><div class="alert alert-danger" v-if="routeAlert" role="alert">{{routeAlert}}</div></transition>
-    <div class="view-bar">
+    <div class="view-bar" v-if="isAdmin">
       <button class="btn btn-outline-primary" @click="projectGroupView = !projectGroupView">
         <span v-if="projectGroupView">Single Projects</span>
         <span v-if="!projectGroupView">Project Groups</span>
