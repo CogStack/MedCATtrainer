@@ -1,26 +1,17 @@
 import copy
+import json
 import logging
 from datetime import datetime
 from io import StringIO
 from typing import Dict, List
 
 from background_task import background
-from django.contrib import admin
 from django.db.models import QuerySet
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 from rest_framework.exceptions import PermissionDenied
 
-from .forms import *
-from .models import *
-from .solr_utils import import_all_concepts, drop_collection
-
-admin.site.register(Entity)
-admin.site.register(MetaTaskValue)
-admin.site.register(MetaTask)
-admin.site.register(MetaAnnotation)
-admin.site.register(Vocabulary)
-admin.site.register(Relation)
-admin.site.register(EntityRelation)
+from api.models import AnnotatedEntity, MetaAnnotation, EntityRelation, Document, ConceptDB
+from api.solr_utils import drop_collection, import_all_concepts
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +148,10 @@ def retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
         {
             "name": "<project_name"  # name of the project
             "id": "<id>"  # the auto-generated id of the project (optional)
+            "project_group_id": "<id>"  # the auto-generated id of the project - nullable
+            "project_group_name": "<group_name>"   # the name of the project group if set.
+            "project_status": "<project_status>"   # status - either annotating, discontinued, complete
+            "project_locked": "<project_locked>"   # locked - for no further annotations
             "cuis": ["cui_1", "cui_2" ... ]  # the CUI filter for the project, includes those from file / and text-box
             "meta_anno_defs": [
                 # list of meta annotation tasks configured for this project.
@@ -241,6 +236,8 @@ def retrieve_project_data(projects: QuerySet) -> Dict[str, List]:
         out['name'] = project.name
         out['id'] = project.id
         out['cuis'] = project.cuis
+        out['project_group_id'] = project.group.id if project.group else None
+        out['project_group_name'] = project.group.name if project.group else None
         out['project_status'] = project.project_status
         out['project_locked'] = project.project_locked
         out['meta_anno_defs'] = [{'name': t.name, 'values': [v.name for v in t.values.all()]}
@@ -351,62 +348,8 @@ def clone_projects(modeladmin, request, queryset):
         project_copy.save()
 
 
-class ReportErrorModelAdminMixin:
-    """Mixin to catch all errors in the Django Admin and map them to user-visible errors."""
-    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
-        try:
-            return super().changeform_view(request, object_id, form_url, extra_context)
-        except Exception as e:
-            self.message_user(request, f'Error with previous action: {e}', level=logging.ERROR)
-            return HttpResponseRedirect(request.path)
-
-
 def dataset_document_counts(dataset):
     return f'{Document.objects.filter(dataset=dataset).count()}'
-
-
-dataset_document_counts.short_description = 'Document Count'
-
-
-class DatasetAdmin(ReportErrorModelAdminMixin, admin.ModelAdmin):
-    model = Dataset
-    form = DatasetForm
-    list_display = ['name', 'create_time', 'description', dataset_document_counts]
-
-
-admin.site.register(Dataset, DatasetAdmin)
-class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
-    model = ProjectAnnotateEntities
-    actions = [download, download_without_text, download_without_text_with_doc_names, reset_project, clone_projects]
-    list_filter = ('members', 'project_status', 'project_locked', 'annotation_classification')
-    list_display = ['name']
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == 'concept_db':
-            kwargs['queryset'] = ConceptDB.objects.filter(use_for_training=True)
-        return super(ProjectAnnotateEntitiesAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
-
-    def formfield_for_manytomany(self, db_field, request, **kwargs):
-        if db_field.name == 'cdb_search_filter':
-            kwargs['queryset'] = ConceptDB.objects.all()
-        if db_field.name == 'validated_documents':
-            project_id = request.path.replace('/admin/api/projectannotateentities/', '').split('/')[0]
-            try:
-                proj = ProjectAnnotateEntities.objects.get(id=int(project_id))
-                kwargs['queryset'] = Document.objects.filter(dataset=proj.dataset.id)
-            except ValueError:  # a blank project has no validated_documents
-                kwargs['queryset'] = Document.objects.none()
-        return super(ProjectAnnotateEntitiesAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
-
-
-admin.site.register(ProjectAnnotateEntities, ProjectAnnotateEntitiesAdmin)
-
-
-class AnnotatedEntityAdmin(admin.ModelAdmin):
-    list_display = ('user', 'project', 'entity', 'value', 'deleted', 'validated')
-    list_filter = ('user', 'project', 'deleted', 'validated')
-    model = AnnotatedEntity
-admin.site.register(AnnotatedEntity, AnnotatedEntityAdmin)
 
 
 @background(schedule=5)
@@ -444,38 +387,5 @@ def delete_indexed_concepts(modeladmin, request, queryset):
         drop_collection(concept_db)
 
 
-class ConceptDBAdmin(admin.ModelAdmin):
-    model = ConceptDB
-    actions = [import_concepts, delete_indexed_concepts, reset_cdb_filters]
-
-admin.site.register(ConceptDB, ConceptDBAdmin)
-
-
 def remove_all_documents(modeladmin, request, queryset):
     Document.objects.all().delete()
-
-
-class DocumentAdmin(admin.ModelAdmin):
-    model = Document
-    actions = [remove_all_documents]
-    list_filter = ('dataset',)
-    list_display = ['name', 'create_time', 'dataset', 'last_modified']
-
-
-admin.site.register(Document, DocumentAdmin)
-
-
-class ExportedProjectAdmin(admin.ModelAdmin):
-    model = ExportedProject
-
-
-admin.site.register(ExportedProject, ExportedProjectAdmin)
-
-
-class ProjectMetricsAdmin(admin.ModelAdmin):
-    model = ProjectMetrics
-    list_display = ('report_name', 'report_name_generated')
-    list_filter = ['projects']
-
-
-admin.site.register(ProjectMetrics, ProjectMetricsAdmin)

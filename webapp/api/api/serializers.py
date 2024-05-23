@@ -72,6 +72,23 @@ class ProjectAnnotateEntitiesSerializer(serializers.ModelSerializer):
         return data
 
 
+class ProjectGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectGroup
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        # enrich with other fields? last_modified etc.?
+        data = super(ProjectGroupSerializer, self).to_representation(instance)
+        projects = ProjectAnnotateEntities.objects.filter(group=instance)
+        if len(projects) > 0:
+            projects = sorted(projects, key=lambda p: p.last_modified, reverse=True)
+            data['last_modified'] = projects[0].last_modified
+        else:
+            data['last_modified'] = None
+        return data
+
+
 class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
