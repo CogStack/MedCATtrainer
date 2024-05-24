@@ -23,7 +23,6 @@ jobs:
           IMAGE_TAG: ${{ env.RELEASE_VERSION }}
         run: |
           docker build -t cogstacksystems/medcat-trainer:$IMAGE_TAG -t cogstacksystems/medcat-trainer:latest webapp/.
-          docker build -t cogstacksystems/medcat-trainer-nginx:$IMAGE_TAG -t cogstacksystems/medcat-trainer-nginx:latest nginx/.
       - name: Run Django Tests
         env:
           IMAGE_TAG: ${{ env.RELEASE_VERSION }}
@@ -43,5 +42,3 @@ jobs:
         run: |
           docker push cogstacksystems/medcat-trainer:$IMAGE_TAG
           docker push cogstacksystems/medcat-trainer:latest
-          docker push cogstacksystems/medcat-trainer-nginx:$IMAGE_TAG
-          docker push cogstacksystems/medcat-trainer-nginx:latest
