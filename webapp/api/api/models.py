@@ -236,6 +236,10 @@ class ProjectAnnotateEntities(Project):
                                                             'cuis and cuis_file are empty does nothing. If "add new '
                                                             'entities" is available & added, and cuis or cuis_file'
                                                             'is non-empty the new CUI will be added.')
+    fast_validate_view = models.BooleanField(default=False,
+                                             help_text='An option that limits the context visibible to the user, used '
+                                                       'for fast review of performance of the underlying model. Should'
+                                                       'be used in the scenario with an already fine-tuned model.')
     terminate_available = models.BooleanField(default=True,
                                               help_text='Enable the option to terminate concepts.')
     irrelevant_available = models.BooleanField(default=False,
@@ -246,6 +250,8 @@ class ProjectAnnotateEntities(Project):
     tasks = models.ManyToManyField(MetaTask, blank=True, default=None)
     relations = models.ManyToManyField(Relation, blank=True, default=None,
                                        help_text='Relations that will be available for this project')
+
+
 
 
 class MetaAnnotation(models.Model):
