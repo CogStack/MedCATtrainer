@@ -262,6 +262,10 @@ def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
             vocab = Vocab.load(vocab_path)
             VOCAB_MAP[vocab_id] = vocab
 
+        # integrated model-pack spacy model not used.
+        # This assumes specified spacy model is installed...
+        # Next change will create conditional params to load CDB / Vocab, or
+        # model-packs directly for a project.
         cat = CAT(cdb=cdb, config=cdb.config, vocab=vocab)
         CAT_MAP[cat_id] = cat
     return cat

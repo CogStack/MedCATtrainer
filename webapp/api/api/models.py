@@ -1,13 +1,23 @@
+import logging
 import os
+import shutil
+from zipfile import BadZipFile
 
 import pandas as pd
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
+from django.db.models import DO_NOTHING, SET_NULL
 from django.dispatch import receiver
 from django.forms import forms, ModelForm
+from medcat.cat import CAT
+from medcat.cdb import CDB
+from medcat.vocab import Vocab
+from medcat.meta_cat import MetaCAT
 from polymorphic.models import PolymorphicModel
+
+from core.settings import MEDIA_ROOT
 
 STATUS_CHOICES = [
         (0, 'Not Validated'),
@@ -22,6 +32,65 @@ BOOL_CHOICES = [
 
 cdb_name_validator = RegexValidator(r'^[0-9a-zA-Z_-]*$', 'Only alpahanumeric characters, -, _ are allowed for CDB names')
 
+logger = logging.getLogger(__name__)
+
+
+class ModelPack(models.Model):
+    name = models.TextField(help_text='')
+    model_pack = models.FileField(help_text='Model pack zip')
+    concept_db = models.ForeignKey('ConceptDB', on_delete=models.CASCADE, blank=True, null=True)
+    vocab = models.ForeignKey('Vocabulary', on_delete=models.CASCADE, blank=True, null=True)
+    meta_cats = models.ManyToManyField('MetaCATModel', blank=True, default=None)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        logger.info('Loading model pack: %s', self.model_pack)
+        model_pack_name = str(self.model_pack).replace(".zip", "")
+        try:
+            CAT.attempt_unpack(self.model_pack.path)
+        except BadZipFile as exc:
+            # potential for CRC-32 errors in Trainer process - ignore and still use
+            logger.warning(f'Possibly corrupt cdb.dat decompressing {self.model_pack}\nFull Exception: {exc}')
+        unpacked_model_pack_path = self.model_pack.path.replace('.zip', '')
+        # attempt to load cdb
+        try:
+            CAT.load_cdb(unpacked_model_pack_path)
+            concept_db = ConceptDB()
+            unpacked_file_name = self.model_pack.file.name.replace('.zip', '')
+            concept_db.cdb_file.name = os.path.join(unpacked_file_name, 'cdb.dat')
+            concept_db.name = f'{self.name} - CDB'
+            concept_db.save(skip_load=True)
+            self.concept_db = concept_db
+        except Exception as exc:
+            raise FileNotFoundError(f'Error loading the CDB from this model pack: {self.model_pack.path}') from exc
+
+        # Load Vocab
+        vocab_path = os.path.join(unpacked_model_pack_path, "vocab.dat")
+        if os.path.exists(vocab_path):
+            Vocab.load(vocab_path)
+            vocab = Vocabulary()
+            vocab.vocab_file.name = vocab_path.replace(f'{MEDIA_ROOT}/', '')
+            vocab.save(skip_load=True)
+            self.vocab = vocab
+        else:
+            raise FileNotFoundError(f'Error loading the Vocab from this model pack: {vocab_path}')
+
+        # load MetaCATs
+        try:
+            # should raise an error if there already is a MetaCAT model with this definition
+            for meta_cat_dir, meta_cat in CAT.load_meta_cats(unpacked_model_pack_path):
+                mc_model = MetaCATModel()
+                mc_model.meta_cat_dir = meta_cat_dir.replace(f'{MEDIA_ROOT}/', '')
+                mc_model.name = f'{meta_cat.config.general.category_name} - {meta_cat.config.model.model_name}'
+                mc_model.save(unpack_load_meta_cat_dir=False)
+                mc_model.get_or_create_meta_tasks_and_values(meta_cat)
+        except Exception as exc:
+            raise MedCATLoadException(f'Failure loading MetaCAT models - {unpacked_model_pack_path}') from exc
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
 
 class ConceptDB(models.Model):
     name = models.CharField(max_length=100, default='', blank=True, validators=[cdb_name_validator])
@@ -29,20 +98,27 @@ class ConceptDB(models.Model):
     use_for_training = models.BooleanField(default=True)
 
     def __init__(self, *args, **kwargs):
-        super(ConceptDB, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__cdb_field_name = None
 
     @classmethod
     def from_db(cls, db, field_names, values):
-        inst = super(ConceptDB, cls).from_db(db, field_names, values)
+        inst = super().from_db(db, field_names, values)
         inst.__cdb_field_name = [v for f, v in zip(field_names, values) if f == 'cdb_file'][0]
         return inst
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, skip_load=False, **kwargs, ):
+        # load the CDB, and raise if this fails.
+        if not skip_load:
+            try:
+                CDB.load(self.cdb_file)
+            except Exception as exc:
+                raise MedCATLoadException(f'Failed to load Concept DB from {self.cdb_file}, '
+                                          f'check if this CDB file successfully loads elsewhere') from exc
         if self.__cdb_field_name is not None and self.__cdb_field_name != self.cdb_file.name:
             raise ValidationError('Cannot change file path of existing CDB.')
         else:
-            super(ConceptDB, self).save(*args, **kwargs)
+            super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -51,8 +127,58 @@ class ConceptDB(models.Model):
 class Vocabulary(models.Model):
     vocab_file = models.FileField()
 
+    def save(self, *args, skip_load=False, **kwargs):
+        # load the Vocab, and raise if this fails
+        if not skip_load:
+            try:
+                Vocab.load(self.vocab_file)
+            except Exception as exc:
+                raise MedCATLoadException(f'Failed to load Vocab from {self.vocab_file}, '
+                                          f'check if this Vocab file successfully loads elsewhere') from exc
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return str(self.vocab_file.name)
+
+
+class MetaCATModel(models.Model):
+    name = models.CharField(max_length=100)
+    meta_cat_dir = models.FilePathField(help_text='The zip or dir for a MetaCAT model', allow_folders=True)
+    meta_task = models.ForeignKey('MetaTask', on_delete=SET_NULL, blank=True, null=True)
+
+    def get_or_create_meta_tasks_and_values(self, meta_cat: MetaCAT):
+        task = meta_cat.config.general.category_name
+        mt = MetaTask.objects.filter(name=task).first()
+        if not mt:
+            mt = MetaTask()
+            mt.name = task
+            mt.save()
+        self.meta_task = mt
+
+        mt_vs = []
+        for meta_task_value in meta_cat.config.general.category_value2id.keys():
+            mt_v = MetaTaskValue.objects.filter(name=meta_task_value).first()
+            if not mt_v:
+                mt_v = MetaTaskValue()
+                mt_v.name = meta_task_value
+                mt_v.save()
+            mt_vs.append(mt_v)
+        self.meta_task.values.set(mt_vs)
+
+    def save(self, *args, unpack_load_meta_cat_dir=False, **kwargs):
+        if unpack_load_meta_cat_dir:
+            try:
+                # load the meta cat model, raise if issues
+                model_files = os.path.join(MEDIA_ROOT, self.meta_cat_dir)
+                shutil.unpack_archive(self.meta_cat_dir, extract_dir=model_files)
+                MetaCAT.load(save_dir_path=model_files)
+            except Exception as exc:
+                raise MedCATLoadException(f'Failed to load MetaCAT from {self.meta_cat_dir}, '
+                                          f'check if this MetaCAT dir successfully loads elsewhere') from exc
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.name} - {str(self.meta_cat_dir)}'
 
 
 class Dataset(models.Model):
@@ -355,3 +481,8 @@ def _remove_file(instance, prop):
     if getattr(instance, prop):
         if os.path.isfile(getattr(instance, prop).path):
             os.remove(getattr(instance, prop).path)
+
+
+class MedCATLoadException(Exception):
+    def __init__(self, message):
+        super().__init__(message)
