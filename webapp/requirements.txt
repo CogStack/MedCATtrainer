@@ -6,4 +6,4 @@ django-polymorphic~=3.0
 djangorestframework~=3.10
 django-background-tasks~=1.2
 openpyxl~=3.0
-medcat~=1.10
+medcat @ git+https://github.com/CogStack/MedCAT@03c68817f4db25cd867ae118ff8dcca12151cf90
