@@ -24,11 +24,13 @@
           <p>{{selectedProjectGroup.description}}</p>
         </div>
         <div slot="body">
-          <project-list :project-items="selectedProjectGroup.items" :is-admin="isAdmin"></project-list>
+          <project-list :project-items="selectedProjectGroup.items" :is-admin="isAdmin"
+                        :cdb-search-index-status="cdbSearchIndexStatus" :cdb-loaded="cdbLoaded"></project-list>
         </div>
       </modal>
     </div>
-    <project-list v-if="!projectGroupView" :project-items="projects.items" :is-admin="isAdmin"></project-list>
+    <project-list v-if="!projectGroupView" :project-items="projects.items" :is-admin="isAdmin"
+                  :cdb-search-index-status="cdbSearchIndexStatus" :cdb-loaded="cdbLoaded"></project-list>
   </div>
 
 </template>
