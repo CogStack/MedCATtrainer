@@ -71,6 +71,8 @@ export default {
       loadingProjects: false,
       isAdmin: false,
       selectedProjectGroup: null,
+      cdbSearchIndexStatus: {},
+      cdbLoaded: {},
     }
   },
   created () {
