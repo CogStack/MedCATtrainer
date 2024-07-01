@@ -35,6 +35,18 @@ class EntityRelationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ModelPackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ModelPack
+        fields = '__all__'
+
+
+class MetaCATModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MetaCATModel
+        fields = '__all__'
+
+
 class ConceptDBSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConceptDB

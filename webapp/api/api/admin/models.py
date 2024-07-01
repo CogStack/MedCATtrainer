@@ -153,6 +153,21 @@ class ConceptDBAdmin(admin.ModelAdmin):
     actions = [import_concepts, delete_indexed_concepts, reset_cdb_filters]
 
 
+class ModelPackAdmin(admin.ModelAdmin):
+    model = ModelPack
+    list_display = ('name', 'model_pack', 'concept_db', 'vocab', 'metacats')
+    fields = ['name', 'model_pack']
+
+    def metacats(self, obj):
+        return ", ".join(str(m_c) for m_c in obj.meta_cats.all())
+
+
+class MetaCATModelAdmin(admin.ModelAdmin):
+    model = MetaCATModel
+    list_display = ('name', 'meta_cat_dir')
+    list_filter = ['meta_task']
+
+
 class DocumentAdmin(admin.ModelAdmin):
     model = Document
     actions = [remove_all_documents]
