@@ -3,7 +3,6 @@ server {
     server_name localhost;
     charset utf-8;
     large_client_header_buffers 4 32k;
-    client_max_body_size 10G;
 
     location /static {
         alias /home/api/static;

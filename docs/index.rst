@@ -14,6 +14,7 @@ Welcome to MedCATtrainer's documentation!
    installation.md
    admin_setup.md
    project_admin.md
+   project_group_admin.md
    demo_page.md
    annotator_guide.md
    meta_annotations.md
