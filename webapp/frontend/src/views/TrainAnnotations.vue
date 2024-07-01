@@ -44,7 +44,7 @@
                         :irrelevantEnabled="(project || {}).irrelevant_available"
                         :conceptSelection="conceptSynonymSelection"
                         @select:remove="markRemove" @select:correct="markCorrect"
-                        @select:kill="markKill" @select:alternative="toggleAltSearch"
+                        @select :kill="markKill" @select:alternative="toggleAltSearch"
                         @select:irrelevant="markIrrelevant" @submit="submitDoc"></task-bar>
             </div>
           </div>
@@ -94,6 +94,17 @@
       <div slot="body" class="help-modal-body">
         <div v-if="project.annotation_guideline_link">
           <h4>Annotation Guidelines: <a :href="'' + project.annotation_guideline_link + ''">Guideline</a></h4>
+        </div>
+        <br>
+
+        <div>
+          <h4>Concepts Annotated</h4>
+          <div>
+            <loading-overlay :loading="loadingProjectConcepts">
+              <div slot="message">Loading Concepts</div>
+            </loading-overlay>
+
+          </div>
         </div>
         <br>
         <h4>Keyboard Shortcuts</h4>
@@ -248,6 +259,7 @@ import MetaAnnotationTaskContainer from '@/components/usecases/MetaAnnotationTas
 import RelationAnnotationTaskContainer from '@/components/usecases/RelationAnnotationTaskContainer.vue'
 import AnnotationSummary from '@/components/common/AnnotationSummary.vue'
 import { Multipane, MultipaneResizer } from 'vue-multipane'
+import LoadingOverlay from "@/components/common/LoadingOverlay.vue"
 
 const TASK_NAME = 'Concept Annotation'
 const CONCEPT_CORRECT = 'Correct'
@@ -263,6 +275,7 @@ let LOAD_NUM_DOC_PAGES = 10 // 100 docs per page, 1000 documents
 export default {
   name: 'TrainAnnotations',
   components: {
+    LoadingOverlay,
     ConceptSummary,
     DocumentSummary,
     Modal,
@@ -314,6 +327,8 @@ export default {
       resubmittingAllDocs: false,
       resubmitSuccess: false,
       helpModal: false,
+      projectConcepts: {},
+      loadingProjectConcepts: false,
       projectCompleteModal: false,
       resetModal: false,
       conceptPickerOpen: true,
@@ -747,6 +762,21 @@ export default {
           this.errors.stacktrace = err.response.data.stacktrace
         }
       })
+    }
+  },
+  watch: {
+    helpModal () {
+      if (this.helpModal && this.projectConcepts) {
+        this.loadingProjectConcepts = true
+        let payload = {
+          cuis: this.project.cuis.split(','),
+          cdb_id: this.project.concept_db
+        }
+        this.$http.post('/api/cuis-to-concepts/', payload).then(resp => {
+          this.projectConcepts = resp.data.results.concept_list
+          this.loadingProjectConcepts = false
+        })
+      }
     }
   },
   beforeDestroy () {

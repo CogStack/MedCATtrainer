@@ -820,6 +820,18 @@ def generate_concept_filter(request):
     return HttpResponseBadRequest('Missing either cuis or cdb_id param. Cannot generate filter.')
 
 
+@api_view(http_method_names=['POST'])
+def cuis_to_concepts(request):
+    cuis = request.data.get('cuis')
+    cdb_id = request.data.get('cdb_id')
+    if cuis is not None and cdb_id is not None:
+        cdb = get_cached_cdb(cdb_id, CDB_MAP)
+        concept_list = [{'cui': cui, 'name': cdb.cui2preferred_name[cui]} for cui in cuis]
+        resp = {'concept_list': concept_list}
+        return Response(resp)
+    return HttpResponseBadRequest('Missing either cuis or cdb_id param. Cannot produce concept list.')
+
+
 @api_view(http_method_names=['GET'])
 def project_progress(request):
     projects = [int(p) for p in request.GET.get('projects', []).split(',')]
