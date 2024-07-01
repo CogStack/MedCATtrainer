@@ -177,7 +177,9 @@ export default {
   components: {LoadingOverlay, Modal},
   props: {
     projectItems: Array,
-    isAdmin: Boolean
+    isAdmin: Boolean,
+    cdbSearchIndexStatus: Object,
+    cdbLoaded: Object,
   },
   data () {
     return {
@@ -213,8 +215,6 @@ export default {
       modelCacheLoadError: false,
       metricsJobId: null,
       saving: false,
-      cdbSearchIndexStatus: {},
-      cdbLoaded: {},
       clearModelModal: false,
       selectedProjects: [],
       loadingProjects: false
