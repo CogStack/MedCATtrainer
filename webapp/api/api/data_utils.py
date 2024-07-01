@@ -106,6 +106,7 @@ def upload_projects_export(medcat_export: Dict):
         p.dataset = ds_mod
         p.save()
 
+        # create django ORM model instances that are referenced in the upload if they don't exist.
         for u in unavailable_users:
             logger.warning(f'Username: {u} - not present in this trainer deployment.')
         for ent_lab in ent_labels:
@@ -119,6 +120,17 @@ def upload_projects_export(medcat_export: Dict):
                 m_task = MetaTask()
                 m_task.name = task
                 m_task.save()
+                # create the MetaTask Values.
+            for task_val in meta_tasks[task]:
+                if MetaTaskValue.objects.filter(name=task_val).first() is None:
+                    mt_value = MetaTaskValue()
+                    mt_value.name = task_val
+                    mt_value.save()
+            m_task = MetaTask.objects.filter(name=task).first()
+            curr_vals = m_task.values.all()
+            task_vals = [MetaTaskValue.objects.filter(name=m_t).first() for m_t in meta_tasks[task]]
+            m_task.values.set(set(list(curr_vals) + task_vals))
+
         for rel in rels:
             if Relation.objects.filter(label=rel).first() is None:
                 r = Relation()
@@ -165,7 +177,8 @@ def upload_projects_export(medcat_export: Dict):
                 for task_name, meta_anno in anno['meta_anns'].items():
                     m_a = MetaAnnotation()
                     m_a.annotated_entity = a
-                    m_a = MetaTask.objects.get(name=task_name)
+                    # there will be at least one or more of these available.
+                    m_a = MetaTask.objects.filter(name=task_name).first()
                     m_a.validated = meta_anno['validated']
                     m_a.save()
                     # missing acc on the model
@@ -176,7 +189,8 @@ def upload_projects_export(medcat_export: Dict):
                 er.user = available_users[relation['user']]
                 er.project = p
                 er.document = doc_mod
-                er.relation = Relation.objects.get(label=relation['relation'])
+                # there will be at least one or more of these available.
+                er.relation = Relation.objects.filter(label=relation['relation']).first()
                 er.validated = er.validated
                 # link relations with start and end anno ents
                 er.start_entity = anno_to_doc_ind[relation['start_entity_start_idx']]
