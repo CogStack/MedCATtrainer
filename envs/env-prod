@@ -8,6 +8,9 @@ ENV=prod
 # SECRET KEY - edit this for prod deployments,
 # SECRET_KEY=
 
+# Complete once this is deployed
+CSRF_TRUSTED_ORIGINS=
+
 # Django Debug mode should be False for prod
 DEBUG=False
 
