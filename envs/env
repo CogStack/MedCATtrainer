@@ -7,6 +7,9 @@ MEDCAT_CONFIG_FILE=/home/configs/base.txt
 ### Deployment Realm ###
 ENV=non-prod
 
+# Complete once this is deployed
+CSRF_TRUSTED_ORIGINS=
+
 ### Django debug setting - to live-reload etc. ###
 DEBUG=True
 
