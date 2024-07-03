@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.fields.files import FileField
 from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
@@ -46,13 +47,19 @@ def save_exported_projects(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=ModelPack)
 def remove_model_pack_assets(sender, instance, **kwargs):
-    if instance.concept_db:
-        instance.concept_db.delete(using=None, keep_parents=False)
-    if instance.vocab:
-        instance.vocab.delete(using=None, keep_parents=False)
-    if len(instance.meta_cats.all()) > 0:
-        for m_c in instance.meta_cats.all():
-            m_c.delete(using=None, keep_parents=False)
+    try:
+        if instance.concept_db:
+            instance.concept_db.delete(using=None, keep_parents=False)
+    except ObjectDoesNotExist:
+        pass  # if a ConceptDB of a model pack is removed, this will cascade ModelPack removal.
+    try:
+        if instance.vocab:
+            instance.vocab.delete(using=None, keep_parents=False)
+        if len(instance.meta_cats.all()) > 0:
+            for m_c in instance.meta_cats.all():
+                m_c.delete(using=None, keep_parents=False)
+    except ObjectDoesNotExist:
+        pass  # if a vocab of a model pack is removed, this will cascade ModelPack removal.
     try:
         # rm the model pack unzipped dir & model pack zip
         shutil.rmtree(instance.model_pack.path.replace(".zip", ""))
