@@ -15,12 +15,16 @@ import sys
 
 log = logging.getLogger(__name__)
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+environ_origins = os.environ.get('CSRF_TRUSTED_ORIGINS', None)
+trusted_origins = [] if environ_origins is None else environ_origins.split(',')
+CSRF_TRUSTED_ORIGINS = ['https://127.0.0.1:8001', 'http://localhost:8001'] + trusted_origins
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
 # SECURITY WARNING: keep the secret key used in production secret!
 realm = os.environ.get('ENV', 'non-prod')
