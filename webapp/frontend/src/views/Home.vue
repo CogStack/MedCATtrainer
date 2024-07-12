@@ -40,7 +40,6 @@ import _ from 'lodash'
 import Modal from '@/components/common/Modal.vue'
 import Login from '@/components/common/Login.vue'
 import EventBus from '@/event-bus'
-import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 import ProjectList from "@/components/common/ProjectList.vue"
 
 
@@ -48,7 +47,6 @@ export default {
   name: 'Home',
   components: {
     ProjectList,
-    LoadingOverlay,
     Login,
     Modal
   },

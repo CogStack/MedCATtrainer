@@ -1,9 +1,12 @@
 <template>
   <div class="full-height project-table">
     <div class="table-container">
-      <loading-overlay :loading="loadingProjects">
-        <p slot="message">Loading Projects...</p>
-      </loading-overlay>
+      <b-overlay :show="loadingProjects">
+        <template #overlay>
+          <b-spinner :variant="'primary'"></b-spinner>
+          <span class="overlay-message">Loading Projects...</span>
+        </template>
+      </b-overlay>
       <b-table id="projectTable" hover small :items="projectItems"
                :fields="isAdmin ? projects.fields : projects.fields.filter(f => projects.adminOnlyFields.indexOf(f.key) === -1)"
                :select-mode="'single'"
@@ -169,12 +172,10 @@
 
 <script>
 import Modal from "@/components/common/Modal.vue"
-import LoadingOverlay from "@/components/common/LoadingOverlay.vue"
-import _ from "lodash"
 
 export default {
   name: "ProjectList",
-  components: {LoadingOverlay, Modal},
+  components: { Modal},
   props: {
     projectItems: Array,
     isAdmin: Boolean,

@@ -1,8 +1,11 @@
 <template>
   <div class="note-container">
-    <loading-overlay :loading="loading !== null">
-      <div slot="message">{{loading}}</div>
-    </loading-overlay>
+    <b-overlay :show="loading !== null" no-wrap opacity="0.2">
+      <template #overlay>
+        <b-spinner :variant="'primary'"></b-spinner>
+        <span class="overlay-message">{{loading}}</span>
+      </template>
+    </b-overlay>
     <div v-if="!loading" class="clinical-note">
       <v-runtime-template ref="clinicalText" :template="formattedText"></v-runtime-template>
     </div>
@@ -18,13 +21,11 @@
 <script>
 import VRuntimeTemplate from 'v-runtime-template'
 import VueSimpleContextMenu from 'vue-simple-context-menu'
-import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 import _ from 'lodash'
 
 export default {
   name: 'ClinicalText',
   components: {
-    LoadingOverlay,
     VRuntimeTemplate,
     VueSimpleContextMenu
   },
