@@ -94,15 +94,17 @@
 
       <div slot="body" class="help-modal-body">
 
-
         <div v-if="project.annotation_guideline_link">
-          <h4>Annotation Guidelines: <a :href="'' + project.annotation_guideline_link + ''">Guideline</a></h4>
+          <h4 class="help-heading" v-b-toggle.annoguide>Annotation Guidelines:</h4>
+          <b-collapse id="annoguide">
+            Link to guideline <a :href="'' + project.annotation_guideline_link + ''">here</a>
+          </b-collapse>
         </div>
 
         <br>
 
         <div>
-          <h4 v-b-toggle.concepts>Concepts Annotated</h4>
+          <h4 class="help-heading" v-b-toggle.concepts>Concepts Annotated</h4>
           <b-collapse id="concepts">
             <concept-filter :cuis="project.cuis" :cdb_id="project.concept_db"></concept-filter>
           </b-collapse>
@@ -110,7 +112,7 @@
         </div>
 
         <br>
-        <h4 v-b-toggle.shortcuts>Keyboard Shortcuts</h4>
+        <h4 class="help-heading" v-b-toggle.shortcuts>Keyboard Shortcuts</h4>
         <b-collapse id="shortcuts">
           <table class="table">
             <thead>
@@ -176,7 +178,7 @@
         </b-collapse>
 
         <br>
-        <h4 v-b-toggle.exp>Experimental Features</h4>
+        <h4 class="help-heading" v-b-toggle.exp>Experimental Features</h4>
         <b-collapse id="exp">
           <button class="btn btn-primary" :disabled="resubmittingAllDocs" @click="submitAll">
             <span v-if="!resubmittingAllDocs">Re-Submit All Validated Documents</span>
@@ -808,6 +810,14 @@ $app-header-height: 60px;
 
 .app-header h4 {
   display: inline-block;
+}
+
+.help-heading {
+  border-bottom: 1px solid transparent;
+
+  &:hover {
+    border-bottom: 1px solid $color-1;
+  }
 }
 
 .meta {

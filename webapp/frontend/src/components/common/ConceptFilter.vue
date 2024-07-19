@@ -8,7 +8,7 @@
     <div>
       <div class="search-bar">
         <b-input v-model="filter" type="search" placeholder="Search for concepts..."></b-input>
-        <span v-if="filter === ''">Project Concept Filter: {{(allItems || []).length}}</span>
+        <span v-if="filter === ''">Project concept filter size: {{(allItems || []).length}}</span>
         <span v-if="filter !== ''">Found {{allFilteredItems.length}} - showing first {{items.length}}</span>
       </div>
 
