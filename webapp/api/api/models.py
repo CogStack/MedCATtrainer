@@ -336,16 +336,26 @@ class AnnotatedEntity(models.Model):
 
 class MetaTaskValue(models.Model):
     name = models.CharField(max_length=150)
+    ordering = models.PositiveSmallIntegerField(help_text="the order in which the meta task value will appear in "
+                                                          "the Trainer Annotation project screen", default=0)
+
+    class Meta:
+        ordering = ['ordering', 'name']
 
     def __str__(self):
         return str(self.name)
 
 
 class MetaTask(models.Model):
-    name = models.CharField(max_length=150)
+    name = models.CharField(max_length=150, unique=True)
     values = models.ManyToManyField(MetaTaskValue, related_name='values')
     default = models.ForeignKey('MetaTaskValue', null=True, blank=True, on_delete=models.SET_NULL)
     description = models.TextField(default="", blank=True)
+    ordering = models.PositiveSmallIntegerField(help_text="the order in which the meta task will appear in "
+                                                          "the Trainer Annotation project screen", default=0)
+
+    class Meta:
+        ordering = ['ordering', 'name']
 
     def __str__(self):
         return str(self.name)
