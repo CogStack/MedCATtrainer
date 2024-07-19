@@ -14,9 +14,12 @@
 
     </div>
     <div class="viewport-full-height">
-      <loading-overlay :loading="loading">
-        <span slot="message">Loading metrics report...</span>
-      </loading-overlay>
+      <b-overlay :show="loading">
+        <template #overlay>
+          <b-spinner variant="'primary'"></b-spinner>
+          <span class="overlay-message">Loading metrics report...</span>
+        </template>
+      </b-overlay>
       <b-tabs class="viewport">
         <b-tab title="User Stats" class="user-stats">
           <b-table striped hover small :items="userStats.items" :fields="userStats.fields"></b-table>
@@ -194,11 +197,10 @@
 <script>
 import Modal from '@/components/common/Modal.vue'
 import AnnoResult from '@/components/anns/AnnoResult.vue'
-import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 
 export default {
   name: 'Metrics.vue',
-  components: { AnnoResult, Modal, LoadingOverlay },
+  components: { AnnoResult, Modal },
   props: {
     reportId: Number
   },

@@ -1,8 +1,5 @@
 <template>
   <div class="full-height metrics-reports-table">
-    <loading-overlay :loading="loadingReports">
-      <p slot="message">Loading Metrics Reports...</p>
-    </loading-overlay>
     <b-table id="metrics-jobs-table" hover small selectable
              :items="reports.items"
              :fields="reports.fields"
@@ -30,6 +27,12 @@
         </button>
       </template>
     </b-table>
+    <b-overlay :show="loadingReports">
+      <template #overlay>
+        <b-spinner :variant="'primary'"></b-spinner>
+        <span class="overlay-message">Loading Metrics Reports...</span>
+      </template>
+    </b-overlay>
     <modal v-if="confDeleteReportModal" :closable="true" @modal:close="confDeleteReportModal = null">
       <h3 slot="header">Confirm Delete Metrics Report</h3>
       <div slot="body">
@@ -50,12 +53,11 @@
 
 <script>
 import VRuntimeTemplate from 'v-runtime-template'
-import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 import Modal from '@/components/common/Modal.vue'
 
 export default {
   name: "MetricsHome",
-  components: {Modal, LoadingOverlay, VRuntimeTemplate,},
+  components: {Modal, VRuntimeTemplate,},
   props: {
   },
   data () {

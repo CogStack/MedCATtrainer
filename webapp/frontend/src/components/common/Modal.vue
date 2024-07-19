@@ -84,11 +84,13 @@ export default {
 
 .modal-header h3 {
   margin-top: 0;
-  text-align: center;
+  text-align: left;
+  margin-left: 0;
 }
 
 .modal-header h4 {
   display: inline-block;
+  margin-left: 0;
 }
 
 .modal-header .close {

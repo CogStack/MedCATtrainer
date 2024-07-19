@@ -5,9 +5,12 @@
       <button  class="btn btn-default" @click="zoomOut"><font-awesome-icon icon="minus"></font-awesome-icon></button>
       <button class="btn btn-default" @click="resetZoom">1:1</button>
     </div>
-    <loading-overlay :loading="loading">
-      <div slot="message">Retrieving Concept Tree...</div>
-    </loading-overlay>
+    <b-overlay :show="loading">
+      <template #overlay>
+        <b-spinner :variant="'primary'"></b-spinner>
+        <span class="overlay-message">Retrieving Concept Tree...</span>
+      </template>
+    </b-overlay>
     <div class="mc-tree-view">
       <vue-tree
         style="width: 1500px; height: 1000px;"
@@ -30,13 +33,12 @@
 </template>
 
 <script>
-import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 import VueTree from '@/components/models/VueTree.vue'
 import _ from 'lodash'
 
 export default {
   name: 'ConceptDatabaseViz',
-  components: { LoadingOverlay, VueTree },
+  components: { VueTree },
   props: {
     cdb: Object,
     selectedCui: String

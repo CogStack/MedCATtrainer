@@ -91,82 +91,102 @@
 
     <modal v-if="helpModal" class="help-modal" :closable="true" @modal:close="helpModal = false">
       <h3 slot="header">{{ project.name }} Annotation Help</h3>
+
       <div slot="body" class="help-modal-body">
+
         <div v-if="project.annotation_guideline_link">
-          <h4>Annotation Guidelines: <a :href="'' + project.annotation_guideline_link + ''">Guideline</a></h4>
+          <h4 class="help-heading" v-b-toggle.annoguide>Annotation Guidelines:</h4>
+          <b-collapse id="annoguide">
+            Link to guideline <a :href="'' + project.annotation_guideline_link + ''">here</a>
+          </b-collapse>
         </div>
+
         <br>
-        <h4>Keyboard Shortcuts</h4>
-        <table class="table">
-          <thead>
+
+        <div>
+          <h4 class="help-heading" v-b-toggle.concepts>Concepts Annotated</h4>
+          <b-collapse id="concepts">
+            <concept-filter :cuis="project.cuis" :cdb_id="project.concept_db"></concept-filter>
+          </b-collapse>
+
+        </div>
+
+        <br>
+        <h4 class="help-heading" v-b-toggle.shortcuts>Keyboard Shortcuts</h4>
+        <b-collapse id="shortcuts">
+          <table class="table">
+            <thead>
             <tr>
               <th>Shortcut Key</th>
               <th>Key Name</th>
               <th>Description</th>
             </tr>
-          </thead>
-          <tbody>
-          <tr>
-            <td><font-awesome-icon icon="arrow-up"></font-awesome-icon></td>
-            <td>Up Arrow</td>
-            <td>Previous Document</td>
-          </tr>
-          <tr>
-            <td><font-awesome-icon icon="arrow-down"></font-awesome-icon></td>
-            <td>Down Arrow</td>
-            <td>Next Document</td>
-          </tr>
-          <tr>
-            <td><font-awesome-icon icon="arrow-left"></font-awesome-icon></td>
-            <td>Left Arrow</td>
-            <td>Previous Concept</td>
-          </tr>
-          <tr>
-            <td><font-awesome-icon icon="arrow-right"></font-awesome-icon> or space</td>
-            <td>Right Arrow or Space bar</td>
-            <td>Next Concept</td>
-          </tr>
-          <tr>
-            <td><font-awesome-icon icon="level-down-alt" :transform="{ rotate: 90 }"></font-awesome-icon></td>
-            <td>Enter Key</td>
-            <td>Submit / Submit Confirm (on submit summary)</td>
-          </tr>
-          <tr>
-            <td></td>
-            <td>1 Key</td>
-            <td>Correct</td>
-          </tr>
-          <tr>
-            <td></td>
-            <td>2 Key</td>
-            <td>Incorrect</td>
-          </tr>
-          <tr>
-            <td></td>
-            <td>3 Key (if set on your project)</td>
-            <td>Terminate</td>
-          </tr>
-          <tr>
-            <td></td>
-            <td>4 Key</td>
-            <td>Alternative</td>
-          </tr>
-          <tr>
-            <td></td>
-            <td>5 Key (if set on your project)</td>
-            <td>Irrelevant</td>
-          </tr>
-          </tbody>
-        </table>
-        <div>
-          <h4>Experimental Features</h4>
+            </thead>
+            <tbody>
+            <tr>
+              <td><font-awesome-icon icon="arrow-up"></font-awesome-icon></td>
+              <td>Up Arrow</td>
+              <td>Previous Document</td>
+            </tr>
+            <tr>
+              <td><font-awesome-icon icon="arrow-down"></font-awesome-icon></td>
+              <td>Down Arrow</td>
+              <td>Next Document</td>
+            </tr>
+            <tr>
+              <td><font-awesome-icon icon="arrow-left"></font-awesome-icon></td>
+              <td>Left Arrow</td>
+              <td>Previous Concept</td>
+            </tr>
+            <tr>
+              <td><font-awesome-icon icon="arrow-right"></font-awesome-icon> or space</td>
+              <td>Right Arrow or Space bar</td>
+              <td>Next Concept</td>
+            </tr>
+            <tr>
+              <td><font-awesome-icon icon="level-down-alt" :transform="{ rotate: 90 }"></font-awesome-icon></td>
+              <td>Enter Key</td>
+              <td>Submit / Submit Confirm (on submit summary)</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td>1 Key</td>
+              <td>Correct</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td>2 Key</td>
+              <td>Incorrect</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td>3 Key (if set on your project)</td>
+              <td>Terminate</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td>4 Key</td>
+              <td>Alternative</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td>5 Key (if set on your project)</td>
+              <td>Irrelevant</td>
+            </tr>
+            </tbody>
+          </table>
+        </b-collapse>
+
+        <br>
+        <h4 class="help-heading" v-b-toggle.exp>Experimental Features</h4>
+        <b-collapse id="exp">
           <button class="btn btn-primary" :disabled="resubmittingAllDocs" @click="submitAll">
             <span v-if="!resubmittingAllDocs">Re-Submit All Validated Documents</span>
             <span v-if="resubmittingAllDocs">Submitting...</span>
           </button>
           <transition name="alert"><span v-if="resubmitSuccess" class="alert alert-info">
             Successfully Re-submitted</span></transition>
-        </div>
+        </b-collapse>
       </div>
       <div slot="footer">
         <button class="btn btn-primary" @click="helpModal = false">Close</button>
@@ -248,6 +268,7 @@ import MetaAnnotationTaskContainer from '@/components/usecases/MetaAnnotationTas
 import RelationAnnotationTaskContainer from '@/components/usecases/RelationAnnotationTaskContainer.vue'
 import AnnotationSummary from '@/components/common/AnnotationSummary.vue'
 import { Multipane, MultipaneResizer } from 'vue-multipane'
+import ConceptFilter from "@/components/common/ConceptFilter.vue"
 
 const TASK_NAME = 'Concept Annotation'
 const CONCEPT_CORRECT = 'Correct'
@@ -263,6 +284,7 @@ let LOAD_NUM_DOC_PAGES = 10 // 100 docs per page, 1000 documents
 export default {
   name: 'TrainAnnotations',
   components: {
+    ConceptFilter,
     ConceptSummary,
     DocumentSummary,
     Modal,
@@ -788,6 +810,14 @@ $app-header-height: 60px;
 
 .app-header h4 {
   display: inline-block;
+}
+
+.help-heading {
+  border-bottom: 1px solid transparent;
+
+  &:hover {
+    border-bottom: 1px solid $color-1;
+  }
 }
 
 .meta {
