@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from typing import Union, Dict, List, Type
+from typing import Dict
 
 import pkg_resources
 from django.contrib.auth.models import User
@@ -222,14 +222,10 @@ def clear_cached_medcat(CAT_MAP, project):
         del CAT_MAP[cat_id]
 
 
-def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
-    try:
-        cdb_id = project.concept_db.id
-        vocab_id = project.vocab.id
-    except AttributeError:
-        raise Exception('Failure loading Project Concept Database or Vocabulary. Are these set correctly?')
+def get_medcat_from_cdb_vocab(CDB_MAP, VOCAB_MAP, CAT_MAP, project) -> CAT:
+    cdb_id = project.concept_db.id
+    vocab_id = project.vocab.id
     cat_id = str(cdb_id) + "-" + str(vocab_id)
-
     if cat_id in CAT_MAP:
         cat = CAT_MAP[cat_id]
     else:
@@ -261,14 +257,29 @@ def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
             vocab_path = project.vocab.vocab_file.path
             vocab = Vocab.load(vocab_path)
             VOCAB_MAP[vocab_id] = vocab
-
-        # integrated model-pack spacy model not used.
-        # This assumes specified spacy model is installed...
-        # Next change will create conditional params to load CDB / Vocab, or
-        # model-packs directly for a project.
         cat = CAT(cdb=cdb, config=cdb.config, vocab=vocab)
         CAT_MAP[cat_id] = cat
     return cat
+
+
+def get_medcat_from_model_pack(CAT_MAP, project) -> CAT:
+    model_pack = project.model_pack.id
+    cat_id = 'mp' + str(model_pack)
+    cat = CAT.load_model_pack(model_pack.path)
+    CAT_MAP[cat_id] = cat
+    return cat
+
+
+def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
+    try:
+        if project.model_pack is None:
+            cat = get_medcat_from_cdb_vocab(CDB_MAP, VOCAB_MAP, CAT_MAP, project)
+        else:
+            cat = get_medcat_from_model_pack(CAT_MAP, project)
+        return cat
+    except AttributeError:
+        raise Exception('Failure loading Project ConceptDB, Vocab or Model Pack. Are these set correctly?')
+
 
 
 def get_cached_cdb(cdb_id: str, CDB_MAP: Dict[str, CDB]) -> CDB:
