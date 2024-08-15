@@ -3,9 +3,12 @@
     <div class="task-name">{{task.name}}</div>
     <div class="task-description">{{task.description}}</div>
     <div class="task-values-container">
-      <button class="btn btn-outline-primary task-value" :class="{'selected': task.value === option.id}"
+      <button class="btn btn-outline-primary task-value"
+              :class="optionStyle(option)"
               v-for="option of task.options" :key="option.id"
-              @click="selectTaskValue(option)">{{option.name}}</button>
+              @click="selectTaskValue(option)">{{option.name}}
+        <span class="predicted-conf" v-if="task.predicted_value === option.id">score:{{task.acc.toFixed(3)}}</span>
+      </button>
     </div>
   </div>
 </template>
@@ -19,6 +22,12 @@ export default {
   methods: {
     selectTaskValue (option) {
       this.$emit('select:metaAnno', this.task, option)
+    },
+    optionStyle (option) {
+      return {
+        'selected': this.task.value === option.id && this.task.validated,
+        'predicted': this.task.predicted_value === option.id
+      }
     }
   }
 }
@@ -45,8 +54,18 @@ export default {
 
 .selected {
   color: #fff;
-  background-color: #005EB8;
-  border-color: #005EB8;
+  background-color: $primary-alt !important;
+  border-color: $primary-alt !important;
+}
+
+.predicted {
+  background: lightgrey;
+  border-color: $primary-alt;
+}
+
+.predicted-conf {
+  font-size: 9pt;
+  display: block;
 }
 
 .task-values-container {

@@ -76,7 +76,8 @@
             </b-tabs>
           </transition>
           <transition name="slide-left">
-            <meta-annotation-task-container v-if="metaAnnotate" :taskIDs="hasMetaTasks"
+            <meta-annotation-task-container v-if="metaAnnotate" :model-pack-set="!!project.model_pack"
+                                            :taskIDs="hasMetaTasks"
                                             :selectedEnt="currentEnt">
             </meta-annotation-task-container>
           </transition>

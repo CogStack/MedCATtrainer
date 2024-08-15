@@ -34,19 +34,16 @@ export default {
         })
       })
     },
-    newMetaAnnotation (selectedEnt, task, optionId, callback) {
+    newMetaAnnotation (selectedEnt, task, optionId) {
       const payload = {
-        validated: true, // meta annotations are always valid.
+        validated: true, // 'default' meta annotations are always valid.
         annotated_entity: selectedEnt.id,
         meta_task: task.id,
         meta_task_value: optionId
       }
       return this.$http.post(`/api/meta-annotations/`, payload)
     },
-    fetchMetaAnnotations (selectedEnt, callback, useDefault) {
-      if (useDefault === undefined) {
-        useDefault = true
-      }
+    fetchMetaAnnotations (selectedEnt, useDefault, callback) {
       if (this.tasks.length > 0 && selectedEnt !== null) {
         for (let t of this.tasks) {
           t.value = null
@@ -61,6 +58,9 @@ export default {
               let r = savedTask[0]
               task.value = r.meta_task_value
               task.annotation_id = r.id
+              task.predicted_value = r.predicted_meta_task_value
+              task.validated = r.validated
+              task.acc = r.acc
               taskValues.push(task)
             } else if (useDefault && task.default) {
               // no annotation exists, should be validated and set as default value

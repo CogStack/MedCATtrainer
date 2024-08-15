@@ -14,9 +14,9 @@ from medcat.utils.helpers import tkns_from_doc
 from medcat.vocab import Vocab
 
 from .models import Entity, AnnotatedEntity, ProjectAnnotateEntities, \
-    ConceptDB
+    ConceptDB, MetaAnnotation, MetaTask
 
-log = logging.getLogger('trainer')
+logger = logging.getLogger('trainer')
 
 
 def remove_annotations(document, project, partial=False):
@@ -26,13 +26,13 @@ def remove_annotations(document, project, partial=False):
             AnnotatedEntity.objects.filter(project=project,
                                            document=document,
                                            validated=False).delete()
-            log.debug(f"Unvalidated Annotations removed for:{document.id}")
+            logger.debug(f"Unvalidated Annotations removed for:{document.id}")
         else:
             # Removes everything
             AnnotatedEntity.objects.filter(project=project, document=document).delete()
-            log.debug(f"All Annotations removed for:{document.id}")
+            logger.debug(f"All Annotations removed for:{document.id}")
     except Exception as e:
-        log.debug(f"Something went wrong: {e}")
+        logger.debug(f"Something went wrong: {e}")
 
 
 def add_annotations(spacy_doc, user, project, document, existing_annotations, cat):
@@ -41,6 +41,19 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
     tkns_in = []
     ents = []
     existing_annos_intervals = [(ann.start_ind, ann.end_ind) for ann in existing_annotations]
+    # all MetaTasks and associated values
+    # that can be produced are expected to have available models
+    try:
+        metatask2obj = {task_name: MetaTask.objects.get(name=task_name)
+                        for task_name in spacy_doc._.ents[0]._.meta_anns.keys()}
+        metataskvals2obj = {task_name: {v.name: v for v in MetaTask.objects.get(name=task_name).values.all()}
+                            for task_name in spacy_doc._.ents[0]._.meta_anns.keys()}
+    except AttributeError:
+        # ignore meta_anns that are not present - i.e. non model pack preds,
+        # or model pack preds with no meta_anns
+        metatask2obj = {}
+        metataskvals2obj = {}
+        pass
 
     def check_ents(ent):
         return any((ea[0] < ent.start_char < ea[1]) or
@@ -68,10 +81,11 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
         else:
             entity = Entity.objects.get(label=label)
 
-        if AnnotatedEntity.objects.filter(project=project,
-                                          document=document,
-                                          start_ind=ent.start_char,
-                                          end_ind=ent.end_char).count() == 0:
+        ann_ent = AnnotatedEntity.objects.filter(project=project,
+                                                  document=document,
+                                                  start_ind=ent.start_char,
+                                                  end_ind=ent.end_char).first()
+        if ann_ent is None:
             # If this entity doesn't exist already
             ann_ent = AnnotatedEntity()
             ann_ent.user = user
@@ -89,6 +103,20 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
                 ann_ent.validated = True
 
             ann_ent.save()
+
+        # check the ent._.meta_anns if it exists
+        if hasattr(ent._, 'meta_anns') and len(metatask2obj) > 0 and len(metataskvals2obj) > 0:
+            for meta_ann_task, pred in ent._.meta_anns.items():
+                meta_anno_obj = MetaAnnotation.objects.filter(annotated_entity=ann_ent,
+                                                              meta_task=metatask2obj[meta_ann_task]).first()
+                if meta_anno_obj is None or not meta_anno_obj.validated:
+                    meta_anno_obj = MetaAnnotation()
+                    meta_anno_obj.predicted_meta_task_value = metataskvals2obj[meta_ann_task][pred['value']]
+                    meta_anno_obj.meta_task = metatask2obj[meta_ann_task]
+                    meta_anno_obj.annotated_entity = ann_ent
+                    meta_anno_obj.meta_task_value = metataskvals2obj[meta_ann_task][pred['value']]
+                    meta_anno_obj.acc = pred['confidence']
+                    meta_anno_obj.save()
 
 
 def get_create_cdb_infos(cdb, concept, cui, cui_info_prop, code_prop, desc_prop, model_clazz):
@@ -113,7 +141,7 @@ def _remove_overlap(project, document, start, end):
 
     for ann in anns:
         if (start <= ann.start_ind <= end) or (start <= ann.end_ind <= end):
-            log.debug("Removed %s ", str(ann))
+            logger.debug("Removed %s ", str(ann))
             ann.delete()
 
 
@@ -238,7 +266,7 @@ def get_medcat_from_cdb_vocab(CDB_MAP, VOCAB_MAP, CAT_MAP, project) -> CAT:
             except KeyError as ke:
                 mc_v = pkg_resources.get_distribution('medcat').version
                 if int(mc_v.split('.')[0]) > 0:
-                    log.error('Attempted to load MedCAT v0.x model with MCTrainer v1.x')
+                    logger.error('Attempted to load MedCAT v0.x model with MCTrainer v1.x')
                     raise Exception('Attempted to load MedCAT v0.x model with MCTrainer v1.x',
                                     'Please re-configure this project to use a MedCAT v1.x CDB or consult the '
                                     'MedCATTrainer Dev team if you believe this should work') from ke
@@ -248,7 +276,7 @@ def get_medcat_from_cdb_vocab(CDB_MAP, VOCAB_MAP, CAT_MAP, project) -> CAT:
             if custom_config is not None and os.path.exists(custom_config):
                 cdb.config.parse_config_file(path=custom_config)
             else:
-                log.info("No MEDCAT_CONFIG_FILE env var set to valid path, using default config available on CDB")
+                logger.info("No MEDCAT_CONFIG_FILE env var set to valid path, using default config available on CDB")
             CDB_MAP[cdb_id] = cdb
 
         if vocab_id in VOCAB_MAP:
@@ -263,9 +291,10 @@ def get_medcat_from_cdb_vocab(CDB_MAP, VOCAB_MAP, CAT_MAP, project) -> CAT:
 
 
 def get_medcat_from_model_pack(CAT_MAP, project) -> CAT:
-    model_pack = project.model_pack.id
-    cat_id = 'mp' + str(model_pack)
-    cat = CAT.load_model_pack(model_pack.path)
+    model_pack_obj = project.model_pack
+    cat_id = 'mp' + str(model_pack_obj.id)
+    logger.info('Loading model pack from:%s', model_pack_obj.model_pack.path)
+    cat = CAT.load_model_pack(model_pack_obj.model_pack.path)
     CAT_MAP[cat_id] = cat
     return cat
 

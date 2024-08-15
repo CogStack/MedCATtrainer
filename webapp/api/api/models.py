@@ -466,7 +466,10 @@ class MetaAnnotation(models.Model):
     meta_task = models.ForeignKey('MetaTask', on_delete=models.CASCADE)
     meta_task_value = models.ForeignKey('MetaTaskValue', on_delete=models.CASCADE)
     acc = models.FloatField(default=1)
-    validated = models.BooleanField(default=False)
+    predicted_meta_task_value = models.ForeignKey('MetaTaskValue', on_delete=models.CASCADE,
+                                                  help_text='meta annotation predicted by a MetaAnnotationModel',
+                                                  null=True, blank=True, related_name="predicted_value")
+    validated = models.BooleanField(help_text='If an annotation is not ', default=False)
     last_modified = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):

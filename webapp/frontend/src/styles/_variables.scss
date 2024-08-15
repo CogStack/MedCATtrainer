@@ -6,13 +6,14 @@
 
 $theme-colors: (
     "primary": #0072CE, //NHS Bright Blue
-    //"primary": #005EB8, //NHS Blue
     "danger": #DA291C, //NHS Emergency Services Red
     "warning": #768692, // NHS Mid Grey
     "info": #E8EDEE, // NHS Pale Grey
     "success": #009639, // NHS Green
     "light-success": #32ab60 // slightly lighter than NHS Green
 );
+
+$primary-alt: #005EB8;  //NHS Blue
 
 $navbar-bg: #0072CE; // NHS Bright Blue
 

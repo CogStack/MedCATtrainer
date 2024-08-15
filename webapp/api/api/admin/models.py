@@ -167,6 +167,13 @@ class MetaCATModelAdmin(admin.ModelAdmin):
     list_display = ('name', 'meta_cat_dir')
 
 
+class MetaAnnotationAdmin(admin.ModelAdmin):
+    model = MetaAnnotation
+    list_display = ('annotated_entity', 'meta_task', 'meta_task_value', 'acc',
+                    'predicted_meta_task_value', 'validated', 'last_modified')
+    list_filter = ('meta_task', 'meta_task_value', 'predicted_meta_task_value', 'validated')
+
+
 class DocumentAdmin(admin.ModelAdmin):
     model = Document
     actions = [remove_all_documents]
