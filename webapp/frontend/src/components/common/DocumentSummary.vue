@@ -10,13 +10,28 @@
     </div>
     <div v-if="loadingDoc" class="loading-doc"></div>
 
-    <div class="doc-list">
+    <div id="doc-sum-list" class="doc-list">
       <div v-for="doc of (searchCrit ? filteredDocs : docs)" :key="doc.id" class="doc clickable"
            :class="{'selected-doc': selectedDocId === doc.id}" @click="loadDoc(doc)">
-        <font-awesome-icon v-if="validatedDocIds.includes(doc.id)" class="validated-doc" icon="check"></font-awesome-icon>
+        <div v-if="!preparedDocIds.includes(doc.id)" class="not-prepared-doc"></div>
+        <font-awesome-icon :id="'doc-sub-' + doc.id"
+                           v-if="validatedDocIds.includes(doc.id)"
+                           class="validated-doc" icon="check"></font-awesome-icon>
+        <font-awesome-icon :id="'doc-prep-' + doc.id"
+                           v-if="preparedDocIds.includes(doc.id)"
+                           class="prepared-doc"
+                           icon="clipboard-check"></font-awesome-icon>
         <div class="note-summary">
           {{doc.text === 'nan' ? '' : (doc.text || '') | limitText }}
         </div>
+        <b-tooltip :target="'doc-prep-' + doc.id"
+                   v-if="preparedDocIds.includes(doc.id)"
+                   triggers="hover"
+                   container="doc-sum-list">Predictions ready for Doc: {{doc.id}}</b-tooltip>
+        <b-tooltip :target="'doc-sub-' + doc.id"
+                   v-if="validatedDocIds.includes(doc.id)"
+                   triggers="hover"
+                   container="doc-sum-list">Doc: {{doc.id}} complete</b-tooltip>
       </div>
       <div class="clickable">
         <div v-if="moreDocs" @click="loadMoreDocs" class="more-docs">
@@ -35,7 +50,8 @@ export default {
     moreDocs: Boolean,
     selectedDocId: Number,
     loadingDoc: Boolean,
-    validatedDocIds: Array
+    validatedDocIds: Array,
+    preparedDocIds: Array
   },
   data () {
     return {
@@ -45,6 +61,9 @@ export default {
     }
   },
   methods: {
+    docSumTarget (doc) {
+      return 'doc-sum-' + doc.id
+    },
     scrollSelectedDocId () {
       const el = document.getElementsByClassName('selected-doc')
       if (el.length > 0) {
@@ -147,6 +166,17 @@ $width: 175px;
   &:hover {
     cursor: pointer;
   }
+}
+
+.not-prepared-doc {
+  background: grey;
+}
+
+.prepared-doc {
+  color: $color-1;
+  position: absolute;
+  font-size: 15px;
+  left: 12px;
 }
 
 .selected-doc {

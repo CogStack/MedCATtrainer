@@ -221,7 +221,7 @@ class ResetPasswordView(PasswordResetView):
 
 @api_view(http_method_names=['GET'])
 def get_anno_tool_conf(_):
-    return Response({k: v for k,v in os.environ.items()})
+    return Response({k: v for k, v in os.environ.items()})
 
 
 @api_view(http_method_names=['POST'])
@@ -253,6 +253,7 @@ def prepare_documents(request):
                                    'description': 'Missing CUI filter file, %s, cannot be found on the filesystem, '
                                                   'but is still set on the project. To fix remove and reset the '
                                                   'cui filter file' % project.cuis_file}, status=500)
+
     try:
         for d_id in d_ids:
             document = Document.objects.get(id=d_id)
@@ -284,6 +285,10 @@ def prepare_documents(request):
                                 document=document,
                                 cat=cat,
                                 existing_annotations=anns)
+
+            # add doc to prepared_documents
+            project.prepared_documents.add(document)
+            project.save()
 
     except Exception as e:
         stack = traceback.format_exc()

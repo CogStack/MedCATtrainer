@@ -268,7 +268,11 @@ class Project(PolymorphicModel, ProjectFields):
                                      help_text='The list users that have access to this annotation project')
     group = models.ForeignKey('ProjectGroup', on_delete=models.SET_NULL, blank=True, null=True,
                               help_text='The annotation project group that this project is part of')
-    validated_documents = models.ManyToManyField(Document, default=None, blank=True)
+    validated_documents = models.ManyToManyField(Document, default=None, blank=True,
+                                                 help_text='Set automatically on each doc submission')
+    prepared_documents = models.ManyToManyField(Document, default=None, blank=True,
+                                                help_text='Set automatically on each prep of a document',
+                                                related_name='prepared_documents')
 
     def __str__(self):
         return str(self.name)

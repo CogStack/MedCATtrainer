@@ -27,7 +27,8 @@
       <div :style="{minWith: '500px'}" class="full-height">
         <div class="app-main">
           <document-summary :docs="docs" :moreDocs="nextDocSetUrl !== null"
-                            :validatedDocIds="validatedDocuments"
+                            :validatedDocIds="(project || {}).validated_documents"
+                            :preparedDocIds="(project || {}).prepared_documents"
                             :selectedDocId="currentDoc !== null ? currentDoc.id : null" :loadingDoc="loadingMsg !== null"
                             @request:nextDocSet="fetchDocuments()" @request:loadDoc="loadDoc"></document-summary>
           <div class="main-viewport">
@@ -328,7 +329,6 @@ export default {
       taskValues: TASK_VALUES,
       project: null,
       searchFilterDBIndex: null,
-      validatedDocuments: null,
       ents: null,
       currentDoc: null,
       currentEnt: null,
@@ -372,7 +372,6 @@ export default {
         } else {
           this.project = resp.data.results[0]
           this.fetchCDBSearchIndex()
-          this.validatedDocuments = this.project.validated_documents
           const loadedDocs = () => {
             this.docIds = this.docs.map(d => d.id)
             this.docIdsToDocs = Object.assign({}, ...this.docs.map(item => ({ [item['id']]: item })))
@@ -384,7 +383,7 @@ export default {
               this.loadDoc(this.docIdsToDocs[docIdRoute])
             } else {
               // find first unvalidated doc.
-              const ids = _.difference(this.docIds, this.validatedDocuments)
+              const ids = _.difference(this.docIds, this.project.validated_documents)
               if (ids.length > 0) {
                 this.loadDoc(this.docIdsToDocs[ids[0]])
               } else {
@@ -452,11 +451,16 @@ export default {
           project_id: this.project.id,
           document_ids: [this.currentDoc.id]
         }
-        if (this.validatedDocuments.indexOf(this.currentDoc.id) === -1) {
-          payload['update'] = 1
+        if (this.project.validated_documents.indexOf(this.currentDoc.id) === -1) {
+          // no need to update annotations for non-validated docs.
+          payload['update'] = 0
         }
         this.$http.post('/api/prepare-documents/', payload).then(_ => {
           // assuming a 200 is fine here.
+          if (!this.project.prepared_documents.includes(this.currentDoc.id)) {
+            this.project.prepared_documents.push(this.currentDoc.id)
+          }
+
           this.fetchEntities()
         }).catch(err => {
           this.errors.modal = true
@@ -684,7 +688,6 @@ export default {
         }
         this.project = proj
         this.fetchCDBSearchIndex()
-        this.validatedDocuments = proj.validated_documents
         this.$http.put(`/api/project-annotate-entities/${this.projectId}/`, this.project).then(() => {
           let payload = {
             project_id: this.project.id,
@@ -694,7 +697,7 @@ export default {
             this.docToSubmit = null
             this.submitConfirmedLoading = false
             if (this.currentDoc.id !== this.docIds.slice(-1)[0].id ||
-              this.validatedDocuments.length !== this.docs.length) {
+              this.project.validated_documents.length !== this.docs.length) {
               const newDocId = this.docIds[this.docIds.indexOf(this.currentDoc.id) + 1]
               if (!newDocId) {
                 this.projectCompleteModal = true

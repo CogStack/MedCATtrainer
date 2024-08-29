@@ -43,7 +43,8 @@ class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
     actions = [download, download_without_text, download_without_text_with_doc_names, reset_project, clone_projects]
     list_filter = ('members', 'project_status', 'project_locked', 'annotation_classification')
     list_display = ['name']
-    fields = (('group', 'name', 'description', 'annotation_guideline_link', 'members', 'dataset', 'validated_documents') +
+    fields = (('group', 'name', 'description', 'annotation_guideline_link', 'members',
+               'dataset', 'validated_documents', 'prepared_documents') +
               _PROJECT_FIELDS_ORDER +
               _PROJECT_ANNO_ENTS_SETTINGS_FIELD_ORDER)
 
@@ -55,7 +56,7 @@ class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == 'cdb_search_filter':
             kwargs['queryset'] = ConceptDB.objects.all()
-        if db_field.name == 'validated_documents':
+        if db_field.name in ('validated_documents', 'prepared_documents'):
             project_id = request.path.replace('/admin/api/projectannotateentities/', '').split('/')[0]
             try:
                 proj = ProjectAnnotateEntities.objects.get(id=int(project_id))
