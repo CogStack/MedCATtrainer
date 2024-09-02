@@ -1,20 +1,19 @@
 import json
 import logging
 import os
-from typing import Dict
+from typing import List
 
-import pkg_resources
+from background_task import background
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from medcat.cat import CAT
-from medcat.cdb import CDB
 from medcat.utils.filters import check_filters
 from medcat.utils.helpers import tkns_from_doc
-from medcat.vocab import Vocab
 
+from .model_cache import get_medcat
 from .models import Entity, AnnotatedEntity, ProjectAnnotateEntities, \
-    ConceptDB, MetaAnnotation, MetaTask
+    MetaAnnotation, MetaTask, Document
 
 logger = logging.getLogger('trainer')
 
@@ -233,90 +232,32 @@ def train_medcat(cat, project, document):
         cat.config.linking['filters'].get('cuis_exclude').update([cui])
 
 
-def get_cached_medcat(CAT_MAP, project):
-    if project.concept_db is None or project.vocab is None:
-        return None
-    cdb_id = project.concept_db.id
-    vocab_id = project.vocab.id
-    cat_id = str(cdb_id) + "-" + str(vocab_id)
-    return CAT_MAP.get(cat_id)
+@background(schedule=1, queue='doc_prep')
+def prep_docs(project_id: List[int], doc_ids: List[int], user_id: int):
+    user = User.objects.get(id=user_id)
+    project = ProjectAnnotateEntities.objects.get(id=project_id)
+    docs = Document.objects.filter(id__in=doc_ids)
 
+    logger.info('Loading CAT object in bg process')
+    cat = get_medcat(project=project)
 
-def clear_cached_medcat(CAT_MAP, project):
-    cdb_id = project.concept_db.id
-    vocab_id = project.vocab.id
-    cat_id = str(cdb_id) + "-" + str(vocab_id)
-    if cat_id in CAT_MAP:
-        del CAT_MAP[cat_id]
+    # Set CAT filters
+    cat.config.linking['filters']['cuis'] = project.cuis
 
+    for doc in docs:
+        logger.info(f'Running MedCAT model over doc: {doc.id}')
+        spacy_doc = cat(doc.text)
+        anns = AnnotatedEntity.objects.filter(document=doc).filter(project=project)
 
-def get_medcat_from_cdb_vocab(CDB_MAP, VOCAB_MAP, CAT_MAP, project) -> CAT:
-    cdb_id = project.concept_db.id
-    vocab_id = project.vocab.id
-    cat_id = str(cdb_id) + "-" + str(vocab_id)
-    if cat_id in CAT_MAP:
-        cat = CAT_MAP[cat_id]
-    else:
-        if cdb_id in CDB_MAP:
-            cdb = CDB_MAP[cdb_id]
-        else:
-            cdb_path = project.concept_db.cdb_file.path
-            try:
-                cdb = CDB.load(cdb_path)
-            except KeyError as ke:
-                mc_v = pkg_resources.get_distribution('medcat').version
-                if int(mc_v.split('.')[0]) > 0:
-                    logger.error('Attempted to load MedCAT v0.x model with MCTrainer v1.x')
-                    raise Exception('Attempted to load MedCAT v0.x model with MCTrainer v1.x',
-                                    'Please re-configure this project to use a MedCAT v1.x CDB or consult the '
-                                    'MedCATTrainer Dev team if you believe this should work') from ke
-                raise
-
-            custom_config = os.getenv("MEDCAT_CONFIG_FILE")
-            if custom_config is not None and os.path.exists(custom_config):
-                cdb.config.parse_config_file(path=custom_config)
-            else:
-                logger.info("No MEDCAT_CONFIG_FILE env var set to valid path, using default config available on CDB")
-            CDB_MAP[cdb_id] = cdb
-
-        if vocab_id in VOCAB_MAP:
-            vocab = VOCAB_MAP[vocab_id]
-        else:
-            vocab_path = project.vocab.vocab_file.path
-            vocab = Vocab.load(vocab_path)
-            VOCAB_MAP[vocab_id] = vocab
-        cat = CAT(cdb=cdb, config=cdb.config, vocab=vocab)
-        CAT_MAP[cat_id] = cat
-    return cat
-
-
-def get_medcat_from_model_pack(CAT_MAP, project) -> CAT:
-    model_pack_obj = project.model_pack
-    cat_id = 'mp' + str(model_pack_obj.id)
-    logger.info('Loading model pack from:%s', model_pack_obj.model_pack.path)
-    cat = CAT.load_model_pack(model_pack_obj.model_pack.path)
-    CAT_MAP[cat_id] = cat
-    return cat
-
-
-def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
-    try:
-        if project.model_pack is None:
-            cat = get_medcat_from_cdb_vocab(CDB_MAP, VOCAB_MAP, CAT_MAP, project)
-        else:
-            cat = get_medcat_from_model_pack(CAT_MAP, project)
-        return cat
-    except AttributeError:
-        raise Exception('Failure loading Project ConceptDB, Vocab or Model Pack. Are these set correctly?')
-
-
-
-def get_cached_cdb(cdb_id: str, CDB_MAP: Dict[str, CDB]) -> CDB:
-    if cdb_id not in CDB_MAP:
-        cdb_obj = ConceptDB.objects.get(id=cdb_id)
-        cdb = CDB.load(cdb_obj.cdb_file.path)
-        CDB_MAP[cdb_id] = cdb
-    return CDB_MAP[cdb_id]
+        add_annotations(spacy_doc=spacy_doc,
+                        user=user,
+                        project=project,
+                        document=doc,
+                        cat=cat,
+                        existing_annotations=anns)
+        # add doc to prepared_documents
+        project.prepared_documents.add(doc)
+    project.save()
 
 
 @receiver(post_save, sender=ProjectAnnotateEntities)
@@ -328,6 +269,7 @@ def save_project_anno(sender, instance, **kwargs):
         instance.cuis = ','.join(set(cui_list) - set(cuis_from_file))
         instance.save()
         post_save.connect(save_project_anno, sender=ProjectAnnotateEntities)
+
 
 
 def env_str_to_bool(var: str, default: bool):

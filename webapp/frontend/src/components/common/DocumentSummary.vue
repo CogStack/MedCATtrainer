@@ -13,7 +13,9 @@
     <div id="doc-sum-list" class="doc-list">
       <div v-for="doc of (searchCrit ? filteredDocs : docs)" :key="doc.id" class="doc clickable"
            :class="{'selected-doc': selectedDocId === doc.id}" @click="loadDoc(doc)">
-        <div v-if="!preparedDocIds.includes(doc.id)" class="not-prepared-doc"></div>
+        <b-overlay @click.stop.prevent class="doc-overlay" v-if="runningBgTasks.includes(doc.id)">
+          <b-spinner class="doc-overlay-spinner" :variant="'primary'"></b-spinner>
+        </b-overlay>
         <font-awesome-icon :id="'doc-sub-' + doc.id"
                            v-if="validatedDocIds.includes(doc.id)"
                            class="validated-doc" icon="check"></font-awesome-icon>
@@ -21,17 +23,34 @@
                            v-if="preparedDocIds.includes(doc.id)"
                            class="prepared-doc"
                            icon="clipboard-check"></font-awesome-icon>
+        <button :id="'run-model-' + doc.id"
+                class="run-model btn btn-outline-info"
+                v-if="!preparedDocIds.includes(doc.id)"
+                @click.stop.prevent
+                @click="prepDoc(doc)">
+          <font-awesome-icon v-if="!runningBgTasks.includes(doc.id)" icon="robot"></font-awesome-icon>
+        </button>
+
         <div class="note-summary">
           {{doc.text === 'nan' ? '' : (doc.text || '') | limitText }}
         </div>
         <b-tooltip :target="'doc-prep-' + doc.id"
-                   v-if="preparedDocIds.includes(doc.id)"
+                   v-if="preparedDocIds.includes(doc.id) || completeBgTasks.includes(doc.id)"
                    triggers="hover"
                    container="doc-sum-list">Predictions ready for Doc: {{doc.id}}</b-tooltip>
         <b-tooltip :target="'doc-sub-' + doc.id"
                    v-if="validatedDocIds.includes(doc.id)"
                    triggers="hover"
                    container="doc-sum-list">Doc: {{doc.id}} complete</b-tooltip>
+        <b-tooltip :target="'run-model-' + doc.id"
+                   triggers="hover"
+                   v-if="!preparedDocIds.includes(doc.id)"
+                   placement="rightbottom"
+                   container="doc-sum-list">
+          Run MedCAT <br/>
+          on doc:{{doc.id}} in<br/>
+          background
+        </b-tooltip>
       </div>
       <div class="clickable">
         <div v-if="moreDocs" @click="loadMoreDocs" class="more-docs">
@@ -46,6 +65,7 @@
 export default {
   name: 'DocumentSummary',
   props: {
+    projId: Number,
     docs: Array,
     moreDocs: Boolean,
     selectedDocId: Number,
@@ -57,12 +77,28 @@ export default {
     return {
       searching: false,
       filteredDocs: [],
-      searchCrit: null
+      searchCrit: null,
+      hoverDoc: null,
+      completeBgTasks: [],
+      runningBgTasks: []
     }
   },
+  created() {
+    this.pollDocPrepStatus(true)
+  },
   methods: {
-    docSumTarget (doc) {
-      return 'doc-sum-' + doc.id
+    pollDocPrepStatus (pollInfinite) {
+      if (this.projId) {
+        this.$http.get(`/api/prep-docs-bg-tasks/?project=${this.projId}`).then(resp => {
+          this.runningBgTasks = resp.data.running_tasks.map(d => d.document)
+          this.completeBgTasks = resp.data.comp_tasks.map(d => d.document)
+        })
+        if (pollInfinite) {
+          setTimeout(this.pollDocPrepStatus, 5000)
+        }
+      } else {
+        setTimeout(this.pollDocPrepStatus, 5000)
+      }
     },
     scrollSelectedDocId () {
       const el = document.getElementsByClassName('selected-doc')
@@ -78,6 +114,10 @@ export default {
     },
     loadDoc (docId) {
       this.$emit('request:loadDoc', docId)
+    },
+    prepDoc (docId) {
+      this.$emit('request:prepDoc', docId)
+      this.runningBgTasks.push(docId)
     },
     keyup (e) {
       if (!this.loadingDoc && e.keyCode === 40 && this.selectedDocId !== this.docs.slice(-1).id) {
@@ -111,7 +151,7 @@ export default {
       } else {
         this.filteredDocs = []
       }
-    }
+    },
   },
   mounted () {
     window.addEventListener('keyup', this.keyup)
@@ -157,6 +197,7 @@ $width: 175px;
 }
 
 .doc {
+  position: relative;
   padding: 5px 3px;
   border-radius: 5px;
   color: $color-5;
@@ -165,18 +206,48 @@ $width: 175px;
 
   &:hover {
     cursor: pointer;
+
+    .run-model {
+      display: block;
+      position: absolute;
+      top: 0;
+      right: 0;
+      z-index: 100;
+      height: 4.5em;
+      width: 25%;
+      font-size: 1.1rem;
+      background-color: #fff;
+    }
   }
 }
 
-.not-prepared-doc {
-  background: grey;
+.doc-overlay {
+  position: absolute !important;
+  z-index: 150;
+  background: $loading-background-color;
+  opacity: .9;
+  margin-top: -5px;
+  height: 5rem;
+  width: 100%;
+  box-shadow: 2px 1px 4px 3px rgba(0,0,0,0.2);
+  cursor: initial;
+}
+
+.doc-overlay-spinner {
+  position: absolute;
+  left: 50px;
+  top: 15px;
+}
+
+.run-model {
+  display: none;
 }
 
 .prepared-doc {
   color: $color-1;
   position: absolute;
   font-size: 15px;
-  left: 12px;
+  left: -7px;
 }
 
 .selected-doc {

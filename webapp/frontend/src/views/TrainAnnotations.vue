@@ -26,10 +26,11 @@
     <multipane class="viewport-container">
       <div :style="{minWith: '500px'}" class="full-height">
         <div class="app-main">
-          <document-summary :docs="docs" :moreDocs="nextDocSetUrl !== null"
+          <document-summary :projId="(project || {}).id" :docs="docs" :moreDocs="nextDocSetUrl !== null"
                             :validatedDocIds="(project || {}).validated_documents"
                             :preparedDocIds="(project || {}).prepared_documents"
                             :selectedDocId="currentDoc !== null ? currentDoc.id : null" :loadingDoc="loadingMsg !== null"
+                            @request:prepDoc="prepareDocBg"
                             @request:nextDocSet="fetchDocuments()" @request:loadDoc="loadDoc"></document-summary>
           <div class="main-viewport">
             <clinical-text :loading="loadingMsg" :text="currentDoc !== null ? currentDoc.text : null"
@@ -443,6 +444,14 @@ export default {
       this.currentEnt = null
       this.prepareDoc()
     },
+    prepareDocBg (doc) {
+      let payload = {
+        project_id: this.project.id,
+        document_ids: [doc.id],
+        bg_task: true
+      }
+      this.$http.post('/api/prepare-documents/', payload)
+    },
     prepareDoc () {
       this.loadingMsg = "Loading MedCAT model..."
       this.$http.get(`/api/cache-model/${this.project.concept_db}/`).then(_ => {
@@ -450,10 +459,6 @@ export default {
         let payload = {
           project_id: this.project.id,
           document_ids: [this.currentDoc.id]
-        }
-        if (this.project.validated_documents.indexOf(this.currentDoc.id) === -1) {
-          // no need to update annotations for non-validated docs.
-          payload['update'] = 0
         }
         this.$http.post('/api/prepare-documents/', payload).then(_ => {
           // assuming a 200 is fine here.
