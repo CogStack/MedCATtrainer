@@ -23,13 +23,6 @@
                            v-if="preparedDocIds.includes(doc.id)"
                            class="prepared-doc"
                            icon="clipboard-check"></font-awesome-icon>
-        <button :id="'run-model-' + doc.id"
-                class="run-model btn btn-outline-info"
-                v-if="!preparedDocIds.includes(doc.id)"
-                @click.stop.prevent
-                @click="prepDoc(doc)">
-          <font-awesome-icon v-if="!runningBgTasks.includes(doc.id)" icon="robot"></font-awesome-icon>
-        </button>
 
         <div class="note-summary">
           {{doc.text === 'nan' ? '' : (doc.text || '') | limitText }}
@@ -42,15 +35,6 @@
                    v-if="validatedDocIds.includes(doc.id)"
                    triggers="hover"
                    container="doc-sum-list">Doc: {{doc.id}} complete</b-tooltip>
-        <b-tooltip :target="'run-model-' + doc.id"
-                   triggers="hover"
-                   v-if="!preparedDocIds.includes(doc.id)"
-                   placement="rightbottom"
-                   container="doc-sum-list">
-          Run MedCAT <br/>
-          on doc:{{doc.id}} in<br/>
-          background
-        </b-tooltip>
       </div>
       <div class="clickable">
         <div v-if="moreDocs" @click="loadMoreDocs" class="more-docs">
@@ -84,7 +68,7 @@ export default {
     }
   },
   created() {
-    this.pollDocPrepStatus(true)
+    // this.pollDocPrepStatus(true)
   },
   methods: {
     pollDocPrepStatus (pollInfinite) {
@@ -114,10 +98,6 @@ export default {
     },
     loadDoc (docId) {
       this.$emit('request:loadDoc', docId)
-    },
-    prepDoc (docId) {
-      this.$emit('request:prepDoc', docId)
-      this.runningBgTasks.push(docId)
     },
     keyup (e) {
       if (!this.loadingDoc && e.keyCode === 40 && this.selectedDocId !== this.docs.slice(-1).id) {
@@ -206,18 +186,6 @@ $width: 175px;
 
   &:hover {
     cursor: pointer;
-
-    .run-model {
-      display: block;
-      position: absolute;
-      top: 0;
-      right: 0;
-      z-index: 100;
-      height: 4.5em;
-      width: 25%;
-      font-size: 1.1rem;
-      background-color: #fff;
-    }
   }
 }
 
@@ -237,10 +205,6 @@ $width: 175px;
   position: absolute;
   left: 50px;
   top: 15px;
-}
-
-.run-model {
-  display: none;
 }
 
 .prepared-doc {

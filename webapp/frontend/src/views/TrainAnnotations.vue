@@ -30,7 +30,6 @@
                             :validatedDocIds="(project || {}).validated_documents"
                             :preparedDocIds="(project || {}).prepared_documents"
                             :selectedDocId="currentDoc !== null ? currentDoc.id : null" :loadingDoc="loadingMsg !== null"
-                            @request:prepDoc="prepareDocBg"
                             @request:nextDocSet="fetchDocuments()" @request:loadDoc="loadDoc"></document-summary>
           <div class="main-viewport">
             <clinical-text :loading="loadingMsg" :text="currentDoc !== null ? currentDoc.text : null"
