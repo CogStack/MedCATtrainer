@@ -69,6 +69,7 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
                     tkns_in.append(tkn)
                 ents.append(ent)
 
+    logger.debug('Found %s annotations to store', len(ents))
     for ent in ents:
         label = ent._.cui
 
@@ -103,6 +104,7 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
 
             ann_ent.save()
 
+        logger.debug('Found % annotations to store', len(ents))
         # check the ent._.meta_anns if it exists
         if hasattr(ent._, 'meta_anns') and len(metatask2obj) > 0 and len(metataskvals2obj) > 0:
             for meta_ann_task, pred in ent._.meta_anns.items():
@@ -116,6 +118,8 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
                     meta_anno_obj.meta_task_value = metataskvals2obj[meta_ann_task][pred['value']]
                     meta_anno_obj.acc = pred['confidence']
                     meta_anno_obj.save()
+                    logger.debug('Successfully saved %s', meta_anno_obj)
+
 
 
 def get_create_cdb_infos(cdb, concept, cui, cui_info_prop, code_prop, desc_prop, model_clazz):

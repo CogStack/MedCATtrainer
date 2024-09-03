@@ -269,6 +269,7 @@ def prepare_documents(request):
             if (len(anns) == 0 and not is_validated) or update:
                 # Based on the project id get the right medcat
                 cat = get_medcat(project=project)
+                logger.info('loaded medcat model for project: %s', project.id)
 
                 # Set CAT filters
                 cat.config.linking['filters']['cuis'] = cuis
