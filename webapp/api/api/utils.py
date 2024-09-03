@@ -71,6 +71,7 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
 
     logger.debug('Found %s annotations to store', len(ents))
     for ent in ents:
+        logger.debug('Processing annotation ent %s of %s', ents.index(ent), len(ents))
         label = ent._.cui
 
         if not Entity.objects.filter(label=label).exists():
@@ -104,13 +105,10 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
 
             ann_ent.save()
 
-        logger.debug('Found % annotations to store', len(ents))
-        # check the ent._.meta_anns if it exists
-        if hasattr(ent._, 'meta_anns') and len(metatask2obj) > 0 and len(metataskvals2obj) > 0:
-            for meta_ann_task, pred in ent._.meta_anns.items():
-                meta_anno_obj = MetaAnnotation.objects.filter(annotated_entity=ann_ent,
-                                                              meta_task=metatask2obj[meta_ann_task]).first()
-                if meta_anno_obj is None or not meta_anno_obj.validated:
+            # check the ent._.meta_anns if it exists
+            if hasattr(ent._, 'meta_anns') and len(metatask2obj) > 0 and len(metataskvals2obj) > 0:
+                logger.debug('Found %s meta annos on ent', len(ent._.meta_anns.items()))
+                for meta_ann_task, pred in ent._.meta_anns.items():
                     meta_anno_obj = MetaAnnotation()
                     meta_anno_obj.predicted_meta_task_value = metataskvals2obj[meta_ann_task][pred['value']]
                     meta_anno_obj.meta_task = metatask2obj[meta_ann_task]
