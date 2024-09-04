@@ -19,6 +19,7 @@ export default {
   },
   mixins: [MetaAnnotationService],
   props: {
+    modelPackSet: Boolean,
     taskIDs: Array,
     selectedEnt: {
       type: Object,
@@ -35,22 +36,21 @@ export default {
   methods: {
     selectedTaskAnno (task, option) {
       if (task.value === option.id) {
-        // remove annotation
-        this.$http.delete(`/api/meta-annotations/${task.annotation_id}/`).then(() => {
-          task.value = null
-          task.annotation_id = null
-        })
-      } else if (task.value && task.value !== option.id) {
-        // update
-        let payload = {
-          validated: true, // meta annotations are always valid.
-          annotated_entity: this.selectedEnt.id,
-          meta_task: task.id,
-          meta_task_value: option.id
+        if (task.validated && !task.predicted_value) {
+          // remove annotation
+          this.$http.delete(`/api/meta-annotations/${task.annotation_id}/`).then(() => {
+            task.value = null
+            task.annotation_id = null
+          })
+        } else {
+          // update prediction to validated is true.
+          task.validated = !task.validated
+          this.updateMetaAnno(task, option)
         }
-        this.$http.put(`/api/meta-annotations/${task.annotation_id}/`, payload).then(() => {
-          task.value = option.id
-        })
+      } else if (task.value && task.value !== option.id) {
+        // update to new value
+        task.validated = true
+        this.updateMetaAnno(task, option)
       } else {
         // create new
         this.newMetaAnnotation(this.selectedEnt, task, option.id).then(resp => {
@@ -58,19 +58,33 @@ export default {
           task.value = resp.data.meta_task_value
         })
       }
+    },
+    updateMetaAnno (task, option) {
+      let payload = {
+        validated: task.validated,
+        predicted_meta_task_value: task.predicted_meta_task_value,
+        annotated_entity: this.selectedEnt.id,
+        meta_task: task.id,
+        meta_task_value: option.id
+      }
+      this.$http.put(`/api/meta-annotations/${task.annotation_id}/`, payload).then(() => {
+        task.value = option.id
+      })
     }
   },
   created () {
     const that = this
     this.fetchMetaTasks(this.taskIDs, () => {
       if (that.selectedEnt) {
-        that.fetchMetaAnnotations(that.selectedEnt)
+        that.fetchMetaAnnotations(that.selectedEnt, !this.modelPackSet)
       }
     })
   },
   watch: {
     'taskIDs': 'fetchMetaTasks',
-    'selectedEnt': 'fetchMetaAnnotations'
+    'selectedEnt': function(selectedEnt) {
+      this.fetchMetaAnnotations(selectedEnt, !this.modelPackSet)
+    }
   }
 }
 </script>

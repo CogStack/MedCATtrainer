@@ -1,22 +1,21 @@
 import json
 import logging
 import os
-from typing import Union, Dict, List, Type
+from typing import List
 
-import pkg_resources
+from background_task import background
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from medcat.cat import CAT
-from medcat.cdb import CDB
 from medcat.utils.filters import check_filters
 from medcat.utils.helpers import tkns_from_doc
-from medcat.vocab import Vocab
 
+from .model_cache import get_medcat
 from .models import Entity, AnnotatedEntity, ProjectAnnotateEntities, \
-    ConceptDB
+    MetaAnnotation, MetaTask, Document
 
-log = logging.getLogger('trainer')
+logger = logging.getLogger('trainer')
 
 
 def remove_annotations(document, project, partial=False):
@@ -26,13 +25,13 @@ def remove_annotations(document, project, partial=False):
             AnnotatedEntity.objects.filter(project=project,
                                            document=document,
                                            validated=False).delete()
-            log.debug(f"Unvalidated Annotations removed for:{document.id}")
+            logger.debug(f"Unvalidated Annotations removed for:{document.id}")
         else:
             # Removes everything
             AnnotatedEntity.objects.filter(project=project, document=document).delete()
-            log.debug(f"All Annotations removed for:{document.id}")
+            logger.debug(f"All Annotations removed for:{document.id}")
     except Exception as e:
-        log.debug(f"Something went wrong: {e}")
+        logger.debug(f"Something went wrong: {e}")
 
 
 def add_annotations(spacy_doc, user, project, document, existing_annotations, cat):
@@ -41,6 +40,19 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
     tkns_in = []
     ents = []
     existing_annos_intervals = [(ann.start_ind, ann.end_ind) for ann in existing_annotations]
+    # all MetaTasks and associated values
+    # that can be produced are expected to have available models
+    try:
+        metatask2obj = {task_name: MetaTask.objects.get(name=task_name)
+                        for task_name in spacy_doc._.ents[0]._.meta_anns.keys()}
+        metataskvals2obj = {task_name: {v.name: v for v in MetaTask.objects.get(name=task_name).values.all()}
+                            for task_name in spacy_doc._.ents[0]._.meta_anns.keys()}
+    except AttributeError:
+        # ignore meta_anns that are not present - i.e. non model pack preds,
+        # or model pack preds with no meta_anns
+        metatask2obj = {}
+        metataskvals2obj = {}
+        pass
 
     def check_ents(ent):
         return any((ea[0] < ent.start_char < ea[1]) or
@@ -57,7 +69,9 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
                     tkns_in.append(tkn)
                 ents.append(ent)
 
+    logger.debug('Found %s annotations to store', len(ents))
     for ent in ents:
+        logger.debug('Processing annotation ent %s of %s', ents.index(ent), len(ents))
         label = ent._.cui
 
         if not Entity.objects.filter(label=label).exists():
@@ -68,10 +82,11 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
         else:
             entity = Entity.objects.get(label=label)
 
-        if AnnotatedEntity.objects.filter(project=project,
-                                          document=document,
-                                          start_ind=ent.start_char,
-                                          end_ind=ent.end_char).count() == 0:
+        ann_ent = AnnotatedEntity.objects.filter(project=project,
+                                                  document=document,
+                                                  start_ind=ent.start_char,
+                                                  end_ind=ent.end_char).first()
+        if ann_ent is None:
             # If this entity doesn't exist already
             ann_ent = AnnotatedEntity()
             ann_ent.user = user
@@ -89,6 +104,20 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
                 ann_ent.validated = True
 
             ann_ent.save()
+
+            # check the ent._.meta_anns if it exists
+            if hasattr(ent._, 'meta_anns') and len(metatask2obj) > 0 and len(metataskvals2obj) > 0:
+                logger.debug('Found %s meta annos on ent', len(ent._.meta_anns.items()))
+                for meta_ann_task, pred in ent._.meta_anns.items():
+                    meta_anno_obj = MetaAnnotation()
+                    meta_anno_obj.predicted_meta_task_value = metataskvals2obj[meta_ann_task][pred['value']]
+                    meta_anno_obj.meta_task = metatask2obj[meta_ann_task]
+                    meta_anno_obj.annotated_entity = ann_ent
+                    meta_anno_obj.meta_task_value = metataskvals2obj[meta_ann_task][pred['value']]
+                    meta_anno_obj.acc = pred['confidence']
+                    meta_anno_obj.save()
+                    logger.debug('Successfully saved %s', meta_anno_obj)
+
 
 
 def get_create_cdb_infos(cdb, concept, cui, cui_info_prop, code_prop, desc_prop, model_clazz):
@@ -113,7 +142,7 @@ def _remove_overlap(project, document, start, end):
 
     for ann in anns:
         if (start <= ann.start_ind <= end) or (start <= ann.end_ind <= end):
-            log.debug("Removed %s ", str(ann))
+            logger.debug("Removed %s ", str(ann))
             ann.delete()
 
 
@@ -205,78 +234,32 @@ def train_medcat(cat, project, document):
         cat.config.linking['filters'].get('cuis_exclude').update([cui])
 
 
-def get_cached_medcat(CAT_MAP, project):
-    if project.concept_db is None or project.vocab is None:
-        return None
-    cdb_id = project.concept_db.id
-    vocab_id = project.vocab.id
-    cat_id = str(cdb_id) + "-" + str(vocab_id)
-    return CAT_MAP.get(cat_id)
+@background(schedule=1, queue='doc_prep')
+def prep_docs(project_id: List[int], doc_ids: List[int], user_id: int):
+    user = User.objects.get(id=user_id)
+    project = ProjectAnnotateEntities.objects.get(id=project_id)
+    docs = Document.objects.filter(id__in=doc_ids)
 
+    logger.info('Loading CAT object in bg process')
+    cat = get_medcat(project=project)
 
-def clear_cached_medcat(CAT_MAP, project):
-    cdb_id = project.concept_db.id
-    vocab_id = project.vocab.id
-    cat_id = str(cdb_id) + "-" + str(vocab_id)
-    if cat_id in CAT_MAP:
-        del CAT_MAP[cat_id]
+    # Set CAT filters
+    cat.config.linking['filters']['cuis'] = project.cuis
 
+    for doc in docs:
+        logger.info(f'Running MedCAT model over doc: {doc.id}')
+        spacy_doc = cat(doc.text)
+        anns = AnnotatedEntity.objects.filter(document=doc).filter(project=project)
 
-def get_medcat(CDB_MAP, VOCAB_MAP, CAT_MAP, project):
-    try:
-        cdb_id = project.concept_db.id
-        vocab_id = project.vocab.id
-    except AttributeError:
-        raise Exception('Failure loading Project Concept Database or Vocabulary. Are these set correctly?')
-    cat_id = str(cdb_id) + "-" + str(vocab_id)
-
-    if cat_id in CAT_MAP:
-        cat = CAT_MAP[cat_id]
-    else:
-        if cdb_id in CDB_MAP:
-            cdb = CDB_MAP[cdb_id]
-        else:
-            cdb_path = project.concept_db.cdb_file.path
-            try:
-                cdb = CDB.load(cdb_path)
-            except KeyError as ke:
-                mc_v = pkg_resources.get_distribution('medcat').version
-                if int(mc_v.split('.')[0]) > 0:
-                    log.error('Attempted to load MedCAT v0.x model with MCTrainer v1.x')
-                    raise Exception('Attempted to load MedCAT v0.x model with MCTrainer v1.x',
-                                    'Please re-configure this project to use a MedCAT v1.x CDB or consult the '
-                                    'MedCATTrainer Dev team if you believe this should work') from ke
-                raise
-
-            custom_config = os.getenv("MEDCAT_CONFIG_FILE")
-            if custom_config is not None and os.path.exists(custom_config):
-                cdb.config.parse_config_file(path=custom_config)
-            else:
-                log.info("No MEDCAT_CONFIG_FILE env var set to valid path, using default config available on CDB")
-            CDB_MAP[cdb_id] = cdb
-
-        if vocab_id in VOCAB_MAP:
-            vocab = VOCAB_MAP[vocab_id]
-        else:
-            vocab_path = project.vocab.vocab_file.path
-            vocab = Vocab.load(vocab_path)
-            VOCAB_MAP[vocab_id] = vocab
-
-        # integrated model-pack spacy model not used.
-        # This assumes specified spacy model is installed...
-        # Next change will create conditional params to load CDB / Vocab, or
-        # model-packs directly for a project.
-        cat = CAT(cdb=cdb, config=cdb.config, vocab=vocab)
-        CAT_MAP[cat_id] = cat
-    return cat
-
-
-def get_cached_cdb(cdb_id: str, CDB_MAP: Dict[str, CDB]) -> CDB:
-    if cdb_id not in CDB_MAP:
-        cdb_obj = ConceptDB.objects.get(id=cdb_id)
-        cdb = CDB.load(cdb_obj.cdb_file.path)
-        CDB_MAP[cdb_id] = cdb
-    return CDB_MAP[cdb_id]
+        add_annotations(spacy_doc=spacy_doc,
+                        user=user,
+                        project=project,
+                        document=doc,
+                        cat=cat,
+                        existing_annotations=anns)
+        # add doc to prepared_documents
+        project.prepared_documents.add(doc)
+    project.save()
 
 
 @receiver(post_save, sender=ProjectAnnotateEntities)
@@ -288,6 +271,7 @@ def save_project_anno(sender, instance, **kwargs):
         instance.cuis = ','.join(set(cui_list) - set(cuis_from_file))
         instance.save()
         post_save.connect(save_project_anno, sender=ProjectAnnotateEntities)
+
 
 
 def env_str_to_bool(var: str, default: bool):

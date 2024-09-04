@@ -36,15 +36,21 @@ logger = logging.getLogger(__name__)
 def calculate_metrics(project_ids: List[int], report_name: str):
     """
     Computes metrics in a background task
-    :param projects: list of projects to compute metrics for. Uses the 'first' for the CDB, but
-    should be the same CDB, but will still try and compute metrics regardless
+    :param projects: list of projects to compute metrics for.
+        Uses the 'first' for the CDB / vocab or ModelPack,
+        but should be the same CDB, but will still try and compute metrics regardless.
     :return: computed metrics results
     """
     logger.info('Calculating metrics for report: %s', report_name)
     projects = [ProjectAnnotateEntities.objects.filter(id=p_id).first() for p_id in project_ids]
-    cdb = CDB.load(projects[0].concept_db.cdb_file.path)
-    vocab = Vocab.load(projects[0].vocab.vocab_file.path)
-    cat = CAT(cdb, vocab, config=cdb.config)
+    if projects[0].cdb is None:
+        # assume the model pack is set.
+        cat = CAT.load_model_pack(projects[0].model_pack.model_pack.path)
+    else:
+        # assume the cdb / vocab is set in these projects
+        cdb = CDB.load(projects[0].concept_db.cdb_file.path)
+        vocab = Vocab.load(projects[0].vocab.vocab_file.path)
+        cat = CAT(cdb, vocab, config=cdb.config)
     project_data = retrieve_project_data(projects)
     metrics = ProjectMetrics(project_data, cat)
     report = metrics.generate_report()

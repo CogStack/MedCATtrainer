@@ -27,6 +27,7 @@ urlpatterns = [
     path('api/anno-conf/', api.views.get_anno_tool_conf),
     path('api/search-concepts/', api.views.search_solr),
     path('api/prepare-documents/', api.views.prepare_documents),
+    path('api/prep-docs-bg-tasks/', api.views.prepare_docs_bg_tasks),
     path('api/api-token-auth/', auth_views.obtain_auth_token),
     path('admin/', admin.site.urls),
     path('api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),

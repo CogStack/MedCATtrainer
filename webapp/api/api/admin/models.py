@@ -8,7 +8,7 @@ from .actions import *
 from ..models import *
 
 _PROJECT_ANNO_ENTS_SETTINGS_FIELD_ORDER = (
-    'concept_db', 'vocab', 'cdb_search_filter', 'require_entity_validation', 'train_model_on_submit',
+    'concept_db', 'vocab', 'model_pack', 'cdb_search_filter', 'require_entity_validation', 'train_model_on_submit',
     'add_new_entities', 'restrict_concept_lookup', 'terminate_available', 'irrelevant_available',
     'enable_entity_annotation_comments', 'tasks', 'relations'
 )
@@ -43,7 +43,8 @@ class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
     actions = [download, download_without_text, download_without_text_with_doc_names, reset_project, clone_projects]
     list_filter = ('members', 'project_status', 'project_locked', 'annotation_classification')
     list_display = ['name']
-    fields = (('group', 'name', 'description', 'annotation_guideline_link', 'members', 'dataset', 'validated_documents') +
+    fields = (('group', 'name', 'description', 'annotation_guideline_link', 'members',
+               'dataset', 'validated_documents', 'prepared_documents') +
               _PROJECT_FIELDS_ORDER +
               _PROJECT_ANNO_ENTS_SETTINGS_FIELD_ORDER)
 
@@ -55,7 +56,7 @@ class ProjectAnnotateEntitiesAdmin(admin.ModelAdmin):
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == 'cdb_search_filter':
             kwargs['queryset'] = ConceptDB.objects.all()
-        if db_field.name == 'validated_documents':
+        if db_field.name in ('validated_documents', 'prepared_documents'):
             project_id = request.path.replace('/admin/api/projectannotateentities/', '').split('/')[0]
             try:
                 proj = ProjectAnnotateEntities.objects.get(id=int(project_id))
@@ -165,7 +166,13 @@ class ModelPackAdmin(admin.ModelAdmin):
 class MetaCATModelAdmin(admin.ModelAdmin):
     model = MetaCATModel
     list_display = ('name', 'meta_cat_dir')
-    list_filter = ['meta_task']
+
+
+class MetaAnnotationAdmin(admin.ModelAdmin):
+    model = MetaAnnotation
+    list_display = ('annotated_entity', 'meta_task', 'meta_task_value', 'acc',
+                    'predicted_meta_task_value', 'validated', 'last_modified')
+    list_filter = ('meta_task', 'meta_task_value', 'predicted_meta_task_value', 'validated')
 
 
 class DocumentAdmin(admin.ModelAdmin):

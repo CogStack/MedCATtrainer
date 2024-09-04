@@ -26,8 +26,10 @@ def reset_project(modeladmin, request, queryset):
         # Remove all annotations and cascade to meta anns
         AnnotatedEntity.objects.filter(project=project).delete()
 
-        # Set all validated documents to none
+        # Clear validated_docuents and prepared_documents
         project.validated_documents.clear()
+        project.prepared_documents.clear()
+
 
 
 def download_without_text(modeladmin, request, queryset):

@@ -77,6 +77,7 @@ class ModelPack(models.Model):
 
         # load MetaCATs
         try:
+            metaCATmodels = []
             # should raise an error if there already is a MetaCAT model with this definition
             for meta_cat_dir, meta_cat in CAT.load_meta_cats(unpacked_model_pack_path):
                 mc_model = MetaCATModel()
@@ -84,6 +85,8 @@ class ModelPack(models.Model):
                 mc_model.name = f'{meta_cat.config.general.category_name} - {meta_cat.config.model.model_name}'
                 mc_model.save(unpack_load_meta_cat_dir=False)
                 mc_model.get_or_create_meta_tasks_and_values(meta_cat)
+                metaCATmodels.append(mc_model)
+            self.meta_cats.add(*metaCATmodels)
         except Exception as exc:
             raise MedCATLoadException(f'Failure loading MetaCAT models - {unpacked_model_pack_path}') from exc
         super().save(*args, **kwargs)
@@ -142,9 +145,10 @@ class Vocabulary(models.Model):
 
 
 class MetaCATModel(models.Model):
-    name = models.CharField(max_length=100)
-    meta_cat_dir = models.FilePathField(help_text='The zip or dir for a MetaCAT model', allow_folders=True)
-    meta_task = models.ForeignKey('MetaTask', on_delete=SET_NULL, blank=True, null=True)
+    name = models.CharField(max_length=100, help_text="The task name followed by the underlying model impl")
+    meta_cat_dir = models.FilePathField(help_text='The zip or dir for a MetaCAT model, not editable, '
+                                                  'is set via a model pack .zip upload',
+                                        allow_folders=True, editable=False)
 
     def get_or_create_meta_tasks_and_values(self, meta_cat: MetaCAT):
         task = meta_cat.config.general.category_name
@@ -152,8 +156,11 @@ class MetaCATModel(models.Model):
         if not mt:
             mt = MetaTask()
             mt.name = task
+            mt.prediction_model = self
             mt.save()
-        self.meta_task = mt
+        else:
+            mt.prediction_model = self
+            mt.save()
 
         mt_vs = []
         for meta_task_value in meta_cat.config.general.category_value2id.keys():
@@ -163,7 +170,8 @@ class MetaCATModel(models.Model):
                 mt_v.name = meta_task_value
                 mt_v.save()
             mt_vs.append(mt_v)
-        self.meta_task.values.set(mt_vs)
+        mt.values.set(mt_vs)
+        self.save()
 
     def save(self, *args, unpack_load_meta_cat_dir=False, **kwargs):
         if unpack_load_meta_cat_dir:
@@ -245,6 +253,10 @@ class ProjectFields(models.Model):
     annotation_classification = models.BooleanField(default=False, help_text="If these annotations are suitable "
                                                                              "for training a general purpose model. If"
                                                                              " in doubt uncheck this.")
+    meta_cat_predictions = models.BooleanField(default=False, help_text="If MetaTasks are setup on the project and "
+                                                                        "there are associated MetaCATModel instances, "
+                                                                        "display these predictions in the interface to "
+                                                                        "be validated / corrected")
     project_locked = models.BooleanField(default=False, help_text="Locked indicates annotation collection is complete and this dataset should "
                                                                   "not be touched any further.")
     project_status = models.CharField(max_length=1, choices=PROJECT_STATUSES, default="A",
@@ -256,7 +268,11 @@ class Project(PolymorphicModel, ProjectFields):
                                      help_text='The list users that have access to this annotation project')
     group = models.ForeignKey('ProjectGroup', on_delete=models.SET_NULL, blank=True, null=True,
                               help_text='The annotation project group that this project is part of')
-    validated_documents = models.ManyToManyField(Document, default=None, blank=True)
+    validated_documents = models.ManyToManyField(Document, default=None, blank=True,
+                                                 help_text='Set automatically on each doc submission')
+    prepared_documents = models.ManyToManyField(Document, default=None, blank=True,
+                                                help_text='Set automatically on each prep of a document',
+                                                related_name='prepared_documents')
 
     def __str__(self):
         return str(self.name)
@@ -353,6 +369,7 @@ class MetaTask(models.Model):
     description = models.TextField(default="", blank=True)
     ordering = models.PositiveSmallIntegerField(help_text="the order in which the meta task will appear in "
                                                           "the Trainer Annotation project screen", default=0)
+    prediction_model = models.ForeignKey('MetaCATModel', null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
         ordering = ['ordering', 'name']
@@ -368,10 +385,13 @@ class ProjectAnnotateEntitiesFields(models.Model):
     class Meta:
         abstract = True
 
-    concept_db = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=False, null=True,
+    concept_db = models.ForeignKey('ConceptDB', on_delete=models.SET_NULL, blank=True, null=True,
                                    help_text='The MedCAT CDB used to annotate / validate')
-    vocab = models.ForeignKey('Vocabulary', on_delete=models.SET_NULL, null=True,
+    vocab = models.ForeignKey('Vocabulary', on_delete=models.SET_NULL, blank=True, null=True,
                               help_text='The MedCAT Vocab used to annotate / validate')
+    model_pack = models.ForeignKey('ModelPack', on_delete=models.SET_NULL, help_text="A MedCAT model pack. This will raise an exception if "
+                                                                                     "both the CDB and Vocab and ModelPack fields are set",
+                                   default=None, null=True, blank=True)
     cdb_search_filter = models.ManyToManyField('ConceptDB', blank=True, default=None,
                                                help_text='The CDB that will be used for concept lookup. '
                                                          'This specific CDB should have been "imported" '
@@ -399,9 +419,18 @@ class ProjectAnnotateEntitiesFields(models.Model):
                                                             help_text="Enable to allow annotators to leave comments"
                                                                       " for each annotation")
     tasks = models.ManyToManyField('MetaTask', blank=True, default=None,
-                                   help_text='The set of MetaAnnotation tasks configured for this project')
+                                   help_text='The set of MetaAnnotation tasks configured for this project, '
+                                             'this will default to the set of Tasks configured in a ModelPack '
+                                             'if a model pack is used for the project')
     relations = models.ManyToManyField('Relation', blank=True, default=None,
                                        help_text='Relations that will be available for this project')
+
+    def save(self, *args, **kwargs):
+        if self.model_pack is None and (self.concept_db is None or self.vocab is None):
+            raise ValidationError('Must set at least the ModelPack or a Concept Database and Vocab Pair')
+        if self.model_pack and (self.concept_db is not None or self.vocab is not None):
+            raise ValidationError('Cannot set model pack and ConceptDB or a Vocab. You must use one or the other.')
+        super().save(*args, **kwargs)
 
 
 class ProjectAnnotateEntities(Project, ProjectAnnotateEntitiesFields):
@@ -419,7 +448,7 @@ class ProjectGroup(ProjectFields, ProjectAnnotateEntitiesFields):
     annotators = models.ManyToManyField(settings.AUTH_USER_MODEL,
                                         help_text="The set of users that will each be provided an annotation project",
                                         related_name='annotators')
-    cdb_search_filter = models.ManyToManyField('ConceptDB', blank=True, default=None,
+    cdb_search_filter = models.ManyToManyField('ConceptDB', blank=True,
                                                help_text='The CDB that will be used for concept lookup. '
                                                          'This specific CDB should have been "imported" '
                                                          'via the CDB admin screen',
@@ -441,7 +470,10 @@ class MetaAnnotation(models.Model):
     meta_task = models.ForeignKey('MetaTask', on_delete=models.CASCADE)
     meta_task_value = models.ForeignKey('MetaTaskValue', on_delete=models.CASCADE)
     acc = models.FloatField(default=1)
-    validated = models.BooleanField(default=False)
+    predicted_meta_task_value = models.ForeignKey('MetaTaskValue', on_delete=models.CASCADE,
+                                                  help_text='meta annotation predicted by a MetaAnnotationModel',
+                                                  null=True, blank=True, related_name="predicted_value")
+    validated = models.BooleanField(help_text='If an annotation is not ', default=False)
     last_modified = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):

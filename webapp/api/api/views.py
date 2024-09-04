@@ -1,33 +1,28 @@
-import logging
-import pickle
 import traceback
-from datetime import datetime
+from smtplib import SMTPException
 from tempfile import NamedTemporaryFile
 
 from background_task.models import Task, CompletedTask
+from django.contrib.auth.views import PasswordResetView
 from django.http import HttpResponseBadRequest, HttpResponseServerError, HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
 from django_filters import rest_framework as drf
-from django.contrib.auth.views import PasswordResetView
-from medcat.cdb import CDB
 from medcat.utils.helpers import tkns_from_doc
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from smtplib import SMTPException
 
-from core.settings import MEDIA_ROOT
 from .admin import download_projects_with_text, download_projects_without_text, \
     import_concepts_from_cdb
 from .data_utils import upload_projects_export
 from .medcat_utils import ch2pt_from_pt2ch, get_all_ch, dedupe_preserve_order, snomed_ct_concept_path
 from .metrics import calculate_metrics
+from .model_cache import get_medcat, get_cached_cdb, VOCAB_MAP, clear_cached_cdb, CAT_MAP, CDB_MAP, is_model_loaded
 from .permissions import *
 from .serializers import *
 from .solr_utils import collections_available, search_collection, ensure_concept_searchable
-from .utils import get_cached_medcat, clear_cached_medcat, get_medcat, get_cached_cdb, \
-    add_annotations, remove_annotations, train_medcat, create_annotation
+from .utils import add_annotations, remove_annotations, train_medcat, create_annotation, prep_docs
 
 # For local testing, put envs
 """
@@ -39,10 +34,6 @@ print(os.environ)
 
 logger = logging.getLogger(__name__)
 
-# Maps between IDs and objects 
-CDB_MAP = {}
-VOCAB_MAP = {}
-CAT_MAP = {}
 
 # Get the basic version of MedCAT
 cat = None
@@ -221,7 +212,7 @@ class ResetPasswordView(PasswordResetView):
 
 @api_view(http_method_names=['GET'])
 def get_anno_tool_conf(_):
-    return Response({k: v for k,v in os.environ.items()})
+    return Response({k: v for k, v in os.environ.items()})
 
 
 @api_view(http_method_names=['POST'])
@@ -253,6 +244,12 @@ def prepare_documents(request):
                                    'description': 'Missing CUI filter file, %s, cannot be found on the filesystem, '
                                                   'but is still set on the project. To fix remove and reset the '
                                                   'cui filter file' % project.cuis_file}, status=500)
+
+    if request.data.get('bg_task'):
+        # execute model infer in bg
+        job = prep_docs(p_id, d_ids, user.id)
+        return Response({'bg_job_id': job.id})
+
     try:
         for d_id in d_ids:
             document = Document.objects.get(id=d_id)
@@ -271,8 +268,8 @@ def prepare_documents(request):
             # If the document is not already annotated, annotate it
             if (len(anns) == 0 and not is_validated) or update:
                 # Based on the project id get the right medcat
-                cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
-                                 CAT_MAP=CAT_MAP, project=project)
+                cat = get_medcat(project=project)
+                logger.info('loaded medcat model for project: %s', project.id)
 
                 # Set CAT filters
                 cat.config.linking['filters']['cuis'] = cuis
@@ -285,6 +282,10 @@ def prepare_documents(request):
                                 cat=cat,
                                 existing_annotations=anns)
 
+            # add doc to prepared_documents
+            project.prepared_documents.add(document)
+            project.save()
+
     except Exception as e:
         stack = traceback.format_exc()
         return Response({'message': e.args[0] if len(e.args) > 0 else 'Internal Server Error',
@@ -292,6 +293,24 @@ def prepare_documents(request):
                          'stacktrace': stack}, status=500)
     return Response({'message': 'Documents prepared successfully'})
 
+
+@api_view(http_method_names=['GET'])
+def prepare_docs_bg_tasks(request):
+    proj_id = int(request.GET['project'])
+    running_doc_prep_tasks = Task.objects.filter(queue='doc_prep')
+    completed_doc_prep_tasks = CompletedTask.objects.filter(queue='doc_prep')
+
+    def transform_task_params(task_params_str):
+        task_params = json.loads(task_params_str)[0]
+        return {
+            'document': task_params[1][0],
+            'user_id': task_params[2]
+        }
+    running_tasks = [transform_task_params(task.task_params) for task in running_doc_prep_tasks
+                     if json.loads(task.task_params)[0][0] == proj_id]
+    complete_tasks = [transform_task_params(task.task_params) for task in completed_doc_prep_tasks
+                      if json.loads(task.task_params)[0][0] == proj_id]
+    return Response({'running_tasks': running_tasks, 'comp_tasks': complete_tasks})
 
 @api_view(http_method_names=['POST'])
 def add_annotation(request):
@@ -310,8 +329,7 @@ def add_annotation(request):
     project = ProjectAnnotateEntities.objects.get(id=p_id)
     document = Document.objects.get(id=d_id)
 
-    cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
-                     CAT_MAP=CAT_MAP, project=project)
+    cat = get_medcat(project=project)
     id = create_annotation(source_val=source_val,
                            selection_occurrence_index=sel_occur_idx,
                            cui=cui,
@@ -342,8 +360,7 @@ def add_concept(request):
     user = request.user
     project = ProjectAnnotateEntities.objects.get(id=p_id)
     document = Document.objects.get(id=d_id)
-    cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
-                     CAT_MAP=CAT_MAP, project=project)
+    cat = get_medcat(project=project)
 
     if cui in cat.cdb.cui2names:
         err_msg = f'Cannot add a concept "{name}" with cui:{cui}. CUI already linked to {cat.cdb.cui2names[cui]}'
@@ -393,14 +410,13 @@ def import_cdb_concepts(request):
 def _submit_document(project: ProjectAnnotateEntities, document: Document):
     if project.train_model_on_submit:
         try:
-            cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
-                             CAT_MAP=CAT_MAP, project=project)
+            cat = get_medcat(project=project)
             train_medcat(cat, project, document)
         except Exception as e:
             if project.vocab.id:
                 if len(VOCAB_MAP[project.vocab.id].unigram_table) == 0:
                     return Exception('Vocab is missing the unigram table. On the vocab instance '
-                                                   'use vocab.make_unigram_table() to build')
+                                     'use vocab.make_unigram_table() to build')
             else:
                 raise e
 
@@ -445,8 +461,7 @@ def save_models(request):
     # Get project id
     p_id = request.data['project_id']
     project = ProjectAnnotateEntities.objects.get(id=p_id)
-    cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
-                     CAT_MAP=CAT_MAP, project=project)
+    cat = get_medcat(project=project)
 
     cat.cdb.save(project.concept_db.cdb_file.path)
 
@@ -546,8 +561,7 @@ def annotate_text(request):
 
     project = ProjectAnnotateEntities.objects.get(id=p_id)
 
-    cat = get_medcat(CDB_MAP=CDB_MAP, VOCAB_MAP=VOCAB_MAP,
-                     CAT_MAP=CAT_MAP, project=project)
+    cat = get_medcat(project=project)
     cat.config.linking['filters']['cuis'] = set(cuis)
     spacy_doc = cat(message)
 
@@ -627,9 +641,9 @@ def upload_deployment(request):
 @api_view(http_method_names=['GET', 'DELETE'])
 def cache_model(request, cdb_id):
     if request.method == 'GET':
-        get_cached_cdb(cdb_id, CDB_MAP)
-    elif request.method == 'DELETE' and cdb_id in CDB_MAP:
-        del CDB_MAP[cdb_id]
+        get_cached_cdb(cdb_id)
+    elif request.method == 'DELETE':
+        clear_cached_cdb(cdb_id)
     else:
         return Response(f'Invalid method or cdb_id:{cdb_id} is invalid / not loaded', 400)
     return Response('success', 200)
@@ -637,8 +651,11 @@ def cache_model(request, cdb_id):
 
 @api_view(http_method_names=['GET'])
 def model_loaded(_):
-    return Response({p.id: False if not p.concept_db else p.concept_db.id in CDB_MAP
-                     for p in ProjectAnnotateEntities.objects.all()})
+    models_loaded = {}
+    for p in ProjectAnnotateEntities.objects.all():
+        models_loaded[p.id] = is_model_loaded(p)
+
+    return Response(models_loaded)
 
 
 @api_view(http_method_names=['GET', 'POST'])
