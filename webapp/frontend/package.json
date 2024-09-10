@@ -29,7 +29,7 @@
     "vue-multipane": "^0.9.5",
     "vue-router": "^3.5.3",
     "vue-select": "^3.20.0",
-    "vue-sidebar-menu": "^4.8.1",
+    "vue-sidebar-menu": "^5.4.1",
     "vue-simple-context-menu": "^3.4.2",
     "vue-splitpane": "^1.0.6"
   },
