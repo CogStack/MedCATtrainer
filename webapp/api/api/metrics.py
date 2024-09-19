@@ -43,7 +43,7 @@ def calculate_metrics(project_ids: List[int], report_name: str):
     """
     logger.info('Calculating metrics for report: %s', report_name)
     projects = [ProjectAnnotateEntities.objects.filter(id=p_id).first() for p_id in project_ids]
-    if projects[0].cdb is None:
+    if projects[0].model_pack:
         # assume the model pack is set.
         cat = CAT.load_model_pack(projects[0].model_pack.model_pack.path)
     else:
