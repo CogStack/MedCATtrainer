@@ -152,6 +152,12 @@ class AnnotatedEntityAdmin(admin.ModelAdmin):
 class ConceptDBAdmin(admin.ModelAdmin):
     model = ConceptDB
     actions = [import_concepts, delete_indexed_concepts, reset_cdb_filters]
+    list_display = ('name', 'use_for_training', 'create_time', 'last_modified', 'last_modified_by')
+    fields = ('name', 'cdb_file', 'use_for_training')
+
+    def save_model(self, request, obj, form, change):
+        obj.last_modified_by = request.user
+        super().save_model(request, obj, form, change)
 
 
 class ModelPackAdmin(admin.ModelAdmin):

@@ -99,6 +99,9 @@ class ConceptDB(models.Model):
     name = models.CharField(max_length=100, default='', blank=True, validators=[cdb_name_validator])
     cdb_file = models.FileField()
     use_for_training = models.BooleanField(default=True)
+    create_time = models.DateTimeField(auto_now_add=True)
+    last_modified = models.DateTimeField(auto_now=True)
+    last_modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=None, null=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -110,7 +113,7 @@ class ConceptDB(models.Model):
         inst.__cdb_field_name = [v for f, v in zip(field_names, values) if f == 'cdb_file'][0]
         return inst
 
-    def save(self, *args, skip_load=False, **kwargs, ):
+    def save(self, *args, skip_load=False, **kwargs):
         # load the CDB, and raise if this fails.
         if not skip_load:
             try:

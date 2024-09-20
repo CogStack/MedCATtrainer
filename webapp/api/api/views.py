@@ -172,6 +172,9 @@ class ConceptDBViewSet(viewsets.ModelViewSet):
     queryset = ConceptDB.objects.all()
     serializer_class = ConceptDBSerializer
 
+    def perform_create(self, serializer):
+        serializer.save(last_modified_by=self.request.user)
+
 
 class VocabularyViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
