@@ -168,7 +168,7 @@ class EntityRelationViewSet(viewsets.ModelViewSet):
 
 class ConceptDBViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ['get', 'post', 'head']
+    http_method_names = ['get', 'post', 'head', 'delete']
     queryset = ConceptDB.objects.all()
     serializer_class = ConceptDBSerializer
 
@@ -178,7 +178,7 @@ class ConceptDBViewSet(viewsets.ModelViewSet):
 
 class VocabularyViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ['get', 'post', 'head']
+    http_method_names = ['get', 'post', 'head', 'delete']
     queryset = Vocabulary.objects.all()
     serializer_class = VocabularySerializer
 
