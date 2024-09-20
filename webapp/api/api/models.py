@@ -114,7 +114,7 @@ class ConceptDB(models.Model):
         # load the CDB, and raise if this fails.
         if not skip_load:
             try:
-                CDB.load(self.cdb_file)
+                CDB.load(self.cdb_file.path)
             except Exception as exc:
                 raise MedCATLoadException(f'Failed to load Concept DB from {self.cdb_file}, '
                                           f'check if this CDB file successfully loads elsewhere') from exc
