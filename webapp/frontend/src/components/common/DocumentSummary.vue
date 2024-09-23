@@ -67,23 +67,7 @@ export default {
       runningBgTasks: []
     }
   },
-  created() {
-    // this.pollDocPrepStatus(true)
-  },
   methods: {
-    pollDocPrepStatus (pollInfinite) {
-      if (this.projId) {
-        this.$http.get(`/api/prep-docs-bg-tasks/?project=${this.projId}`).then(resp => {
-          this.runningBgTasks = resp.data.running_tasks.map(d => d.document)
-          this.completeBgTasks = resp.data.comp_tasks.map(d => d.document)
-        })
-        if (pollInfinite) {
-          setTimeout(this.pollDocPrepStatus, 5000)
-        }
-      } else {
-        setTimeout(this.pollDocPrepStatus, 5000)
-      }
-    },
     scrollSelectedDocId () {
       const el = document.getElementsByClassName('selected-doc')
       if (el.length > 0) {

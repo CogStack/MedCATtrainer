@@ -7,6 +7,7 @@ services:
       context: ./webapp
       args:
         SPACY_MODELS: ${SPACY_MODELS:-en_core_web_md}
+    image: medcattrainer-api
     restart: always
     volumes:
       - ./webapp/api/core:/home/api/core
@@ -22,6 +23,25 @@ services:
     environment:
       - MCT_VERSION=latest
     command: /home/scripts/run.sh
+
+  # bg process task runner
+  medcattrainer-bg-process:
+    image: medcattrainer-api
+    depends_on:
+      - medcattrainer
+    restart: always
+    volumes:
+      - ./webapp/api/core:/home/api/core
+      - ./webapp/api/api:/home/api/api
+      - ./webapp/scripts/run-bg-process.sh:/home/scripts/run-bg-process.sh
+      - ./configs:/home/configs
+      - api-media:/home/api/media
+      - api-static:/home/api/static
+      - api-db:/home/api/db
+    env_file:
+      - ./envs/env
+    command: /home/scripts/run-bg-process.sh
+
 
   nginx:
     image: nginx
