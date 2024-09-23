@@ -487,42 +487,36 @@ export default {
       this.currentEnt = null
       this.prepareDoc()
     },
-    prepareDocBg(doc) {
-      let payload = {
-        project_id: this.project.id,
-        document_ids: [doc.id],
-        bg_task: true
-      }
-      this.$http.post('/api/prepare-documents/', payload)
-    },
-    prepareDoc() {
-      this.loadingMsg = "Loading MedCAT model..."
-      this.$http.get(`/api/cache-model/${this.project.concept_db}/`).then(_ => {
-        this.loadingMsg = "Preparing Document..."
-        let payload = {
-          project_id: this.project.id,
-          document_ids: [this.currentDoc.id]
-        }
-        this.$http.post('/api/prepare-documents/', payload).then(_ => {
-          // assuming a 200 is fine here.
-          if (!this.project.prepared_documents.includes(this.currentDoc.id)) {
-            this.project.prepared_documents.push(this.currentDoc.id)
+    prepareDoc () {
+      if (this.project.prepared_documents.includes(this.currentDoc.id)) {
+        this.fetchEntities()
+      } else {
+        this.loadingMsg = "Loading MedCAT model..."
+        this.$http.get(`/api/cache-model/${this.project.concept_db}/`).then(_ => {
+          this.loadingMsg = "Preparing Document..."
+          let payload = {
+            project_id: this.project.id,
+            document_ids: [this.currentDoc.id]
           }
-
-          this.fetchEntities()
-        }).catch(err => {
+          this.$http.post('/api/prepare-documents/', payload).then(_ => {
+            // assuming a 200 is fine here.
+            if (!this.project.prepared_documents.includes(this.currentDoc.id)) {
+              this.project.prepared_documents.push(this.currentDoc.id)
+            }
+            this.fetchEntities()
+          }).catch(err => {
+            this.errors.modal = true
+            if (err.response) {
+              this.errors.message = err.response.data.message || 'Internal Server Error.'
+              this.errors.description = err.response.data.description || ''
+              this.errors.stacktrace = err.response.data.stacktrace
+            }
+          })
+        }).catch(_ => {
           this.errors.modal = true
-          if (err.response) {
-            this.errors.message = err.response.data.message || 'Internal Server Error.'
-            this.errors.description = err.response.data.description || ''
-            this.errors.stacktrace = err.response.data.stacktrace
-          }
+          this.errors.mesasge = "Internal server error - cannot load MedCAT model. Contact your MedCAT admin quoting this project ID"
         })
-      }).catch(_ => {
-        this.errors.modal = true
-        this.errors.mesasge = "Internal server error - cannot load MedCAT model. Contact your MedCAT admin quoting this project ID"
-      })
-
+      }
     },
     fetchEntities(selectedEntId) {
       let params = this.nextEntSetUrl === null ? `?project=${this.projectId}&document=${this.currentDoc.id}`

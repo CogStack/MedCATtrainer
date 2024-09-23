@@ -37,3 +37,4 @@ RUN for SPACY_MODEL in ${SPACY_MODELS}; do python -m spacy download ${SPACY_MODE
 
 WORKDIR /home/api/
 RUN chmod a+x /home/scripts/run.sh
+RUN chmod a+x /home/scripts/run-bg-process.sh

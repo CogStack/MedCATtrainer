@@ -4,6 +4,7 @@ from tempfile import NamedTemporaryFile
 
 from background_task.models import Task, CompletedTask
 from django.contrib.auth.views import PasswordResetView
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseBadRequest, HttpResponseServerError, HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -248,11 +249,6 @@ def prepare_documents(request):
                                                   'but is still set on the project. To fix remove and reset the '
                                                   'cui filter file' % project.cuis_file}, status=500)
 
-    if request.data.get('bg_task'):
-        # execute model infer in bg
-        job = prep_docs(p_id, d_ids, user.id)
-        return Response({'bg_job_id': job.id})
-
     try:
         for d_id in d_ids:
             document = Document.objects.get(id=d_id)
@@ -297,23 +293,58 @@ def prepare_documents(request):
     return Response({'message': 'Documents prepared successfully'})
 
 
+@api_view(http_method_names=['POST'])
+def prepare_documents_bg(request):
+    user = request.user
+    # Get project id
+    p_id = request.data['project_id']
+    project = ProjectAnnotateEntities.objects.get(id=p_id)
+    docs = Document.objects.filter(dataset=project.dataset)
+
+    # Get docs that have no AnnotatedEntities
+    d_ids = [d.id for d in docs if len(AnnotatedEntity.objects.filter(document=d).filter(project=project)) == 0 or
+             d in project.validated_documents.all()]
+
+    # execute model infer in bg
+    job = prep_docs(p_id, d_ids, user.id)
+    return Response({'bg_job_id': job.id})
+
+
 @api_view(http_method_names=['GET'])
-def prepare_docs_bg_tasks(request):
-    proj_id = int(request.GET['project'])
+def prepare_docs_bg_tasks(_):
     running_doc_prep_tasks = Task.objects.filter(queue='doc_prep')
     completed_doc_prep_tasks = CompletedTask.objects.filter(queue='doc_prep')
 
     def transform_task_params(task_params_str):
         task_params = json.loads(task_params_str)[0]
         return {
-            'document': task_params[1][0],
+            'project': task_params[0],
             'user_id': task_params[2]
         }
-    running_tasks = [transform_task_params(task.task_params) for task in running_doc_prep_tasks
-                     if json.loads(task.task_params)[0][0] == proj_id]
-    complete_tasks = [transform_task_params(task.task_params) for task in completed_doc_prep_tasks
-                      if json.loads(task.task_params)[0][0] == proj_id]
+    running_tasks = [transform_task_params(task.task_params) for task in running_doc_prep_tasks]
+    complete_tasks = [transform_task_params(task.task_params) for task in completed_doc_prep_tasks]
     return Response({'running_tasks': running_tasks, 'comp_tasks': complete_tasks})
+
+
+@api_view(http_method_names=['GET', 'DELETE'])
+def prepare_docs_bg_task(request, proj_id):
+    if request.method == 'GET':
+        # state of bg running process as determined by prepared docs
+        try:
+            proj = ProjectAnnotateEntities.objects.get(id=proj_id)
+            prepd_docs_count = proj.prepared_documents.count()
+            ds_total_count = Document.objects.filter(dataset=ProjectAnnotateEntities.objects.get(id=proj_id).dataset.id).count()
+            return Response({'proj_id': proj_id, 'dataset_len': ds_total_count, 'prepd_docs_len': prepd_docs_count})
+        except ObjectDoesNotExist:
+            return HttpResponseBadRequest('No Project found for ID: %s', proj_id)
+    else:
+        running_doc_prep_tasks = {json.loads(task.task_params)[0][0]: task.id
+                                  for task in Task.objects.filter(queue='doc_prep')}
+        if proj_id in running_doc_prep_tasks:
+            Task.objects.filter(id=running_doc_prep_tasks[proj_id]).delete()
+            return Response("Successfully stopped running response")
+        else:
+            return HttpResponseBadRequest('Could not find running BG Process to stop')
 
 @api_view(http_method_names=['POST'])
 def add_annotation(request):
@@ -623,7 +654,11 @@ def version(_):
 def concept_search_index_available(request):
     cdb_ids = request.GET.get('cdbs', '').split(',')
     cdb_ids = [c for c in cdb_ids if len(c)]
-    return collections_available(cdb_ids)
+    try:
+        return collections_available(cdb_ids)
+    except Exception as e:
+        return HttpResponseServerError("Solr Search Service not available check the service is up, running "
+                                       "and configured correctly. %s", e)
 
 
 @api_view(http_method_names=['GET'])

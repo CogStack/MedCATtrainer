@@ -17,8 +17,20 @@ CDB_MAP = {}
 VOCAB_MAP = {}
 CAT_MAP = {}
 
+_MAX_MODELS_LOADED = os.getenv("MAX_MEDCAT_MODELS", 1)
 
 logger = logging.getLogger(__name__)
+
+
+def _clear_models(cdb_map: Dict[str, CDB]=CDB_MAP,
+                  vocab_map: Dict[str, Vocab]=VOCAB_MAP,
+                  cat_map: Dict[str, CAT]=CAT_MAP):
+    if len(cat_map) == _MAX_MODELS_LOADED:
+        (k := next(iter(cat_map)), cat_map.pop(k))
+    if len(cdb_map) == _MAX_MODELS_LOADED:
+        (k := next(iter(cdb_map)), cdb_map.pop(k))
+    if len(vocab_map) == _MAX_MODELS_LOADED:
+        (k := next(iter(vocab_map)), vocab_map.pop(k))
 
 
 def get_medcat_from_cdb_vocab(project,
@@ -61,6 +73,7 @@ def get_medcat_from_cdb_vocab(project,
             vocab_map[vocab_id] = vocab
         cat = CAT(cdb=cdb, config=cdb.config, vocab=vocab)
         cat_map[cat_id] = cat
+        _clear_models(cat_map=cat_map, cdb_map=cdb_map, vocab_map=vocab_map)
     return cat
 
 
@@ -70,6 +83,7 @@ def get_medcat_from_model_pack(project, cat_map: Dict[str, CAT]=CAT_MAP) -> CAT:
     logger.info('Loading model pack from:%s', model_pack_obj.model_pack.path)
     cat = CAT.load_model_pack(model_pack_obj.model_pack.path)
     cat_map[cat_id] = cat
+    _clear_models(cat_map=cat_map)
     return cat
 
 
