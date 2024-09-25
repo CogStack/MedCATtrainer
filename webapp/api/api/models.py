@@ -114,17 +114,18 @@ class ConceptDB(models.Model):
         return inst
 
     def save(self, *args, skip_load=False, **kwargs):
-        # load the CDB, and raise if this fails.
+        if self.__cdb_field_name is not None and self.__cdb_field_name != self.cdb_file.name:
+            raise ValidationError('Cannot change file path of existing CDB.')
+        else:
+            super().save(*args, **kwargs)
+        # load the CDB, and raise if this fails - must be saved first so storage handler can rename path if name clashes
         if not skip_load:
             try:
                 CDB.load(self.cdb_file.path)
             except Exception as exc:
                 raise MedCATLoadException(f'Failed to load Concept DB from {self.cdb_file}, '
                                           f'check if this CDB file successfully loads elsewhere') from exc
-        if self.__cdb_field_name is not None and self.__cdb_field_name != self.cdb_file.name:
-            raise ValidationError('Cannot change file path of existing CDB.')
-        else:
-            super().save(*args, **kwargs)
+
 
     def __str__(self):
         return self.name
