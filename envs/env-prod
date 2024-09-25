@@ -12,7 +12,7 @@ ENV=prod
 CSRF_TRUSTED_ORIGINS=
 
 # Django Debug mode should be False for prod
-DEBUG=False
+DEBUG=0
 
 ### Load example CDB, Vocab ###
 LOAD_EXAMPLES=0

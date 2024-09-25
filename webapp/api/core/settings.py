@@ -38,9 +38,13 @@ else:
     SECRET_KEY = 'q$&esydgbn2=#-k5s5i(+^dtxs1@$50_(ln0wuw@zig4m&^m7='
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', True)
-if realm == 'prod' and DEBUG:
-    log.warning('Running in prod realm with DEBUG=True, are you sure you want to do that?')
+try:
+    DEBUG = bool(int(os.environ.get('DEBUG', 1)))
+    if realm == 'prod' and DEBUG:
+        log.warning('Running in prod realm with DEBUG=True, are you sure you want to do that?')
+except ValueError as e:
+    log.error('Error parsing DEBUG env, setting DEBUG to True. DEBUG env var should be set to 0 (false) or 1 (true).')
+    DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 

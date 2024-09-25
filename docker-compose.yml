@@ -40,6 +40,8 @@ services:
       - api-static:/home/api/static
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/sites-enabled/:/etc/nginx/sites-enabled
+    env_file:
+      - ./envs/env
     ports:
       - ${MCTRAINER_PORT:-8001}:8000
     depends_on:
@@ -50,6 +52,8 @@ services:
     container_name: mct_solr
     image: solr:8
     restart: always
+    env_file:
+      - ./envs/env
     ports:
       - ${SOLR_PORT:-8983}:8983
     volumes:
