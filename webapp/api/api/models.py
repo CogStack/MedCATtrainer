@@ -58,7 +58,7 @@ class ModelPack(models.Model):
             concept_db = ConceptDB()
             unpacked_file_name = self.model_pack.file.name.replace('.zip', '')
             concept_db.cdb_file.name = os.path.join(unpacked_file_name, 'cdb.dat')
-            concept_db.name = f'{self.name} - CDB'
+            concept_db.name = f'{self.name}_CDB'
             concept_db.save(skip_load=True)
             self.concept_db = concept_db
         except Exception as exc:
