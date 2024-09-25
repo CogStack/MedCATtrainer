@@ -137,7 +137,7 @@ class Vocabulary(models.Model):
         # load the Vocab, and raise if this fails
         if not skip_load:
             try:
-                Vocab.load(self.vocab_file)
+                Vocab.load(self.vocab_file.path)
             except Exception as exc:
                 raise MedCATLoadException(f'Failed to load Vocab from {self.vocab_file}, '
                                           f'check if this Vocab file successfully loads elsewhere') from exc

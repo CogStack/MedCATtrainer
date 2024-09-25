@@ -47,8 +47,9 @@ def add_annotations(spacy_doc, user, project, document, existing_annotations, ca
                         for task_name in spacy_doc._.ents[0]._.meta_anns.keys()}
         metataskvals2obj = {task_name: {v.name: v for v in MetaTask.objects.get(name=task_name).values.all()}
                             for task_name in spacy_doc._.ents[0]._.meta_anns.keys()}
-    except AttributeError:
-        # ignore meta_anns that are not present - i.e. non model pack preds,
+    except (AttributeError, IndexError):
+        # IndexError: ignore if there are no annotations in this doc
+        # AttributeError: ignore meta_anns that are not present - i.e. non model pack preds
         # or model pack preds with no meta_anns
         metatask2obj = {}
         metataskvals2obj = {}
