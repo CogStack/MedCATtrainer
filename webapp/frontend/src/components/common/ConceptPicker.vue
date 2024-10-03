@@ -1,24 +1,26 @@
 <template>
-  <v-select v-model="selectedCUI" @search="searchCUI"
-            :inputId="'searchBox'"
-            :clearSearchOnSelect="true"
-            :filterable="false"
-            :appendToBody="true"
-            :options="searchResults"
-            :loading="loadingResults"
-            label="cui"
-            @open="$emit('picker:opened')"
-            @close="$emit('picker:closed')">
-    <template v-slot:no-options="{ search, searching }">
-      <template v-if="searching">No results found for <em>{{ search }}</em>.
+  <div @keydown.stop>
+    <v-select v-model="selectedCUI" @search="searchCUI"
+              :inputId="'searchBox'"
+              :clearSearchOnSelect="true"
+              :filterable="false"
+              :appendToBody="true"
+              :options="searchResults"
+              :loading="loadingResults"
+              label="cui"
+              @open="$emit('picker:opened')"
+              @close="$emit('picker:closed')">
+      <template v-slot:no-options="{ search, searching }">
+        <template v-if="searching">No results found for <em>{{ search }}</em>.
+        </template>
+        <em v-else style="opacity: 0.5">Start typing to search for a concept.</em>
       </template>
-      <em v-else style="opacity: 0.5">Start typing to search for a concept.</em>
-    </template>
-    <template v-slot:option="option">
-      <span class="select-option">{{option.name}}</span>
-      <span class="select-option-cui"> - {{option.cui}}</span>
-    </template>
-  </v-select>
+      <template v-slot:option="option">
+        <span class="select-option">{{option.name}}</span>
+        <span class="select-option-cui"> - {{option.cui}}</span>
+      </template>
+    </v-select>
+  </div>
 </template>
 
 <script>
