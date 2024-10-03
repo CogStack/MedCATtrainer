@@ -22,12 +22,16 @@ export default {
   methods: {
     selectTaskValue (option) {
       this.$emit('select:metaAnno', this.task, option)
+      this.$forceUpdate()
     },
     optionStyle (option) {
-      return {
-        'selected': this.task.value === option.id && this.task.validated,
-        'predicted': this.task.predicted_value === option.id
+      if (this.task.value === option.id &&
+        (this.task.validated || !this.task.predicted_value)) {
+        return 'selected'
+      } else if (this.task.predicted_value === option.id) {
+        return 'predicted'
       }
+      return ''
     }
   }
 }
