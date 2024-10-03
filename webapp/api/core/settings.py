@@ -20,9 +20,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-environ_origins = os.environ.get('CSRF_TRUSTED_ORIGINS', None)
-trusted_origins = [] if environ_origins is None else environ_origins.split(',')
-CSRF_TRUSTED_ORIGINS = ['https://127.0.0.1:8001', 'http://localhost:8001'] + trusted_origins
+environ_origins = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+trusted_origins = [origin.strip() for origin in environ_origins.split(',') if origin.strip()]
+
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8001', 'http://localhost:8001'] + trusted_origins
 
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 

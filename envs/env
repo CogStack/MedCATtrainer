@@ -3,6 +3,8 @@ OPENBLAS_NUM_THREADS=1
 
 ### MedCAT cfg ###
 MEDCAT_CONFIG_FILE=/home/configs/base.txt
+# number of MedCAT models that can be cached, run in bg processes at any one time
+MAX_MEDCAT_MODELS=2
 
 ### Deployment Realm ###
 ENV=non-prod

@@ -175,7 +175,7 @@ export default {
         this.selectedProjectGroup = projectGroups[0]
         this.selectedProjectGroup.items = this.projects.items.filter(p => p.group === this.selectedProjectGroup.id)
       }
-    },
+    }
   }
 }
 </script>

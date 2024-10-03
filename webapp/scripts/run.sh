@@ -14,8 +14,6 @@ python /home/api/manage.py makemigrations api --noinput
 python /home/api/manage.py migrate --noinput
 python /home/api/manage.py migrate api --noinput
 
-python /home/api/manage.py process_tasks --log-std &
-
 # create a new super user, with username and password 'admin'
 # also create a user group `user_group` that prevents users from deleting models
 echo "from django.contrib.auth import get_user_model
