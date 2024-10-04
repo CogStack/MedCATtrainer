@@ -3,7 +3,7 @@
 
 services:
   medcattrainer:
-    image: cogstacksystems/medcat-trainer:v2.17.3
+    image: cogstacksystems/medcat-trainer:v2.17.4
     restart: always
     volumes:
       - ./configs:/home/configs
@@ -14,12 +14,12 @@ services:
     env_file:
       - ./envs/env
     environment:
-      - MCT_VERSION=v2.17.3
+      - MCT_VERSION=v2.17.4
     command: /home/scripts/run.sh
 
   # crontab - for db backup
   medcattrainer-db-backup:
-    image: cogstacksystems/medcat-trainer:v2.17.3
+    image: cogstacksystems/medcat-trainer:v2.17.4
     restart: always
     volumes:
       - ./configs:/home/configs
