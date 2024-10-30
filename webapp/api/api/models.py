@@ -135,6 +135,8 @@ class Vocabulary(models.Model):
     vocab_file = models.FileField()
 
     def save(self, *args, skip_load=False, **kwargs):
+        super().save(*args, **kwargs)
+
         # load the Vocab, and raise if this fails
         if not skip_load:
             try:
@@ -142,7 +144,6 @@ class Vocabulary(models.Model):
             except Exception as exc:
                 raise MedCATLoadException(f'Failed to load Vocab from {self.vocab_file}, '
                                           f'check if this Vocab file successfully loads elsewhere') from exc
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return str(self.vocab_file.name)
