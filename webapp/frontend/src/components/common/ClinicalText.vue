@@ -1,11 +1,14 @@
 <template>
   <div class="note-container">
-    <b-overlay :show="loading !== null" no-wrap opacity="0.2">
-      <template #overlay>
-        <b-spinner :variant="'primary'"></b-spinner>
-        <span class="overlay-message">{{loading}}</span>
-      </template>
-    </b-overlay>
+    <v-overlay :model-value="loading !== null"
+               class="align-center justify-center"
+               color="primary"
+               activator="parent"
+               :disabled="true"
+               :persistent="true">
+      <v-progress-circular indeterminate color="primary"></v-progress-circular>
+      <span class="overlay-message">{{loading}}</span>
+    </v-overlay>
     <div v-if="!loading" class="clinical-note">
       <v-runtime-template ref="clinicalText" :template="formattedText"></v-runtime-template>
     </div>
@@ -19,7 +22,7 @@
 </template>
 
 <script>
-import VRuntimeTemplate from 'v-runtime-template'
+import VRuntimeTemplate from "vue3-runtime-template"
 import VueSimpleContextMenu from 'vue-simple-context-menu'
 import _ from 'lodash'
 
@@ -51,6 +54,11 @@ export default {
     },
     addAnnos: Boolean
   },
+  emits: [
+    'select:concept',
+    'select:addSynonym',
+    'remove:newAnno'
+  ],
   data () {
     return {
       ctxMenuOptions: [
@@ -196,7 +204,7 @@ export default {
         // event is 132 px too large.
         // TODO: Fix hack, bug introduced with vue-multipane.
         let ev = {
-          pageY: event.pageY - 132,
+          pageY: event.pageY - 42,
           pageX: event.pageX
         }
         this.$refs.ctxMenu.showMenu(ev)
@@ -269,7 +277,6 @@ export default {
   color: $task-color-1;
   cursor: pointer;
   position: relative;
-  //right: -5px;
   top: -5px;
 }
 

@@ -1,9 +1,11 @@
 <template>
   <div @mousedown.stop class="relation-extraction-container">
-    <div class="title">Relation Annotations</div>
-    <button class="btn btn-default add-rel-btn" @click="addNewRelation">
-      <font-awesome-icon icon="plus"></font-awesome-icon>
-    </button>
+    <div class="title title-padding">Relation Annotations
+      <button class="btn btn-default add-rel-btn" @click="addNewRelation">
+        <font-awesome-icon icon="plus"></font-awesome-icon>
+      </button>
+    </div>
+
     <div class="relation-list">
       <relation-annotation v-for="(rel, idx) of entityRelations" :key="idx" :entity-relation="rel"
                            :possible-relations="relations" :selected-ent="selectedEntity"
@@ -33,6 +35,9 @@ export default {
     },
     currRelation: Object
   },
+  emits: [
+      'selected:relation'
+  ],
   data () {
     return {
       relations: {},
@@ -74,7 +79,7 @@ export default {
     },
     addNewRelation () {
       this.entityRelations.push({
-        user: Number(this.$cookie.get('user-id')),
+        user: Number(this.$cookies.get('user-id')),
         project: Number(this.projectId),
         document: Number(this.documentId),
         relation: this.relations[0],
@@ -109,7 +114,8 @@ export default {
       this.$emit('selected:relation', rel)
     },
     relationChanged (rel, prop, val) {
-      this.$set(rel, prop, val)
+      rel[prop] = val
+      // this.$set(rel, prop, val)
       this.editRelation(rel)
     }
   }
@@ -123,19 +129,16 @@ export default {
   overflow-y: auto;
 }
 
+.title-padding {
+  padding: 5px 5px 5px 15px;
+}
+
 .add-rel-btn {
-  position: absolute;
-  right: 10px;
-  top: 42px;
   float: right;
-  cursor: pointer;
-  opacity: 0.5;
-  &:hover {
-    opacity: 1;
-  }
 }
 
 .relation-list {
+  width: 100%;
   overflow-y: auto;
 }
 </style>

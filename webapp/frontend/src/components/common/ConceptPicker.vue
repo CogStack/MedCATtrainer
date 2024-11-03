@@ -30,6 +30,11 @@ export default {
   components: {
     vSelect
   },
+  emits: [
+    'picker:opened',
+    'picker:closed',
+    'pickedResult:concept'
+  ],
   props: {
     restrict_concept_lookup: Boolean,
     cui_filter: String,

@@ -43,8 +43,9 @@
           <span v-if="!exportingFilter">Export Filter</span>
           <font-awesome-icon v-if="exportingFilter" icon="spinner" spin size="xs" />
         </button>
-        <b-tooltip target="export-filter-btn" triggers="hover" container="concept-filter"
-                   title="Calculate all child concepts and download as a .json file - to upload into a Trainer project"></b-tooltip>
+        <v-tooltip>
+          Calculate all child concepts and download as a .json file - to upload into a Trainer project
+        </v-tooltip>
       </div>
     </div>
     <div class="view-port">

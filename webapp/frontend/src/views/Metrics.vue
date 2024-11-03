@@ -1,182 +1,219 @@
 <template>
   <div class="metrics-view">
     <div class="metrics-header">
-      <div class="title">Metrics Report:
+      <v-row class="header-row">
+        <div class="report-name-label">
+          Metrics Report:
+        </div>
         <span v-if="!editingName">
           <span v-if="!reportName" class="no-report-name">n/a</span>
-          <span v-if="reportName" class="completed-report-name">{{reportName}}</span>
+          <span v-if="reportName" class="completed-report-name">{{ reportName }}</span>
           <font-awesome-icon icon="pencil" class="edit-name-icon" @click="editingName = true"></font-awesome-icon>
         </span>
         <span class="report-name-input" v-if="editingName">
-          <b-form-input placeholder="Report name" type="text" v-model="editedReportName"></b-form-input>
+          <v-text-field placeholder="Report name"
+                        class="report-name-input"
+                        variant="underlined"
+                        @update:focused="updateName($event)"
+                        v-model="editedReportName"></v-text-field>
         </span>
-      </div>
+      </v-row>
+
 
     </div>
     <div class="viewport-full-height">
-      <b-overlay :show="loading">
-        <template #overlay>
-          <b-spinner variant="'primary'"></b-spinner>
-          <span class="overlay-message">Loading metrics report...</span>
-        </template>
-      </b-overlay>
-      <b-tabs class="viewport">
-        <b-tab title="User Stats" class="user-stats">
-          <b-table striped hover small :items="userStats.items" :fields="userStats.fields"></b-table>
-        </b-tab>
-        <b-tab title="Annotations" class="anno-summary">
-          <b-table striped hover small :items="annoSummary.items" :fields="annoSummary.fields">
-            <template #cell(status)="data">
-              <div id="status" :class="textColorClass(data.item.status)">
-                {{data.item.status}}
-                <font-awesome-icon icon="check-circle" v-if="['Correct', 'Manually Added', 'Alternative'].includes(data.item.status)"></font-awesome-icon>
-                <font-awesome-icon icon="times-circle" v-if="['Incorrect', 'Terminated', 'Irrelevant'].includes(data.item.status)"></font-awesome-icon>
-              </div>
-            </template>
-          </b-table>
-        </b-tab>
-        <b-tab title="Concept Summary" class="concept-summary">
-          <b-table striped hover small :items="conceptSummary.items" :fields="conceptSummary.fields" id="concepts-sum-tbl">
-            <template #head(concept)="data">
-              <div id="concept-head">Concept</div>
-              <b-tooltip target="concept-head"
-                         triggers="hover"
-                         container="concepts-sum-tbl"
-                         title=""></b-tooltip>
-            </template>
-            <template #head(concept_count)="data">
-              <div id="concept-count-head">Concept Count</div>
-              <b-tooltip target="concept-count-head"
-                         triggers="hover"
-                         container="concepts-sum-tbl"
-                         title="Number of occurrences across the projects"></b-tooltip>
-            </template>
-            <template #head(variations)="data">
-              <div id="variations-head"># Vars</div>
-              <b-tooltip target="variations-head"
-                         triggers="hover"
-                         container="concepts-sum-tbl"
-                         title="The count of unique variations for a concept"></b-tooltip>
-            </template>
-            <template #head(variation_values)="data">
-              <div id="variations-values-head">Variations</div>
-              <b-tooltip target="variations-values-head"
-                         triggers="hover"
-                         container="concepts-sum-tbl"
-                         title="The unique set of variations for a concept"></b-tooltip>
-            </template>
-            <template #head(count_variations_ratio)="data">
-              <div id="variations-ratio-head">Variations Ratio</div>
-              <b-tooltip target="variations-ratio-head"
-                         triggers="hover"
-                         container="concepts-sum-tbl"
-                         title="The ratio of number of annotations and the number of variations of a concept"></b-tooltip>
-            </template>
-            <template #head(cui)="data">
-              <div id="cui-head">CUI</div>
-              <b-tooltip target="cui-head"
-                         triggers="hover"
-                         container="concepts-sum-tbl"
-                         title="The Concept Unique Identifier"></b-tooltip>
-            </template>
-            <template #head(cui_f1)="data">
-              <div id="cui-f1-head">F1</div>
-              <b-tooltip target="cui-f1-head"
-                         triggers="hover"
-                         container="concepts-sum-tbl"
-                         title="The harmonic mean of the recall and precision scores"></b-tooltip>
-            </template>
-            <template #head(cui_prec)="data">
-              <div id="cui-prec-head">Prec</div>
-              <b-tooltip target="cui-prec-head"
-                         triggers="hover"
-                         container="concepts-sum-tbl"
-                         title="The precision scores of a concept."></b-tooltip>
-            </template>
-            <template #head(cui_rec)="data">
-              <div id="cui-rec-head">Rec</div>
-              <b-tooltip target="cui-rec-head"
-                         triggers="hover"
-                         container="concepts-sum-tbl"
-                         title="The recall scores of a concept."></b-tooltip>
-            </template>
-            <template #head(tps)="data">
-              <div id="tps-head">TPs</div>
-              <b-tooltip target="tps-head"
-                         triggers="hover"
-                         container="concepts-sum-tbl"
-                         title="True positives - concept examples that are annotated and predicted by the model"></b-tooltip>
-            </template>
-            <template #head(fns)="data">
-              <div id="fns-head">FNs</div>
-              <b-tooltip target="fns-head"
-                         triggers="hover"
-                         container="concepts-sum-tbl"
-                         title="False negatives - concept examples that annotated but not predicted by the model"></b-tooltip>
-            </template>
-            <template #head(fps)="data">
-              <div id="fps-head">FPs</div>
-              <b-tooltip target="fps-head"
-                         triggers="hover"
-                         container="concepts-sum-tbl"
-                         title="False positives - concept examples that are predicted but not annotated"></b-tooltip>
-            </template>
-            <template #cell(variation_values)="data">
-              <div>{{data.item.value.join(', ')}}</div>
-            </template>
-            <template #cell(cui_f1)="data">
-              <div v-html="data.value"></div>
-            </template>
-            <template #cell(cui_rec)="data">
-              <div v-html="data.value"></div>
-            </template>
-            <template #cell(cui_prec)="data">
-              <div v-html="data.value"></div>
-            </template>
-            <template #cell(tps)="data">
-              <button class="btn btn-outline-success res-btn" :disabled="data.item.tps === 0"
-                      @click="openExamples('tp_examples', data.item)">
-                {{data.item.tps}}
-              </button>
-            </template>
-            <template #cell(fns)="data">
-              <button class="btn btn-outline-warning res-btn" :disabled="data.item.fns === 0"
-                      @click="openExamples('fn_examples', data.item)">
-                {{data.item.fns}}
-              </button>
-            </template>
-            <template #cell(fps)="data">
-              <button class="btn btn-outline-danger res-btn" :disabled="data.item.fps === 0" @click="openExamples('fp_examples', data.item)">
-                {{data.item.fps}}
-              </button>
-            </template>
-          </b-table>
-        </b-tab>
-        <b-tab v-if="metaAnnsSummary.items" name="Meta Anns">
-          <b-table striped hover small :items="metaAnnsSummary.items" :fields="metaAnnsSummary.fields" class="meta-anno-summary"></b-table>
-        </b-tab>
-      </b-tabs>
+      <v-overlay :model-value="loading"
+                 class="align-center justify-center"
+                 color="primary"
+                 activator="parent"
+                 :disabled="true"
+                 :persistent="true">
+        <v-progress-circular color="primary" indeterminate></v-progress-circular>
+        <span class="overlay-message">Loading metrics report...</span>
+      </v-overlay>
+
+      <div class="viewport">
+        <v-tabs v-model="tab">
+          <v-tab :value="'user_stats'">User Stats</v-tab>
+          <v-tab :value="'annotations'">Annotations</v-tab>
+          <v-tab :value="'concept_summary'">Concept Summary</v-tab>
+          <v-tab :value="'meta_anns'" v-if="metaAnnsSummary.items">Meta Annotations</v-tab>
+        </v-tabs>
+
+        <div class="tab-pane">
+          <KeepAlive>
+            <div v-if="tab === 'user_stats'">
+              <v-data-table :items="userStats.items" :headers="userStats.headers" :hover="true"></v-data-table>
+            </div>
+          </KeepAlive>
+
+          <KeepAlive>
+            <div v-if="tab === 'annotations'">
+                <v-data-table :items="annoSummary.items" :headers="annoSummary.headers" :hover="true">
+                    <template #item.status="{ item }">
+                        <div id="status" :class="textColorClass(item.status)">
+                            {{ item.status }}
+                            <font-awesome-icon
+                                    icon="check-circle" v-if="['Correct', 'Manually Added', 'Alternative'].includes(item.status)">
+                            </font-awesome-icon>
+                            <font-awesome-icon
+                                    icon="times-circle" v-if="['Incorrect', 'Terminated', 'Irrelevant'].includes(item.status)">
+                            </font-awesome-icon>
+                        </div>
+                    </template>
+                </v-data-table>
+            </div>
+          </KeepAlive>
+
+          <KeepAlive>
+            <div v-if="tab === 'concept_summary'">
+              <v-data-table :items="conceptSummary.items" :headers="conceptSummary.headers">
+                <template #header.concept>
+                  <div>Concept</div>
+                  <v-tooltip></v-tooltip>
+                </template>
+                <template #header.concept_count>
+                  Concept Count
+                  <v-tooltip activator="parent">Number of occurrences across the projects</v-tooltip>
+                </template>
+                <template #header.variations>
+                  # Vars
+                  <v-tooltip activator="parent">The count of unique variations for a concept</v-tooltip>
+                </template>
+                <template #header.variation_values>
+                  Variations
+                  <v-tooltip activator="parent">The unique set of variations for a concept</v-tooltip>
+                </template>
+                <template #header.count_variations_ratio>
+                  Variations Ratio
+                  <v-tooltip activator="parent">The ratio of number of annotations and the number of variations of a concept</v-tooltip>
+                </template>
+                <template #header>
+                  CUI
+                  <v-tooltip activator="parent">The Concept Unique Identifier</v-tooltip>
+                </template>
+                <template #header.cui_f1>
+                  F1
+                  <v-tooltip activator="parent">The harmonic mean of the recall and precision scores</v-tooltip>
+                </template>
+                <template #header.cui_prec>
+                  Prec.
+                  <v-tooltip activator="parent">The precision scores of a concept</v-tooltip>
+                </template>
+                <template #header.cui_rec>
+                  Rec
+                  <v-tooltip activator="parent">The recall scores of a concept</v-tooltip>
+                </template>
+                <template #header.tps>
+                  TPs
+                  <v-tooltip activator="parent">True positives - concept examples that are annotated and predicted by the model</v-tooltip>
+                </template>
+                <template #header.fns>
+                  FNs
+                  <v-tooltip activator="parent">False negatives - concept examples that annotated but not predicted by the model</v-tooltip>
+                </template>
+                <template #header.fps>
+                  FPs
+                  <v-tooltip activator="parent">False positives - concept examples that are predicted but not annotated</v-tooltip>
+                </template>
+                <template #item.variation_values="{ item }">
+                  <div>{{ item.value.join(', ') }}</div>
+                </template>
+                <template #item.cui_f1="{ item }">
+                  <div class="perf-progress">
+                    <v-progress-linear
+                        v-model="item.cui_f1"
+                        color="#32AB60"
+                        background-color="#46B480"
+                        height="30px"
+                        :max="1.0">
+                      <span :class="{'good-perf': item.cui_f1 > 0.4}">{{item.cui_f1.toFixed(1)}}</span>
+                    </v-progress-linear>
+                  </div>
+                </template>
+                <template #item.cui_rec="{ item }">
+                  <div class="perf-progress">
+                    <v-progress-linear
+                        v-model="item.cui_rec"
+                        color="#32AB60"
+                        background-color="#46B480"
+                        height="30px"
+                        :max="1.0">
+                      <span :class="{'good-perf': item.cui_rec > 0.4}">{{item.cui_rec.toFixed(1)}}</span>
+                    </v-progress-linear>
+                  </div>
+                </template>
+                <template #item.cui_prec="{ item }">
+                  <div class="perf-progress">
+                    <v-progress-linear
+                        v-model="item.cui_prec"
+                        color="#32AB60"
+                        background-color="#46B480"
+                        height="30px"
+                        :max="1.0">
+                      <span :class="{'good-perf': item.cui_prec > 0.4}">{{item.cui_prec.toFixed(1)}}</span>
+                    </v-progress-linear>
+                  </div>
+                </template>
+                <template #item.tps="{ item }">
+                  <button class="btn btn-outline-success res-btn" :disabled="item.tps === 0"
+                          @click="openExamples('tp_examples', item)">
+                    {{ item.tps }}
+                  </button>
+                </template>
+                <template #item.fns="{ item }">
+                  <button class="btn btn-outline-warning res-btn" :disabled="item.fns === 0"
+                          @click="openExamples('fn_examples', item)">
+                    {{ item.fns }}
+                  </button>
+                </template>
+                <template #item.fps="{ item }">
+                  <button class="btn btn-outline-danger res-btn" :disabled="item.fps === 0"
+                          @click="openExamples('fp_examples', item)">
+                    {{ item.fps }}
+                  </button>
+                </template>
+              </v-data-table>
+            </div>
+          </KeepAlive>
+
+          <KeepAlive>
+            <div v-if="tab === 'meta_anns'">
+              <v-data-table :items="metaAnnsSummary.items"
+                            :headers="metaAnnsSummary.headers"
+                            :hover="true"
+                            class="meta-anno-summary">
+              </v-data-table>
+            </div>
+          </KeepAlive>
+        </div>
+      </div>
+
     </div>
     <modal class="summary-modal" v-if="modalData.results" :closable="true" @modal:close="clearModalData">
-      <h3 slot="header">{{modalData.title}}</h3>
-      <div slot="body">
-        <div v-if="modalData.type === 'fp'">
-          <p>False positive model predictions can be the result of:</p>
-          <ul>
-            <li>Alternative model predictions that are overlapping with other concepts</li>
-            <li>Genuine missed annotations by an annotator.</li>
-          </ul>
-          <p>Clicking through these annotations will not highlight this annotation as it doesn't exist in the dataset </p>
-        </div>
-        <div v-if="modalData.type === 'fn'">
-          <p>False negative model predictions can be the result of:</p>
-          <ul>
-            <li>An model mistake that marked an annotation 'correct' where it should be incorrect</li>
-            <li>An annotator mistake that marked an annotation 'correct' where it should be incorrect</li>
-          </ul>
-        </div>
-        <table class="table table-hover">
-          <thead>
+      <template #header>
+        <h3>{{ modalData.title }}</h3>
+      </template>
+      <template #body>
+        <div>
+          <div v-if="modalData.type === 'fp'">
+            <p>False positive model predictions can be the result of:</p>
+            <ul>
+              <li>Alternative model predictions that are overlapping with other concepts</li>
+              <li>Genuine missed annotations by an annotator.</li>
+            </ul>
+            <p>Clicking through these annotations will not highlight this annotation as it doesn't exist in the
+              dataset </p>
+          </div>
+          <div v-if="modalData.type === 'fn'">
+            <p>False negative model predictions can be the result of:</p>
+            <ul>
+              <li>An model mistake that marked an annotation 'correct' where it should be incorrect</li>
+              <li>An annotator mistake that marked an annotation 'correct' where it should be incorrect</li>
+            </ul>
+          </div>
+          <table class="table table-hover">
+            <thead>
             <tr>
               <th>Doc Name</th>
               <th>CUI</th>
@@ -184,12 +221,14 @@
               <th>Accuracy</th>
               <th>Text</th>
             </tr>
-          </thead>
-          <tbody>
-            <anno-result v-for="(res, key) of modalData.results" :key="key" :result="res" :type="modalData.type"></anno-result>
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+            <anno-result v-for="(res, key) of modalData.results" :key="key" :result="res"
+                         :type="modalData.type"></anno-result>
+            </tbody>
+          </table>
+        </div>
+      </template>
     </modal>
   </div>
 </template>
@@ -200,19 +239,19 @@ import AnnoResult from '@/components/anns/AnnoResult.vue'
 
 export default {
   name: 'Metrics.vue',
-  components: { AnnoResult, Modal },
+  components: {AnnoResult, Modal},
   props: {
     reportId: Number
   },
-  created () {
+  created() {
     if (this.reportId || (this.$route.query && this.$route.query.reportId)) {
       this.loading = true
       let reportId = this.reportId ? this.reportId : this.$route.query.reportId
       this.$http.get(`/api/metrics/${reportId}/`).then(resp => {
         this.loading = false
         this.reportName = resp.data.results.report_name || resp.data.results.report_name_generated
-        this.$set(this.userStats, 'items', resp.data.results.user_stats)
-        this.$set(this.conceptSummary, 'items', resp.data.results.concept_summary)
+        this.userStats.items = resp.data.results.user_stats
+        this.conceptSummary.items = resp.data.results.concept_summary
         let anno_summary = resp.data.results.annotation_summary.map(s => {
           if (s.correct) {
             s.status = 'Correct'
@@ -229,53 +268,54 @@ export default {
           }
           return s
         })
-        this.$set(this.annoSummary, 'items', anno_summary)
-        this.$set(this.metaAnnsSummary, 'items', resp.data.results.meta_anno_summary)
+        this.annoSummary.items = anno_summary
+        this.metaAnnsSummary.items = resp.data.results.meta_anno_summary
       })
     }
   },
-  data () {
+  data() {
     return {
       loading: false,
+      tab: null,
       reportName: null,
       editingName: false,
       editedReportName: null,
       userStats: {
-        fields: [
-          { key: 'user', label: 'User', sortable: true },
-          { key: 'count', label: 'Count', sortable: true }
+        headers: [
+          {value: 'user', title: 'User'},
+          {value: 'count', title: 'Count'}
         ]
       },
       annoSummary: {
-        fields: [
-          { key: 'project', label: 'Project', sortable: true },
-          { key: 'document_name', label: 'Doc. Name', sortable: true },
-          { key: 'id', label: 'Annotation Id', sortable: true },
-          { key: 'user', label: 'User', sortable: true },
-          { key: 'cui', label: 'CUI', sortable: true },
-          { key: 'concept_name', label: 'Concept', sortable: true },
-          { key: 'value', label: 'text', sortable: true },
-          { key: 'status', label: 'Status', sortable: true }
+        headers: [
+          {value: 'project', title: 'Project'},
+          { value: 'document_name', title: 'Doc. Name' },
+          { value: 'id', title: 'Annotation Id' },
+          { value: 'user', title: 'User' },
+          { value: 'cui', title: 'CUI' },
+          { value: 'concept_name', title: 'Concept' },
+          { value: 'value', title: 'text' },
+          { value: 'status', title: 'Status' }
         ]
       },
       conceptSummary: {
-        fields: [
-          { key: 'concept_name', sortable: true },
-          { key: 'concept_count', sortable: true },
-          { key: 'variations', sortable: true },
-          { key: 'variation_values', label: ''},
-          { key: 'count_variations_ratio', label: 'Variation Ratio', sortable: true },
-          { key: 'cui', label: 'CUI' },
-          { key: 'cui_f1', label: 'F1', sortable: true, formatter: this.perfFormatter },
-          { key: 'cui_prec', label: 'Prec.', sortable: true, formatter: this.perfFormatter },
-          { key: 'cui_rec', label: 'Rec.', sortable: true, formatter: this.perfFormatter },
-          { key: 'tps', label: 'TPs', sortable: true },
-          { key: 'fns', label: 'FNs', sortable: true },
-          { key: 'fps', label: 'FPs', sortable: true }
+        headers: [
+          {value: 'concept_name', title: 'Concept Name'},
+          { value: 'concept_count' },
+          { value: 'variations' },
+          { value: 'variation_values', title: ''},
+          { value: 'count_variations_ratio', title: 'Variation Ratio' },
+          { value: 'cui', title: 'CUI' },
+          { value: 'cui_f1', title: 'F1' },
+          { value: 'cui_prec', title: 'Prec.' },
+          { value: 'cui_rec', title: 'Rec.' },
+          { value: 'tps', title: 'TPs' },
+          { value: 'fns', title: 'FNs' },
+          { value: 'fps', title: 'FPs' }
         ]
       },
       metaAnnsSummary: {
-        fields: []
+        headers: []
       },
       modalData: {
         results: null,
@@ -285,7 +325,7 @@ export default {
     }
   },
   methods: {
-    textColorClass (status) {
+    textColorClass(status) {
       return {
         'task-color-text-0': status === 'Correct' || status === 'Manually Added',
         'task-color-text-1': status === 'Incorrect',
@@ -294,14 +334,14 @@ export default {
         'task-color-text-4': status === 'Irrelevant'
       }
     },
-    clearModalData () {
+    clearModalData() {
       this.modalData = {
         results: null,
         title: null,
         type: null
       }
     },
-    openExamples (exampleType, item) {
+    openExamples(exampleType, item) {
       if (exampleType === 'tp_examples') {
         this.modalData.title = 'True Positive Model Predictions'
         this.modalData.type = 'tp'
@@ -315,18 +355,7 @@ export default {
       const idx = this.conceptSummary.items.indexOf(item)
       this.modalData.results = this.conceptSummary.items[idx][exampleType]
     },
-    perfFormatter (value) {
-      let txtColorClass = 'good-perf'
-      if (Number(value) < 0.45) {
-        txtColorClass = 'bad-perf'
-      }
-      return `
-        <div class="gradient-fill ${txtColorClass}" style="width: calc(${Number(value) * 100}%);">
-          ${Number(value).toFixed(3)}
-        </div>
-`
-    },
-    saveEditedName () {
+    saveEditedName() {
       if (this.editingName && this.editedReportName !== '') {
         const payload = {
           report_name: this.editedReportName
@@ -337,25 +366,38 @@ export default {
         })
       }
     },
-    keydown (e) {
+    keydown(e) {
       if (e.keyCode === 27 && this.editingName) { // esc key
         this.editingName = false
       } else if (e.keyCode === 13 && this.editingName) { // enter key
-        this.saveEditedName()
+        if (this.editedReportName) {
+          this.saveEditedName()
+        } else {
+          this.editingName = false
+        }
+      }
+    },
+    updateName (focused) {
+      if (!focused) {
+        if (this.editedReportName !== null) {
+          this.saveEditedName()
+        } else {
+          this.editingName = false
+        }
       }
     },
   },
-  mounted () {
+  mounted() {
     window.addEventListener('keydown', this.keydown)
   },
-  beforeDestroy () {
+  beforeDestroy() {
     window.removeEventListener('keydown', this.keydown)
   }
 }
 </script>
 
 <style lang="scss">
-$metrics-header-height: 42px;
+$metrics-header-height: 50px;
 
 .metrics-view {
   // full-height minus app header height
@@ -363,8 +405,19 @@ $metrics-header-height: 42px;
 }
 
 .metrics-header {
+  @extend .title;
   padding: 10px;
-  height: 42px;
+  height: $metrics-header-height;
+}
+
+.header-row {
+  flex-wrap: nowrap;
+  padding: 5px 0;
+}
+
+.report-name-label {
+  padding: 10px;
+  display: inline-block;
 }
 
 .viewport-full-height {
@@ -377,23 +430,24 @@ $metrics-header-height: 42px;
 }
 
 .completed-report-name {
+  padding: 10px;
+  display: inline-block;
   font-style: italic;
 }
 
 .report-name-input {
   display: inline-block;
   height: 30px;
+  width: 250px;
+  padding-left: 5px;
 }
 
 .viewport {
   height: 100%;
 
-  .tab-content {
-    height: 100%;
-
-    .tab-pane {
-      height: calc(100% - 30px);
-    }
+  .tab-pane {
+    height: calc(100% - 48px);
+    overflow-y: auto;
   }
 }
 
@@ -424,26 +478,31 @@ $metrics-header-height: 42px;
   color: #E5EBEA;
 }
 
-.bad-perf {
-  color: #45503B;
-}
-
-.gradient-fill {
-  height: 25px;
-  padding: 0 1px;
-  background-image: linear-gradient(to right, #32ab60, #E8EDEE);
-  box-shadow: 0 5px 5px -5px #32ab60;
+.perf-progress {
+  width: 50px;
 }
 
 .edit-name-icon {
   height: 11px;
   margin-bottom: 15px;
   opacity: 0.5;
+
+  &:hover {
+    cursor: pointer;
+  }
 }
 
 .res-btn {
   height: 25px;
   padding: 3px 10px !important;
   border: 0 !important;
+  &:hover {
+    color: white !important;
+  }
 }
+.v-input--density-default {
+  --v-input-control-height: 30px !important;
+  --v-input-padding-top: 0px !important;
+}
+
 </style>

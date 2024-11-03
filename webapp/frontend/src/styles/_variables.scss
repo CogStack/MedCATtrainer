@@ -1,8 +1,28 @@
 // NHS Brand Colours
 // https://digital.nhs.uk/about-nhs-digital/corporate-information-and-documents/nhs-digital-style-guidelines/how-we-look/colour-palette
 
-@import "node_modules/bootstrap/scss/bootstrap";
+// functions required before bootstrap import to avoid deprecation warning issue described in functions.scss
+@import './functions.scss';
+@import 'bootstrap/scss/bootstrap';
 
+//$body-font-family: Montserrat;
+//
+//.v-application {
+//  .display-1,
+//  .display-2,
+//  .display-3,
+//  .display-4,
+//  .headline,
+//  .title,
+//  .subtitle-1,
+//  .subtitle-2,
+//  .body-1,
+//  .body-2,
+//  .caption,
+//  .overline {
+//    font-family: $body-font-family !important;
+//  }
+//}
 
 $theme-colors: (
     "primary": #0072CE, //NHS Bright Blue

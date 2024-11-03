@@ -1,20 +1,20 @@
-import { createVuePlugin as vue } from "vite-plugin-vue2";
-import { defineConfig, loadEnv } from 'vite'
+import { fileURLToPath, URL } from 'node:url'
 
-// https://vitejs.dev/config/
-const path = require("path");
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '')
-  return {
-  define: {
-    __APP_ENV__: JSON.stringify(env.APP_ENV),
-  },
-  plugins: [vue()],
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import vueDevTools from 'vite-plugin-vue-devtools'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [
+    vue(),
+    vueDevTools(),
+  ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
-      vue: 'vue/dist/vue.esm.js'
-    },
+      vue: 'vue/dist/vue.esm-bundler.js',
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    }
   },
   build: {
     sourcemap: true,
@@ -44,5 +44,4 @@ export default defineConfig(({ mode }) => {
       }
     }
   }
-}
 })

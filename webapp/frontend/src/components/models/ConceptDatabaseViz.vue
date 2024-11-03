@@ -5,12 +5,15 @@
       <button  class="btn btn-default" @click="zoomOut"><font-awesome-icon icon="minus"></font-awesome-icon></button>
       <button class="btn btn-default" @click="resetZoom">1:1</button>
     </div>
-    <b-overlay :show="loading">
-      <template #overlay>
-        <b-spinner :variant="'primary'"></b-spinner>
-        <span class="overlay-message">Retrieving Concept Tree...</span>
-      </template>
-    </b-overlay>
+    <v-overlay :model-value="loading"
+               class="align-center justify-center"
+               color="primary"
+               activator="parent"
+               :disabled="true"
+               :persistent="true">
+      <v-progress-circular indeterminate color="'primary'"></v-progress-circular>
+      <span class="overlay-message">Retrieving Concept Tree...</span>
+    </v-overlay>
     <div class="mc-tree-view">
       <vue-tree
         style="width: 1500px; height: 1000px;"
@@ -43,6 +46,9 @@ export default {
     cdb: Object,
     selectedCui: String
   },
+  emits: [
+    'select:node'
+  ],
   data () {
     return {
       CDB: {},
@@ -77,13 +83,13 @@ export default {
       if (this.nodeCuis.indexOf(node.cui) === -1 || node.complete) {
         this.$http.get(`api/model-concept-children/${this.cdb.id}/?parent_cui=${node.cui}`).then(resp => {
           this.loading = false
-          this.$set(node, 'children', resp.data.results.map(r => {
+          node.children = resp.data.results.map(r => {
             return {
               pretty_name: r.pretty_name,
               cui: r.cui,
               _key: r.cui
             }
-          }))
+          })
           this.nodeCuis.push(node.cui)
         })
       }

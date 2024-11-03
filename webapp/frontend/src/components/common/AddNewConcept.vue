@@ -4,9 +4,11 @@
       Add New Concept
       <div @click="selectNewConcept()" @mousedown.stop class="show-form-button">
         <transition name="slide-up">
-          <font-awesome-icon v-if="!showAdd" class="" icon="angle-right"
-                             @click="$emit('select:newConcept')"></font-awesome-icon>
-          <font-awesome-icon v-if="showAdd" icon="angle-down"></font-awesome-icon>
+          <div>
+            <font-awesome-icon v-if="!showAdd" class="" icon="angle-right"
+                               @click="$emit('select:newConcept')"></font-awesome-icon>
+            <font-awesome-icon v-if="showAdd" icon="angle-down"></font-awesome-icon>
+          </div>
         </transition>
       </div>
     </div>
@@ -56,6 +58,10 @@ export default {
     project: Object,
     documentId: Number
   },
+  emits: [
+    'select:newConcept',
+    'request:addConceptComplete'
+  ],
   data () {
     return {
       showAdd: false,

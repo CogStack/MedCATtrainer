@@ -1,13 +1,11 @@
 <template>
   <div class="nav-bar">
-    <div class="nav-buttons">
-      <button :disabled="backDisabled()" @click="back()" type="button" class="btn btn-outline-warning mb-2">
-        <font-awesome-icon icon="backward"></font-awesome-icon>
-      </button>
-      <button :disabled="nextDisabled()"  @click="next()" type="button" class="btn btn-outline-warning mb-2">
-        <font-awesome-icon icon="forward"></font-awesome-icon>
-      </button>
-    </div>
+    <button :disabled="backDisabled()" @click="back()" type="button" class="btn btn-outline-warning mb-2">
+      <font-awesome-icon icon="backward"></font-awesome-icon>
+    </button>
+    <button :disabled="nextDisabled()"  @click="next()" type="button" class="btn btn-outline-warning mb-2">
+      <font-awesome-icon icon="forward"></font-awesome-icon>
+    </button>
   </div>
 </template>
 
@@ -26,6 +24,10 @@ export default {
     nextBtnDisabled: Boolean,
     backBtnDisabled: Boolean
   },
+  emits: [
+    'select:next',
+    'select:back'
+  ],
   methods: {
     nextDisabled () {
       if (this.useEnts) {
@@ -64,12 +66,9 @@ export default {
 
 <style scoped lang="scss">
 .nav-bar {
+  width: 95px;
   display: inline-block;
   background: $background;
   color: $text;
-}
-
-.nav-buttons {
-  padding: 10px 10px;
 }
 </style>

@@ -91,6 +91,9 @@ export default {
     AddNewConcept,
     ConceptPicker
   },
+  emits: [
+    'request:addAnnotationComplete'
+  ],
   mixins: [ConceptDetailService],
   props: {
     selection: Object,

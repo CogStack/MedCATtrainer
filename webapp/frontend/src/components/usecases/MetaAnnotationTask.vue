@@ -19,6 +19,9 @@ export default {
   props: {
     task: Object
   },
+  emits: [
+    'select:metaAnno'
+  ],
   methods: {
     selectTaskValue (option) {
       this.$emit('select:metaAnno', this.task, option)

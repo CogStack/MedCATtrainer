@@ -2,12 +2,14 @@
   <div class="summary">
     <table class="table table-condensed table-hover">
       <thead>
-        <th>Annotated Text</th>
-        <th>Concept ID</th>
-        <th>Concept Name</th>
-        <th v-if="showInfoCol('icd10')">ICD-10</th>
-        <th v-if="showInfoCol('opcs4')">OPCS-4</th>
-        <th v-for="task in tasks" :key="task.id">{{task.name}}</th>
+        <tr>
+          <th>Annotated Text</th>
+          <th>Concept ID</th>
+          <th>Concept Name</th>
+          <th v-if="showInfoCol('icd10')">ICD-10</th>
+          <th v-if="showInfoCol('opcs4')">OPCS-4</th>
+          <th v-for="task in tasks" :key="task.id">{{task.name}}</th>
+        </tr>
       </thead>
       <tbody>
         <tr v-for="concept in annos" :key="concept.id" class="summary-body" @click="selectConcept(concept)">
