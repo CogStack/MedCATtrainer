@@ -28,6 +28,7 @@
 
 export default {
   name: 'Modal',
+  emits: ['modal:close'],
   props: {
     closable: Boolean
   },
@@ -43,6 +44,8 @@ export default {
 <style lang="scss">
 .close {
   opacity: 0.5;
+  float: right;
+  font-size: 1.5rem;
 
   :hover {
     opacity: 0.75;
@@ -91,10 +94,6 @@ export default {
 .modal-header h4 {
   display: inline-block;
   margin-left: 0;
-}
-
-.modal-header .close {
-  float: right;
 }
 
 .modal-body {

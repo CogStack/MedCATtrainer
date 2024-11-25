@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import VRuntimeTemplate from 'v-runtime-template'
+import VRuntimeTemplate from 'vue3-runtime-template'
 
 export default {
   name: 'AnnoResult.vue',

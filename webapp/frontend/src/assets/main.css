@@ -1,7 +1,7 @@
 html, body {
   height: 100%;
   overflow: hidden;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 body > div {
@@ -11,4 +11,22 @@ body > div {
 body {
   font-family: inherit;
   font-size: 1rem;
+}
+
+.v-table > .v-table__wrapper > table > tbody > tr > td,
+.v-table > .v-table__wrapper > table > tbody > tr > th,
+.v-table > .v-table__wrapper > table > thead > tr > td,
+.v-table > .v-table__wrapper > table > thead > tr > th,
+.v-table > .v-table__wrapper > table > tfoot > tr > td,
+.v-table > .v-table__wrapper > table > tfoot > tr > th {
+  padding: 0 4px;
+}
+
+.v-table--density-default {
+  --v-table-header-height: 42px !important;
+  --v-table-row-height: 32px !important;
+}
+
+.v-data-table tbody tr:nth-of-type(even) {
+  background-color: rgba(0, 0, 0, .03);
 }

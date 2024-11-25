@@ -9,24 +9,26 @@
       </button>
     </div>
     <div v-if="projectGroupView" class="full-height project-group-table">
-      <b-table id="projectGroupTable" hover :items="projectGroups.items"
-               :fields="projectGroups.fields" :select-mode="'single'"
-               selectable @row-selected="selectProjectGroup"
-               v-if="!loadingProjects">
-        <template #cell(last_modified)="data">
-          {{new Date(data.item.last_modified).toLocaleString()}}
+      <v-data-table id="projectGroupTable" :items="projectGroups.items"
+                    :headers="projectGroups.headers"
+                    :hover="true"
+                    v-if="!loadingProjects"
+                    color="primary"
+                    @click:row="selectProjectGroup">
+        <template v-slot:item.last_modified="{ item }">
+          {{new Date(item.last_modified).toLocaleString()}}
         </template>
-      </b-table>
+      </v-data-table>
       <modal v-if="selectedProjectGroup" :closable="true" @modal:close="selectedProjectGroup = null" class="summary-modal">
-        <div slot="header">
+        <template #header>
           <h3>Project Group: {{selectedProjectGroup.name}}</h3>
           <br>
           <p>{{selectedProjectGroup.description}}</p>
-        </div>
-        <div slot="body">
+        </template>
+        <template #body>
           <project-list :project-items="selectedProjectGroup.items" :is-admin="isAdmin"
                         :cdb-search-index-status="cdbSearchIndexStatus" :cdb-loaded="cdbLoaded"></project-list>
-        </div>
+        </template>
       </modal>
     </div>
     <project-list v-if="!projectGroupView" :project-items="projects.items" :is-admin="isAdmin"
@@ -55,10 +57,10 @@ export default {
       projectGroupView: false,
       projectGroups: {
         items: [],
-        fields: [
-          { key: 'name', label: 'Name', sortable: true },
-          { key: 'description', label: 'Description' },
-          { key: 'last_modified', label: 'Last Modified', sortable: true }
+        headers: [
+          { value: 'name', title: 'Name' },
+          { value: 'description', title: 'Description' },
+          { value: 'last_modified', title: 'Last Modified' }
         ]
       },
       projects: {
@@ -98,9 +100,9 @@ export default {
       })
       // assume if there's an api-token we've logged in before and will try get projects
       // fallback to logging in otherwise
-      if (this.$cookie.get('api-token')) {
+      if (this.$cookies.get('api-token')) {
         this.loginSuccessful = true
-        this.isAdmin = this.$cookie.get('admin') === 'true'
+        this.isAdmin = this.$cookies.get('admin') === 'true'
         this.fetchProjects()
       }
     },
@@ -121,10 +123,10 @@ export default {
             this.postLoadedProjects()
           }
         }).catch(() => {
-          this.$cookie.delete('username')
-          this.$cookie.delete('api-token')
-          this.$cookie.delete('admin')
-          this.$cookie.delete('user-id')
+          this.$cookies.remove('username')
+          this.$cookies.remove('api-token')
+          this.$cookies.remove('admin')
+          this.$cookies.remove('user-id')
           this.loadingProjects = false
           this.loginSuccessful = false
         })
@@ -164,15 +166,15 @@ export default {
       const projectIds = this.projects.items.map(p => p.id)
       this.$http.get(`/api/project-progress/?projects=${projectIds}`).then(resp => {
         this.projects.items = this.projects.items.map(item => {
-          item['progress'] = `${resp.data[item.id].validated_count} / ${resp.data[item.id].dataset_count}`
-          item['percent_progress'] = Math.ceil((resp.data[item.id].validated_count / resp.data[item.id].dataset_count) * 100)
+          item['progress'] = resp.data[item.id].validated_count
+          item['progress_max'] = resp.data[item.id].dataset_count
           return item
         })
       })
     },
-    selectProjectGroup(projectGroups) {
-      if (projectGroups.length > 0 && projectGroups[0]) {
-        this.selectedProjectGroup = projectGroups[0]
+    selectProjectGroup(_, { item }) {
+      if (item) {
+        this.selectedProjectGroup = item
         this.selectedProjectGroup.items = this.projects.items.filter(p => p.group === this.selectedProjectGroup.id)
       }
     },

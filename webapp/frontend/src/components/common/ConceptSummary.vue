@@ -103,6 +103,11 @@ export default {
     searchFilterDBIndex: String
   },
   mixins: [ConceptDetailService],
+  emits: [
+    'select:altConcept',
+    'select:alternative',
+    'updated:entityComment'
+  ],
   data () {
     return {
       conceptSummary: {},
@@ -176,8 +181,7 @@ export default {
         that.fetchDetail(this.selectedEnt, this.searchFilterDBIndex, () => {
           that.cleanProps()
         })
-      },
-      deep: true
+      }
     }
   }
 }

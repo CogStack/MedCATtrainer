@@ -1,27 +1,39 @@
 <template>
-  <div>
-    <b-overlay :show="loading" no-wrap opacity="0.5">
-      <template #overlay>
-        <b-spinner :variant="'primary'"></b-spinner>
-      </template>
-    </b-overlay>
+  <div class="concept-filter-parent">
+    <v-overlay :model-value="loading"
+               class="align-center justify-center"
+               color="#005EB8"
+               activator="parent"
+               contained
+               :disabled="true"
+               :persistent="true">
+      <v-progress-circular indeterminate color="'primary'"></v-progress-circular>
+    </v-overlay>
     <div>
-      <div class="search-bar">
-        <b-input v-model="filter" type="search" placeholder="Search for concepts..."></b-input>
-        <span v-if="filter === ''">Project concept filter size: {{(allItems || []).length}}</span>
-        <span v-if="filter !== ''">Found {{allFilteredItems.length}} - showing first {{items.length}}</span>
-      </div>
+      <v-row class="search-bar">
+        <v-text-field v-model="filter" type="search"
+                      label="Concept search"></v-text-field>
+        <div class="search-results">
+            <span v-if="filter === ''">Project concept filter size: <strong>{{(allItems || []).length}}</strong></span>
+            <span v-if="filter !== ''">Found <strong>{{allFilteredItems.length}}</strong> - showing first {{items.length}}</span>
+        </div>
+      </v-row>
 
-      <b-table ref="concept-table" id="table-id"
-               :items="items"
-               :fields="fields"
-               sticky-header
-               show-empty
-               small>
-        <template #cell(name)="data">
-          <span v-html="data.item.name"></span>
-        </template>
-      </b-table>
+
+      <v-table density="compact" id="concept-table">
+        <thead>
+          <tr>
+            <th>CUI</th>
+            <th>Name</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item in items" :key="item.cui">
+            <td>{{item.cui}}</td>
+            <td><span v-html="item.name"></span></td>
+          </tr>
+        </tbody>
+      </v-table>
     </div>
   </div>
 </template>
@@ -44,10 +56,10 @@ export default {
       loading: false,
       items: null,
       allItems: null,
-      allFilteredItems: null,
-      fields: [
-        { key: 'cui', label: 'CUI', sortable: true },
-        { key: 'name', label: 'Name', sortable: true }
+      allFilteredItems: [],
+      headers: [
+        { value: 'cui', title: 'CUI' },
+        { value: 'name', title: 'Name' }
       ],
       filter: '',
     }
@@ -70,43 +82,7 @@ export default {
       this.loading = false
     })
   },
-  mounted () {
-    const tableScrollBody = this.$refs["concept-table"].$el;
-    /* Consider debouncing the event call */
-    tableScrollBody.addEventListener("scroll", this.onScroll);
-  },
-  beforeDestroy() {
-    /* Clean up just to be sure */
-    const tableScrollBody = this.$refs["concept-table"].$el;
-    tableScrollBody.removeEventListener("scroll", this.onScroll);
-  },
   methods: {
-    onScroll (event) {
-      if (
-        event.target.scrollTop + event.target.clientHeight >=
-        event.target.scrollHeight
-      ) {
-        // fetch more items
-        if (this.allFilteredItems !== null && this.items.length !== this.allFilteredItems.length) {
-          window.setTimeout(() => {
-            if (this.filter.length !== 0) {
-              if (this.items.length < this.allFilteredItems.length) {
-                this.items = this.allFilteredItems.slice(0, ROW_LIMIT * this.currentPage)
-                this.currentPage ++
-                this.loading = false
-              }
-            } else if (this.items.length !== this.allItems.length) {
-              this.items = this.allItems.slice(0, ROW_LIMIT * this.currentPage)
-              this.currentPage ++
-              this.loading = false
-            } else {
-              this.loading = false
-            }
-          }, 200)
-          this.loading = true
-        }
-      }
-    },
     filterItems: _.debounce(function(filterStr) {
       filterStr = filterStr.toLowerCase()
       function highlightCUINames(concepts, query) {
@@ -151,7 +127,7 @@ export default {
       }
       this.currentPage = 0
       this.loading = false
-    }, 300)
+    }, 500)
   },
   watch: {
     filter (newVal, oldVal) {
@@ -159,7 +135,7 @@ export default {
         this.filterItems(newVal)
       } else {
         this.items = this.allItems.slice(0, ROW_LIMIT)
-        this.allFilteredItems = null
+        this.allFilteredItems = []
         this.currentPage = 0
         this.loading = false
       }
@@ -169,8 +145,14 @@ export default {
 </script>
 
 <style lang="scss">
+.concept-filter-parent {
+  position: relative;
+  padding: 5px;
+}
+
 .search-bar {
-  margin: 10px 0;
+  flex-wrap: nowrap;
+  //margin: 5px 0;
   width: calc(100% - 300px);
 
   input {
@@ -181,6 +163,11 @@ export default {
   span {
     float: right;
   }
+}
+
+.search-results {
+  padding-left: 10px;
+  padding-top: 10px;
 }
 
 .highlight {

@@ -32,6 +32,14 @@ export default {
     irrelevantEnabled: Boolean,
     conceptSelection: Object
   },
+  emits: [
+    'select:correct',
+    'select:remove',
+    'select:kill',
+    'select:alternative',
+    'select:irrelevant',
+    'submit'
+  ],
   watch: {
     'submitLocked' (oldVal, newVal) {
       if (newVal) {
@@ -119,7 +127,6 @@ export default {
 <style scoped lang="scss">
 .task-bar {
   width: 100%;
-  padding: 5px 0;
   background-color: $background;
   color: $text;
   text-align: center;
@@ -134,7 +141,7 @@ export default {
 
   .submit {
     float: right;
-    width: 100px
+    width: 100px;
   }
 }
 </style>

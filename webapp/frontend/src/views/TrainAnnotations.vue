@@ -7,9 +7,9 @@
 
       <div class="meta">
         <h5 class="file-name-heading" v-if="((docs || {}).length || 0) > 0">
-          <span class="file-name">{{(currentDoc || {}).name}}</span>
+          <span class="file-name">{{ (currentDoc || {}).name }}</span>
           <span class="divider">|</span>
-          <span class="files-remaining">{{ totalDocs - (project !== null ? project.validated_documents.length : 0)}} Remaining</span>
+          <span class="files-remaining">{{ totalDocs - (project !== null ? project.validated_documents.length : 0) }} Remaining</span>
         </h5>
         <button class="btn btn-default" @click="summaryModal = true">
           <font-awesome-icon icon="list-alt" class="summary-icon"></font-awesome-icon>
@@ -23,14 +23,14 @@
       </div>
     </div>
 
-    <multipane class="viewport-container">
-      <div :style="{minWith: '500px'}" class="full-height">
-        <div class="app-main">
-          <document-summary :projId="(project || {}).id" :docs="docs" :moreDocs="nextDocSetUrl !== null"
-                            :validatedDocIds="(project || {}).validated_documents"
-                            :preparedDocIds="(project || {}).prepared_documents"
-                            :selectedDocId="currentDoc !== null ? currentDoc.id : null" :loadingDoc="loadingMsg !== null"
-                            @request:nextDocSet="fetchDocuments()" @request:loadDoc="loadDoc"></document-summary>
+    <div class="app-main">
+      <document-summary :projId="(project || {}).id" :docs="docs" :moreDocs="nextDocSetUrl !== null"
+                        :validatedDocIds="(project || {}).validated_documents"
+                        :preparedDocIds="(project || {}).prepared_documents"
+                        :selectedDocId="currentDoc !== null ? currentDoc.id : null" :loadingDoc="loadingMsg !== null"
+                        @request:nextDocSet="fetchDocuments()" @request:loadDoc="loadDoc"></document-summary>
+      <splitpanes class="default-theme">
+        <pane size="70" min-size="20">
           <div class="main-viewport">
             <clinical-text :loading="loadingMsg" :text="currentDoc !== null ? currentDoc.text : null"
                            :current-ent="currentEnt" :ents="ents" :task-name="taskName" :task-values="taskValues"
@@ -38,8 +38,9 @@
                            :current-rel-end-ent="(currentRel || {}).end_entity"
                            @select:concept="selectEntity" @select:addSynonym="addSynonym"
                            @pick:concept="conceptPickerState" @remove:newAnno="removeNewAnno"></clinical-text>
-            <div class="taskbar">
-              <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt" @select:next="next" @select:back="back"></nav-bar>
+            <div class="task-nav-bar">
+              <nav-bar class="nav" :ents="ents" :currentEnt="currentEnt" @select:next="next"
+                       @select:back="back"></nav-bar>
               <task-bar class="tasks" :taskLocked="taskLocked" :ents="ents" :altSearch="altSearch"
                         :submitLocked="docToSubmit !== null" :terminateEnabled="(project || {}).terminate_available"
                         :irrelevantEnabled="(project || {}).irrelevant_available"
@@ -49,182 +50,215 @@
                         @select:irrelevant="markIrrelevant" @submit="submitDoc"></task-bar>
             </div>
           </div>
-        </div>
-      </div>
-      <multipane-resizer></multipane-resizer>
-      <div :style="{ flexGrow: 1, width: '375px', minWidth: '425px', maxWidth: '1000px' }">
-        <div class="sidebar-container">
-          <transition name="slide-left">
-            <concept-summary v-if="!conceptSynonymSelection && !hasRelations" :selectedEnt="currentEnt" :altSearch="altSearch"
-                             :project="project" :searchFilterDBIndex="searchFilterDBIndex"
-                             @select:altConcept="markAlternative"
-                             @select:alternative="toggleAltSearch"
-                             @updated:entityComment="markEntity(false)"
-                             class="concept-summary"></concept-summary>
-            <b-tabs v-if="!conceptSynonymSelection && hasRelations">
-              <b-tab title="Concept">
-                <concept-summary :selectedEnt="currentEnt" :altSearch="altSearch"
-                                 :project="project"  :searchFilterDBIndex="searchFilterDBIndex"
-                                 @select:altConcept="markAlternative" @select:alternative="toggleAltSearch"
+        </pane>
+        <pane size="15" min-size="10">
+          <div class="sidebar-container">
+            <transition name="slide-left">
+              <div>
+                <concept-summary v-if="!conceptSynonymSelection && !hasRelations" :selectedEnt="currentEnt"
+                                 :altSearch="altSearch"
+                                 :project="project" :searchFilterDBIndex="searchFilterDBIndex"
+                                 @select:altConcept="markAlternative"
+                                 @select:alternative="toggleAltSearch"
+                                 @updated:entityComment="markEntity(false)"
                                  class="concept-summary"></concept-summary>
-              </b-tab>
-              <b-tab title="Relations" v-if="hasRelations && docId">
-                <relation-annotation-task-container :available-relations="project.relations" :project-id="project.id"
-                                                    :document-id="docId" :selected-entity="currentEnt"
-                                                    :curr-relation="currentRel" @selected:relation="selectRelation">
-                </relation-annotation-task-container>
-              </b-tab>
-            </b-tabs>
-          </transition>
-          <transition name="slide-left">
-            <meta-annotation-task-container v-if="metaAnnotate" :model-pack-set="!!project.model_pack"
-                                            :taskIDs="hasMetaTasks"
-                                            :selectedEnt="currentEnt">
-            </meta-annotation-task-container>
-          </transition>
-          <transition name="slide-left">
-            <add-annotation v-if="conceptSynonymSelection" :selection="conceptSynonymSelection"
-                         :project="project" :documentId="currentDoc.id" :searchFilterDBIndex="searchFilterDBIndex"
-                         @request:addAnnotationComplete="addAnnotationComplete" class="add-annotation"></add-annotation>
-          </transition>
-        </div>
-      </div>
-    </multipane>
+                <v-tabs v-if="!conceptSynonymSelection && hasRelations" v-model="tab">
+                  <v-tab :value="'concept'">Concept</v-tab>
+                  <v-tab :value="'relation'">Relation</v-tab>
+                  <v-tab title="Relations" v-if="hasRelations && docId">
+                  </v-tab>
+                </v-tabs>
+                <v-tabs-window v-if="!conceptSynonymSelection && hasRelations" v-model="tab">
+                  <v-tabs-window-item :value="'concept'">
+                    <concept-summary :selectedEnt="currentEnt" :altSearch="altSearch"
+                                     :project="project" :searchFilterDBIndex="searchFilterDBIndex"
+                                     @select:altConcept="markAlternative" @select:alternative="toggleAltSearch"
+                                     class="concept-summary"></concept-summary>
+                  </v-tabs-window-item>
+                  <v-tabs-window-item :value="'relation'">
+                    <relation-annotation-task-container :available-relations="project.relations"
+                                                        :project-id="project.id"
+                                                        :document-id="docId" :selected-entity="currentEnt"
+                                                        :curr-relation="currentRel" @selected:relation="selectRelation">
+                    </relation-annotation-task-container>
+                  </v-tabs-window-item>
+                </v-tabs-window>
+              </div>
+            </transition>
+            <transition name="slide-left">
+              <meta-annotation-task-container v-if="metaAnnotate" :model-pack-set="!!project.model_pack"
+                                              :taskIDs="hasMetaTasks"
+                                              :selectedEnt="currentEnt">
+              </meta-annotation-task-container>
+            </transition>
+            <transition name="slide-left">
+              <add-annotation v-if="conceptSynonymSelection" :selection="conceptSynonymSelection"
+                              :project="project" :documentId="currentDoc.id" :searchFilterDBIndex="searchFilterDBIndex"
+                              @request:addAnnotationComplete="addAnnotationComplete"
+                              class="add-annotation"></add-annotation>
+            </transition>
+          </div>
+        </pane>
+      </splitpanes>
+    </div>
 
     <modal v-if="helpModal" class="help-modal" :closable="true" @modal:close="helpModal = false">
-      <h3 slot="header">{{ project.name }} Annotation Help</h3>
-
-      <div slot="body" class="help-modal-body">
-
-        <div v-if="project.annotation_guideline_link">
-          <h4 class="help-heading" v-b-toggle.annoguide>Annotation Guidelines:</h4>
-          <b-collapse id="annoguide">
-            Link to guideline <a :href="'' + project.annotation_guideline_link + ''">here</a>
-          </b-collapse>
-        </div>
-
-        <br>
-
-        <div>
-          <h4 class="help-heading" v-b-toggle.concepts>Concepts Annotated</h4>
-          <b-collapse id="concepts">
+      <template #header>
+        <h3>{{ project.name }} Annotation Help</h3>
+      </template>
+      <template #body>
+        <div class="help-modal-body">
+          <div class="concept-filter-search">
+            <div class="project-filter-title">
+              Project Concepts Annotated:
+            </div>
             <concept-filter :cuis="project.cuis" :cdb_id="project.concept_db"></concept-filter>
-          </b-collapse>
+          </div>
 
+          <v-expansion-panels>
+            <v-expansion-panel v-if="project.annotation_guideline_link" title="Annotation Guidelines">
+              <v-expansion-panel-text>
+                Link to guideline <a :href="'' + project.annotation_guideline_link + ''">here</a>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+            <v-expansion-panel title="Keyboard Shortcuts">
+              <v-expansion-panel-text>
+                <table class="table">
+                  <thead>
+                  <tr>
+                    <th>Shortcut Key</th>
+                    <th>Key Name</th>
+                    <th>Description</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr>
+                    <td>
+                      <font-awesome-icon icon="arrow-up"></font-awesome-icon>
+                    </td>
+                    <td>Up Arrow</td>
+                    <td>Previous Document</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <font-awesome-icon icon="arrow-down"></font-awesome-icon>
+                    </td>
+                    <td>Down Arrow</td>
+                    <td>Next Document</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <font-awesome-icon icon="arrow-left"></font-awesome-icon>
+                    </td>
+                    <td>Left Arrow</td>
+                    <td>Previous Concept</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <font-awesome-icon icon="arrow-right"></font-awesome-icon>
+                      or space
+                    </td>
+                    <td>Right Arrow or Space bar</td>
+                    <td>Next Concept</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <font-awesome-icon icon="level-down-alt" :transform="{ rotate: 90 }"></font-awesome-icon>
+                    </td>
+                    <td>Enter Key</td>
+                    <td>Submit / Submit Confirm (on submit summary)</td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td>1 Key</td>
+                    <td>Correct</td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td>2 Key</td>
+                    <td>Incorrect</td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td>3 Key (if set on your project)</td>
+                    <td>Terminate</td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td>4 Key</td>
+                    <td>Alternative</td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td>5 Key (if set on your project)</td>
+                    <td>Irrelevant</td>
+                  </tr>
+                  </tbody>
+                </table>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+            <v-expansion-panel title="Experimental Features">
+              <v-expansion-panel-text>
+                <button class="btn btn-primary" :disabled="resubmittingAllDocs" @click="submitAll">
+                  <span v-if="!resubmittingAllDocs">Re-Submit All Validated Documents</span>
+                  <span v-if="resubmittingAllDocs">Submitting...</span>
+                </button>
+                <transition name="alert"><span v-if="resubmitSuccess" class="alert alert-info">Successfully Re-submitted</span>
+                </transition>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+          </v-expansion-panels>
         </div>
-
-        <br>
-        <h4 class="help-heading" v-b-toggle.shortcuts>Keyboard Shortcuts</h4>
-        <b-collapse id="shortcuts">
-          <table class="table">
-            <thead>
-            <tr>
-              <th>Shortcut Key</th>
-              <th>Key Name</th>
-              <th>Description</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td><font-awesome-icon icon="arrow-up"></font-awesome-icon></td>
-              <td>Up Arrow</td>
-              <td>Previous Document</td>
-            </tr>
-            <tr>
-              <td><font-awesome-icon icon="arrow-down"></font-awesome-icon></td>
-              <td>Down Arrow</td>
-              <td>Next Document</td>
-            </tr>
-            <tr>
-              <td><font-awesome-icon icon="arrow-left"></font-awesome-icon></td>
-              <td>Left Arrow</td>
-              <td>Previous Concept</td>
-            </tr>
-            <tr>
-              <td><font-awesome-icon icon="arrow-right"></font-awesome-icon> or space</td>
-              <td>Right Arrow or Space bar</td>
-              <td>Next Concept</td>
-            </tr>
-            <tr>
-              <td><font-awesome-icon icon="level-down-alt" :transform="{ rotate: 90 }"></font-awesome-icon></td>
-              <td>Enter Key</td>
-              <td>Submit / Submit Confirm (on submit summary)</td>
-            </tr>
-            <tr>
-              <td></td>
-              <td>1 Key</td>
-              <td>Correct</td>
-            </tr>
-            <tr>
-              <td></td>
-              <td>2 Key</td>
-              <td>Incorrect</td>
-            </tr>
-            <tr>
-              <td></td>
-              <td>3 Key (if set on your project)</td>
-              <td>Terminate</td>
-            </tr>
-            <tr>
-              <td></td>
-              <td>4 Key</td>
-              <td>Alternative</td>
-            </tr>
-            <tr>
-              <td></td>
-              <td>5 Key (if set on your project)</td>
-              <td>Irrelevant</td>
-            </tr>
-            </tbody>
-          </table>
-        </b-collapse>
-
-        <br>
-        <h4 class="help-heading" v-b-toggle.exp>Experimental Features</h4>
-        <b-collapse id="exp">
-          <button class="btn btn-primary" :disabled="resubmittingAllDocs" @click="submitAll">
-            <span v-if="!resubmittingAllDocs">Re-Submit All Validated Documents</span>
-            <span v-if="resubmittingAllDocs">Submitting...</span>
-          </button>
-          <transition name="alert"><span v-if="resubmitSuccess" class="alert alert-info">
-            Successfully Re-submitted</span></transition>
-        </b-collapse>
-      </div>
-      <div slot="footer">
+      </template>
+      <template #footer>
         <button class="btn btn-primary" @click="helpModal = false">Close</button>
-      </div>
+      </template>
     </modal>
 
     <modal v-if="errors.modal" @modal:close="errors.modal = false" class="error-modal">
-      <h3 slot="header" class="text-danger">Error: {{errors.message}}</h3>
-      <div slot="body" class="error-body">
-        <p v-if="errors.description.length > 0">{{errors.description}}</p>
-        <p v-if="errors.stacktrace">Full Error:</p>
-        <p v-if="errors.stacktrace" class="error-stacktrace">{{errors.stacktrace}}</p>
-      </div>
-      <div slot="footer">
-        <a href="/"><button class="btn btn-primary">MedCATtrainer Home</button></a>
-      </div>
+      <template #header>
+        <h3 slot="header" class="text-danger">Error: {{ errors.message }}</h3>
+      </template>
+      <template #body>
+        <div class="error-body">
+          <p v-if="errors.description.length > 0">{{ errors.description }}</p>
+          <p v-if="errors.stacktrace">Full Error:</p>
+          <p v-if="errors.stacktrace" class="error-stacktrace">{{ errors.stacktrace }}</p>
+        </div>
+      </template>
+      <template #footer>
+        <a href="/">
+          <button class="btn btn-primary">MedCATtrainer Home</button>
+        </a>
+      </template>
     </modal>
 
     <modal v-if="projectCompleteModal" @modal:close="projectCompleteModal = false">
-      <h3 slot="header" class="text-success">Project Annotations Complete</h3>
-      <div slot="body">
+      <template #header>
+        <h3 class="text-success">Project Annotations Complete</h3>
+      </template>
+      <template #body>
         <p>Exit this window to review annotations or return to the project selection screen</p>
-      </div>
-      <div slot="footer">
-        <a href="/"><button class="btn btn-primary">MedCATtrainer Home</button></a>
-      </div>
+      </template>
+      <template #footer>
+        <a href="/">
+          <button class="btn btn-primary">MedCATtrainer Home</button>
+        </a>
+      </template>
     </modal>
 
     <modal v-if="docToSubmit" :closable="true" @modal:close="docToSubmit=null" class="summary-modal">
-      <h3 slot="header">Submit Document</h3>
-      <div slot="body">
-        <annotation-summary :annos="ents" :currentDoc="currentDoc"
-                            :taskIDs="hasMetaTasks" :searchFilterDBIndex="searchFilterDBIndex"
-                            @select:AnnoSummaryConcept="selectEntityFromSummary"></annotation-summary>
-      </div>
-      <div slot="footer">
+      <template #header>
+        <h3>Submit Document</h3>
+      </template>
+      <template #body>
+        <div slot="body">
+          <annotation-summary :annos="ents" :currentDoc="currentDoc"
+                              :taskIDs="hasMetaTasks" :searchFilterDBIndex="searchFilterDBIndex"
+                              @select:AnnoSummaryConcept="selectEntityFromSummary"></annotation-summary>
+        </div>
+      </template>
+      <template #footer>
         <button class="btn btn-primary" :disabled="submitConfirmedLoading" @click="submitConfirmed()">
           <span v-if="!submitConfirmedLoading">Confirm</span>
           <span v-if="submitConfirmedLoading">
@@ -232,26 +266,35 @@
             <font-awesome-icon icon="spinner" spin></font-awesome-icon>
           </span>
         </button>
-      </div>
+      </template>
     </modal>
 
     <modal v-if="summaryModal" :closable="true" @modal:close="summaryModal = false" class="summary-modal">
-      <h3 slot="header">Annotation Summary</h3>
-      <div slot="body">
+      <template #header>
+        <h3>Annotation Summary</h3>
+      </template>
+      <template #body>
         <annotation-summary :annos="ents" :currentDoc="currentDoc"
                             :taskIDs="(project || {}).tasks || []"
                             @select:AnnoSummaryConcept="selectEntityFromSummary"></annotation-summary>
-      </div>
+      </template>
     </modal>
+
     <modal v-if="resetModal" :closable="true" @modal:close="resetModal = false" class="reset-modal">
-      <h3 slot="header">Reset Document</h3>
-      <div slot="body">
-        <p class="text-center">Confirm reset of document annotations</p>
-        <p class="text-center">This will clear all current annotations in this document</p>
-      </div>
-      <div slot="footer">
+      <template #header>
+        <h3>Reset Document</h3>
+      </template>
+
+      <template #body>
+        <div>
+          <p class="text-center">Confirm reset of document annotations</p>
+          <p class="text-center">This will clear all current annotations in this document</p>
+        </div>
+      </template>
+
+      <template #footer>
         <button class="btn btn-primary" @click="confirmReset">Confirm</button>
-      </div>
+      </template>
     </modal>
   </div>
 </template>
@@ -269,8 +312,8 @@ import AddAnnotation from '@/components/anns/AddAnnotation.vue'
 import MetaAnnotationTaskContainer from '@/components/usecases/MetaAnnotationTaskContainer.vue'
 import RelationAnnotationTaskContainer from '@/components/usecases/RelationAnnotationTaskContainer.vue'
 import AnnotationSummary from '@/components/common/AnnotationSummary.vue'
-import { Multipane, MultipaneResizer } from 'vue-multipane'
 import ConceptFilter from "@/components/common/ConceptFilter.vue"
+import {Splitpanes, Pane} from 'splitpanes'
 
 const TASK_NAME = 'Concept Annotation'
 const CONCEPT_CORRECT = 'Correct'
@@ -297,8 +340,8 @@ export default {
     MetaAnnotationTaskContainer,
     RelationAnnotationTaskContainer,
     AnnotationSummary,
-    Multipane,
-    MultipaneResizer
+    Splitpanes,
+    Pane,
   },
   props: {
     projectId: {
@@ -309,14 +352,14 @@ export default {
     }
   },
   computed: {
-    hasRelations () {
+    hasRelations() {
       return ((this.project || {}).relations || []).length > 0
     },
-    hasMetaTasks () {
+    hasMetaTasks() {
       return (this.project || {}).tasks || []
     }
   },
-  data () {
+  data() {
     return {
       docs: null,
       docIds: null,
@@ -351,20 +394,21 @@ export default {
       submitConfirmedLoading: false,
       altSearch: false,
       conceptSynonymSelection: null,
-      metaAnnotate: false
+      metaAnnotate: false,
+      tab: null
     }
   },
-  created () {
+  created() {
     this.fetchAnnoConf()
   },
   methods: {
-    fetchAnnoConf () {
+    fetchAnnoConf() {
       this.$http.get(`/api/anno-conf/`).then(resp => {
         LOAD_NUM_DOC_PAGES = resp.data['LOAD_NUM_DOC_PAGES'] || LOAD_NUM_DOC_PAGES
         this.fetchData()
       })
     },
-    fetchData () {
+    fetchData() {
       this.$http.get(`/api/project-annotate-entities/?id=${this.projectId}`).then(resp => {
         if (resp.data.count === 0) {
           this.errors.modal = true
@@ -374,7 +418,7 @@ export default {
           this.fetchCDBSearchIndex()
           const loadedDocs = () => {
             this.docIds = this.docs.map(d => d.id)
-            this.docIdsToDocs = Object.assign({}, ...this.docs.map(item => ({ [item['id']]: item })))
+            this.docIdsToDocs = Object.assign({}, ...this.docs.map(item => ({[item['id']]: item})))
             const docIdRoute = Number(this.$route.params.docId)
             if (docIdRoute) {
               while (!this.docs.map(d => d.id).includes(docIdRoute)) {
@@ -396,9 +440,9 @@ export default {
         }
       })
     },
-    fetchDocuments (numPagesLoaded, finishedLoading) {
+    fetchDocuments(numPagesLoaded, finishedLoading) {
       let params = this.nextDocSetUrl === null ? `?dataset=${this.project.dataset}`
-        : `?${this.nextDocSetUrl.split('?').slice(-1)[0]}`
+          : `?${this.nextDocSetUrl.split('?').slice(-1)[0]}`
 
       this.$http.get(`/api/documents/${params}`).then(resp => {
         if (resp.data.results.length > 0) {
@@ -420,7 +464,7 @@ export default {
       })
       return finishedLoading
     },
-    fetchCDBSearchIndex () {
+    fetchCDBSearchIndex() {
       if (this.project.cdb_search_filter.length > 0) {
         this.$http.get(`/api/concept-dbs/${this.project.cdb_search_filter[0]}/`).then(resp => {
           if (resp.data) {
@@ -429,7 +473,7 @@ export default {
         })
       }
     },
-    loadDoc (doc) {
+    loadDoc(doc) {
       this.currentDoc = doc
       if (String(this.$route.params.docId) !== String(doc.id)) {
         this.$router.replace({
@@ -443,7 +487,7 @@ export default {
       this.currentEnt = null
       this.prepareDoc()
     },
-    prepareDocBg (doc) {
+    prepareDocBg(doc) {
       let payload = {
         project_id: this.project.id,
         document_ids: [doc.id],
@@ -451,7 +495,7 @@ export default {
       }
       this.$http.post('/api/prepare-documents/', payload)
     },
-    prepareDoc () {
+    prepareDoc() {
       this.loadingMsg = "Loading MedCAT model..."
       this.$http.get(`/api/cache-model/${this.project.concept_db}/`).then(_ => {
         this.loadingMsg = "Preparing Document..."
@@ -480,12 +524,12 @@ export default {
       })
 
     },
-    fetchEntities (selectedEntId) {
+    fetchEntities(selectedEntId) {
       let params = this.nextEntSetUrl === null ? `?project=${this.projectId}&document=${this.currentDoc.id}`
-        : `?${this.nextEntSetUrl.split('?').slice(-1)[0]}`
+          : `?${this.nextEntSetUrl.split('?').slice(-1)[0]}`
       this.$http.get(`/api/annotated-entities/${params}`).then(resp => {
         let useAssignedVal = !this.project.require_entity_validation ||
-          this.project.validated_documents.indexOf(this.currentDoc.id) !== -1
+            this.project.validated_documents.indexOf(this.currentDoc.id) !== -1
 
         const ents = resp.data.results.map(e => {
           e.assignedValues = {}
@@ -516,14 +560,14 @@ export default {
         } else {
           this.ents = _.orderBy(this.ents, ['start_ind'], ['asc'])
           this.currentEnt = selectedEntId ? this.ents[this.ents.map(e => e.id).indexOf(selectedEntId)]
-            : this.ents[0]
+              : this.ents[0]
           this.metaAnnotate = this.currentEnt && (this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_ALTERNATIVE ||
-            this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_CORRECT)
+              this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_CORRECT)
           this.loadingMsg = null
           if (this.$route.query.annoStart && this.$route.query.annoEnd) {
             const ent = _.find(this.ents, e => {
               return Number(this.$route.query.annoStart) === e.start_ind &
-                Number(this.$route.query.annoEnd) === e.end_ind
+                  Number(this.$route.query.annoEnd) === e.end_ind
             })
             if (ent) {
               this.currentEnt = ent
@@ -532,21 +576,21 @@ export default {
         }
       })
     },
-    selectEntityFromSummary (entIdx) {
+    selectEntityFromSummary(entIdx) {
       this.docToSubmit = null
       this.summaryModal = false
       this.selectEntity(entIdx)
     },
-    selectEntity (entIdx) {
+    selectEntity(entIdx) {
       this.currentEnt = this.ents[entIdx]
       this.conceptSynonymSelection = null
       this.metaAnnotate = this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_ALTERNATIVE ||
-        this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_CORRECT
+          this.currentEnt.assignedValues[TASK_NAME] === CONCEPT_CORRECT
     },
-    selectRelation (rel) {
+    selectRelation(rel) {
       this.currentRel = rel
     },
-    setStatus (status) {
+    setStatus(status) {
       this.currentEnt.validated = 1
       // reset statuses in case this is a re-annotation.
       this.currentEnt.correct = 0
@@ -556,7 +600,7 @@ export default {
       this.currentEnt.irrelevant = 0
       this.currentEnt[status] = 1
     },
-    markCorrect () {
+    markCorrect() {
       if (this.currentEnt) {
         this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_CORRECT
         this.setStatus('correct')
@@ -564,18 +608,22 @@ export default {
         this.metaAnnotate = this.project.tasks.length > 0
       }
     },
-    markEntity (moveToNext) {
+    markEntity(moveToNext) {
       if (this.currentEnt) {
         this.taskLocked = true
         this.$http.put(`/api/annotated-entities/${this.currentEnt.id}/`, this.currentEnt).then(_ => {
           if (moveToNext) {
-            if (this.ents.slice(-1)[0].id !== this.currentEnt.id) { this.next() } else { this.currentEnt = null }
+            if (this.ents.slice(-1)[0].id !== this.currentEnt.id) {
+              this.next()
+            } else {
+              this.currentEnt = null
+            }
           }
           this.taskLocked = false
         })
       }
     },
-    markRemove (kill) {
+    markRemove(kill) {
       if (this.currentEnt) {
         this.currentEnt.assignedValues[TASK_NAME] = kill ? CONCEPT_KILLED : CONCEPT_REMOVED
         if (kill) {
@@ -587,16 +635,16 @@ export default {
         this.metaAnnotate = false
       }
     },
-    toggleAltSearch (choice) {
+    toggleAltSearch(choice) {
       this.altSearch = choice
     },
-    markKill () {
+    markKill() {
       this.markRemove(true)
     },
-    markAlternative (item) {
+    markAlternative(item) {
       this.altSearch = false
       this.taskLocked = true
-      this.$http.post(`/api/get-create-entity/`, { label: item.cui }).then(resp => {
+      this.$http.post(`/api/get-create-entity/`, {label: item.cui}).then(resp => {
         this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_ALTERNATIVE
         this.currentEnt.entity = resp.data.entity_id
         this.setStatus('alternative')
@@ -608,13 +656,13 @@ export default {
       })
       this.currentEnt.cui = item.cui
     },
-    markIrrelevant () {
+    markIrrelevant() {
       this.currentEnt.assignedValues[TASK_NAME] = CONCEPT_IRRELEVANT
       this.setStatus('irrelevant')
       this.markEntity(true)
       this.metaAnnotate = false
     },
-    addAnnotationComplete (addedAnnotationId) {
+    addAnnotationComplete(addedAnnotationId) {
       this.conceptSynonymSelection = null
       if (addedAnnotationId) {
         this.$http.get(`/api/annotated-entities/${addedAnnotationId}/`).then(resp => {
@@ -627,7 +675,7 @@ export default {
         })
       }
     },
-    removeNewAnno (i) {
+    removeNewAnno(i) {
       let entToRemove = this.ents[i]
       this.$http.delete(`/api/annotated-entities/${entToRemove.id}/`).then(_ => {
         if (i === this.ents.length - 1) {
@@ -638,7 +686,7 @@ export default {
         this.ents.splice(i, 1)
       })
     },
-    addSynonym (selection) {
+    addSynonym(selection) {
       this.conceptSynonymSelection = null
       let that = this
       window.setTimeout(function () {
@@ -646,23 +694,23 @@ export default {
         that.metaAnnotate = false
       }, 50)
     },
-    conceptPickerState (val) {
+    conceptPickerState(val) {
       this.conceptPickerOpen = val
     },
-    next () {
+    next() {
       this.selectEntity(this.ents.indexOf(this.currentEnt) + 1)
     },
-    back () {
+    back() {
       this.selectEntity(this.ents.indexOf(this.currentEnt) - 1)
     },
-    submitDoc (docId) {
+    submitDoc(docId) {
       if (this.docToSubmit === null) {
         const annoUpdates = []
         if (!this.project.require_entity_validation) {
           this.ents = this.ents.map(ent => {
-            this.$set(ent, 'validated', 1)
+            ent.validated = 1
             if (!(ent.killed || ent.alternative || ent.deleted || ent.irrelevant)) {
-              this.$set(ent, 'correct', 1)
+              ent.correct = 1
             }
             annoUpdates.push(this.$http.put(`/api/annotated-entities/${ent.id}/`, ent))
             return ent
@@ -680,7 +728,7 @@ export default {
         }
       }
     },
-    submitConfirmed () {
+    submitConfirmed() {
       this.confirmSubmitListenerRemove()
       this.submitConfirmedLoading = true
       this.$http.get(`/api/project-annotate-entities/?id=${this.projectId}`).then(resp => {
@@ -701,7 +749,7 @@ export default {
             this.docToSubmit = null
             this.submitConfirmedLoading = false
             if (this.currentDoc.id !== this.docIds.slice(-1)[0].id ||
-              this.project.validated_documents.length !== this.docs.length) {
+                this.project.validated_documents.length !== this.docs.length) {
               const newDocId = this.docIds[this.docIds.indexOf(this.currentDoc.id) + 1]
               if (!newDocId) {
                 this.projectCompleteModal = true
@@ -718,7 +766,7 @@ export default {
         })
       })
     },
-    submitAll () {
+    submitAll() {
       let subPromises = []
       for (const vDoc of this.project.validated_documents) {
         const payload = {
@@ -744,20 +792,20 @@ export default {
         })
       }
     },
-    keydown (e) {
+    keydown(e) {
       if (e.keyCode === 13 && this.docToSubmit && !this.submitConfirmedLoading) {
         this.submitConfirmed()
       } else if (e.keyCode === 27 && this.docToSubmit) {
         this.docToSubmit = null
       }
     },
-    confirmSubmitListenerRemove () {
+    confirmSubmitListenerRemove() {
       window.removeEventListener('keydown', this.keydown)
     },
-    confirmSubmitListenerAdd () {
+    confirmSubmitListenerAdd() {
       window.addEventListener('keydown', this.keydown)
     },
-    confirmReset () {
+    confirmReset() {
       this.loadingMsg = "Resetting document annotations..."
       const payload = {
         project_id: this.project.id,
@@ -779,7 +827,7 @@ export default {
       })
     }
   },
-  beforeDestroy () {
+  beforeDestroy() {
     this.confirmSubmitListenerRemove()
   }
 }
@@ -828,6 +876,14 @@ $app-header-height: 60px;
   }
 }
 
+.concept-filter-search {
+  padding: 5px 0;
+}
+
+.project-filter-title {
+  margin-bottom: 10px;
+}
+
 .meta {
   flex: 1 1 auto;
   text-align: right;
@@ -872,6 +928,7 @@ $app-header-height: 60px;
 }
 
 .main-viewport {
+  height: 100%;
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
@@ -888,6 +945,7 @@ $app-header-height: 60px;
 }
 
 .sidebar-container {
+  background-color: var(--bs-body-bg);
   height: 100%;
   display: flex;
   justify-content: space-between;
@@ -898,6 +956,11 @@ $app-header-height: 60px;
     width: 100%;
     flex: 1 1 auto;
   }
+}
+
+.task-nav-bar {
+  background-color: var(--bs-body-bg);
+  padding: 5px 5px 0 5px;
 }
 
 .slide-left-enter-active {
@@ -914,33 +977,6 @@ $app-header-height: 60px;
 .divider {
   opacity: 0.5;
   padding: 0 5px;
-}
-
-.layout-v > .multipane-resizer {
-  margin: 0;
-  left: 0;
-  position: relative;
-  width: 10px;
-
-  &:before {
-    display: block;
-    content: "";
-    width: 5px;
-    height: 50px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    margin-top: -20px;
-    margin-left: -1.5px;
-    border-left: 1px solid #ccc;
-    border-right: 1px solid #ccc;
-  }
-
-  &:hover {
-    &:before {
-      border-color: #999;
-    }
-  }
 }
 
 .summary-title {

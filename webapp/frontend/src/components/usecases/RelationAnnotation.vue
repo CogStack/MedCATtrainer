@@ -25,6 +25,11 @@ export default {
     selectedEnt: Object,
     selectedRelation: Object
   },
+  emits: [
+    'click:clearRelation',
+    'click:selectRelation',
+    'changed:relation'
+  ],
   data () {
     return {
       relChoice: Object
@@ -60,11 +65,11 @@ export default {
     },
     selectStartEnt () {
       this.$emit('changed:relation', this.entityRelation, 'start_entity', this.selectedEnt)
-      this.startRelClass = this.entRelClass(this.selectedEnt)
+      // this.startRelClass = this.entRelClass(this.selectedEnt)
     },
     selectEndEnt () {
       this.$emit('changed:relation', this.entityRelation, 'end_entity', this.selectedEnt)
-      this.endRelClass = this.entRelClass(this.selectedEnt)
+      // this.endRelClass = this.entRelClass(this.selectedEnt)
     },
     entRelClass (selectedEnt) {
       if (selectedEnt.correct) {

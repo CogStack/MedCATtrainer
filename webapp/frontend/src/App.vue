@@ -1,5 +1,5 @@
 <template>
-  <div @login:success="loginSuccessful">
+  <div @login:success="loginSuccessful" class="full-height">
     <nav class="navbar">
       <router-link class="app-name" to="/">Med<img class="icon" src="./assets/cat-logo.png" >AT</router-link>
       <router-link class="navbar-brand" to="/">Projects</router-link>
@@ -36,22 +36,22 @@ export default {
   data () {
     return {
       loginModal: false,
-      uname: this.$cookie.get('username') || null,
+      uname: this.$cookies.get('username') || null,
       version: ''
     }
   },
   methods: {
     loginSuccessful () {
       this.loginModal = false
-      this.uname = this.$cookie.get('username')
+      this.uname = this.$cookies.get('username')
       if (this.$route.name !== 'home') {
         this.$router.push({ name: 'home' })
       }
     },
     logout () {
-      this.$cookie.delete('username')
-      this.$cookie.delete('api-token')
-      this.$cookie.delete('admin')
+      this.$cookies.remove('username')
+      this.$cookies.remove('api-token')
+      this.$cookies.remove('admin')
       if (this.$route.name !== 'home') {
         this.$router.push({ name: 'home' })
       } else {
@@ -91,11 +91,15 @@ export default {
 .app-name {
   padding: 0 10px;
   font-size: 2.25rem;
-
+  text-decoration: none;
   color: #fff;
+
   &:hover {
     color: #fff !important;
     text-decoration: none;
+  }
+  &:focus {
+    color: #fff;
   }
 }
 
@@ -103,10 +107,14 @@ export default {
   color: #fff;
   border-bottom: 1px solid transparent;
   margin-left: 20px;
+  padding: 3px 0;
 
   &:hover {
     color: #fff;
     border-bottom: 1px solid #fff;
+  }
+  &:focus {
+    color: #fff;
   }
 }
 

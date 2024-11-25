@@ -13,9 +13,6 @@
     <div id="doc-sum-list" class="doc-list">
       <div v-for="doc of (searchCrit ? filteredDocs : docs)" :key="doc.id" class="doc clickable"
            :class="{'selected-doc': selectedDocId === doc.id}" @click="loadDoc(doc)">
-        <b-overlay @click.stop.prevent class="doc-overlay" v-if="runningBgTasks.includes(doc.id)">
-          <b-spinner class="doc-overlay-spinner" :variant="'primary'"></b-spinner>
-        </b-overlay>
         <font-awesome-icon :id="'doc-sub-' + doc.id"
                            v-if="validatedDocIds.includes(doc.id)"
                            class="validated-doc" icon="check"></font-awesome-icon>
@@ -25,16 +22,16 @@
                            icon="clipboard-check"></font-awesome-icon>
 
         <div class="note-summary">
-          {{doc.text === 'nan' ? '' : (doc.text || '') | limitText }}
+          {{doc.text === 'nan' ? '' : (limitText(doc.text) || '')}}
         </div>
-        <b-tooltip :target="'doc-prep-' + doc.id"
-                   v-if="preparedDocIds.includes(doc.id) || completeBgTasks.includes(doc.id)"
-                   triggers="hover"
-                   container="doc-sum-list">Predictions ready for Doc: {{doc.id}}</b-tooltip>
-        <b-tooltip :target="'doc-sub-' + doc.id"
-                   v-if="validatedDocIds.includes(doc.id)"
-                   triggers="hover"
-                   container="doc-sum-list">Doc: {{doc.id}} complete</b-tooltip>
+        <v-tooltip activator="parent"
+                   v-if="preparedDocIds.includes(doc.id) || completeBgTasks                                   .includes(doc.id)">
+          Predictions ready for Doc: {{doc.id}}
+        </v-tooltip>
+        <v-tooltip activator="parent"
+                   v-if="validatedDocIds.includes(doc.id)">
+          Doc: {{doc.id}} complete
+        </v-tooltip>
       </div>
       <div class="clickable">
         <div v-if="moreDocs" @click="loadMoreDocs" class="more-docs">
@@ -57,6 +54,10 @@ export default {
     validatedDocIds: Array,
     preparedDocIds: Array
   },
+  emits: [
+    'request:nextDocSet',
+    'request:loadDoc'
+  ],
   data () {
     return {
       searching: false,
@@ -132,14 +133,6 @@ export default {
         this.filteredDocs = []
       }
     },
-  },
-  mounted () {
-    window.addEventListener('keyup', this.keyup)
-  },
-  beforeDestroy () {
-    window.removeEventListener('keyup', this.keyup)
-  },
-  filters: {
     limitText (value) {
       value = value.trim()
       let splitText = value.split('\n')
@@ -148,7 +141,13 @@ export default {
       }
       return value
     }
-  }
+  },
+  mounted () {
+    window.addEventListener('keyup', this.keyup)
+  },
+  beforeDestroy () {
+    window.removeEventListener('keyup', this.keyup)
+  },
 }
 </script>
 
@@ -187,24 +186,6 @@ $width: 175px;
   &:hover {
     cursor: pointer;
   }
-}
-
-.doc-overlay {
-  position: absolute !important;
-  z-index: 150;
-  background: $loading-background-color;
-  opacity: .9;
-  margin-top: -5px;
-  height: 5rem;
-  width: 100%;
-  box-shadow: 2px 1px 4px 3px rgba(0,0,0,0.2);
-  cursor: initial;
-}
-
-.doc-overlay-spinner {
-  position: absolute;
-  left: 50px;
-  top: 15px;
 }
 
 .prepared-doc {
