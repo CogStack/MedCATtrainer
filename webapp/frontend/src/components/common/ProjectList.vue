@@ -202,8 +202,8 @@
         <div class="cancel-dialog-body" v-if="cancelRunningBgTaskModal.prepCount === cancelRunningBgTaskModal.dsCount">
           Model predictions ready.
         </div>
-      </templatediv>
-      <div slot="footer">
+      </template>
+      <template #footer>
         <button class="btn btn-primary" @click="confirmCancelBgTaskStop()">
           <span v-if="cancelRunningBgTaskModal.prepCount < cancelRunningBgTaskModal.dsCount">
             Confirm
@@ -212,7 +212,7 @@
             View Project
           </span>
         </button>
-      </div>
+      </template>
     </modal>
   </div>
 </template>
@@ -483,17 +483,6 @@ export default {
   padding: 0 5px;
 
 }
-
-//
-//.progress-gradient-fill {
-//  position: absolute;
-//  z-index: -1;
-//  top: 0;
-//  height: 25px;
-//  padding: 0 1px;
-//  background-image: linear-gradient(to right, #32ab60, #E8EDEE);
-//  box-shadow: 0 5px 5px -5px #32ab60;
-//}
 
 
 .submit-report-job-alert {
