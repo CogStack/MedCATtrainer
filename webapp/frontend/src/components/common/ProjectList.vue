@@ -88,14 +88,17 @@
           <font-awesome-icon v-if="!item.annotation_classification" class="status-cell" icon="minus"></font-awesome-icon>
         </template>
         <template #item.cdb_search_filter="{ item }">
-          <font-awesome-icon v-if="cdbSearchIndexStatus[item.cdb_search_filter]" icon="check" class="success"></font-awesome-icon>
-          <span>
-            <font-awesome-icon v-if="!cdbSearchIndexStatus[item.cdb_search_filter]" icon="times" class="danger"></font-awesome-icon>
+          <span v-if="cdbSearchIndexStatus[item.cdb_search_filter]">
+            <font-awesome-icon icon="check" class="success"></font-awesome-icon>
+            <v-tooltip activator="parent" >Concept DB search available</v-tooltip>
           </span>
-          <v-tooltip activator="parent">
-            <div>Project concept search not available.</div>
-            <div>Check the project setup 'CDB search filter' option is set and correctly imported</div>
-          </v-tooltip>
+          <span v-if="!cdbSearchIndexStatus[item.cdb_search_filter]">
+            <font-awesome-icon  icon="times" class="danger"></font-awesome-icon>
+            <v-tooltip activator="parent">
+              <div>Project concept search not available.</div>
+              <div>Check the project setup 'CDB search filter' option is set and correctly imported</div>
+            </v-tooltip>
+          </span>
         </template>
         <template #item.model_loaded="{ item }">
           <div v-if="cdbLoaded[item.id]" @click.stop>
