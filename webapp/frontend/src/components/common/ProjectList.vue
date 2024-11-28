@@ -1,5 +1,5 @@
 <template>
-  <template class="full-height project-table">
+  <div class="full-height project-table">
     <div class="table-container">
       <v-overlay :model-value="loadingProjects"
                  :disabled="true"
@@ -111,15 +111,17 @@
             </button>
           </div>
         </template>
-        <template #item.metrics="{ item }">
-          <button :disabled="runningBgTasks.has(item.id) || completeBgTasks.has(item.id)"
-                  @click="runModel(item.id)"
-                  class="run-model btn btn-outline-primary">
-            <font-awesome-icon class=" model-bg-run-comp" icon="check"
-                               v-if="completeBgTasks.has(item.id)"></font-awesome-icon>
-            <font-awesome-icon v-if="runningBgTasks.has(item.id)" icon="spinner" spin></font-awesome-icon>
-            <font-awesome-icon v-if="!runningBgTasks.has(item.id)" icon="robot"></font-awesome-icon>
-          </button>
+        <template #item.run_model="{ item }">
+          <div @click.stop>
+            <button :disabled="runningBgTasks.has(item.id) || completeBgTasks.has(item.id)"
+                    @click="runModel(item.id)"
+                    class="run-model btn btn-outline-primary">
+              <font-awesome-icon class=" model-bg-run-comp" icon="check"
+                                 v-if="completeBgTasks.has(item.id)"></font-awesome-icon>
+              <font-awesome-icon v-if="runningBgTasks.has(item.id)" icon="spinner" spin></font-awesome-icon>
+              <font-awesome-icon v-if="!runningBgTasks.has(item.id)" icon="robot"></font-awesome-icon>
+            </button>
+          </div>
         </template>
         <template #item.metrics="{ item }">
           <div  @click.stop>
@@ -191,11 +193,11 @@
         <h3>Background Model Predictions</h3>
       </template>
       <template #body>
-        <b-progress :max="cancelRunningBgTaskModal.dsCount" height="2rem" animated >
-          <b-progress-bar :value="cancelRunningBgTaskModal.prepCount" >
-            <span><strong>{{ cancelRunningBgTaskModal.prepCount }} / {{ cancelRunningBgTaskModal.dsCount }}</strong></span>
-          </b-progress-bar>
-        </b-progress>
+        <v-progress-linear :max="cancelRunningBgTaskModal.dsCount"
+                           v-model="cancelRunningBgTaskModal.prepCount"
+                           height="20px" class="animate" striped color="primary">
+          <span><strong>{{ cancelRunningBgTaskModal.prepCount }} / {{ cancelRunningBgTaskModal.dsCount }}</strong></span>
+        </v-progress-linear>
         <div class="cancel-dialog-body" v-if="cancelRunningBgTaskModal.prepCount < cancelRunningBgTaskModal.dsCount">
           Confirm to stop running model predictions in the background and enter project.
         </div>
@@ -397,7 +399,7 @@ export default {
       }).catch(exc => {
         console.warn(exc)
       }).finally(_ => {
-        this.select([project])
+        this.select({}, {item: project})
         this.cancelRunningBgTaskModal = null
       })
     },
@@ -520,6 +522,19 @@ export default {
 .v-table > .v-table__wrapper > table > tfoot > tr > td,
 .v-table > .v-table__wrapper > table > tfoot > tr > th {
   padding: 0 4px !important;
+}
+
+.v-progress-linear.animate .v-progress-linear__determinate
+{
+  animation: move 5s linear infinite;
+}
+@keyframes move {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 100px 100px;
+  }
 }
 
 </style>
