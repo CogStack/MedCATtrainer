@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Dict
 
 from django.contrib.auth.models import User
+from django.db import transaction
 from django.db.models import Q
 
 from core.settings import MEDIA_ROOT
@@ -42,14 +43,14 @@ def dataset_from_file(dataset: Dataset):
                         "The 'name' column are document IDs, and the 'text' column is the text you're "
                         "collecting annotations for")
 
-
-    for i, row in enumerate(df.iterrows()):
-        row = row[1]
-        document = Document()
-        document.name = row['name']
-        document.text = sanitise_input(row['text'])
-        document.dataset = dataset
-        document.save()
+    with transaction.atomic():
+        for i, row in enumerate(df.iterrows()):
+            row = row[1]
+            document = Document()
+            document.name = row['name']
+            document.text = sanitise_input(row['text'])
+            document.dataset = dataset
+            document.save()
 
 
 def sanitise_input(text: str):

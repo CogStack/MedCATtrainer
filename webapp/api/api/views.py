@@ -5,6 +5,7 @@ from tempfile import NamedTemporaryFile
 from background_task.models import Task, CompletedTask
 from django.contrib.auth.views import PasswordResetView
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from django.http import HttpResponseBadRequest, HttpResponseServerError, HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -248,7 +249,6 @@ def prepare_documents(request):
                                    'description': 'Missing CUI filter file, %s, cannot be found on the filesystem, '
                                                   'but is still set on the project. To fix remove and reset the '
                                                   'cui filter file' % project.cuis_file}, status=500)
-
     try:
         for d_id in d_ids:
             document = Document.objects.get(id=d_id)
@@ -264,26 +264,28 @@ def prepare_documents(request):
 
             is_validated = document in project.validated_documents.all()
 
-            # If the document is not already annotated, annotate it
-            if (len(anns) == 0 and not is_validated) or update:
-                # Based on the project id get the right medcat
-                cat = get_medcat(project=project)
-                logger.info('loaded medcat model for project: %s', project.id)
+            with transaction.atomic():
+                # If the document is not already annotated, annotate it
+                if (len(anns) == 0 and not is_validated) or update:
+                    # Based on the project id get the right medcat
+                    cat = get_medcat(project=project)
+                    logger.info('loaded medcat model for project: %s', project.id)
 
-                # Set CAT filters
-                cat.config.linking['filters']['cuis'] = cuis
+                    # Set CAT filters
+                    cat.config.linking['filters']['cuis'] = cuis
 
-                spacy_doc = cat(document.text)
-                add_annotations(spacy_doc=spacy_doc,
-                                user=user,
-                                project=project,
-                                document=document,
-                                cat=cat,
-                                existing_annotations=anns)
+                    spacy_doc = cat(document.text)
 
-            # add doc to prepared_documents
-            project.prepared_documents.add(document)
-            project.save()
+                    add_annotations(spacy_doc=spacy_doc,
+                                    user=user,
+                                    project=project,
+                                    document=document,
+                                    cat=cat,
+                                    existing_annotations=anns)
+
+                # add doc to prepared_documents
+                project.prepared_documents.add(document)
+                project.save()
 
     except Exception as e:
         stack = traceback.format_exc()
