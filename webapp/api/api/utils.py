@@ -5,6 +5,7 @@ from typing import List
 
 from background_task import background
 from django.contrib.auth.models import User
+from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from medcat.cat import CAT
@@ -241,26 +242,28 @@ def prep_docs(project_id: List[int], doc_ids: List[int], user_id: int):
     project = ProjectAnnotateEntities.objects.get(id=project_id)
     docs = Document.objects.filter(id__in=doc_ids)
 
-    logger.info('Loading CAT object in bg process')
+    logger.info('Loading CAT object in bg process for project: %s', project.id)
     cat = get_medcat(project=project)
 
     # Set CAT filters
     cat.config.linking['filters']['cuis'] = project.cuis
 
     for doc in docs:
-        logger.info(f'Running MedCAT model over doc: {doc.id}')
+        logger.info(f'Running MedCAT model for project {project.id}:{project.name} over doc: {doc.id}')
         spacy_doc = cat(doc.text)
         anns = AnnotatedEntity.objects.filter(document=doc).filter(project=project)
-
-        add_annotations(spacy_doc=spacy_doc,
-                        user=user,
-                        project=project,
-                        document=doc,
-                        cat=cat,
-                        existing_annotations=anns)
-        # add doc to prepared_documents
+        with transaction.atomic():
+            add_annotations(spacy_doc=spacy_doc,
+                            user=user,
+                            project=project,
+                            document=doc,
+                            cat=cat,
+                            existing_annotations=anns)
+            # add doc to prepared_documents
         project.prepared_documents.add(doc)
     project.save()
+    logger.info('Prepared all docs for project: %s, docs processed: %s',
+                project.id, project.prepared_documents)
 
 
 @receiver(post_save, sender=ProjectAnnotateEntities)

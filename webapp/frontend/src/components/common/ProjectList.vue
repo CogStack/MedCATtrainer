@@ -88,14 +88,17 @@
           <font-awesome-icon v-if="!item.annotation_classification" class="status-cell" icon="minus"></font-awesome-icon>
         </template>
         <template #item.cdb_search_filter="{ item }">
-          <font-awesome-icon v-if="cdbSearchIndexStatus[item.cdb_search_filter]" icon="check" class="success"></font-awesome-icon>
-          <span>
-            <font-awesome-icon v-if="!cdbSearchIndexStatus[item.cdb_search_filter]" icon="times" class="danger"></font-awesome-icon>
+          <span v-if="cdbSearchIndexStatus[item.cdb_search_filter]">
+            <font-awesome-icon icon="check" class="success"></font-awesome-icon>
+            <v-tooltip activator="parent" >Concept DB search available</v-tooltip>
           </span>
-          <v-tooltip activator="parent">
-            <div>Project concept search not available.</div>
-            <div>Check the project setup 'CDB search filter' option is set and correctly imported</div>
-          </v-tooltip>
+          <span v-if="!cdbSearchIndexStatus[item.cdb_search_filter]">
+            <font-awesome-icon  icon="times" class="danger"></font-awesome-icon>
+            <v-tooltip activator="parent">
+              <div>Project concept search not available.</div>
+              <div>Check the project setup 'CDB search filter' option is set and correctly imported</div>
+            </v-tooltip>
+          </span>
         </template>
         <template #item.model_loaded="{ item }">
           <div v-if="cdbLoaded[item.id]" @click.stop>
@@ -108,6 +111,18 @@
             <button class="btn btn-outline-secondary" @click="loadProjectCDB(item.concept_db)">
               <font-awesome-icon v-if="loadingModel !== item.concept_db" icon="fa-cloud-arrow-up"></font-awesome-icon>
               <font-awesome-icon v-if="loadingModel === item.concept_db" icon="spinner" spin></font-awesome-icon>
+            </button>
+          </div>
+        </template>
+        <template #item.run_model="{ item }">
+          <div @click.stop>
+            <button :disabled="runningBgTasks.has(item.id) || completeBgTasks.has(item.id)"
+                    @click="runModel(item.id)"
+                    class="run-model btn btn-outline-primary">
+              <font-awesome-icon class=" model-bg-run-comp" icon="check"
+                                 v-if="completeBgTasks.has(item.id)"></font-awesome-icon>
+              <font-awesome-icon v-if="runningBgTasks.has(item.id)" icon="spinner" spin></font-awesome-icon>
+              <font-awesome-icon v-if="!runningBgTasks.has(item.id)" icon="robot"></font-awesome-icon>
             </button>
           </div>
         </template>
@@ -141,6 +156,7 @@
       <transition name="alert"><div class="alert alert-primary" v-if="saving" role="alert">Saving models</div></transition>
       <transition name="alert"><div class="alert alert-primary" v-if="modelSaved" role="alert">Model Successfully saved</div></transition>
       <transition name="alert"><div class="alert alert-danger" v-if="modelSavedError" role="alert">Error saving model</div></transition>
+      <transition name="alert"><div class="alert alert-danger" v-if="runModelBgError" role="alert">Error running model in background</div></transition>
       <transition name="alert"><div class="alert alert-primary" v-if="loadingModel" role="alert">Loading model</div></transition>
       <transition name="alert"><div class="alert alert-danger" v-if="modelCacheLoadError" role="alert">Error loading MedCAT model for project</div></transition>
       <transition name="alert"><div class="alert alert-danger" v-if="projectLockedWarning" role="alert">Unable load a locked project. Contact your CogStack administrator to unlock</div></transition>
@@ -174,6 +190,35 @@
         <button class="btn btn-default" @click="clearModelModal = false">Cancel</button>
       </template>
     </modal>
+
+    <modal v-if="cancelRunningBgTaskModal" :closable="true" @modal:close="cancelRunningBgTaskModal = null">
+      <template #header>
+        <h3>Background Model Predictions</h3>
+      </template>
+      <template #body>
+        <v-progress-linear :max="cancelRunningBgTaskModal.dsCount"
+                           v-model="cancelRunningBgTaskModal.prepCount"
+                           height="20px" class="animate" striped color="primary">
+          <span><strong>{{ cancelRunningBgTaskModal.prepCount }} / {{ cancelRunningBgTaskModal.dsCount }}</strong></span>
+        </v-progress-linear>
+        <div class="cancel-dialog-body" v-if="cancelRunningBgTaskModal.prepCount < cancelRunningBgTaskModal.dsCount">
+          Confirm to stop running model predictions in the background and enter project.
+        </div>
+        <div class="cancel-dialog-body" v-if="cancelRunningBgTaskModal.prepCount === cancelRunningBgTaskModal.dsCount">
+          Model predictions ready.
+        </div>
+      </template>
+      <template #footer>
+        <button class="btn btn-primary" @click="confirmCancelBgTaskStop()">
+          <span v-if="cancelRunningBgTaskModal.prepCount < cancelRunningBgTaskModal.dsCount">
+            Confirm
+          </span>
+          <span v-if="cancelRunningBgTaskModal.prepCount === cancelRunningBgTaskModal.dsCount">
+            View Project
+          </span>
+        </button>
+      </template>
+    </modal>
   </div>
 </template>
 
@@ -205,6 +250,7 @@ export default {
           { value: 'progress', title: 'Progress' },
           { value: 'anno_class', title: 'Annotation Classification' },
           { value: 'cdb_search_filter', title: 'Concepts Imported' },
+          { value: 'run_model', title: 'Run Model' },
           { value: 'model_loaded', title: 'Model Loaded' },
           { value: 'metrics', title: 'Metrics' },
           { value: 'save_model', title: 'Save Model' }
@@ -212,6 +258,7 @@ export default {
         adminOnlyFields: [
           'anno_class',
           'cdb_search_filter',
+          'run_model',
           'model_loaded',
           'save_model'
         ]
@@ -219,6 +266,7 @@ export default {
       projectLockedWarning: false,
       modelSaved: false,
       modelSavedError: false,
+      runModelBgError: false,
       loadingModel: false,
       modelCacheLoadError: false,
       metricsJobId: null,
@@ -226,7 +274,13 @@ export default {
       clearModelModal: false,
       selectedProjects: [],
       loadingProjects: false,
+      runningBgTasks: new Set(),
+      completeBgTasks: new Set(),
+      cancelRunningBgTaskModal: null
     }
+  },
+  created () {
+    this.pollDocPrepStatus()
   },
   methods: {
     clearLoadedModel (cdbId) {
@@ -271,23 +325,40 @@ export default {
         }, 15000)
       })
     },
-
     select (_, { item }) {
       let project = item
-      if (!project.project_locked) {
-        this.$router.push({
-          name: 'train-annotations',
-          params: {
-            projectId: project.id
-          }
-        })
-      } else {
-        this.projectLockedWarning = true
-        const that = this
-        setTimeout(() => {
-          that.projectLockedWarning = false
-        }, 5000)
+      if (project) {
+        if (project.project_locked) {
+          this.projectLockedWarning = true
+          const that = this
+          setTimeout(() => {
+            that.projectLockedWarning = false
+          }, 5000)
+        } else if (this.runningBgTasks.has(project.id)) {
+          this.bgTaskStatus(project)
+        } else {
+          this.$router.push({
+            name: 'train-annotations',
+            params: {
+              projectId: project.id
+            }
+          })
+        }
       }
+    },
+    runModel (projectId) {
+      let payload = {
+        project_id: projectId
+      }
+      this.runningBgTasks = new Set([...this.runningBgTasks, projectId])
+      this.$http.post('/api/prepare-documents-bg/', payload).then(_ => {
+      }).catch(_ => {
+        this.runModelBgError = true
+        const that = this
+        setTimeout(function () {
+          that.runModelBgError = false
+        }, 5000)
+      })
     },
     saveModel (projectId) {
       let payload = {
@@ -309,6 +380,40 @@ export default {
           that.modelSavedError = false
         }, 5000)
       })
+    },
+    bgTaskStatus (project) {
+      this.$http.get(`/api/prep-docs-bg-tasks/${project.id}/`).then(resp => {
+        this.cancelRunningBgTaskModal = {
+          proj: project,
+          dsCount: resp.data.dataset_len,
+          prepCount: resp.data.prepd_docs_len
+        }
+        setTimeout(() => {
+          if (this.cancelRunningBgTaskModal) {
+            this.bgTaskStatus(project)
+          }
+        }, 5000)
+      })
+    },
+    confirmCancelBgTaskStop () {
+      let project = this.cancelRunningBgTaskModal.proj
+      this.$http.delete(`/api/prep-docs-bg-tasks/${project.id}/`).then(_ => {
+        this.runningBgTasks.delete(project.id)
+      }).catch(exc => {
+        console.warn(exc)
+      }).finally(_ => {
+        this.select({}, {item: project})
+        this.cancelRunningBgTaskModal = null
+      })
+    },
+    pollDocPrepStatus () {
+      this.$http.get('/api/prep-docs-bg-tasks/').then(resp => {
+        this.completeBgTasks = new Set(resp.data.comp_tasks.map(d => d.project))
+        this.runningBgTasks = new Set([...this.runningBgTasks,
+          ...resp.data.running_tasks.map(d => d.project)]).difference(this.completeBgTasks)
+
+      })
+      setTimeout(this.pollDocPrepStatus, 8000)
     }
   }
 }
@@ -384,17 +489,6 @@ export default {
 
 }
 
-//
-//.progress-gradient-fill {
-//  position: absolute;
-//  z-index: -1;
-//  top: 0;
-//  height: 25px;
-//  padding: 0 1px;
-//  background-image: linear-gradient(to right, #32ab60, #E8EDEE);
-//  box-shadow: 0 5px 5px -5px #32ab60;
-//}
-
 
 .submit-report-job-alert {
   text-align: right;
@@ -408,6 +502,22 @@ export default {
   text-overflow: ellipsis;
 }
 
+.run-model {
+  position: relative;
+}
+
+.model-bg-run-comp {
+  color: $success;
+  font-size: 15px;
+  position: absolute;
+  right: -5px;
+  top: -5px;
+}
+
+.cancel-dialog-body {
+  padding-top: 10px;
+}
+
 .v-table > .v-table__wrapper > table > tbody > tr > td,
 .v-table > .v-table__wrapper > table > tbody > tr > th,
 .v-table > .v-table__wrapper > table > thead > tr > td,
@@ -415,6 +525,19 @@ export default {
 .v-table > .v-table__wrapper > table > tfoot > tr > td,
 .v-table > .v-table__wrapper > table > tfoot > tr > th {
   padding: 0 4px !important;
+}
+
+.v-progress-linear.animate .v-progress-linear__determinate
+{
+  animation: move 5s linear infinite;
+}
+@keyframes move {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 100px 100px;
+  }
 }
 
 </style>
