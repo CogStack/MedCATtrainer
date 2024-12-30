@@ -65,4 +65,5 @@ app.use(vuetify);
   }
 })()
 
+app.config.compilerOptions.whitespace = 'preserve';
 app.mount('#app')
