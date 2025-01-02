@@ -3,7 +3,9 @@
     <v-data-table :items="reports.items"
                   :headers="reports.headers"
                   :hover="true"
-                  @click:row="loadMetrics">
+                  @click:row="loadMetrics"
+                  hide-default-footer
+                  :items-per-page="-1">
       <template #item.projects="{ item }" >
         <div @click.stop>
           <v-runtime-template :template="projectsFormatter(item.projects)"></v-runtime-template>
@@ -11,13 +13,13 @@
       </template>
 
       <template #item.status="{ item }">
-        <span v-if="item.status == 'pending'">Pending
+        <span v-if="item.status === 'pending'">Pending
           <font-awesome-icon icon="fa-regular fa-clock" class="status-icon"></font-awesome-icon>
         </span>
-        <span v-if="item.status == 'running'">Running
+        <span v-if="item.status === 'running'">Running
           <font-awesome-icon icon="spinner" spin class="status-icon"></font-awesome-icon>
         </span>
-        <span v-if="item.status == 'complete'">Complete
+        <span v-if="item.status === 'complete'">Complete
           <font-awesome-icon icon="check" class="status-icon success"></font-awesome-icon>
         </span>
       </template>
@@ -41,10 +43,10 @@
         <h3>Confirm Delete Metrics Report</h3>
       </template>
       <template #body>
-        <div v-if="confDeleteReportModal.status == 'running'">
+        <div v-if="confDeleteReportModal.status === 'running'">
           Metrics report still running, this will cancel the running metrics report running job
         </div>
-        <div v-if="confDeleteReportModal.status == 'complete'">
+        <div v-if="confDeleteReportModal.status === 'complete'">
           Confirm complete metrics report deletion. To regenerate the report reselect the projects on the
           home screen and select metrics.
         </div>
@@ -126,7 +128,7 @@ export default {
       this.$http.delete(`/api/metrics-job/${this.confDeleteReportModal.report_id}/`).then(_ => {
         this.confDeleteReportModal = null
         this.reports.items.splice(item)
-      }).finally(err => {
+      }).finally(() => {
         this.confDeleteReportModal = null
       })
     },
