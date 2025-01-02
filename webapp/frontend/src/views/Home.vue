@@ -14,7 +14,9 @@
                     :hover="true"
                     v-if="!loadingProjects"
                     color="primary"
-                    @click:row="selectProjectGroup">
+                    @click:row="selectProjectGroup"
+                    hide-default-footer
+                    :items-per-page="-1">
         <template v-slot:item.last_modified="{ item }">
           {{new Date(item.last_modified).toLocaleString()}}
         </template>
