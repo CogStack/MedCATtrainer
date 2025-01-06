@@ -2,8 +2,9 @@
 # projects are not used.
 
 services:
+  # api server
   medcattrainer:
-    image: cogstacksystems/medcat-trainer:v2.17.4
+    image: cogstacksystems/medcat-trainer:v2.18.0
     restart: always
     volumes:
       - ./configs:/home/configs
@@ -14,12 +15,26 @@ services:
     env_file:
       - ./envs/env
     environment:
-      - MCT_VERSION=v2.17.4
+      - MCT_VERSION=v2.18.0
     command: /home/scripts/run.sh
+
+  # bg process task runner
+  medcattrainer-bg-process:
+    image: cogstacksystems/medcat-trainer:v2.18.0
+    restart: always
+    volumes:
+      - ./configs:/home/configs
+      - api-media:/home/api/media
+      - api-static:/home/api/static
+      - api-db:/home/api/db
+      - api-db-backup:/home/api/db-backup
+    env_file:
+      - ./envs/env
+    command: /home/scripts/run-bg-process.sh
 
   # crontab - for db backup
   medcattrainer-db-backup:
-    image: cogstacksystems/medcat-trainer:v2.17.4
+    image: cogstacksystems/medcat-trainer:v2.18.0
     restart: always
     volumes:
       - ./configs:/home/configs
