@@ -43,13 +43,15 @@
         <div class="tab-pane">
           <KeepAlive>
             <div v-if="tab === 'user_stats'">
-              <v-data-table :items="userStats.items" :headers="userStats.headers" :hover="true"></v-data-table>
+              <v-data-table :items="userStats.items" :headers="userStats.headers" :hover="true" hide-default-footer
+                            :items-per-page="-1"></v-data-table>
             </div>
           </KeepAlive>
 
           <KeepAlive>
             <div v-if="tab === 'annotations'">
-                <v-data-table :items="annoSummary.items" :headers="annoSummary.headers" :hover="true">
+                <v-data-table :items="annoSummary.items" :headers="annoSummary.headers" :hover="true" hide-default-footer
+                              :items-per-page="-1">
                     <template #item.status="{ item }">
                         <div id="status" :class="textColorClass(item.status)">
                             {{ item.status }}
@@ -67,7 +69,8 @@
 
           <KeepAlive>
             <div v-if="tab === 'concept_summary'">
-              <v-data-table :items="conceptSummary.items" :headers="conceptSummary.headers">
+              <v-data-table :items="conceptSummary.items" :headers="conceptSummary.headers" hide-default-footer
+                            :items-per-page="-1">
                 <template #header.concept>
                   <div>Concept</div>
                   <v-tooltip></v-tooltip>
@@ -182,7 +185,9 @@
               <v-data-table :items="metaAnnsSummary.items"
                             :headers="metaAnnsSummary.headers"
                             :hover="true"
-                            class="meta-anno-summary">
+                            class="meta-anno-summary"
+                            hide-default-footer
+                            :items-per-page="-1">
               </v-data-table>
             </div>
           </KeepAlive>

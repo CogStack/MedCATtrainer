@@ -15,7 +15,9 @@
                     :items="projectItems"
                     :hover="true"
                     v-if="!loadingProjects"
-                    @click:row="select">
+                    @click:row="select"
+                    hide-default-footer
+                    :items-per-page="-1">
         <template #header.metrics>
           Metrics
           <v-tooltip activator="parent">
