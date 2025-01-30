@@ -66,9 +66,11 @@ class DatasetSerializer(serializers.ModelSerializer):
 
 
 class ProjectAnnotateEntitiesSerializer(serializers.ModelSerializer):
+    cuis_file = serializers.FileField(write_only=True, required=False)
+    
     class Meta:
         model = ProjectAnnotateEntities
-        exclude = ('cuis_file', )
+        fields = '__all__'
 
     def to_representation(self, instance):
         data = super(ProjectAnnotateEntitiesSerializer, self).to_representation(instance)
