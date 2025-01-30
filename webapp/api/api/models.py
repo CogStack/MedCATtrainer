@@ -132,6 +132,7 @@ class ConceptDB(models.Model):
 
 
 class Vocabulary(models.Model):
+    name = models.CharField(max_length=100, default='', blank=True)
     vocab_file = models.FileField()
 
     def save(self, *args, skip_load=False, **kwargs):
