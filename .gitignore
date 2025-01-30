@@ -42,3 +42,10 @@ tmp.py
 
 # docs outputs
 docs/_build
+
+# macOS system files
+.DS_Store
+*/.DS_Store
+
+# Jupyter Notebook checkpoints
+*/.ipynb_checkpoints/*

@@ -185,9 +185,16 @@ class VocabularyViewSet(viewsets.ModelViewSet):
     serializer_class = VocabularySerializer
 
 
+class ModelPackViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get', 'post', 'head', 'delete']
+    queryset = ModelPack.objects.all()
+    serializer_class = ModelPackSerializer
+
+
 class DatasetViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ['get']
+    http_method_names = ['get', 'post']
     queryset = Dataset.objects.all()
     serializer_class = DatasetSerializer
 

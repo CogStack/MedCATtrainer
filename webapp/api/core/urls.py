@@ -19,6 +19,7 @@ router.register(r'relations', api.views.RelationViewSet)
 router.register(r'entity-relations', api.views.EntityRelationViewSet)
 router.register(r'concept-dbs', api.views.ConceptDBViewSet)
 router.register(r'vocabs', api.views.VocabularyViewSet)
+router.register(r'modelpacks', api.views.ModelPackViewSet)
 router.register(r'datasets', api.views.DatasetViewSet)
 
 

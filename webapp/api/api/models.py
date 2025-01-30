@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 
 class ModelPack(models.Model):
-    name = models.TextField(help_text='')
+    name = models.TextField(help_text='', unique=True)
     model_pack = models.FileField(help_text='Model pack zip')
     concept_db = models.ForeignKey('ConceptDB', on_delete=models.CASCADE, blank=True, null=True)
     vocab = models.ForeignKey('Vocabulary', on_delete=models.CASCADE, blank=True, null=True)
@@ -96,7 +96,7 @@ class ModelPack(models.Model):
 
 
 class ConceptDB(models.Model):
-    name = models.CharField(max_length=100, default='', blank=True, validators=[cdb_name_validator])
+    name = models.CharField(max_length=100, default='', blank=True, validators=[cdb_name_validator], unique=True)
     cdb_file = models.FileField()
     use_for_training = models.BooleanField(default=True)
     create_time = models.DateTimeField(auto_now_add=True)
@@ -150,7 +150,7 @@ class Vocabulary(models.Model):
 
 
 class MetaCATModel(models.Model):
-    name = models.CharField(max_length=100, help_text="The task name followed by the underlying model impl")
+    name = models.CharField(max_length=100, help_text="The task name followed by the underlying model impl", unique=True)
     meta_cat_dir = models.FilePathField(help_text='The zip or dir for a MetaCAT model, not editable, '
                                                   'is set via a model pack .zip upload',
                                         allow_folders=True, editable=False)
@@ -195,7 +195,7 @@ class MetaCATModel(models.Model):
 
 
 class Dataset(models.Model):
-    name = models.CharField(max_length=150)
+    name = models.CharField(max_length=150, unique=True)
     original_file = models.FileField()
     create_time = models.DateTimeField(auto_now_add=True)
     description = models.TextField(default="", blank=True)
@@ -241,7 +241,7 @@ class ProjectFields(models.Model):
         ("C", "Complete"),
     ]
 
-    name = models.CharField(max_length=150, help_text='A name of the annotation project')
+    name = models.CharField(max_length=150, help_text='A name of the annotation project', unique=True)
     description = models.TextField(default="", blank=True, help_text='A short description of the annotations to be '
                                                                      'collected and why')
     dataset = models.ForeignKey('Dataset', on_delete=models.CASCADE, help_text='The dataset to be annotated.')
@@ -356,7 +356,7 @@ class AnnotatedEntity(models.Model):
 
 
 class MetaTaskValue(models.Model):
-    name = models.CharField(max_length=150)
+    name = models.CharField(max_length=150, unique=True)
     ordering = models.PositiveSmallIntegerField(help_text="the order in which the meta task value will appear in "
                                                           "the Trainer Annotation project screen", default=0)
 
