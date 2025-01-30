@@ -160,6 +160,16 @@ class ConceptDBAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
+class VocabularyAdmin(admin.ModelAdmin):
+    model = Vocabulary
+    list_display = ('name', 'create_time', 'last_modified', 'last_modified_by')
+    fields = ('name', 'vocab_file', 'create_time', 'last_modified', 'last_modified_by')
+    
+    def save_model(self, request, obj, form, change):
+        obj.last_modified_by = request.user
+        super().save_model(request, obj, form, change)
+
+
 class ModelPackAdmin(admin.ModelAdmin):
     model = ModelPack
     list_display = ('name', 'model_pack', 'concept_db', 'vocab', 'metacats')
@@ -167,6 +177,10 @@ class ModelPackAdmin(admin.ModelAdmin):
 
     def metacats(self, obj):
         return ", ".join(str(m_c) for m_c in obj.meta_cats.all())
+    
+    def save_model(self, request, obj, form, change):
+        obj.last_modified_by = request.user
+        super().save_model(request, obj, form, change)
 
 
 class MetaCATModelAdmin(admin.ModelAdmin):

@@ -63,6 +63,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class ProjectAnnotateEntitiesViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get', 'post', 'put']
     queryset = ProjectAnnotateEntities.objects.all()
     serializer_class = ProjectAnnotateEntitiesSerializer
     filterset_fields = ['members', 'dataset', 'id', 'project_status', 'annotation_classification']

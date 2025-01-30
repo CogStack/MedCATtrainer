@@ -30,7 +30,7 @@ BOOL_CHOICES = [
         ]
 
 
-cdb_name_validator = RegexValidator(r'^[0-9a-zA-Z_-]*$', 'Only alpahanumeric characters, -, _ are allowed for CDB names')
+cdb_name_validator = RegexValidator(r'^[a-zA-Z][a-zA-Z0-9_]*$', 'a-z for first character required. Alpahanumeric and _ thereafter are allowed for CDB names')
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +41,9 @@ class ModelPack(models.Model):
     concept_db = models.ForeignKey('ConceptDB', on_delete=models.CASCADE, blank=True, null=True)
     vocab = models.ForeignKey('Vocabulary', on_delete=models.CASCADE, blank=True, null=True)
     meta_cats = models.ManyToManyField('MetaCATModel', blank=True, default=None)
+    create_time = models.DateTimeField(auto_now_add=True)
+    last_modified = models.DateTimeField(auto_now=True)
+    last_modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=None, null=True)   
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -134,6 +137,9 @@ class ConceptDB(models.Model):
 class Vocabulary(models.Model):
     name = models.CharField(max_length=100, default='', blank=True)
     vocab_file = models.FileField()
+    create_time = models.DateTimeField(auto_now_add=True)
+    last_modified = models.DateTimeField(auto_now=True)
+    last_modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=None, null=True)
 
     def save(self, *args, skip_load=False, **kwargs):
         super().save(*args, **kwargs)
