@@ -17,6 +17,18 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "frontend build",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/webapp/frontend",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "build"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "django shell",
             "type": "debugpy",
             "request": "launch",
