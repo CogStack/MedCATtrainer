@@ -207,13 +207,13 @@
               <li>Alternative model predictions that are overlapping with other concepts</li>
               <li>Genuine missed annotations by an annotator.</li>
             </ul>
-            <p>Clicking through these annotations will not highlight this annotation as it doesn't exist in the
+            <p>Clicking on these annotations will not highlight this annotation as it doesn't exist in the
               dataset </p>
           </div>
           <div v-if="modalData.type === 'fn'">
             <p>False negative model predictions can be the result of:</p>
             <ul>
-              <li>An model mistake that marked an annotation 'correct' where it should be incorrect</li>
+              <li>A model mistake that marked an annotation 'correct' where it should be incorrect</li>
               <li>An annotator mistake that marked an annotation 'correct' where it should be incorrect</li>
             </ul>
           </div>
