@@ -82,4 +82,3 @@ volumes:
   api-db:
   api-db-backup:
   solr-data:
-

@@ -34,7 +34,7 @@
 
       <div class="viewport">
         <v-tabs v-model="tab">
-          <v-tab :value="'user_stats'">User Stats</v-tab>
+          <v-tab :value="'summary_stats'">Summary Stats</v-tab>
           <v-tab :value="'annotations'">Annotations</v-tab>
           <v-tab :value="'concept_summary'">Concept Summary</v-tab>
           <v-tab :value="'meta_anns'" v-if="metaAnnsSummary.items">Meta Annotations</v-tab>
@@ -42,7 +42,38 @@
 
         <div class="tab-pane">
           <KeepAlive>
-            <div v-if="tab === 'user_stats'">
+            <div v-if="tab === 'summary_stats'">
+              <v-row class="summary-row">
+                <v-card class="summary-card">
+                  <v-card-title># Projects </v-card-title>
+                  <v-card-text>{{ Object.keys(projects2name).length }}</v-card-text>
+                </v-card>
+
+                <v-card class="summary-card">
+                  <v-card-title># Documents</v-card-title>
+                  <v-card-text>{{ Object.values(projects2doc_ids).map(doc_ids => doc_ids.length).reduce((a, b) => a + b, 0) }}</v-card-text>
+                </v-card>
+
+                <v-card class="summary-card">
+                  <v-card-title>Annotation Overlap</v-card-title>
+                  <v-card-text>{{ calculateOverlap(projects2doc_ids) }}%</v-card-text>
+                </v-card>
+
+                <v-card class="summary-card">
+                  <v-card-title>Annotator Agreement</v-card-title>
+                  <v-card-text>{{ calculateAnnotatorAgreement(annoSummary) }}</v-card-text>
+                </v-card>
+
+                <v-card class="summary-card">
+                  <v-card-title>Total Annotation Time</v-card-title>
+                  <v-card-text> {{ elapsedTime(annoSummary.items || []) }} </v-card-text>
+                </v-card>
+              </v-row>
+              
+              <div>
+                <div ref="plotElement"></div>
+              </div>
+              
               <v-data-table :items="userStats.items" :headers="userStats.headers" :hover="true" hide-default-footer
                             :items-per-page="-1"></v-data-table>
             </div>
@@ -207,13 +238,13 @@
               <li>Alternative model predictions that are overlapping with other concepts</li>
               <li>Genuine missed annotations by an annotator.</li>
             </ul>
-            <p>Clicking through these annotations will not highlight this annotation as it doesn't exist in the
+            <p>Clicking on these annotations will not highlight this annotation as it doesn't exist in the
               dataset </p>
           </div>
           <div v-if="modalData.type === 'fn'">
             <p>False negative model predictions can be the result of:</p>
             <ul>
-              <li>An model mistake that marked an annotation 'correct' where it should be incorrect</li>
+              <li>A model mistake that marked an annotation 'correct' where it should be incorrect</li>
               <li>An annotator mistake that marked an annotation 'correct' where it should be incorrect</li>
             </ul>
           </div>
@@ -229,7 +260,7 @@
             </thead>
             <tbody>
             <anno-result v-for="(res, key) of modalData.results" :key="key" :result="res"
-                         :type="modalData.type"></anno-result>
+                         :type="modalData.type" :doc-text="textFromAnno(res)"></anno-result>
             </tbody>
           </table>
         </div>
@@ -241,6 +272,8 @@
 <script>
 import Modal from '@/components/common/Modal.vue'
 import AnnoResult from '@/components/anns/AnnoResult.vue'
+import Plotly from 'plotly.js-dist'
+
 
 export default {
   name: 'Metrics.vue',
@@ -257,6 +290,27 @@ export default {
         this.reportName = resp.data.results.report_name || resp.data.results.report_name_generated
         this.userStats.items = resp.data.results.user_stats
         this.conceptSummary.items = resp.data.results.concept_summary
+
+        this.userStats.items.forEach(userRow => {
+          const user = userRow.user
+          const exampleTypes = [
+            ['tp_examples', 'tps'],
+            ['fn_examples', 'fns'],
+            ['fp_examples', 'fps']
+          ]
+
+          exampleTypes.forEach(([exampleType, countType]) => {
+            userRow[countType] = this.conceptSummary.items.map(item => {
+              return (item[exampleType] || []).filter(i => i.user === user).length
+            }).reduce((a, b) => a + b, 0)
+          })
+        })
+
+        this.docs2text = resp.data.results.docs2text
+        this.projects2doc_ids = resp.data.results.projects2doc_ids
+        this.projects2name = resp.data.results.projects2name
+        this.docs2name = resp.data.results.docs2name
+
         let anno_summary = resp.data.results.annotation_summary.map(s => {
           if (s.correct) {
             s.status = 'Correct'
@@ -275,6 +329,8 @@ export default {
         })
         this.annoSummary.items = anno_summary
         this.metaAnnsSummary.items = resp.data.results.meta_anno_summary
+
+        this.annoChart()
       })
     }
   },
@@ -285,10 +341,17 @@ export default {
       reportName: null,
       editingName: false,
       editedReportName: null,
+      projects2name: {},
+      projects2doc_ids: {},
+      docs2text: {},
+      docs2name: {},
       userStats: {
         headers: [
           {value: 'user', title: 'User'},
-          {value: 'count', title: 'Count'}
+          {value: 'count', title: 'Count'},
+          {value: 'tps', title: 'True Positives'},
+          {value: 'fns', title: 'False Negatives'},
+          {value: 'fps', title: 'False Positives'}
         ]
       },
       annoSummary: {
@@ -330,6 +393,80 @@ export default {
     }
   },
   methods: {
+    annoChart () {
+      // Create plotly chart of annotations per user per day
+      const userDailyCounts = {}
+        const users = new Set()
+        
+        // First pass - collect all users and find min/max dates
+        let minDate, maxDate
+        this.annoSummary.items.forEach(ann => {
+          const date = new Date(ann.last_modified)
+          if (!minDate || date < minDate) minDate = date
+          if (!maxDate || date > maxDate) maxDate = date
+          users.add(ann.user)
+        })
+
+        // Initialize counts for all dates for all users
+        // Take a 2 days either side of min and max date.
+        maxDate.setDate(maxDate.getDate() + 2)
+        minDate.setDate(minDate.getDate() - 2)
+        for (const user of users) {
+          userDailyCounts[user] = {}
+          for (let d = new Date(minDate); d <= maxDate; d.setDate(d.getDate() + 1)) {
+            const dateStr = d.toISOString().split('T')[0]
+            userDailyCounts[user][dateStr] = 0
+          }
+        }
+
+        // Count annotations
+        this.annoSummary.items.forEach(ann => {
+          const dateStr = new Date(ann.last_modified).toISOString().split('T')[0]
+          const user = ann.user
+          userDailyCounts[user][dateStr]++
+        })
+
+        const febTestAnns = this.annoSummary.items.filter(ann => {
+          const dateStr = new Date(ann.last_modified).toISOString().split('T')[0]
+          return dateStr === '2025-02-05'
+        })
+        console.log(febTestAnns)
+
+        // Convert to plotly format
+        const plotData = []
+        for (const user in userDailyCounts) {
+          const dates = Object.keys(userDailyCounts[user]).sort()
+          const counts = dates.map(date => userDailyCounts[user][date])
+          
+          plotData.push({
+            x: dates,
+            y: counts,
+            type: 'bar',
+            name: user
+          })
+        }
+
+        const layout = {
+          title: 'Daily Annotation Counts by User',
+          barmode: 'group',
+          xaxis: {
+            title: 'Date', 
+            type: 'date',
+            range: [minDate, maxDate]
+          },
+          yaxis: {
+            title: 'Number of Annotations'
+          },
+          // Using a selection NHS theme colors
+          colorway: ['#005EB8', '#00A499', '#330072', '#41B6E6', '#AE2573', '#8A1538'] 
+        }
+
+        Plotly.newPlot(this.$refs.plotElement, plotData, layout)
+    },
+    textFromAnno(anno) {
+      const docId = anno['document id']
+      return this.docs2text[docId]
+    },
     textColorClass(status) {
       return {
         'task-color-text-0': status === 'Correct' || status === 'Manually Added',
@@ -391,6 +528,95 @@ export default {
         }
       }
     },
+    calculateOverlap(projects2doc_ids) {
+      if (Object.keys(projects2doc_ids).length < 2) {
+        return 0
+      }
+      const projectIds = Object.keys(projects2doc_ids)
+      const minLength = Math.min(...projectIds.map(id => projects2doc_ids[id].length))
+      const commonDocs = projects2doc_ids[projectIds[0]].filter(docId => {
+        return projectIds.every(projectId => projects2doc_ids[projectId].includes(docId))
+      })
+      return (commonDocs.length / minLength) * 100
+    },
+    elapsedTime (annoSummary) {
+      if (annoSummary.length === 0) {
+        return 'NA'
+      }
+
+      const dates = annoSummary.map(anno => new Date(anno.last_modified))
+      const latestDate = new Date(Math.max.apply(null, dates))
+      const earliestDate = new Date(Math.min.apply(null, dates))
+      
+      const diffMs = latestDate - earliestDate
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+      const diffHrs = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+
+      if (diffDays > 0) {
+        return `${diffDays}d ${diffHrs}h ${diffMins}m`
+      } else if (diffHrs > 0) {
+        return `${diffHrs}h ${diffMins}m`
+      } else {
+        return `${diffMins}m`
+      }
+    },
+    calculateAnnotatorAgreement(annoSummary) {
+      // Interannotator agreement is the percentage of annotations that are the same across all annotators
+      if (!annoSummary.items || annoSummary.items.length === 0) {
+        return 'NA'
+      }
+      const annotators = new Set()
+      annoSummary.items.forEach(anno => {
+        annotators.add(anno.user)
+      })
+
+      // Group annotations by their document/span
+      const annotationsBySpan = {}
+      annoSummary.items.forEach(anno => {
+        const key = `${anno.document_id}_${anno.start}_${anno.end}`
+        if (!annotationsBySpan[key]) {
+          annotationsBySpan[key] = []
+        }
+        annotationsBySpan[key].push(anno)
+      })
+
+      // Check agreement for each span
+      let agreementCount = 0
+      let totalSpans = 0
+
+      for (const spanAnnotations of Object.values(annotationsBySpan)) {
+        // Only consider spans that all annotators have annotated
+        if (spanAnnotations.length === annotators.size) {
+          totalSpans++
+          
+          // Check if all annotations for this span agree
+          const firstAnno = spanAnnotations[0]
+          const allAgree = spanAnnotations.every(anno => {
+            return (
+              anno.correct === firstAnno.correct &&
+              anno.deleted === firstAnno.deleted &&
+              anno.killed === firstAnno.killed &&
+              (
+                // For alternative and manually_created, check CUI match when true
+                (!anno.alternative && !firstAnno.alternative) ||
+                (anno.alternative && firstAnno.alternative && anno.cui === firstAnno.cui)
+              ) &&
+              (
+                (!anno.manually_created && !firstAnno.manually_created) ||
+                (anno.manually_created && firstAnno.manually_created && anno.cui === firstAnno.cui)
+              )
+            )
+          })
+
+          if (allAgree) {
+            agreementCount++
+          }
+        }
+      }
+
+      return totalSpans > 0 ? ((agreementCount / totalSpans) * 100).toFixed(2) : 0
+    }
   },
   mounted() {
     window.addEventListener('keydown', this.keydown)
@@ -494,6 +720,30 @@ $metrics-header-height: 50px;
 
   &:hover {
     cursor: pointer;
+  }
+}
+
+.summary-row {
+  padding: 10px 0;
+  margin: 0 !important;
+}
+
+.summary-card {
+  padding: 5px;
+  margin: 2px;
+
+  .v-card-title {
+    font-size: 0.9rem;
+    color: $text; 
+    padding: 8px;
+  }
+
+  .v-card-text {
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+    padding: 8px;
+    color: $secondary; 
   }
 }
 

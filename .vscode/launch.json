@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        
         {
             "name": "frontend",
             "type": "node",
@@ -13,6 +14,18 @@
             "runtimeArgs": [
                 "run",
                 "dev"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "frontend build",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/webapp/frontend",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "build"
             ],
             "console": "integratedTerminal"
         },
@@ -53,6 +66,16 @@
             "args": [
                 "runserver",
                 "0.0.0.0:8001"
+            ],
+            "django": true,
+            "program": "${workspaceFolder}/webapp/api/manage.py"
+        },
+        {
+            "name": "process tasks",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "process_tasks"
             ],
             "django": true,
             "program": "${workspaceFolder}/webapp/api/manage.py"

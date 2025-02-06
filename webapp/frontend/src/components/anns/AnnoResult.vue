@@ -21,7 +21,8 @@ export default {
     type: {
       type: String,
       default: 'tp'
-    }
+    },
+    docText: String
   },
   computed: {
     text () {
@@ -33,19 +34,11 @@ export default {
       if (this.type === 'fp' || this.type === 'fn') {
         highlightClass = 'highlight-task-1'
       }
+      
       const srcVal = this.result['source value']
-      const resTxt = this.result.text
-      const regexp = RegExp(`${srcVal}`, 'sg')
-      const matches = [...resTxt.matchAll(regexp)]
-      let outText = '<span>'
-      for (let match of matches) {
-        if (match.index === 60) {
-          // this is the match to use - other matches are spurious, and represent other MedCAT AnnoResults.
-          outText = `<span>${resTxt.slice(0, match.index)}`
-          outText += `<span class="${highlightClass}" @click="openAnno">${srcVal}</span>`
-          outText += `${resTxt.slice(match.index + srcVal.length)}</span>`
-        }
-      }
+      let outText = `<span>${this.docText.slice(this.result['start'] - 60, this.result['start'])}`
+      outText += `<span class="${highlightClass}" @click="openAnno">${srcVal}</span>`
+      outText += `${this.docText.slice(this.result['end'], this.result['end'] + 60)}</span>`
       return outText
     }
   },
