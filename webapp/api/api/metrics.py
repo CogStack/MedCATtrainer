@@ -24,7 +24,7 @@ from medcat.vocab import Vocab
 from torch import nn
 
 from api.admin import retrieve_project_data
-from api.models import ProjectAnnotateEntities, ProjectMetrics as AppProjectMetrics
+from api.models import AnnotatedEntity, ProjectAnnotateEntities, ProjectMetrics as AppProjectMetrics
 from core.settings import MEDIA_ROOT
 
 _dt_fmt = '%Y-%m-%d %H:%M:%S.%f'
@@ -76,16 +76,20 @@ class ProjectMetrics(object):
         """
         self.mct_export = mct_export_data
         self.cat = cat
-        self.project_names = []
-        self.document_names = []
+        self.projects2names = {}    
+        self.projects2doc_ids = {}
+        self.docs2names = {}
+        self.docs2texts = {}
         self.annotations = self._annotations()
 
     def _annotations(self):
         ann_lst = []
         for proj in self.mct_export['projects']:
-            self.project_names.append(proj)
+            self.projects2names[proj['id']] = proj['name']
+            self.projects2doc_ids[proj['id']] = [doc['id'] for doc in proj['documents']]
             for doc in proj['documents']:
-                self.document_names.append(doc['name'])
+                self.docs2names[doc['id']] = doc['name']
+                self.docs2texts[doc['id']] = doc['text']
                 for anns in doc['annotations']:
                     meta_anns_dict = dict()
                     for meta_ann in anns['meta_anns'].items():
@@ -135,6 +139,8 @@ class ProjectMetrics(object):
             fps, fns, tps, cui_prec, cui_rec, cui_f1, cui_counts, examples = self.cat._print_stats(data=self.mct_export,
                                                                                                    use_project_filters=True,
                                                                                                    extra_cui_filter=extra_cui_filter)
+            # remap tps, fns, fps to specific user annotations
+            examples = self.enrich_medcat_metrics(examples)
             concept_count_df['fps'] = concept_count_df['cui'].map(fps)
             concept_count_df['fns'] = concept_count_df['cui'].map(fns)
             concept_count_df['tps'] = concept_count_df['cui'].map(tps)
@@ -153,6 +159,33 @@ class ProjectMetrics(object):
         # convert sets to lists
         concept_summary = [{k: list(v) if isinstance(v, set) else v for k, v in row.items()} for row in concept_summary]
         return concept_summary
+
+    def enrich_medcat_metrics(self, examples):
+        """
+        Add the user prop to the medcat output metrics. Can potentially add more later for each of the categories
+        """
+        for tp in [i for e_i in examples['tp'].values() for i in e_i]:
+            try:
+                ann = AnnotatedEntity.objects.get(project_id=tp['project id'], document_id=tp['document id'], 
+                                                  start_ind=tp['start'], end_ind=tp['end'])
+                tp['user'] = ann.user.username
+            except:
+                tp['user'] = None
+        for fp in (i for e_i in examples['fp'].values() for i in e_i):
+            try:
+                ann = AnnotatedEntity.objects.get(project_id=fp['project id'], document_id=fp['document id'], 
+                                                  start_ind=fp['start'], end_ind=fp['end'])
+                fp['user'] = ann.user.username
+            except:
+                fp['user'] = None
+        for fn in (i for e_i in examples['fn'].values() for i in e_i):
+            try:
+                ann = AnnotatedEntity.objects.get(project_id=fn['project id'], document_id=fn['document id'], 
+                                                  start_ind=fn['start'], end_ind=fn['end'])
+                fn['user'] = ann.user.username
+            except:
+                fn['user'] = None
+        return examples
 
     def user_stats(self, by_user: bool = True):
         """
@@ -367,4 +400,8 @@ class ProjectMetrics(object):
         return {'user_stats': self.user_stats().to_dict('records'),
                 'concept_summary': self.concept_summary(),
                 'annotation_summary': anno_df.to_dict('records'),
-                'meta_anno_summary': meta_anns_summary}
+                'meta_anno_summary': meta_anns_summary, 
+                'projects2doc_ids': self.projects2doc_ids,
+                'docs2text': self.docs2texts,
+                'projects2name': self.projects2names,
+                'docs2name': self.docs2names}
