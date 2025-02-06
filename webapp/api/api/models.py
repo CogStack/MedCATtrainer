@@ -427,6 +427,8 @@ class ProjectAnnotateEntitiesFields(models.Model):
                                               help_text='Enable the option to terminate concepts.')
     irrelevant_available = models.BooleanField(default=False,
                                                help_text='Enable the option to add the irrelevant button.')
+    deid_model_annotation = models.BooleanField(default=False,
+                                                help_text='To indicate that this project is to collect De-ID Model annotations')
     enable_entity_annotation_comments = models.BooleanField(default=False,
                                                             help_text="Enable to allow annotators to leave comments"
                                                                       " for each annotation")
