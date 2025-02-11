@@ -76,7 +76,9 @@ class ModelPack(models.Model):
             vocab.save(skip_load=True)
             self.vocab = vocab
         else:
-            raise FileNotFoundError(f'Error loading the Vocab from this model pack: {vocab_path}')
+            # DeID model packs do not have a vocab.dat file
+            logger.warn('Error loading the Vocab from this model pack - '
+                        f'if this is a DeID model pack, this is expected: {vocab_path}')
 
         # load MetaCATs
         try:
@@ -444,6 +446,9 @@ class ProjectAnnotateEntitiesFields(models.Model):
             raise ValidationError('Must set at least the ModelPack or a Concept Database and Vocab Pair')
         if self.model_pack and (self.concept_db is not None or self.vocab is not None):
             raise ValidationError('Cannot set model pack and ConceptDB or a Vocab. You must use one or the other.')
+        if self.deid_model_annotation and self.model_pack is None:
+            raise ValidationError('Must set a DeID ModelPack for De-ID Model Annotation, cannot only set a cdb / vocab pair as'
+                                  ' not be a DeId model')
         super().save(*args, **kwargs)
 
 
