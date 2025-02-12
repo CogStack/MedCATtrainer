@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         
         {
             "name": "frontend",
@@ -67,6 +68,9 @@
                 "runserver",
                 "0.0.0.0:8001"
             ],
+            "env": {
+                "CONCEPT_SEARCH_SERVICE_HOST": "localhost"
+            },
             "django": true,
             "program": "${workspaceFolder}/webapp/api/manage.py"
         },
@@ -77,6 +81,9 @@
             "args": [
                 "process_tasks"
             ],
+            "env": {
+                "CONCEPT_SEARCH_SERVICE_HOST": "localhost"
+            },
             "django": true,
             "program": "${workspaceFolder}/webapp/api/manage.py"
         }

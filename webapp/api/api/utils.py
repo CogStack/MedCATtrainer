@@ -11,6 +11,7 @@ from django.dispatch import receiver
 from medcat.cat import CAT
 from medcat.utils.filters import check_filters
 from medcat.utils.helpers import tkns_from_doc
+from medcat.utils.ner.deid import DeIdModel
 
 from .model_cache import get_medcat
 from .models import Entity, AnnotatedEntity, ProjectAnnotateEntities, \
@@ -250,7 +251,11 @@ def prep_docs(project_id: List[int], doc_ids: List[int], user_id: int):
 
     for doc in docs:
         logger.info(f'Running MedCAT model for project {project.id}:{project.name} over doc: {doc.id}')
-        spacy_doc = cat(doc.text)
+        if not project.deid_model_annotation:
+            spacy_doc = cat(doc.text)
+        else:
+            deid = DeIdModel(cat)
+            spacy_doc = deid(doc.text)
         anns = AnnotatedEntity.objects.filter(document=doc).filter(project=project)
         with transaction.atomic():
             add_annotations(spacy_doc=spacy_doc,

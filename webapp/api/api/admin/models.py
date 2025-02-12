@@ -8,7 +8,7 @@ from .actions import *
 from ..models import *
 
 _PROJECT_ANNO_ENTS_SETTINGS_FIELD_ORDER = (
-    'concept_db', 'vocab', 'model_pack', 'cdb_search_filter', 'require_entity_validation', 'train_model_on_submit',
+    'concept_db', 'vocab', 'model_pack', 'cdb_search_filter', 'deid_model_annotation', 'require_entity_validation', 'train_model_on_submit',
     'add_new_entities', 'restrict_concept_lookup', 'terminate_available', 'irrelevant_available',
     'enable_entity_annotation_comments', 'tasks', 'relations'
 )
