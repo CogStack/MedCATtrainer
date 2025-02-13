@@ -21,16 +21,17 @@ export default defineConfig({
     assetsDir: 'static'
   },
   server: {
+    host: '127.0.0.1',
     proxy: {
       '^/api/concepts/*': {
-        target: 'http://localhost:8983/solr',
+        target: 'http://127.0.0.1:8983/solr',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/\/api\/concepts/, '/')
       },
       '^/api/*': {
-        target: 'http://localhost:8001'
-      }
+        target: 'http://127.0.0.1:8001'
+      } 
     }
   },
   css: {

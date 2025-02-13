@@ -14,6 +14,7 @@ from medcat.utils.helpers import tkns_from_doc
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from medcat.utils.ner.deid import DeIdModel
 
 from .admin import download_projects_with_text, download_projects_without_text, \
     import_concepts_from_cdb
@@ -281,6 +282,12 @@ def prepare_documents(request):
 
                     # Set CAT filters
                     cat.config.linking['filters']['cuis'] = cuis
+                    
+                    if not project.deid_model_annotation:
+                        spacy_doc = cat(document.text)
+                    else:
+                        deid = DeIdModel(cat)
+                        spacy_doc = deid(document.text)
 
                     spacy_doc = cat(document.text)
 
