@@ -130,7 +130,7 @@ export default {
     }, 500)
   },
   watch: {
-    filter (newVal, oldVal) {
+    filter (newVal) {
       if (newVal.length > 0) {
         this.filterItems(newVal)
       } else {

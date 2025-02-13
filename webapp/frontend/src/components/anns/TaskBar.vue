@@ -41,7 +41,7 @@ export default {
     'submit'
   ],
   watch: {
-    'submitLocked' (oldVal, newVal) {
+    'submitLocked' (newVal) {
       if (newVal) {
         this.listenSubmit()
       } else {

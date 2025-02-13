@@ -54,15 +54,28 @@
                   <v-card-text>{{ Object.values(projects2doc_ids).map(doc_ids => doc_ids.length).reduce((a, b) => a + b, 0) }}</v-card-text>
                 </v-card>
 
-                <v-card class="summary-card">
-                  <v-card-title>Annotation Overlap</v-card-title>
-                  <v-card-text>{{ calculateOverlap(projects2doc_ids) }}%</v-card-text>
-                </v-card>
+                <v-tooltip location="bottom">
+                  <template v-slot:activator="{ props }">
+                    <v-card v-bind="props" class="summary-card">   
+                      <v-card-title>Annotation Overlap</v-card-title>
+                      <v-card-text>{{ calculateOverlap(projects2doc_ids) }}%</v-card-text>
+                    </v-card>
+                  </template>
+                  <span>Percentage of documents that<br>overlap between projects</span>
+                </v-tooltip>
 
-                <v-card class="summary-card">
-                  <v-card-title>Annotator Agreement</v-card-title>
-                  <v-card-text>{{ calculateAnnotatorAgreement(annoSummary) }}</v-card-text>
-                </v-card>
+
+                <v-tooltip location="bottom">
+                  <template v-slot:activator="{ props }">
+                    <v-card v-bind="props" class="summary-card">
+                      <v-card-title>Annotator Agreement</v-card-title>
+                      <v-card-text>{{ calculateAnnotatorAgreement(annoSummary) }}%</v-card-text>
+                    </v-card>
+                  </template>
+                  <span>Percentage of annotations that are in agreement<br>
+                    across all projects and therefore documents.<br>
+                    Documents identified by their document name.</span>
+                </v-tooltip>
 
                 <v-card class="summary-card">
                   <v-card-title>Total Annotation Time</v-card-title>
@@ -532,10 +545,16 @@ export default {
       if (Object.keys(projects2doc_ids).length < 2) {
         return 0
       }
-      const projectIds = Object.keys(projects2doc_ids)
-      const minLength = Math.min(...projectIds.map(id => projects2doc_ids[id].length))
-      const commonDocs = projects2doc_ids[projectIds[0]].filter(docId => {
-        return projectIds.every(projectId => projects2doc_ids[projectId].includes(docId))
+
+      const projects2docNames = {}
+      for (const projectId in projects2doc_ids) {
+        projects2docNames[projectId] = this.projects2doc_ids[projectId].map(docId => this.docs2name[docId])
+      }
+
+      const projectIds = Object.keys(projects2docNames)
+      const minLength = Math.min(...projectIds.map(id => projects2docNames[id].length))
+      const commonDocs = projects2docNames[projectIds[0]].filter(docId => {
+        return projectIds.every(projectId => projects2docNames[projectId].includes(docId))
       })
       return (commonDocs.length / minLength) * 100
     },
@@ -615,7 +634,16 @@ export default {
         }
       }
 
-      return totalSpans > 0 ? ((agreementCount / totalSpans) * 100).toFixed(2) : 0
+      return totalSpans > 0 ? ((agreementCount / totalSpans) * 100).toFixed(1) : 0
+    }
+  },
+  watch: {
+    tab(newTab) {
+      if (newTab === 'summary_stats') {
+        this.$nextTick(() => {
+          this.annoChart()
+        })
+      }
     }
   },
   mounted() {

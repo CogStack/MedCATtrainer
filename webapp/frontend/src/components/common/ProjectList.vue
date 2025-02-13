@@ -411,9 +411,14 @@ export default {
     pollDocPrepStatus () {
       this.$http.get('/api/prep-docs-bg-tasks/').then(resp => {
         this.completeBgTasks = new Set(resp.data.comp_tasks.map(d => d.project))
-        this.runningBgTasks = new Set([...this.runningBgTasks,
-          ...resp.data.running_tasks.map(d => d.project)]).difference(this.completeBgTasks)
-
+        const newRunningTasks = new Set([
+          ...this.runningBgTasks,
+          ...resp.data.running_tasks.map(d => d.project)
+        ])
+        for (const completedTask of this.completeBgTasks) {
+          newRunningTasks.delete(completedTask)
+        }
+        this.runningBgTasks = newRunningTasks
       })
       setTimeout(this.pollDocPrepStatus, 8000)
     }
