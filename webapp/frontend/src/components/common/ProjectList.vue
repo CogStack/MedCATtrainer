@@ -137,6 +137,11 @@
                     @click="selectProject(item)">
               <font-awesome-icon icon="fa-chart-pie"></font-awesome-icon>
             </button>
+            <v-tooltip activator="parent">
+              Once selected, only projects <br>
+              configured to use the same MedCAT <br>
+              model will be available
+            </v-tooltip>
           </div>
         </template>
         <template #item.save_model="{ item }">
@@ -324,7 +329,7 @@ export default {
         return {class: ''}
       } else {
         let disabled = this.selectedProjects[0].id !== data.item.id
-        return {class: disabled ? ' disabled-row' : '', "aria-disabled": disabled}  
+        return {class: disabled ? ' disabled-row' : ''}  
       }
     },
     submitMetricsReportReq () {
@@ -559,11 +564,9 @@ export default {
   }
 }
 
-.disabled-row {
+:deep(.v-table > .v-table__wrapper > table > tbody > tr.disabled-row) {
   pointer-events: none;
   opacity: 0.5;
   background-color: #f0f0f0;
-  border: 1px solid red;
 }
-
 </style>
