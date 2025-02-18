@@ -11,13 +11,15 @@
         <span class="overlay-message">Loading Projects...</span>
       </v-overlay>
       <v-data-table id="projectTable"
+                    :key="tableKey"
                     :headers="isAdmin ? projects.headers : projects.headers.filter(f => projects.adminOnlyFields.indexOf(f.value) === -1)"
                     :items="projectItems"
                     :hover="true"
+                    :items-per-page="-1"
+                    :row-props="availableProjectForMetrics"
                     v-if="!loadingProjects"
                     @click:row="select"
-                    hide-default-footer
-                    :items-per-page="-1">
+                    hide-default-footer>
         <template #header.metrics>
           Metrics
           <v-tooltip activator="parent">
@@ -238,6 +240,7 @@ export default {
   },
   data () {
     return {
+      tableKey: 0,
       projects: {
         headers: [
           { value: 'locked', title: ''},
@@ -313,6 +316,15 @@ export default {
         this.selectedProjects.splice(this.selectedProjects.indexOf(project), 1)
       } else {
         this.selectedProjects.push(project)
+      }
+      this.tableKey++
+    },
+    availableProjectForMetrics (data) {
+      if (this.selectedProjects.length === 0) {
+        return {class: ''}
+      } else {
+        let disabled = this.selectedProjects[0].id !== data.item.id
+        return {class: disabled ? ' disabled-row' : '', "aria-disabled": disabled}  
       }
     },
     submitMetricsReportReq () {
@@ -545,6 +557,13 @@ export default {
   100% {
     background-position: 100px 100px;
   }
+}
+
+.disabled-row {
+  pointer-events: none;
+  opacity: 0.5;
+  background-color: #f0f0f0;
+  border: 1px solid red;
 }
 
 </style>
