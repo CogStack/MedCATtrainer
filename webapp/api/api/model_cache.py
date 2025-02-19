@@ -102,18 +102,23 @@ def get_medcat(project,
 
 
 def get_cached_medcat(project, cat_map: Dict[str, CAT]=CAT_MAP):
-    if project.concept_db is None or project.vocab is None:
-        return None
-    cdb_id = project.concept_db.id
-    vocab_id = project.vocab.id
-    cat_id = str(cdb_id) + "-" + str(vocab_id)
+    if project.model_pack is not None:
+        cat_id = 'mp' + str(project.model_pack.id)
+    else:
+        cdb_id = project.concept_db.id
+        vocab_id = project.vocab.id
+        cat_id = str(cdb_id) + "-" + str(vocab_id)
     return cat_map.get(cat_id)
 
 
 def clear_cached_medcat(project, cat_map: Dict[str, CAT]=CAT_MAP):
-    cdb_id = project.concept_db.id
-    vocab_id = project.vocab.id
-    cat_id = str(cdb_id) + "-" + str(vocab_id)
+    if project.model_pack is not None:
+        model_pack_obj = project.model_pack
+        cat_id = 'mp' + str(model_pack_obj.id)
+    else:
+        cdb_id = project.concept_db.id
+        vocab_id = project.vocab.id
+        cat_id = str(cdb_id) + "-" + str(vocab_id)
     if cat_id in cat_map:
         del cat_map[cat_id]
 

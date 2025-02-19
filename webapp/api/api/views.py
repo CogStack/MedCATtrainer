@@ -21,7 +21,7 @@ from .admin import download_projects_with_text, download_projects_without_text, 
 from .data_utils import upload_projects_export
 from .medcat_utils import ch2pt_from_pt2ch, get_all_ch, dedupe_preserve_order, snomed_ct_concept_path
 from .metrics import calculate_metrics
-from .model_cache import get_medcat, get_cached_cdb, VOCAB_MAP, clear_cached_cdb, CAT_MAP, CDB_MAP, is_model_loaded
+from .model_cache import get_medcat, get_cached_cdb, VOCAB_MAP, clear_cached_medcat, CAT_MAP, CDB_MAP, is_model_loaded
 from .permissions import *
 from .serializers import *
 from .solr_utils import collections_available, search_collection, ensure_concept_searchable
@@ -694,14 +694,25 @@ def upload_deployment(request):
 
 
 @api_view(http_method_names=['GET', 'DELETE'])
-def cache_model(request, cdb_id):
-    if request.method == 'GET':
-        get_cached_cdb(cdb_id)
-    elif request.method == 'DELETE':
-        clear_cached_cdb(cdb_id)
-    else:
-        return Response(f'Invalid method or cdb_id:{cdb_id} is invalid / not loaded', 400)
-    return Response('success', 200)
+def cache_model(request, project_id):
+    try:
+        project = ProjectAnnotateEntities.objects.get(id=project_id)
+        is_loaded = is_model_loaded(project)
+        if request.method == 'GET':
+            if not is_loaded:
+                get_medcat(project)
+                return Response('success', 200)
+        elif request.method == 'DELETE':
+            if is_loaded:
+                clear_cached_medcat(project_id)
+            return Response('success', 200)
+        else:
+            return Response(f'Invalid method', 404)
+    except ProjectAnnotateEntities.DoesNotExist:
+        return Response(f'Project with id:{project_id} does not exist', 404)
+    except Exception as e:
+        return Response({'message': f'{str(e)}'}, 500)
+    
 
 
 @api_view(http_method_names=['GET'])

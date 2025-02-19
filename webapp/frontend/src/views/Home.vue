@@ -157,7 +157,7 @@ export default {
       })
     },
     fetchSearchIndexStatus () {
-      const cdbIds = _.uniq(this.projects.items.map(p => p.cdb_search_filter[0]))
+      const cdbIds = _.uniq(this.projects.items.map(p => p.cdb_search_filter[0])).filter(id => id)
       this.$http.get(`/api/concept-db-search-index-created/?cdbs=${cdbIds.join(',')}`).then(resp => {
         this.cdbSearchIndexStatus = resp.data.results
       }).catch(err => {

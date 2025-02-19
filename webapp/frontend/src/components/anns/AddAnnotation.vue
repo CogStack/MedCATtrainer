@@ -65,11 +65,12 @@
       </table>
     </div>
     <div v-if="selectedCUI !== null" class="action-buttons">
-      <button @click="submit()" class="btn task-btn-0">
-        <font-awesome-icon icon="plus"></font-awesome-icon>
+      <button @click="submit()" :disabled="loading" class="btn task-btn-0">
+        <font-awesome-icon v-if="!loading" icon="plus"></font-awesome-icon>
+        <font-awesome-icon v-if="loading" icon="spinner" spin size="xs" />
         Add Term
       </button>
-      <button @click="cancel()" class="btn task-btn-1">
+      <button @click="cancel()" class="btn task-btn-1" :disabled="loading">
         <font-awesome-icon icon="times"></font-awesome-icon>
         Cancel
       </button>
@@ -107,7 +108,8 @@ export default {
       prevText: this.selection.prevText,
       nextText: this.selection.nextText,
       selectedCUI: null,
-      conceptPickerOpen: false
+      conceptPickerOpen: false,
+      loading: false
     }
   },
   methods: {
@@ -122,11 +124,17 @@ export default {
         selection_occur_idx: this.selection.selectionOccurrenceIdx,
         cui: this.selectedCUI.cui
       }
-
-      this.$http.post('/api/add-annotation/', payload).then(resp => {
-        this.$emit('request:addAnnotationComplete', resp.data.id)
-        this.selectedCUI = null
+      this.loading = true
+      this.$http.get(`/api/cache-model/${this.project.id}/`).then(_ => {
+        this.loading = false
+        this.$http.post('/api/add-annotation/', payload).then(resp => {
+          this.$emit('request:addAnnotationComplete', resp.data.id)
+          this.selectedCUI = null
+        })
+      }).catch(err => {
+        this.errorMessage = err.response.data.message || 'Error loading model.'
       })
+      
     },
     cancel () {
       this.$emit('request:addAnnotationComplete')
