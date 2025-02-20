@@ -11,9 +11,12 @@
               @open="$emit('picker:opened')"
               @close="$emit('picker:closed')">
       <template v-slot:no-options="{ search, searching }">
+        <template v-if="error">
+          <span class="text-danger">{{ error }}</span>
+        </template>
         <template v-if="searching">No results found for <em>{{ search }}</em>.
         </template>
-        <em v-else style="opacity: 0.5">Start typing to search for a concept.</em>
+        <em v-if="!error" style="opacity: 0.5">Start typing to search for a concept.</em>
       </template>
       <template v-slot:option="option">
         <span class="select-option">{{option.name}}</span>
@@ -90,13 +93,19 @@ export default {
       }
 
       const that = this
-      const conceptDbs = Array.from(new Set(this.cdb_search_filter.concat(this.concept_db))).join(',')
+      const conceptDBset = new Set(this.cdb_search_filter.concat(this.concept_db))
+      conceptDBset.delete(null)
+      const conceptDbs = Array.from(conceptDBset).join(',')
       const searchByTerm = function () {
         let searchConceptsQueryParams = `search=${term}&cdbs=${conceptDbs}`
         that.$http.get(`/api/search-concepts/?${searchConceptsQueryParams}`).then(resp => {
           that.searchResults = filterResults(resp.data.results.map(res => mapResult(res, resp.data.results)))
           // loading(false)
           that.loadingResults = false
+        }).catch(err => {
+          that.error = err.response?.data?.message || 'Error searching concepts - check project setup or contact project support'
+          that.loadingResults = false
+          that.searchResults = []
         })
       }
       const filterResults = function (results) {

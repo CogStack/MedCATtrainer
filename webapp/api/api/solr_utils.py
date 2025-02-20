@@ -19,10 +19,14 @@ logger = logging.getLogger(__name__)
 def _cache_solr_collection_schema_types(collection):
     url = f'http://{SOLR_HOST}:{SOLR_PORT}/solr/{collection}/schema'
     logger.info(f'Retrieving solr schema: {url}')
-    resp = json.loads(requests.get(url).text)
-    cui_type = [n for n in resp['schema']['fields'] if n['name'] == 'cui'][0]['type']
-    # just store cui type for the time being
-    SOLR_INDEX_SCHEMA[collection] = {'cui': cui_type}
+    try:
+        resp = json.loads(requests.get(url).text)
+        cui_type = [n for n in resp['schema']['fields'] if n['name'] == 'cui'][0]['type']
+        # just store cui type for the time being
+        SOLR_INDEX_SCHEMA[collection] = {'cui': cui_type}
+    except ConnectionError as e:
+        logger.error(f'Error connecting to solr search service to retrieve schema for collection: {collection}')
+        raise e
 
 
 def collections_available(cdbs: List[int]):
