@@ -704,7 +704,7 @@ def cache_model(request, project_id):
                 return Response('success', 200)
         elif request.method == 'DELETE':
             if is_loaded:
-                clear_cached_medcat(project_id)
+                clear_cached_medcat(project)
             return Response('success', 200)
         else:
             return Response(f'Invalid method', 404)
@@ -721,7 +721,7 @@ def model_loaded(_):
     for p in ProjectAnnotateEntities.objects.all():
         models_loaded[p.id] = is_model_loaded(p)
 
-    return Response(models_loaded)
+    return Response({'model_states': models_loaded})
 
 
 @api_view(http_method_names=['GET', 'POST'])

@@ -143,7 +143,7 @@ export default {
     },
     showCtxMenu  (event) {
       const selection = window.getSelection()
-      const selStr = selection.toString()
+      const selStr = selection.toString().trim()
       const anchor = selection.anchorNode
       const focus = selection.focusNode
 

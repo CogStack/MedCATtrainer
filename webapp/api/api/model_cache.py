@@ -25,11 +25,11 @@ logger = logging.getLogger(__name__)
 def _clear_models(cdb_map: Dict[str, CDB]=CDB_MAP,
                   vocab_map: Dict[str, Vocab]=VOCAB_MAP,
                   cat_map: Dict[str, CAT]=CAT_MAP):
-    if len(cat_map) == _MAX_MODELS_LOADED:
+    if len(cat_map) > _MAX_MODELS_LOADED:
         (k := next(iter(cat_map)), cat_map.pop(k))
-    if len(cdb_map) == _MAX_MODELS_LOADED:
+    if len(cdb_map) > _MAX_MODELS_LOADED:
         (k := next(iter(cdb_map)), cdb_map.pop(k))
-    if len(vocab_map) == _MAX_MODELS_LOADED:
+    if len(vocab_map) > _MAX_MODELS_LOADED:
         (k := next(iter(vocab_map)), vocab_map.pop(k))
 
 
@@ -118,6 +118,8 @@ def clear_cached_medcat(project, cat_map: Dict[str, CAT]=CAT_MAP):
     else:
         cdb_id = project.concept_db.id
         vocab_id = project.vocab.id
+        clear_cached_cdb(cdb_id)
+        clear_cached_vocab(vocab_id)
         cat_id = str(cdb_id) + "-" + str(vocab_id)
     if cat_id in cat_map:
         del cat_map[cat_id]
@@ -134,6 +136,11 @@ def get_cached_cdb(cdb_id: str, cdb_map: Dict[str, CDB]=CDB_MAP) -> CDB:
 def clear_cached_cdb(cdb_id, cdb_map: Dict[str, CDB]=CDB_MAP):
     if cdb_id in cdb_map:
         del cdb_map[cdb_id]
+
+
+def clear_cached_vocab(vocab_id, vocab_map: Dict[str, Vocab]=VOCAB_MAP):
+    if vocab_id in vocab_map:
+        del vocab_map[vocab_id]
 
 
 def is_model_loaded(project,

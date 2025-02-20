@@ -29,12 +29,12 @@
         </template>
         <template #body>
           <project-list :project-items="selectedProjectGroup.items" :is-admin="isAdmin"
-                        :cdb-search-index-status="cdbSearchIndexStatus" :cdb-loaded="cdbLoaded"></project-list>
+                        :cdb-search-index-status="cdbSearchIndexStatus"></project-list>
         </template>
       </modal>
     </div>
     <project-list v-if="!projectGroupView" :project-items="projects.items" :is-admin="isAdmin"
-                  :cdb-search-index-status="cdbSearchIndexStatus" :cdb-loaded="cdbLoaded"></project-list>
+                  :cdb-search-index-status="cdbSearchIndexStatus"></project-list>
   </div>
 
 </template>
@@ -73,8 +73,7 @@ export default {
       loadingProjects: false,
       isAdmin: false,
       selectedProjectGroup: null,
-      cdbSearchIndexStatus: {},
-      cdbLoaded: {},
+      cdbSearchIndexStatus: {}
     }
   },
   created () {
@@ -145,17 +144,12 @@ export default {
       })
     },
     postLoadedProjects () {
-      this.fetchCDBsLoaded()
       this.fetchSearchIndexStatus()
       this.fetchProjectProgress()
       this.fetchProjectGroups()
       this.loadingProjects = false
     },
-    fetchCDBsLoaded () {
-      this.$http.get('/api/model-loaded/').then(resp => {
-        this.cdbLoaded = resp.data
-      })
-    },
+
     fetchSearchIndexStatus () {
       const cdbIds = _.uniq(this.projects.items.map(p => p.cdb_search_filter[0])).filter(id => id)
       this.$http.get(`/api/concept-db-search-index-created/?cdbs=${cdbIds.join(',')}`).then(resp => {

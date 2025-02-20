@@ -105,16 +105,16 @@
           </span>
         </template>
         <template #item.model_loaded="{ item }">
-          <div v-if="cdbLoaded[item.id]" @click.stop>
+          <div v-if="modelLoaded[item.id]" @click.stop>
             <button class="btn btn-outline-success model-up">
-              <font-awesome-icon icon="times" class="clear-model-cache" @click="clearLoadedModel(item.concept_db)"></font-awesome-icon>
+              <font-awesome-icon icon="times" class="clear-model-cache" @click="clearLoadedModel(item.id)"></font-awesome-icon>
               <font-awesome-icon icon="fa-cloud-arrow-up"></font-awesome-icon>
             </button>
           </div>
-          <div v-if="!cdbLoaded[item.id]" @click.stop>
-            <button class="btn btn-outline-secondary" @click="loadProjectCDB(item.concept_db)">
-              <font-awesome-icon v-if="loadingModel !== item.concept_db" icon="fa-cloud-arrow-up"></font-awesome-icon>
-              <font-awesome-icon v-if="loadingModel === item.concept_db" icon="spinner" spin></font-awesome-icon>
+          <div v-if="!modelLoaded[item.id]" @click.stop>
+            <button class="btn btn-outline-secondary" @click="loadProjectCDB(item.id)">
+              <font-awesome-icon v-if="loadingModel !== item.id" icon="fa-cloud-arrow-up"></font-awesome-icon>
+              <font-awesome-icon v-if="loadingModel === item.id" icon="spinner" spin></font-awesome-icon>
             </button>
           </div>
         </template>
@@ -187,7 +187,7 @@
         <h3>Confirm Clear Cached Model State</h3>
       </template>
       <template #body>
-        <p>Confirm clearing cached MedCAT Model for Concept DB {{clearModelModal}} (and any other Projects that use this model). </p>
+        <p>Confirm clearing cached MedCAT Model Project {{clearModelModal}} (and any other Projects that use the same model). </p>
         <p>
           This will remove any interim training done (if any).
           To recover the cached model, re-open the project(s), and re-submit all documents.
@@ -241,11 +241,11 @@ export default {
     projectItems: Array,
     isAdmin: Boolean,
     cdbSearchIndexStatus: Object,
-    cdbLoaded: Object,
   },
   data () {
     return {
       tableKey: 0,
+      modelLoaded: {},
       projects: {
         headers: [
           { value: 'locked', title: ''},
@@ -291,22 +291,23 @@ export default {
   },
   created () {
     this.pollDocPrepStatus()
+    this.fetchModelsLoaded()
   },
   methods: {
-    clearLoadedModel (cdbId) {
-      this.clearModelModal = cdbId
+    clearLoadedModel (projectId) {
+      this.clearModelModal = projectId
     },
-    confirmClearLoadedModel (cdbId) {
+    confirmClearLoadedModel (projectId) {
       this.clearModelModal = false
-      this.$http.delete(`/api/cache-model/${cdbId}/`).then(_ => {
-        this.fetchCDBsLoaded()
+      this.$http.delete(`/api/cache-model/${projectId}/`).then(_ => {
+        this.fetchModelsLoaded()
       })
     },
-    loadProjectCDB (cdbId) {
-      this.loadingModel = cdbId
-      this.$http.get(`/api/cache-model/${cdbId}/`).then(_ => {
+    loadProjectCDB (projectId) {
+      this.loadingModel = projectId
+      this.$http.get(`/api/cache-model/${projectId}/`).then(_ => {
         this.loadingModel = false
-        this.fetchCDBsLoaded()
+        this.fetchModelsLoaded()
       }).catch(_ => {
         this.modelCacheLoadError = true
         this.loadingModel = false
@@ -314,6 +315,11 @@ export default {
         setTimeout(() => {
           that.modelCacheLoadError = false
         }, 5000)
+      })
+    },
+    fetchModelsLoaded () {
+      this.$http.get('/api/model-loaded/').then(resp => {
+        this.modelLoaded = resp?.data?.model_states
       })
     },
     selectProject (project) {
