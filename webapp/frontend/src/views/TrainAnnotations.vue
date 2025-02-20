@@ -492,7 +492,7 @@ export default {
         this.fetchEntities()
       } else {
         this.loadingMsg = "Loading MedCAT model..."
-        this.$http.get(`/api/cache-model/${this.project.concept_db}/`).then(_ => {
+        this.$http.get(`/api/cache-model/${this.project.id}/`).then(_ => {
           this.loadingMsg = "Preparing Document..."
           let payload = {
             project_id: this.project.id,
@@ -512,9 +512,10 @@ export default {
               this.errors.stacktrace = err.response.data.stacktrace
             }
           })
-        }).catch(_ => {
+        }).catch(e => {
           this.errors.modal = true
-          this.errors.mesasge = "Internal server error - cannot load MedCAT model. Contact your MedCAT admin quoting this project ID"
+          this.errors.description = e.response?.data?.message || 'Internal server error - cannot load MedCAT model. Contact your MedCAT admin quoting this project ID'
+          this.errors.message = 'Failed to load MedCAT Model'
         })
       }
     },
