@@ -42,10 +42,10 @@ export default {
   ],
   watch: {
     'submitLocked' (newVal) {
-      if (newVal) {
-        this.listenSubmit()
+      if (newVal === null || newVal === false) {
+        this.listenShortcuts()
       } else {
-        this.ignoreSubmit()
+        this.ignoreShortcuts()
       }
     }
   },
@@ -79,7 +79,7 @@ export default {
     keydown (e) {
       if (e.keyCode === 13 && !this.conceptSelection) {
         if (!this.submitDisabled()) {
-          this.ignoreSubmit()
+          this.ignoreShortcuts()
           this.submit()
         }
       } else if (e.keyCode >= 49 && e.keyCode < 54 && !this.taskLocked) {
@@ -108,18 +108,18 @@ export default {
         }
       }
     },
-    listenSubmit () {
+    listenShortcuts () {
       window.addEventListener('keydown', this.keydown)
     },
-    ignoreSubmit () {
+    ignoreShortcuts () {
       window.removeEventListener('keydown', this.keydown)
     }
   },
   mounted () {
-    this.listenSubmit()
+    this.listenShortcuts()
   },
   beforeDestroy () {
-    this.ignoreSubmit()
+    this.ignoreShortcuts()
   }
 }
 </script>
