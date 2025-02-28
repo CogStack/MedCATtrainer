@@ -4,7 +4,7 @@
 services:
   # api server
   medcattrainer:
-    image: cogstacksystems/medcat-trainer:v2.20.0
+    image: cogstacksystems/medcat-trainer:v2.21.0
     restart: always
     volumes:
       - ./configs:/home/configs
@@ -15,12 +15,12 @@ services:
     env_file:
       - ./envs/env
     environment:
-      - MCT_VERSION=v2.20.0
+      - MCT_VERSION=v2.21.0
     command: /home/scripts/run.sh
 
   # bg process task runner
   medcattrainer-bg-process:
-    image: cogstacksystems/medcat-trainer:v2.20.0
+    image: cogstacksystems/medcat-trainer:v2.21.0
     restart: always
     volumes:
       - ./configs:/home/configs
@@ -34,7 +34,7 @@ services:
 
   # crontab - for db backup
   medcattrainer-db-backup:
-    image: cogstacksystems/medcat-trainer:v2.20.0
+    image: cogstacksystems/medcat-trainer:v2.21.0
     restart: always
     volumes:
       - ./configs:/home/configs
