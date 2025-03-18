@@ -17,9 +17,13 @@ CDB_MAP = {}
 VOCAB_MAP = {}
 CAT_MAP = {}
 
-_MAX_MODELS_LOADED = os.getenv("MAX_MEDCAT_MODELS", 1)
-
 logger = logging.getLogger(__name__)
+
+try:
+    _MAX_MODELS_LOADED = int(os.getenv("MAX_MEDCAT_MODELS", 1))
+except ValueError:
+    _MAX_MODELS_LOADED = 1
+    logger.warning("MAX_MEDCAT_MODELS is not an integer, using default value of 1")
 
 
 def _clear_models(cdb_map: Dict[str, CDB]=CDB_MAP,
