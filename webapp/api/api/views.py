@@ -701,7 +701,7 @@ def cache_model(request, project_id):
         if request.method == 'GET':
             if not is_loaded:
                 get_medcat(project)
-                return Response('success', 200)
+            return Response('success', 200)
         elif request.method == 'DELETE':
             if is_loaded:
                 clear_cached_medcat(project)
