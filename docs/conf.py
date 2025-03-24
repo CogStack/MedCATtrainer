@@ -35,7 +35,14 @@ extensions = [
     'sphinx.ext.autodoc',
     'myst_parser',
     'sphinx.ext.inheritance_diagram',
+    'autoapi.extension',
 ]
+
+autoapi_type = 'python'
+autoapi_dirs = ['../webapp/api/api']
+autodoc_typehints = 'description'
+autoapi_template_dir = '_templates/autoapi_templates'
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -66,3 +73,16 @@ html_static_path = ['_static']
 html_css_files = [
     'css/overrides.css'
 ]
+
+def autoapi_skip_member(app, what, name, obj, skip, options):
+    # skip:
+    #   log class attributes
+    #   'private' methods, attributes, functions
+    exclude = (what == 'attribute' and name == 'log') or \
+        (name.startswith('_') and not name.startswith('__'))
+    return exclude
+
+
+def setup(app):
+    """Add autoapi-skip-member."""
+    app.connect('autoapi-skip-member', autoapi_skip_member)
