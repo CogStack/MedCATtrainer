@@ -7,47 +7,20 @@ services:
     restart: always
     image: cogstacksystems/medcat-trainer:v2.20.0
     volumes:
-      - ./configs:/home/configs
       - api-media:/home/api/media
       - api-static:/home/api/static
       - api-db:/home/api/db
       - api-db-backup:/home/api/db-backup
+      - ./supervisord.conf:/etc/supervisord.conf
+      - ./configs:/home/configs
     expose:
       - "8000"
     env_file:
       - ./envs/env-prod
     environment:
       - MCT_VERSION=v2.20.0
-    command: /home/scripts/run.sh
+    command: /usr/bin/supervisord -c /etc/supervisord.conf
 
-  # bg process task runner
-  medcattrainer-bg-process:
-    image: cogstacksystems/medcat-trainer:v2.20.0
-    restart: always
-    volumes:
-      - ./configs:/home/configs
-      - api-media:/home/api/media
-      - api-static:/home/api/static
-      - api-db:/home/api/db
-      - api-db-backup:/home/api/db-backup
-    env_file:
-      - ./envs/env
-    command: /home/scripts/run-bg-process.sh
-
-  # crontab - for db backup
-  medcattrainer-db-backup:
-    image: cogstacksystems/medcat-trainer:v2.20.0
-    restart: always
-    volumes:
-      - ./configs:/home/configs
-      - api-media:/home/api/media
-      - api-static:/home/api/static
-      - api-db:/home/api/db
-      - api-db-backup:/home/api/db-backup
-    env_file:
-      - ./envs/env-prod
-    entrypoint: /home/scripts/entry.sh
-    command: cron -f -l 2
 
   nginx:
     container_name: medcattrainer_nginx
@@ -78,6 +51,7 @@ services:
       - solr-data:/var/solr
     command:
       - -cloud  # solr cloud launches
+
 volumes:
   api-media:
   api-static:

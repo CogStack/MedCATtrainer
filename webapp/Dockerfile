@@ -7,6 +7,9 @@ RUN apt-get update -y && \
 # install vim as its annoying not to have an editor
 RUN apt-get install -y vim
 
+# install supervisor
+RUN apt-get install -y supervisor
+
 # install cron - and remove any default tabs
 RUN apt-get install -y cron && which cron && rm -rf /etc/cron.*/*
 
