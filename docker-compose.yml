@@ -2,50 +2,22 @@
 # projects are not used.
 
 services:
-  # api server
+  # medattrainer services
   medcattrainer:
-    image: cogstacksystems/medcat-trainer:v2.20.0
+    image: cogstacksystems/medcat-trainer:v2.21.1
     restart: always
     volumes:
-      - ./configs:/home/configs
       - api-media:/home/api/media
       - api-static:/home/api/static
       - api-db:/home/api/db
       - api-db-backup:/home/api/db-backup
+      - ./configs:/home/configs
+      - ./supervisord.conf:/etc/supervisord.conf
     env_file:
       - ./envs/env
     environment:
-      - MCT_VERSION=v2.20.0
-    command: /home/scripts/run.sh
-
-  # bg process task runner
-  medcattrainer-bg-process:
-    image: cogstacksystems/medcat-trainer:v2.20.0
-    restart: always
-    volumes:
-      - ./configs:/home/configs
-      - api-media:/home/api/media
-      - api-static:/home/api/static
-      - api-db:/home/api/db
-      - api-db-backup:/home/api/db-backup
-    env_file:
-      - ./envs/env
-    command: /home/scripts/run-bg-process.sh
-
-  # crontab - for db backup
-  medcattrainer-db-backup:
-    image: cogstacksystems/medcat-trainer:v2.20.0
-    restart: always
-    volumes:
-      - ./configs:/home/configs
-      - api-media:/home/api/media
-      - api-static:/home/api/static
-      - api-db:/home/api/db
-      - api-db-backup:/home/api/db-backup
-    env_file:
-      - ./envs/env
-    entrypoint: /home/scripts/entry.sh
-    command: cron -f -l 2
+      - MCT_VERSION=v2.21.1
+    command: /usr/bin/supervisord -c /etc/supervisord.conf
 
   nginx:
     image: nginx

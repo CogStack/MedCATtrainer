@@ -160,13 +160,15 @@ export default {
     },
     fetchProjectProgress () {
       const projectIds = this.projects.items.map(p => p.id)
-      this.$http.get(`/api/project-progress/?projects=${projectIds}`).then(resp => {
-        this.projects.items = this.projects.items.map(item => {
-          item['progress'] = resp.data[item.id].validated_count
-          item['progress_max'] = resp.data[item.id].dataset_count
-          return item
+      if (projectIds.length > 0) {
+        this.$http.get(`/api/project-progress/?projects=${projectIds}`).then(resp => {
+          this.projects.items = this.projects.items.map(item => {
+            item['progress'] = resp.data[item.id].validated_count
+            item['progress_max'] = resp.data[item.id].dataset_count
+            return item
+          })
         })
-      })
+      }
     },
     selectProjectGroup(_, { item }) {
       if (item) {
