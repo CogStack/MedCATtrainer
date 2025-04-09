@@ -7,6 +7,9 @@ RUN apt-get update -y && \
 # install vim as its annoying not to have an editor
 RUN apt-get install -y vim
 
+# install supervisor
+RUN apt-get install -y supervisor
+
 # install cron - and remove any default tabs
 RUN apt-get install -y cron && which cron && rm -rf /etc/cron.*/*
 
@@ -30,7 +33,8 @@ RUN npm install && npm run build
 
 # Install requirements for backend
 WORKDIR /home/
-RUN pip install pip --upgrade
+RUN pip install pip --upgrade 
+RUN pip install --upgrade setuptools
 RUN pip install --no-cache-dir -r requirements.txt
 ARG SPACY_MODELS="en_core_web_md"
 RUN for SPACY_MODEL in ${SPACY_MODELS}; do python -m spacy download ${SPACY_MODEL}; done
