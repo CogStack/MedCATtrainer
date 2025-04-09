@@ -22,8 +22,9 @@ if User.objects.count() == 0:
     User.objects.create_superuser('admin', 'admin@example.com', 'admin')
 " | python manage.py shell
 
-if [ $LOAD_EXAMPLES ]; then
-  python /home/scripts/load_examples.py &
+if [ $LOAD_EXAMPLES ]; then 
+  echo "Loading examples..."
+  python /home/scripts/load_examples.py >> /dev/stdout 2>> /dev/stderr &
 fi
 
 # Creating a default user group that can manage projects and annotate but not delete
