@@ -55,7 +55,8 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
-    permission_classes = [permissions.IsAuthenticated, IsReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ['get', 'post', 'put']
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
 
