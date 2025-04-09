@@ -38,9 +38,9 @@ export default defineConfig({
     preprocessorOptions: {
       scss: {
         additionalData: `
-          @import "./src/styles/_variables.scss";
-          @import "./src/styles/_common.scss";
-          @import "./src/styles/_tabs.scss";
+          @import "@/styles/_variables.scss";
+          @import "@/styles/_common.scss";
+          @import "@/styles/_tabs.scss";
         `
       }
     }
