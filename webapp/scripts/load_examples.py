@@ -65,7 +65,7 @@ def main(port=8000,
                     with open(dataset_tmp_file, 'w') as f:
                         f.write(ds.text)
 
-                    ds_dict = pd.read_csv(dataset_tmp_file).loc[:, ['name', 'text']].to_dict()§
+                    ds_dict = pd.read_csv(dataset_tmp_file).loc[:, ['name', 'text']].to_dict()
                     create_example_project(URL, headers, umls_cdb_tmp_file, vocab_tmp_file, 'umls_ortho_example_dataset', ds_dict, 'umls_cdb',
                                            'Example Project - UMLS (Diseases / Symptoms / Findings)')
                     create_example_project(URL, headers, snomed_cdb_tmp_file, vocab_tmp_file, 'snomed_ortho_example_dataset', ds_dict, 'snomed_cdb',
