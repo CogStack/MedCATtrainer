@@ -7,8 +7,7 @@ import pandas as pd
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
-from django.db import models
-from django.db.models import DO_NOTHING, SET_NULL
+from django.db import models, transaction
 from django.dispatch import receiver
 from django.forms import forms, ModelForm
 from medcat.cat import CAT
@@ -45,8 +44,13 @@ class ModelPack(models.Model):
     last_modified = models.DateTimeField(auto_now=True)
     last_modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=None, null=True)   
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
+        is_new = self._state.adding
+        if is_new:
+            super().save(*args, **kwargs)
+        
+        # Process the model pack
         logger.info('Loading model pack: %s', self.model_pack)
         model_pack_name = str(self.model_pack).replace(".zip", "")
         try:
@@ -91,10 +95,13 @@ class ModelPack(models.Model):
                 mc_model.save(unpack_load_meta_cat_dir=False)
                 mc_model.get_or_create_meta_tasks_and_values(meta_cat)
                 metaCATmodels.append(mc_model)
-            self.meta_cats.add(*metaCATmodels)
+            self.meta_cats.set(metaCATmodels)  # Use set() instead of add() for atomic operation
         except Exception as exc:
             raise MedCATLoadException(f'Failure loading MetaCAT models - {unpacked_model_pack_path}') from exc
-        super().save(*args, **kwargs)
+            
+        # Only save if this is an update (not a new instance)
+        if not is_new:
+            super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
