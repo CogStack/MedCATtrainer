@@ -43,9 +43,11 @@ def calculate_metrics(project_ids: List[int], report_name: str):
     """
     logger.info('Calculating metrics for report: %s', report_name)
     projects = [ProjectAnnotateEntities.objects.filter(id=p_id).first() for p_id in project_ids]
+    loaded_model_pack = False
     if projects[0].model_pack:
         # assume the model pack is set.
         cat = CAT.load_model_pack(projects[0].model_pack.model_pack.path)
+        loaded_model_pack = True
     else:
         # assume the cdb / vocab is set in these projects
         cdb = CDB.load(projects[0].concept_db.cdb_file.path)
@@ -53,7 +55,7 @@ def calculate_metrics(project_ids: List[int], report_name: str):
         cat = CAT(cdb, vocab, config=cdb.config)
     project_data = retrieve_project_data(projects)
     metrics = ProjectMetrics(project_data, cat)
-    report = metrics.generate_report()
+    report = metrics.generate_report(meta_ann=loaded_model_pack)
     report_file_path = f'{MEDIA_ROOT}/{report_name}.json'
     json.dump(report, open(report_file_path, 'w'))
     apm = AppProjectMetrics()
