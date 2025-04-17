@@ -156,9 +156,14 @@ class ProjectMetrics(object):
                                 'tp': 'tp_examples'})
             concept_count_df = concept_count_df.merge(examples_df, how='left', on='cui').fillna(0)
 
+            # Process examples to ensure underscores are preserved
+            for col in ['fp_examples', 'fn_examples', 'tp_examples']:
+                if col in concept_count_df.columns:
+                    concept_count_df[col] = concept_count_df[col].apply(lambda x: x if isinstance(x, list) else [])
+
         # brittle - probably shouldn't rely on cat._print_stats ...
         concept_summary = concept_count_df.to_dict('records')
-        # convert sets to lists
+        # convert sets to lists and ensure examples are properly formatted
         concept_summary = [{k: list(v) if isinstance(v, set) else v for k, v in row.items()} for row in concept_summary]
         return concept_summary
 

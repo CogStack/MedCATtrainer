@@ -19,7 +19,6 @@
         </span>
       </v-row>
 
-
     </div>
     <div class="viewport-full-height">
       <v-overlay :model-value="loading"
@@ -35,9 +34,36 @@
       <div class="viewport">
         <v-tabs v-model="tab">
           <v-tab :value="'summary_stats'">Summary Stats</v-tab>
-          <v-tab :value="'annotations'">Annotations</v-tab>
-          <v-tab :value="'concept_summary'">Concept Summary</v-tab>
-          <v-tab :value="'meta_anns'" v-if="metaAnnsSummary.items">Meta Annotations</v-tab>
+          <v-tab :value="'annotations'">
+            Annotations
+            <v-tooltip location="bottom">
+              <template v-slot:activator="{ props }">
+                <font-awesome-icon v-bind="props" icon="info-circle" class="ml-2" />
+              </template>
+              <span>A table of raw annotations, and their annotationstatus</span>
+            </v-tooltip>
+          </v-tab>
+          <v-tab :value="'concept_summary'">
+            Concept Summary
+            <v-tooltip location="bottom">
+              <template v-slot:activator="{ props }">
+                <font-awesome-icon v-bind="props" icon="info-circle" class="ml-2" />
+              </template>
+              <span>Model predictions compared to gold standard annotated dataset<br>
+              after evaluating across the entire dataset grouped by each unique concept</span>
+            </v-tooltip>
+          </v-tab>
+          <v-tab :value="'meta_anns'" v-if="metaAnnsSummary.items">
+            Meta Annotations
+            <v-tooltip location="bottom">
+              <template v-slot:activator="{ props }">
+                <font-awesome-icon v-bind="props" icon="info-circle" class="ml-2" />
+              </template>
+              <span>All scores and averages are calculated on a per-concept basis.<br>
+              Each concept's performance is evaluated independently<br>
+              for each meta annotation task in the dataset.</span>
+            </v-tooltip>
+          </v-tab>
         </v-tabs>
 
         <div class="tab-pane">
@@ -54,6 +80,16 @@
                   <v-card-text>{{ Object.values(projects2doc_ids).map(doc_ids => doc_ids.length).reduce((a, b) => a + b, 0) }}</v-card-text>
                 </v-card>
 
+                <v-card class="summary-card">
+                  <v-card-title># Annotations</v-card-title>
+                  <v-card-text>{{ annoSummary.items ? annoSummary.items.length : 0 }}</v-card-text>
+                </v-card>
+
+                <v-card class="summary-card">
+                  <v-card-title># Concepts</v-card-title>
+                  <v-card-text>{{ conceptSummary.items ? conceptSummary.items.length : 0 }}</v-card-text>
+                </v-card>
+
                 <v-tooltip location="bottom">
                   <template v-slot:activator="{ props }">
                     <v-card v-bind="props" class="summary-card">
@@ -63,7 +99,6 @@
                   </template>
                   <span>Percentage of documents that<br>overlap between projects</span>
                 </v-tooltip>
-
 
                 <v-tooltip location="bottom">
                   <template v-slot:activator="{ props }">
@@ -81,6 +116,7 @@
                   <v-card-title>Total Annotation Time</v-card-title>
                   <v-card-text> {{ elapsedTime(annoSummary.items || []) }} </v-card-text>
                 </v-card>
+
               </v-row>
 
               <div>
@@ -94,144 +130,85 @@
 
           <KeepAlive>
             <div v-if="tab === 'annotations'">
-                <v-data-table :items="annoSummary.items" :headers="annoSummary.headers" :hover="true" hide-default-footer
-                              :items-per-page="-1">
-                    <template #item.status="{ item }">
-                        <div id="status" :class="textColorClass(item.status)">
-                            {{ item.status }}
-                            <font-awesome-icon
-                                    icon="check-circle" v-if="['Correct', 'Manually Added', 'Alternative'].includes(item.status)">
-                            </font-awesome-icon>
-                            <font-awesome-icon
-                                    icon="times-circle" v-if="['Incorrect', 'Terminated', 'Irrelevant'].includes(item.status)">
-                            </font-awesome-icon>
-                        </div>
-                    </template>
-                </v-data-table>
+              <annotations-table
+                :items="annoSummary.items">
+              </annotations-table>
             </div>
           </KeepAlive>
 
           <KeepAlive>
             <div v-if="tab === 'concept_summary'">
-              <v-data-table :items="conceptSummary.items" :headers="conceptSummary.headers" hide-default-footer
-                            :items-per-page="-1">
-                <template #header.concept>
-                  <div>Concept</div>
-                  <v-tooltip></v-tooltip>
-                </template>
-                <template #header.concept_count>
-                  Concept Count
-                  <v-tooltip activator="parent">Number of occurrences across the projects</v-tooltip>
-                </template>
-                <template #header.variations>
-                  # Vars
-                  <v-tooltip activator="parent">The count of unique variations for a concept</v-tooltip>
-                </template>
-                <template #header.variation_values>
-                  Variations
-                  <v-tooltip activator="parent">The unique set of variations for a concept</v-tooltip>
-                </template>
-                <template #header.count_variations_ratio>
-                  Variations Ratio
-                  <v-tooltip activator="parent">The ratio of number of annotations and the number of variations of a concept</v-tooltip>
-                </template>
-                <template #header>
-                  CUI
-                  <v-tooltip activator="parent">The Concept Unique Identifier</v-tooltip>
-                </template>
-                <template #header.cui_f1>
-                  F1
-                  <v-tooltip activator="parent">The harmonic mean of the recall and precision scores</v-tooltip>
-                </template>
-                <template #header.cui_prec>
-                  Prec.
-                  <v-tooltip activator="parent">The precision scores of a concept</v-tooltip>
-                </template>
-                <template #header.cui_rec>
-                  Rec
-                  <v-tooltip activator="parent">The recall scores of a concept</v-tooltip>
-                </template>
-                <template #header.tps>
-                  TPs
-                  <v-tooltip activator="parent">True positives - concept examples that are annotated and predicted by the model</v-tooltip>
-                </template>
-                <template #header.fns>
-                  FNs
-                  <v-tooltip activator="parent">False negatives - concept examples that annotated but not predicted by the model</v-tooltip>
-                </template>
-                <template #header.fps>
-                  FPs
-                  <v-tooltip activator="parent">False positives - concept examples that are predicted but not annotated</v-tooltip>
-                </template>
-                <template #item.variation_values="{ item }">
-                  <div>{{ item.value.join(', ') }}</div>
-                </template>
-                <template #item.cui_f1="{ item }">
-                  <div class="perf-progress">
-                    <v-progress-linear
-                        v-model="item.cui_f1"
-                        color="#32AB60"
-                        background-color="#46B480"
-                        height="30px"
-                        :max="1.0">
-                      <span :class="{'good-perf': item.cui_f1 > 0.4}">{{item.cui_f1.toFixed(1)}}</span>
-                    </v-progress-linear>
-                  </div>
-                </template>
-                <template #item.cui_rec="{ item }">
-                  <div class="perf-progress">
-                    <v-progress-linear
-                        v-model="item.cui_rec"
-                        color="#32AB60"
-                        background-color="#46B480"
-                        height="30px"
-                        :max="1.0">
-                      <span :class="{'good-perf': item.cui_rec > 0.4}">{{item.cui_rec.toFixed(1)}}</span>
-                    </v-progress-linear>
-                  </div>
-                </template>
-                <template #item.cui_prec="{ item }">
-                  <div class="perf-progress">
-                    <v-progress-linear
-                        v-model="item.cui_prec"
-                        color="#32AB60"
-                        background-color="#46B480"
-                        height="30px"
-                        :max="1.0">
-                      <span :class="{'good-perf': item.cui_prec > 0.4}">{{item.cui_prec.toFixed(1)}}</span>
-                    </v-progress-linear>
-                  </div>
-                </template>
-                <template #item.tps="{ item }">
-                  <button class="btn btn-outline-success res-btn" :disabled="item.tps === 0"
-                          @click="openExamples('tp_examples', item)">
-                    {{ item.tps }}
-                  </button>
-                </template>
-                <template #item.fns="{ item }">
-                  <button class="btn btn-outline-warning res-btn" :disabled="item.fns === 0"
-                          @click="openExamples('fn_examples', item)">
-                    {{ item.fns }}
-                  </button>
-                </template>
-                <template #item.fps="{ item }">
-                  <button class="btn btn-outline-danger res-btn" :disabled="item.fps === 0"
-                          @click="openExamples('fp_examples', item)">
-                    {{ item.fps }}
-                  </button>
-                </template>
-              </v-data-table>
+              <concept-summary
+                :items="conceptSummary.items"
+                :docs2text="docs2text">
+              </concept-summary>
             </div>
           </KeepAlive>
 
           <KeepAlive>
             <div v-if="tab === 'meta_anns'">
+              <v-row class="summary-row">
+                <template v-for="task in Object.keys(metaAnnsSummary.items[0]?.meta_tasks)" :key="task">
+                  <v-tooltip location="bottom">
+                    <template v-slot:activator="{ props }">
+                      <v-card v-bind="props" class="summary-card">
+                        <v-card-title>{{ task }} Macro Avg. F1</v-card-title>
+                        <v-card-text>{{ calculateMetaTaskAverage(task, 'macro', 'f1') }}%</v-card-text>
+                      </v-card>
+                    </template>
+                    <span>Macro average treats all classes equally, regardless of their frequency.<br>
+                    It calculates the metric for each class independently and then averages them.<br>
+                    This is useful when all classes are equally important.</span>
+                  </v-tooltip>
+
+                  <v-tooltip location="bottom">
+                    <template v-slot:activator="{ props }">
+                      <v-card v-bind="props" class="summary-card">
+                        <v-card-title>{{ task }} Micro Avg. F1</v-card-title>
+                        <v-card-text>{{ calculateMetaTaskAverage(task, 'micro', 'f1') }}%</v-card-text>
+                      </v-card>
+                    </template>
+                    <span>Micro average weights each class by its frequency in the dataset.<br>
+                    It aggregates the contributions of all classes to compute the average metric.<br>
+                    This is useful when class imbalance exists and you want to account for it.</span>
+                  </v-tooltip>
+                </template>
+              </v-row>
+
               <v-data-table :items="metaAnnsSummary.items"
                             :headers="metaAnnsSummary.headers"
                             :hover="true"
                             class="meta-anno-summary"
                             hide-default-footer
                             :items-per-page="-1">
+                <template #item="{ item }">
+                  <tr>
+                    <td>{{ item.cui }}</td>
+                    <td>{{ item.concept_name }}</td>
+                    <template v-for="task in Object.keys(item.meta_tasks)" :key="task">
+                      <!-- Macro metrics -->
+                      <td>
+                        <metric-cell :value="item.meta_tasks[task].macro.f1" />
+                      </td>
+                      <td>
+                        <metric-cell :value="item.meta_tasks[task].macro.prec" />
+                      </td>
+                      <td>
+                        <metric-cell :value="item.meta_tasks[task].macro.rec" />
+                      </td>
+                      <!-- Micro metrics -->
+                      <td>
+                        <metric-cell :value="item.meta_tasks[task].micro.f1" />
+                      </td>
+                      <td>
+                        <metric-cell :value="item.meta_tasks[task].micro.prec" />
+                      </td>
+                      <td>
+                        <metric-cell :value="item.meta_tasks[task].micro.rec" />
+                      </td>
+                    </template>
+                  </tr>
+                </template>
                 <template #item="{ item }">
                   <tr>
                     <td>{{ item.cui }}</td>
@@ -267,58 +244,18 @@
       </div>
 
     </div>
-    <modal class="summary-modal" v-if="modalData.results" :closable="true" @modal:close="clearModalData">
-      <template #header>
-        <h3>{{ modalData.title }}</h3>
-      </template>
-      <template #body>
-        <div>
-          <div v-if="modalData.type === 'fp'">
-            <p>False positive model predictions can be the result of:</p>
-            <ul>
-              <li>Alternative model predictions that are overlapping with other concepts</li>
-              <li>Genuine missed annotations by an annotator.</li>
-            </ul>
-            <p>Clicking on these annotations will not highlight this annotation as it doesn't exist in the
-              dataset </p>
-          </div>
-          <div v-if="modalData.type === 'fn'">
-            <p>False negative model predictions can be the result of:</p>
-            <ul>
-              <li>A model mistake that marked an annotation 'correct' where it should be incorrect</li>
-              <li>An annotator mistake that marked an annotation 'correct' where it should be incorrect</li>
-            </ul>
-          </div>
-          <table class="table table-hover">
-            <thead>
-            <tr>
-              <th>Doc Name</th>
-              <th>CUI</th>
-              <th>Value</th>
-              <th>Accuracy</th>
-              <th>Text</th>
-            </tr>
-            </thead>
-            <tbody>
-            <anno-result v-for="(res, key) of modalData.results" :key="key" :result="res"
-                         :type="modalData.type" :doc-text="textFromAnno(res)"></anno-result>
-            </tbody>
-          </table>
-        </div>
-      </template>
-    </modal>
   </div>
 </template>
 
 <script>
-import Modal from '@/components/common/Modal.vue'
-import AnnoResult from '@/components/anns/AnnoResult.vue'
 import Plotly from 'plotly.js-dist'
 import MetricCell from '@/components/metrics/MetricCell.vue'
+import AnnotationsTable from '@/components/metrics/AnnotationsTable.vue'
+import ConceptSummary from '@/components/metrics/ConceptSummary.vue'
 
 export default {
   name: 'Metrics.vue',
-  components: {AnnoResult, Modal, MetricCell},
+  components: {MetricCell, AnnotationsTable, ConceptSummary},
   props: {
     reportId: Number
   },
@@ -403,6 +340,38 @@ export default {
           return taskHeader
         })
         this.metaAnnsSummary.headers = [...this.metaAnnsSummary.headers, ...summaryHeaders]
+        let summaryHeaders = resp.data.results.meta_anns_task_summary.map(task => {
+          // Create task header with children
+          const taskName = task['name']
+          const taskHeader = {
+            title: taskName,
+            align: 'left',
+            children: [
+              // Macro metrics group
+              {
+                title: 'Macro Avg',
+                align: 'left',
+                children: [
+                  { value: item => `${item.meta_tasks[taskName].macro.f1.toFixed(2)}`, title: 'F1', key: `meta_tasks.${taskName}.macro.f1` },
+                  { value: item => `${item.meta_tasks[taskName].macro.prec.toFixed(2)}`, title: 'Prec', key: `meta_tasks.${taskName}.macro.prec` },
+                  { value: item => `${item.meta_tasks[taskName].macro.rec.toFixed(2)}`, title: 'Rec', key: `meta_tasks.${taskName}.macro.rec`  }
+                ]
+              },
+              // Micro metrics group
+              {
+                title: 'Micro Avg',
+                align: 'left',
+                children: [
+                  { value: item => `${item.meta_tasks[taskName].micro.f1.toFixed(2)}`, title: 'F1', key: `meta_tasks.${taskName}.micro.f1` },
+                  { value: item => `${item.meta_tasks[taskName].micro.prec.toFixed(2)}`, title: 'Prec', key: `meta_tasks.${taskName}.micro.prec` },
+                  { value: item => `${item.meta_tasks[taskName].micro.rec.toFixed(2)}`, title: 'Rec', key: `meta_tasks.${taskName}.micro.rec` }
+                ]
+              }
+            ]
+          }
+          return taskHeader
+        })
+        this.metaAnnsSummary.headers = [...this.metaAnnsSummary.headers, ...summaryHeaders]
         this.annoChart()
       })
     }
@@ -427,44 +396,13 @@ export default {
           {value: 'fps', title: 'False Positives'}
         ]
       },
-      annoSummary: {
-        headers: [
-          {value: 'project', title: 'Project'},
-          { value: 'document_name', title: 'Doc. Name' },
-          { value: 'id', title: 'Annotation Id' },
-          { value: 'user', title: 'User' },
-          { value: 'cui', title: 'CUI' },
-          { value: 'concept_name', title: 'Concept' },
-          { value: 'value', title: 'text' },
-          { value: 'status', title: 'Status' }
-        ]
-      },
-      conceptSummary: {
-        headers: [
-          {value: 'concept_name', title: 'Concept Name'},
-          { value: 'concept_count' },
-          { value: 'variations' },
-          { value: 'variation_values', title: ''},
-          { value: 'count_variations_ratio', title: 'Variation Ratio' },
-          { value: 'cui', title: 'CUI' },
-          { value: 'cui_f1', title: 'F1' },
-          { value: 'cui_prec', title: 'Prec.' },
-          { value: 'cui_rec', title: 'Rec.' },
-          { value: 'tps', title: 'TPs' },
-          { value: 'fns', title: 'FNs' },
-          { value: 'fps', title: 'FPs' }
-        ]
-      },
+      annoSummary: {},
+      conceptSummary: {},
       metaAnnsSummary: {
         headers: [
           { value: 'cui', title: 'CUI' },
           { value: 'concept_name', title: 'Concept' },
         ]
-      },
-      modalData: {
-        results: null,
-        title: null,
-        type: null
       }
     }
   },
@@ -473,6 +411,7 @@ export default {
       // Create plotly chart of annotations per user per day
       const userDailyCounts = {}
         const users = new Set()
+
 
         // First pass - collect all users and find min/max dates
         let minDate, maxDate
@@ -514,6 +453,7 @@ export default {
           const dates = Object.keys(userDailyCounts[user]).sort()
           const counts = dates.map(date => userDailyCounts[user][date])
 
+
           plotData.push({
             x: dates,
             y: counts,
@@ -527,6 +467,7 @@ export default {
           barmode: 'group',
           xaxis: {
             title: 'Date',
+            title: 'Date',
             type: 'date',
             range: [minDate, maxDate]
           },
@@ -535,6 +476,7 @@ export default {
           },
           // Using a selection NHS theme colors
           colorway: ['#005EB8', '#00A499', '#330072', '#41B6E6', '#AE2573', '#8A1538']
+          colorway: ['#005EB8', '#00A499', '#330072', '#41B6E6', '#AE2573', '#8A1538']
         }
 
         Plotly.newPlot(this.$refs.plotElement, plotData, layout)
@@ -542,36 +484,6 @@ export default {
     textFromAnno(anno) {
       const docId = anno['document id']
       return this.docs2text[docId]
-    },
-    textColorClass(status) {
-      return {
-        'task-color-text-0': status === 'Correct' || status === 'Manually Added',
-        'task-color-text-1': status === 'Incorrect',
-        'task-color-text-2': status === 'Terminated',
-        'task-color-text-3': status === 'Alternative',
-        'task-color-text-4': status === 'Irrelevant'
-      }
-    },
-    clearModalData() {
-      this.modalData = {
-        results: null,
-        title: null,
-        type: null
-      }
-    },
-    openExamples(exampleType, item) {
-      if (exampleType === 'tp_examples') {
-        this.modalData.title = 'True Positive Model Predictions'
-        this.modalData.type = 'tp'
-      } else if (exampleType === 'fp_examples') {
-        this.modalData.title = 'False Positive Model Predictions'
-        this.modalData.type = 'fp'
-      } else {
-        this.modalData.title = 'False Negative Model Predictions'
-        this.modalData.type = 'fn'
-      }
-      const idx = this.conceptSummary.items.indexOf(item)
-      this.modalData.results = this.conceptSummary.items[idx][exampleType]
     },
     saveEditedName() {
       if (this.editingName && this.editedReportName !== '') {
@@ -630,6 +542,7 @@ export default {
       const latestDate = new Date(Math.max.apply(null, dates))
       const earliestDate = new Date(Math.min.apply(null, dates))
 
+
       const diffMs = latestDate - earliestDate
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
       const diffHrs = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
@@ -672,6 +585,7 @@ export default {
         if (spanAnnotations.length === annotators.size) {
           totalSpans++
 
+
           // Check if all annotations for this span agree
           const firstAnno = spanAnnotations[0]
           const allAgree = spanAnnotations.every(anno => {
@@ -701,6 +615,68 @@ export default {
     },
     formatMetric(value) {
       return typeof value === 'number' && !isNaN(value) ? value.toFixed(2) : '-'
+    },
+    calculateMacroAverage(metric) {
+      if (!this.conceptSummary.items || this.conceptSummary.items.length === 0) {
+        return '0.0'
+      }
+      const sum = this.conceptSummary.items.reduce((acc, item) => acc + item[metric], 0)
+      return ((sum / this.conceptSummary.items.length) * 100).toFixed(1)
+    },
+    calculateMicroAverage(metric) {
+      if (!this.conceptSummary.items || this.conceptSummary.items.length === 0) {
+        return '0.0'
+      }
+      let totalTPs = 0
+      let totalFPs = 0
+      let totalFNs = 0
+
+      this.conceptSummary.items.forEach(item => {
+        totalTPs += item.tps
+        totalFPs += item.fps
+        totalFNs += item.fns
+      })
+
+      let precision = totalTPs / (totalTPs + totalFPs)
+      let recall = totalTPs / (totalTPs + totalFNs)
+      let f1 = 2 * (precision * recall) / (precision + recall)
+
+      switch(metric) {
+        case 'cui_prec':
+          return (precision * 100).toFixed(1)
+        case 'cui_rec':
+          return (recall * 100).toFixed(1)
+        case 'cui_f1':
+          return (f1 * 100).toFixed(1)
+        default:
+          return '0.0'
+      }
+    },
+    calculateMetaTaskAverage(task, metricType, metric) {
+      if (!this.metaAnnsSummary.items || this.metaAnnsSummary.items.length === 0) {
+        return '0.0'
+      }
+
+      if (metricType === 'macro') {
+        // For macro average, simply average the metrics across all concepts
+        const sum = this.metaAnnsSummary.items.reduce((acc, item) => acc + item.meta_tasks[task][metricType][metric], 0)
+        return ((sum / this.metaAnnsSummary.items.length) * 100).toFixed(1)
+      } else {
+        // For micro average, we need to weight by the total number of samples per class
+        let totalSamples = 0
+        let weightedSum = 0
+
+        this.metaAnnsSummary.items.forEach(item => {
+          const classes = item.meta_tasks[task].classes
+          Object.values(classes).forEach(classMetrics => {
+            const classTotal = classMetrics.total
+            totalSamples += classTotal
+            weightedSum += classMetrics[metric] * classTotal
+          })
+        })
+
+        return totalSamples > 0 ? ((weightedSum / totalSamples) * 100).toFixed(1) : '0.0'
+      }
     }
   },
   watch: {
@@ -820,14 +796,19 @@ $metrics-header-height: 50px;
 .summary-row {
   padding: 10px 0;
   margin: 0 !important;
+  display: flex;
+  flex: 1;
+  width: 100%;
 }
 
 .summary-card {
   padding: 5px;
   margin: 2px;
+  flex: 1;
 
   .v-card-title {
     font-size: 0.9rem;
+    color: $text;
     color: $text;
     padding: 8px;
   }
