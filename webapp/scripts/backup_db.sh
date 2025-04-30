@@ -9,6 +9,14 @@ if [ -n "${DB_BACKUP_DIR}" ] && [ -f "${DB_PATH}" ]; then
     echo "Checking age of current backups - removing any older than 90 days.."
     find ${DB_BACKUP_DIR} -mtime +90 -type f -delete
   fi
+
+  # Check if a backup already exists for today
+  TODAY=$(date +"%Y-%m-%d")
+  if [ -n "$(find ${DB_BACKUP_DIR} -name "db-backup-${TODAY}__*.sqlite3" -type f)" ]; then
+    echo "A backup already exists for today (${TODAY}). Skipping backup creation."
+    return 0
+  fi
+
   BACKUP_NAME=db-backup-$(date +"%Y-%m-%d__%H-%M-%S").sqlite3
   cp $DB_PATH ${DB_BACKUP_DIR}/${BACKUP_NAME}
   echo "Backed up existing DB to ${DB_BACKUP_DIR}/${BACKUP_NAME}"
