@@ -78,10 +78,11 @@ class ProjectMetrics(object):
         """
         self.mct_export = mct_export_data
         self.cat = cat
-        self.projects2names = {}    
+        self.projects2names = {}
         self.projects2doc_ids = {}
         self.docs2names = {}
         self.docs2texts = {}
+        self.meta_task_summary = {}
         self.annotations = self._annotations()
 
     def _annotations(self):
@@ -125,8 +126,7 @@ class ProjectMetrics(object):
         :return: DataFrame summary of annotations.
         """
         concept_output = self.annotation_df()
-        concept_output = concept_output[concept_output['validated'] == True]
-        concept_output = concept_output[(concept_output['correct'] == True) | (concept_output['alternative'] == True)]
+        concept_output = concept_output[concept_output['validated'] & ((concept_output['correct']) | (concept_output['alternative']))]
         if self.cat:
             concept_count = concept_output.groupby(['cui', 'concept_name']).agg({'value': set, 'id': 'count'})
         else:
@@ -168,21 +168,21 @@ class ProjectMetrics(object):
         """
         for tp in [i for e_i in examples['tp'].values() for i in e_i]:
             try:
-                ann = AnnotatedEntity.objects.get(project_id=tp['project id'], document_id=tp['document id'], 
+                ann = AnnotatedEntity.objects.get(project_id=tp['project id'], document_id=tp['document id'],
                                                   start_ind=tp['start'], end_ind=tp['end'])
                 tp['user'] = ann.user.username
             except:
                 tp['user'] = None
         for fp in (i for e_i in examples['fp'].values() for i in e_i):
             try:
-                ann = AnnotatedEntity.objects.get(project_id=fp['project id'], document_id=fp['document id'], 
+                ann = AnnotatedEntity.objects.get(project_id=fp['project id'], document_id=fp['document id'],
                                                   start_ind=fp['start'], end_ind=fp['end'])
                 fp['user'] = ann.user.username
             except:
                 fp['user'] = None
         for fn in (i for e_i in examples['fn'].values() for i in e_i):
             try:
-                ann = AnnotatedEntity.objects.get(project_id=fn['project id'], document_id=fn['document id'], 
+                ann = AnnotatedEntity.objects.get(project_id=fn['project id'], document_id=fn['document id'],
                                                   start_ind=fn['start'], end_ind=fn['end'])
                 fn['user'] = ann.user.username
             except:
@@ -258,7 +258,7 @@ class ProjectMetrics(object):
 
         with torch.no_grad():
             for i in range(num_batches):
-                x, cpos, y = create_batch_piped_data(data,
+                x, cpos, attention_mask, y = create_batch_piped_data(data,
                                                      i*batch_size_eval,
                                                      (i+1)*batch_size_eval,
                                                      device=device,
@@ -274,6 +274,7 @@ class ProjectMetrics(object):
         return predictions
 
     def _eval(self, metacat_model, mct_export):
+        # TODO: Should be moved into
         g_config = metacat_model.config.general
         t_config = metacat_model.config.train
         t_config['test_size'] = 0
@@ -298,7 +299,7 @@ class ProjectMetrics(object):
 
         # We already have everything, just get the data
         category_value2id = g_config['category_value2id']
-        data, _ = encode_category_values(data, existing_category_value2id=category_value2id)
+        data, _, _ = encode_category_values(data, existing_category_value2id=category_value2id)
         logger.info(_)
         # Run evaluation
         assert metacat_model.tokenizer is not None
@@ -311,80 +312,102 @@ class ProjectMetrics(object):
         DataFrame of all annotations created including meta_annotation predictions.
         This function is similar to annotation_df with the addition of Meta_annotation predictions from the medcat model.
         prerequisite Args: MedcatTrainer_export([mct_export_paths], model_pack_path=<path to medcat model>)
-        :return: DataFrame
         """
         anns_df = self.annotation_df()
-        meta_df = anns_df[(anns_df['validated'] == True) & (anns_df['deleted'] == False) & (anns_df['killed'] == False)
-                          & (anns_df['irrelevant'] != True)]
+        meta_df = anns_df[anns_df['validated'] & ~anns_df['deleted'] &
+                          ~anns_df['killed'] & ~anns_df['irrelevant']]
         meta_df = meta_df.reset_index(drop=True)
 
-        for meta_model_card in self.cat.get_model_card(as_dict=True)['MetaCAT models']:
-            meta_model = meta_model_card['Category Name']
+        for meta_model in self.cat._meta_cats:
             logger.info(f'Checking metacat model: {meta_model}')
-            _meta_model = MetaCAT.load(self.model_pack_path + '/meta_' + meta_model)
-            meta_results = self._eval(_meta_model, self.mct_export)
-            _meta_values = {v: k for k, v in meta_results['meta_values'].items()}
+            meta_model_task = meta_model.name
+            meta_results = self._eval(meta_model, self.mct_export)
+            meta_values = {v: k for k, v in meta_results['meta_values'].items()}
             pred_meta_values = []
             counter = 0
-            for meta_value in meta_df[meta_model]:
+            for meta_value in meta_df[meta_model_task]:
                 if pd.isnull(meta_value):
                     pred_meta_values.append(np.nan)
                 else:
-                    pred_meta_values.append(_meta_values.get(meta_results['predictions'][counter], np.nan))
+                    pred_meta_values.append(meta_values.get(meta_results['predictions'][counter], np.nan))
                     counter += 1
-            meta_df.insert(meta_df.columns.get_loc(meta_model) + 1, 'predict_' + meta_model, pred_meta_values)
+            meta_df.insert(meta_df.columns.get_loc(meta_model_task) + 1, 'predict_' + meta_model_task, pred_meta_values)
 
         return meta_df
 
-    def meta_anns_concept_summary(self) -> pd.DataFrame:
+    def meta_anns_concept_summary(self) -> List[Dict]:
+        """Calculate performance metrics for meta annotations per concept.
+
+        Returns:
+            List[Dict]: List of dictionaries containing concept-level meta annotation metrics
+        """
         meta_df = self.full_annotation_df()
         meta_performance = {}
+
         for cui in meta_df.cui.unique():
-            temp_meta_df = meta_df[meta_df['cui'] == cui]
+            concept_df = meta_df[meta_df['cui'] == cui]
             meta_task_results = {}
+
             for meta_model_card in self.cat.get_model_card(as_dict=True)['MetaCAT models']:
                 meta_task = meta_model_card['Category Name']
-                list_meta_anns = list(zip(temp_meta_df[meta_task], temp_meta_df['predict_' + meta_task]))
-                counter_meta_anns = Counter(list_meta_anns)
-                meta_value_results = {}
-                for meta_value in meta_model_card['Classes'].keys():
-                    total = 0
-                    fp = 0
-                    fn = 0
-                    tp = 0
-                    for meta_value_result, count in counter_meta_anns.items():
-                        if meta_value_result[0] == meta_value:
-                            if meta_value_result[1] == meta_value:
-                                tp += count
-                                total += count
-                            else:
-                                fn += count
-                                total += count
-                        elif meta_value_result[1] == meta_value:
-                            fp += count
-                        else:
-                            pass  # Skips nan values
-                    meta_value_results[(meta_task, meta_value, 'total')] = total
-                    meta_value_results[(meta_task, meta_value, 'fps')] = fp
-                    meta_value_results[(meta_task, meta_value, 'fns')] = fn
-                    meta_value_results[(meta_task, meta_value, 'tps')] = tp
-                    try:
-                        meta_value_results[(meta_task, meta_value, 'f-score')] = tp / (tp + (1 / 2) * (fp + fn))
-                    except ZeroDivisionError:
-                        meta_value_results[(meta_task, meta_value, 'f-score')] = 0
-                meta_task_results.update(meta_value_results)
-            meta_performance[cui] = meta_task_results
+                meta_classes = meta_model_card['Classes'].keys()
 
-        meta_anns_df = pd.DataFrame.from_dict(meta_performance, orient='index')
-        col_lst = []
-        for col in meta_anns_df.columns:
-            if col[2] == 'total':
-                col_lst.append(col)
-        meta_anns_df['total_anns'] = meta_anns_df[col_lst].sum(axis=1)
-        meta_anns_df = meta_anns_df.sort_values(by='total_anns', ascending=False)
-        meta_anns_df = meta_anns_df.rename_axis('cui').reset_index(drop=False)
-        meta_anns_df.insert(1, 'concept_name', meta_anns_df['cui'].map(self.cat.cdb.cui2preferred_name))
-        return meta_anns_df
+                # Calculate per-class metrics
+                class_metrics = {}
+                total_instances = 0
+
+                for meta_value in meta_classes:
+                    # Get predictions and ground truth for this class
+                    preds = concept_df['predict_' + meta_task] == meta_value
+                    truths = concept_df[meta_task] == meta_value
+
+                    # Calculate metrics
+                    tp = int((preds & truths).sum())
+                    fp = int((preds & ~truths).sum())
+                    fn = int((~preds & truths).sum())
+                    total = int(truths.sum())
+                    total_instances += total
+
+                    # Store metrics
+                    class_metrics[meta_value] = {
+                        'total': total,
+                        'f1': float(tp / (tp + 0.5 * (fp + fn)) if (tp + fp + fn) > 0 else 0),
+                        'prec': float(tp / (tp + fp) if (tp + fp) > 0 else 0),
+                        'rec': float(tp / (tp + fn) if (tp + fn) > 0 else 0)
+                    }
+
+                # Calculate macro averages (unweighted)
+                macro_metrics = {
+                    'f1': float(sum(m['f1'] for m in class_metrics.values()) / len(meta_classes)),
+                    'prec': float(sum(m['prec'] for m in class_metrics.values()) / len(meta_classes)),
+                    'rec': float(sum(m['rec'] for m in class_metrics.values()) / len(meta_classes))
+                }
+
+                # Calculate micro averages (weighted by class size)
+                if total_instances > 0:
+                    micro_metrics = {
+                        'f1': float(sum(m['f1'] * m['total'] for m in class_metrics.values()) / total_instances),
+                        'prec': float(sum(m['prec'] * m['total'] for m in class_metrics.values()) / total_instances),
+                        'rec': float(sum(m['rec'] * m['total'] for m in class_metrics.values()) / total_instances)
+                    }
+                else:
+                    micro_metrics = {'f1': 0.0, 'prec': 0.0, 'rec': 0.0}
+
+                # Store results for this meta task
+                meta_task_results[meta_task] = {
+                    'classes': class_metrics,
+                    'macro': macro_metrics,
+                    'micro': micro_metrics
+                }
+
+            # Store results for this concept
+            meta_performance[cui] = {
+                'cui': cui,
+                'concept_name': self.cat.cdb.cui2preferred_name[cui],
+                'meta_tasks': meta_task_results
+            }
+
+        return list(meta_performance.values())
 
     def generate_report(self, meta_ann=False):
         if meta_ann:
@@ -397,13 +420,17 @@ class ProjectMetrics(object):
 
         meta_anns_summary = None
         if meta_ann:
-            meta_anns_summary = self.meta_anns_concept_summary().to_dict('records')
+            meta_anns_summary = self.meta_anns_concept_summary()
+
+        # assumes all projects have the same meta_anno_defs - this would break further up if not the case.
+        meta_anno_task_summary = self.mct_export['projects'][0]['meta_anno_defs']
 
         return {'user_stats': self.user_stats().to_dict('records'),
                 'concept_summary': self.concept_summary(),
                 'annotation_summary': anno_df.to_dict('records'),
-                'meta_anno_summary': meta_anns_summary, 
+                'meta_anno_summary': meta_anns_summary,
                 'projects2doc_ids': self.projects2doc_ids,
                 'docs2text': self.docs2texts,
                 'projects2name': self.projects2names,
-                'docs2name': self.docs2names}
+                'docs2name': self.docs2names,
+                'meta_anns_task_summary': meta_anno_task_summary}

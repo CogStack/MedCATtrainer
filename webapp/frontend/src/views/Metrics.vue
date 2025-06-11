@@ -56,7 +56,7 @@
 
                 <v-tooltip location="bottom">
                   <template v-slot:activator="{ props }">
-                    <v-card v-bind="props" class="summary-card">   
+                    <v-card v-bind="props" class="summary-card">
                       <v-card-title>Annotation Overlap</v-card-title>
                       <v-card-text>{{ calculateOverlap(projects2doc_ids) }}%</v-card-text>
                     </v-card>
@@ -82,11 +82,11 @@
                   <v-card-text> {{ elapsedTime(annoSummary.items || []) }} </v-card-text>
                 </v-card>
               </v-row>
-              
+
               <div>
                 <div ref="plotElement"></div>
               </div>
-              
+
               <v-data-table :items="userStats.items" :headers="userStats.headers" :hover="true" hide-default-footer
                             :items-per-page="-1"></v-data-table>
             </div>
@@ -232,6 +232,21 @@
                             class="meta-anno-summary"
                             hide-default-footer
                             :items-per-page="-1">
+                <template v-for="header in metaAnnsSummary.headers" :key="header.value" #[`item.${header.value}`]="{ item }">
+                  <div v-if="typeof item[header.value] === 'number'" class="perf-progress">
+                    <v-progress-linear
+                        :model-value="item[header.value]"
+                        color="#32AB60"
+                        background-color="#46B480"
+                        height="30px"
+                        :max="1.0">
+                      <span :class="{'good-perf': item[header.value] > 0.4}">{{formatMetric(item[header.value])}}</span>
+                    </v-progress-linear>
+                  </div>
+                  <div v-else>
+                    {{ item[header.value] }}
+                  </div>
+                </template>
               </v-data-table>
             </div>
           </KeepAlive>
@@ -343,6 +358,37 @@ export default {
         this.annoSummary.items = anno_summary
         this.metaAnnsSummary.items = resp.data.results.meta_anno_summary
 
+        let summaryHeaders = resp.data.results.meta_anns_task_summary.map(task => {
+          // Create task header with children
+          const taskHeader = {
+            title: task['name'],
+            align: 'center',
+            children: [
+              // Macro metrics group
+              {
+                title: 'Macro Avg',
+                align: 'center',
+                children: [
+                  { value: `meta_tasks.${task['name']}.macro.f1`, title: 'F1' },
+                  { value: `meta_tasks.${task['name']}.macro.prec`, title: 'Prec' },
+                  { value: `meta_tasks.${task['name']}.macro.rec`, title: 'Rec' }
+                ]
+              },
+              // Micro metrics group
+              {
+                title: 'Micro Avg',
+                align: 'center',
+                children: [
+                  { value: `meta_tasks.${task['name']}.micro.f1`, title: 'F1' },
+                  { value: `meta_tasks.${task['name']}.micro.prec`, title: 'Prec' },
+                  { value: `meta_tasks.${task['name']}.micro.rec`, title: 'Rec' }
+                ]
+              }
+            ]
+          }
+          return taskHeader
+        })
+        this.metaAnnsSummary.headers = [...this.metaAnnsSummary.headers, ...summaryHeaders]
         this.annoChart()
       })
     }
@@ -396,7 +442,10 @@ export default {
         ]
       },
       metaAnnsSummary: {
-        headers: []
+        headers: [
+          { value: 'cui', title: 'CUI' },
+          { value: 'concept_name', title: 'Concept' },
+        ]
       },
       modalData: {
         results: null,
@@ -410,7 +459,7 @@ export default {
       // Create plotly chart of annotations per user per day
       const userDailyCounts = {}
         const users = new Set()
-        
+
         // First pass - collect all users and find min/max dates
         let minDate, maxDate
         this.annoSummary.items.forEach(ann => {
@@ -450,7 +499,7 @@ export default {
         for (const user in userDailyCounts) {
           const dates = Object.keys(userDailyCounts[user]).sort()
           const counts = dates.map(date => userDailyCounts[user][date])
-          
+
           plotData.push({
             x: dates,
             y: counts,
@@ -463,7 +512,7 @@ export default {
           title: 'Daily Annotation Counts by User',
           barmode: 'group',
           xaxis: {
-            title: 'Date', 
+            title: 'Date',
             type: 'date',
             range: [minDate, maxDate]
           },
@@ -471,7 +520,7 @@ export default {
             title: 'Number of Annotations'
           },
           // Using a selection NHS theme colors
-          colorway: ['#005EB8', '#00A499', '#330072', '#41B6E6', '#AE2573', '#8A1538'] 
+          colorway: ['#005EB8', '#00A499', '#330072', '#41B6E6', '#AE2573', '#8A1538']
         }
 
         Plotly.newPlot(this.$refs.plotElement, plotData, layout)
@@ -566,7 +615,7 @@ export default {
       const dates = annoSummary.map(anno => new Date(anno.last_modified))
       const latestDate = new Date(Math.max.apply(null, dates))
       const earliestDate = new Date(Math.min.apply(null, dates))
-      
+
       const diffMs = latestDate - earliestDate
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
       const diffHrs = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
@@ -608,7 +657,7 @@ export default {
         // Only consider spans that all annotators have annotated
         if (spanAnnotations.length === annotators.size) {
           totalSpans++
-          
+
           // Check if all annotations for this span agree
           const firstAnno = spanAnnotations[0]
           const allAgree = spanAnnotations.every(anno => {
@@ -635,6 +684,9 @@ export default {
       }
 
       return totalSpans > 0 ? ((agreementCount / totalSpans) * 100).toFixed(1) : 0
+    },
+    formatMetric(value) {
+      return typeof value === 'number' && !isNaN(value) ? value.toFixed(2) : '-'
     }
   },
   watch: {
@@ -762,7 +814,7 @@ $metrics-header-height: 50px;
 
   .v-card-title {
     font-size: 0.9rem;
-    color: $text; 
+    color: $text;
     padding: 8px;
   }
 
@@ -771,7 +823,7 @@ $metrics-header-height: 50px;
     font-weight: bold;
     text-align: center;
     padding: 8px;
-    color: $secondary; 
+    color: $secondary;
   }
 }
 
