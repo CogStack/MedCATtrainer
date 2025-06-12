@@ -14,12 +14,12 @@ from background_task.models import Task
 from django.contrib.auth.models import User
 from django.db.models import QuerySet
 from medcat.cat import CAT
-from medcat.cdb import CDB
-from medcat.config_meta_cat import ConfigMetaCAT
-from medcat.meta_cat import MetaCAT
-from medcat.tokenizers.meta_cat_tokenizers import TokenizerWrapperBase
-from medcat.utils.meta_cat.data_utils import prepare_from_json, encode_category_values
-from medcat.utils.meta_cat.ml_utils import create_batch_piped_data
+from medcat.storage.serialisers import deserialise
+from medcat.config.config_meta_cat import ConfigMetaCAT
+from medcat.components.addons.meta_cat.meta_cat import MetaCAT
+from medcat.components.addons.meta_cat.mctokenizers.tokenizers import TokenizerWrapperBase
+from medcat.components.addons.meta_cat.data_utils import prepare_from_json, encode_category_values
+from medcat.components.addons.meta_cat.ml_utils import create_batch_piped_data
 from medcat.vocab import Vocab
 from torch import nn
 
@@ -48,8 +48,8 @@ def calculate_metrics(project_ids: List[int], report_name: str):
         cat = CAT.load_model_pack(projects[0].model_pack.model_pack.path)
     else:
         # assume the cdb / vocab is set in these projects
-        cdb = CDB.load(projects[0].concept_db.cdb_file.path)
-        vocab = Vocab.load(projects[0].vocab.vocab_file.path)
+        cdb = deserialise(projects[0].concept_db.cdb_file.path)
+        vocab = deserialise(projects[0].vocab.vocab_file.path)
         cat = CAT(cdb, vocab, config=cdb.config)
     project_data = retrieve_project_data(projects)
     metrics = ProjectMetrics(project_data, cat)
@@ -76,7 +76,7 @@ class ProjectMetrics(object):
         """
         self.mct_export = mct_export_data
         self.cat = cat
-        self.projects2names = {}    
+        self.projects2names = {}
         self.projects2doc_ids = {}
         self.docs2names = {}
         self.docs2texts = {}
@@ -166,21 +166,21 @@ class ProjectMetrics(object):
         """
         for tp in [i for e_i in examples['tp'].values() for i in e_i]:
             try:
-                ann = AnnotatedEntity.objects.get(project_id=tp['project id'], document_id=tp['document id'], 
+                ann = AnnotatedEntity.objects.get(project_id=tp['project id'], document_id=tp['document id'],
                                                   start_ind=tp['start'], end_ind=tp['end'])
                 tp['user'] = ann.user.username
             except:
                 tp['user'] = None
         for fp in (i for e_i in examples['fp'].values() for i in e_i):
             try:
-                ann = AnnotatedEntity.objects.get(project_id=fp['project id'], document_id=fp['document id'], 
+                ann = AnnotatedEntity.objects.get(project_id=fp['project id'], document_id=fp['document id'],
                                                   start_ind=fp['start'], end_ind=fp['end'])
                 fp['user'] = ann.user.username
             except:
                 fp['user'] = None
         for fn in (i for e_i in examples['fn'].values() for i in e_i):
             try:
-                ann = AnnotatedEntity.objects.get(project_id=fn['project id'], document_id=fn['document id'], 
+                ann = AnnotatedEntity.objects.get(project_id=fn['project id'], document_id=fn['document id'],
                                                   start_ind=fn['start'], end_ind=fn['end'])
                 fn['user'] = ann.user.username
             except:
@@ -400,7 +400,7 @@ class ProjectMetrics(object):
         return {'user_stats': self.user_stats().to_dict('records'),
                 'concept_summary': self.concept_summary(),
                 'annotation_summary': anno_df.to_dict('records'),
-                'meta_anno_summary': meta_anns_summary, 
+                'meta_anno_summary': meta_anns_summary,
                 'projects2doc_ids': self.projects2doc_ids,
                 'docs2text': self.docs2texts,
                 'projects2name': self.projects2names,
