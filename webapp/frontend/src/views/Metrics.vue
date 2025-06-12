@@ -232,20 +232,33 @@
                             class="meta-anno-summary"
                             hide-default-footer
                             :items-per-page="-1">
-                <template v-for="header in metaAnnsSummary.headers" :key="header.value" #[`item.${header.value}`]="{ item }">
-                  <div v-if="typeof item[header.value] === 'number'" class="perf-progress">
-                    <v-progress-linear
-                        :model-value="item[header.value]"
-                        color="#32AB60"
-                        background-color="#46B480"
-                        height="30px"
-                        :max="1.0">
-                      <span :class="{'good-perf': item[header.value] > 0.4}">{{formatMetric(item[header.value])}}</span>
-                    </v-progress-linear>
-                  </div>
-                  <div v-else>
-                    {{ item[header.value] }}
-                  </div>
+                <template #item="{ item }">
+                  <tr>
+                    <td>{{ item.cui }}</td>
+                    <td>{{ item.concept_name }}</td>
+                    <template v-for="task in Object.keys(item.meta_tasks)" :key="task">
+                      <!-- Macro metrics -->
+                      <td>
+                        <metric-cell :value="item.meta_tasks[task].macro.f1" />
+                      </td>
+                      <td>
+                        <metric-cell :value="item.meta_tasks[task].macro.prec" />
+                      </td>
+                      <td>
+                        <metric-cell :value="item.meta_tasks[task].macro.rec" />
+                      </td>
+                      <!-- Micro metrics -->
+                      <td>
+                        <metric-cell :value="item.meta_tasks[task].micro.f1" />
+                      </td>
+                      <td>
+                        <metric-cell :value="item.meta_tasks[task].micro.prec" />
+                      </td>
+                      <td>
+                        <metric-cell :value="item.meta_tasks[task].micro.rec" />
+                      </td>
+                    </template>
+                  </tr>
                 </template>
               </v-data-table>
             </div>
@@ -301,11 +314,11 @@
 import Modal from '@/components/common/Modal.vue'
 import AnnoResult from '@/components/anns/AnnoResult.vue'
 import Plotly from 'plotly.js-dist'
-
+import MetricCell from '@/components/metrics/MetricCell.vue'
 
 export default {
   name: 'Metrics.vue',
-  components: {AnnoResult, Modal},
+  components: {AnnoResult, Modal, MetricCell},
   props: {
     reportId: Number
   },
@@ -360,28 +373,29 @@ export default {
 
         let summaryHeaders = resp.data.results.meta_anns_task_summary.map(task => {
           // Create task header with children
+          const taskName = task['name']
           const taskHeader = {
-            title: task['name'],
-            align: 'center',
+            title: taskName,
+            align: 'left',
             children: [
               // Macro metrics group
               {
                 title: 'Macro Avg',
-                align: 'center',
+                align: 'left',
                 children: [
-                  { value: `meta_tasks.${task['name']}.macro.f1`, title: 'F1' },
-                  { value: `meta_tasks.${task['name']}.macro.prec`, title: 'Prec' },
-                  { value: `meta_tasks.${task['name']}.macro.rec`, title: 'Rec' }
+                  { value: item => `${item.meta_tasks[taskName].macro.f1.toFixed(2)}`, title: 'F1', key: `meta_tasks.${taskName}.macro.f1` },
+                  { value: item => `${item.meta_tasks[taskName].macro.prec.toFixed(2)}`, title: 'Prec', key: `meta_tasks.${taskName}.macro.prec` },
+                  { value: item => `${item.meta_tasks[taskName].macro.rec.toFixed(2)}`, title: 'Rec', key: `meta_tasks.${taskName}.macro.rec`  }
                 ]
               },
               // Micro metrics group
               {
                 title: 'Micro Avg',
-                align: 'center',
+                align: 'left',
                 children: [
-                  { value: `meta_tasks.${task['name']}.micro.f1`, title: 'F1' },
-                  { value: `meta_tasks.${task['name']}.micro.prec`, title: 'Prec' },
-                  { value: `meta_tasks.${task['name']}.micro.rec`, title: 'Rec' }
+                  { value: item => `${item.meta_tasks[taskName].micro.f1.toFixed(2)}`, title: 'F1', key: `meta_tasks.${taskName}.micro.f1` },
+                  { value: item => `${item.meta_tasks[taskName].micro.prec.toFixed(2)}`, title: 'Prec', key: `meta_tasks.${taskName}.micro.prec` },
+                  { value: item => `${item.meta_tasks[taskName].micro.rec.toFixed(2)}`, title: 'Rec', key: `meta_tasks.${taskName}.micro.rec` }
                 ]
               }
             ]
