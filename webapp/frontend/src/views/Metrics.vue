@@ -209,34 +209,6 @@
                     </template>
                   </tr>
                 </template>
-                <template #item="{ item }">
-                  <tr>
-                    <td>{{ item.cui }}</td>
-                    <td>{{ item.concept_name }}</td>
-                    <template v-for="task in Object.keys(item.meta_tasks)" :key="task">
-                      <!-- Macro metrics -->
-                      <td>
-                        <metric-cell :value="item.meta_tasks[task].macro.f1" />
-                      </td>
-                      <td>
-                        <metric-cell :value="item.meta_tasks[task].macro.prec" />
-                      </td>
-                      <td>
-                        <metric-cell :value="item.meta_tasks[task].macro.rec" />
-                      </td>
-                      <!-- Micro metrics -->
-                      <td>
-                        <metric-cell :value="item.meta_tasks[task].micro.f1" />
-                      </td>
-                      <td>
-                        <metric-cell :value="item.meta_tasks[task].micro.prec" />
-                      </td>
-                      <td>
-                        <metric-cell :value="item.meta_tasks[task].micro.rec" />
-                      </td>
-                    </template>
-                  </tr>
-                </template>
               </v-data-table>
             </div>
           </KeepAlive>
@@ -340,38 +312,6 @@ export default {
           return taskHeader
         })
         this.metaAnnsSummary.headers = [...this.metaAnnsSummary.headers, ...summaryHeaders]
-        let summaryHeaders = resp.data.results.meta_anns_task_summary.map(task => {
-          // Create task header with children
-          const taskName = task['name']
-          const taskHeader = {
-            title: taskName,
-            align: 'left',
-            children: [
-              // Macro metrics group
-              {
-                title: 'Macro Avg',
-                align: 'left',
-                children: [
-                  { value: item => `${item.meta_tasks[taskName].macro.f1.toFixed(2)}`, title: 'F1', key: `meta_tasks.${taskName}.macro.f1` },
-                  { value: item => `${item.meta_tasks[taskName].macro.prec.toFixed(2)}`, title: 'Prec', key: `meta_tasks.${taskName}.macro.prec` },
-                  { value: item => `${item.meta_tasks[taskName].macro.rec.toFixed(2)}`, title: 'Rec', key: `meta_tasks.${taskName}.macro.rec`  }
-                ]
-              },
-              // Micro metrics group
-              {
-                title: 'Micro Avg',
-                align: 'left',
-                children: [
-                  { value: item => `${item.meta_tasks[taskName].micro.f1.toFixed(2)}`, title: 'F1', key: `meta_tasks.${taskName}.micro.f1` },
-                  { value: item => `${item.meta_tasks[taskName].micro.prec.toFixed(2)}`, title: 'Prec', key: `meta_tasks.${taskName}.micro.prec` },
-                  { value: item => `${item.meta_tasks[taskName].micro.rec.toFixed(2)}`, title: 'Rec', key: `meta_tasks.${taskName}.micro.rec` }
-                ]
-              }
-            ]
-          }
-          return taskHeader
-        })
-        this.metaAnnsSummary.headers = [...this.metaAnnsSummary.headers, ...summaryHeaders]
         this.annoChart()
       })
     }
@@ -411,7 +351,6 @@ export default {
       // Create plotly chart of annotations per user per day
       const userDailyCounts = {}
         const users = new Set()
-
 
         // First pass - collect all users and find min/max dates
         let minDate, maxDate
@@ -453,7 +392,6 @@ export default {
           const dates = Object.keys(userDailyCounts[user]).sort()
           const counts = dates.map(date => userDailyCounts[user][date])
 
-
           plotData.push({
             x: dates,
             y: counts,
@@ -467,7 +405,6 @@ export default {
           barmode: 'group',
           xaxis: {
             title: 'Date',
-            title: 'Date',
             type: 'date',
             range: [minDate, maxDate]
           },
@@ -475,7 +412,6 @@ export default {
             title: 'Number of Annotations'
           },
           // Using a selection NHS theme colors
-          colorway: ['#005EB8', '#00A499', '#330072', '#41B6E6', '#AE2573', '#8A1538']
           colorway: ['#005EB8', '#00A499', '#330072', '#41B6E6', '#AE2573', '#8A1538']
         }
 
@@ -542,7 +478,6 @@ export default {
       const latestDate = new Date(Math.max.apply(null, dates))
       const earliestDate = new Date(Math.min.apply(null, dates))
 
-
       const diffMs = latestDate - earliestDate
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
       const diffHrs = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
@@ -584,7 +519,6 @@ export default {
         // Only consider spans that all annotators have annotated
         if (spanAnnotations.length === annotators.size) {
           totalSpans++
-
 
           // Check if all annotations for this span agree
           const firstAnno = spanAnnotations[0]
@@ -808,7 +742,6 @@ $metrics-header-height: 50px;
 
   .v-card-title {
     font-size: 0.9rem;
-    color: $text;
     color: $text;
     padding: 8px;
   }
