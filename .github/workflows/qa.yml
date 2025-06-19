@@ -10,7 +10,7 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout master
+      - name: Checkout main
         uses: actions/checkout@v4
         with:
           ref: 'main'
