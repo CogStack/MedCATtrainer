@@ -283,7 +283,7 @@ def prepare_documents(request):
 
                     # Set CAT filters
                     cat.config.linking['filters']['cuis'] = cuis
-                    
+
                     if not project.deid_model_annotation:
                         spacy_doc = cat(document.text)
                     else:
@@ -713,7 +713,7 @@ def cache_model(request, project_id):
         return Response(f'Project with id:{project_id} does not exist', 404)
     except Exception as e:
         return Response({'message': f'{str(e)}'}, 500)
-    
+
 
 
 @api_view(http_method_names=['GET'])
@@ -926,7 +926,7 @@ def cuis_to_concepts(request):
 def project_progress(request):
     if request.GET.get('projects') is None:
         return HttpResponseBadRequest('Cannot get progress for empty projects')
-    
+
     projects = [int(p) for p in request.GET.get('projects', []).split(',')]
 
     projects2datasets = {p.id: (p, p.dataset) for p in [ProjectAnnotateEntities.objects.filter(id=p_id).first()
