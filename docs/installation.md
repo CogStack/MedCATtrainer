@@ -2,14 +2,14 @@
 MedCATtrainer is a docker-compose packaged Django application.
 
 ## Download from Dockerhub
-Clone the repo, run the default docker-compose file and default env var: 
+Clone the repo, run the default docker-compose file and default env var:
 ```shell
 $ git clone https://github.com/CogStack/MedCATtrainer
 $ cd MedCATtrainer
 $ docker-compose up
 ```
 
-This will use the pre-built docker images available on DockerHub. If your internal firewall does on permit access to DockerHub, you can build 
+This will use the pre-built docker images available on DockerHub. If your internal firewall does on permit access to DockerHub, you can build
 directly from source.
 
 ## MedCAT v0.x models
@@ -29,9 +29,9 @@ To change environment variables, such as the exposed host ports and language of 
 ```shell
 $ cp .env-example .env
 # Set local configuration in .env
-``` 
+```
 
-## Troubleshooting 
+## Troubleshooting
 If the build fails with an error code 137, the virtual machine running the docker
 daemon does not have enough memory. Increase the allocated memory to containers in the docker daemon
 settings CLI or associated docker GUI.
@@ -44,9 +44,9 @@ On Windows: https://docs.docker.com/docker-for-windows/#resources
 
 For password resets and other emailing services email environment variables are required to be set up.
 
-Personal email accounts can be set up by users to do this, or you can contact someone in CogStack for a cogstack no email credentials. 
+Personal email accounts can be set up by users to do this, or you can contact someone in CogStack for a cogstack no email credentials.
 
-The environment variables required are listed in [Environment Variables.](#(optional)-environment-variables) 
+The environment variables required are listed in [Environment Variables.](#(optional)-environment-variables)
 
 Environment Variables are located in envs/env or envs/env-prod, when those are set webapp/frontend/.env must change "VITE_APP_EMAIL" to 1.
 
