@@ -2,7 +2,7 @@ name: qa-build
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   # run tests / lint / etc. before building container image?
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout master
         uses: actions/checkout@v4
         with:
-          ref: 'master'
+          ref: 'main'
 
       - name: Build
         run: |
