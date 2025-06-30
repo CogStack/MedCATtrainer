@@ -96,11 +96,11 @@ export default {
     },
     editRelation (rel) {
       if (rel.start_entity.value && rel.end_entity.value && rel.relation) {
+        rel.validated = true
         const payload = { ...rel }
         payload.start_entity = payload.start_entity.id
         payload.end_entity = payload.end_entity.id
         payload.relation = payload.relation.id
-        rel.validated = true
         if (rel.id) {
           this.$http.put(`/api/entity-relations/${rel.id}/`, payload)
         } else {
