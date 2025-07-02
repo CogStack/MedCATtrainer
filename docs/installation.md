@@ -9,8 +9,14 @@ $ cd MedCATtrainer
 $ docker-compose up
 ```
 
-This will use the pre-built docker images available on DockerHub. If your internal firewall does on permit access to DockerHub, you can build
-directly from source.
+This will use the pre-built docker images available on DockerHub. If your internal firewall does on permit access to DockerHub, you can build directly from source.
+
+To check logs of the MedCATtrainer running containers
+```bash
+$  docker logs <containerid> | grep "\[medcattrainer\]"
+$  docker logs <containerid> | grep "\[bg-process\]"
+$  docker logs <containerid> | grep "\[db-backup\]"
+```
 
 ## MedCAT v0.x models
 If you have MedCAT v0.x models, and want to use the trainer please use the following docker-compose file:
