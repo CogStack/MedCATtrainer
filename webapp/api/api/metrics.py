@@ -13,18 +13,20 @@ import torch
 from background_task.models import Task
 from django.contrib.auth.models import User
 from django.db.models import QuerySet
+from medcat.stats.stats import get_stats
 from medcat.cat import CAT
 from medcat.cdb import CDB
-from medcat.config_meta_cat import ConfigMetaCAT
-from medcat.meta_cat import MetaCAT
-from medcat.tokenizers.meta_cat_tokenizers import TokenizerWrapperBase
-from medcat.utils.meta_cat.data_utils import prepare_from_json, encode_category_values
-from medcat.utils.meta_cat.ml_utils import create_batch_piped_data
+from medcat.config.config_meta_cat import ConfigMetaCAT
+from medcat.components.addons.meta_cat.meta_cat import MetaCATAddon
+from medcat.components.addons.meta_cat.mctokenizers.tokenizers import TokenizerWrapperBase
+from medcat.components.addons.meta_cat.data_utils import prepare_from_json, encode_category_values
+from medcat.components.addons.meta_cat.ml_utils import create_batch_piped_data
 from medcat.vocab import Vocab
 from torch import nn
 
 from api.admin import retrieve_project_data
 from api.models import AnnotatedEntity, ProjectAnnotateEntities, ProjectMetrics as AppProjectMetrics
+from api.utils import clear_cdb_cnf_addons
 from core.settings import MEDIA_ROOT
 
 _dt_fmt = '%Y-%m-%d %H:%M:%S.%f'
@@ -49,6 +51,7 @@ def calculate_metrics(project_ids: List[int], report_name: str):
     else:
         # assume the cdb / vocab is set in these projects
         cdb = CDB.load(projects[0].concept_db.cdb_file.path)
+        clear_cdb_cnf_addons(cdb, projects[0].concept_db.name)
         vocab = Vocab.load(projects[0].vocab.vocab_file.path)
         cat = CAT(cdb, vocab, config=cdb.config)
     project_data = retrieve_project_data(projects)
@@ -76,7 +79,7 @@ class ProjectMetrics(object):
         """
         self.mct_export = mct_export_data
         self.cat = cat
-        self.projects2names = {}    
+        self.projects2names = {}
         self.projects2doc_ids = {}
         self.docs2names = {}
         self.docs2texts = {}
@@ -113,7 +116,7 @@ class ProjectMetrics(object):
         """
         annotation_df = pd.DataFrame(self.annotations)
         if self.cat:
-            annotation_df.insert(5, 'concept_name', annotation_df['cui'].map(self.cat.cdb.cui2preferred_name))
+            annotation_df.insert(5, 'concept_name', annotation_df['cui'].map(self.cat.cdb.get_name))
         annotation_df['last_modified'] = pd.to_datetime(annotation_df['last_modified']).dt.tz_localize(None)
         return annotation_df
 
@@ -136,9 +139,10 @@ class ProjectMetrics(object):
         concept_count_df['count_variations_ratio'] = round(concept_count_df['concept_count'] /
                                                            concept_count_df['variations'], 3)
         if self.cat:
-            fps, fns, tps, cui_prec, cui_rec, cui_f1, cui_counts, examples = self.cat._print_stats(data=self.mct_export,
-                                                                                                   use_project_filters=True,
-                                                                                                   extra_cui_filter=extra_cui_filter)
+            fps, fns, tps, cui_prec, cui_rec, cui_f1, cui_counts, examples = get_stats(self.cat,
+                                                                                       data=self.mct_export,
+                                                                                       use_project_filters=True,
+                                                                                       extra_cui_filter=extra_cui_filter)
             # remap tps, fns, fps to specific user annotations
             examples = self.enrich_medcat_metrics(examples)
             concept_count_df['fps'] = concept_count_df['cui'].map(fps)
@@ -166,21 +170,21 @@ class ProjectMetrics(object):
         """
         for tp in [i for e_i in examples['tp'].values() for i in e_i]:
             try:
-                ann = AnnotatedEntity.objects.get(project_id=tp['project id'], document_id=tp['document id'], 
+                ann = AnnotatedEntity.objects.get(project_id=tp['project id'], document_id=tp['document id'],
                                                   start_ind=tp['start'], end_ind=tp['end'])
                 tp['user'] = ann.user.username
             except:
                 tp['user'] = None
         for fp in (i for e_i in examples['fp'].values() for i in e_i):
             try:
-                ann = AnnotatedEntity.objects.get(project_id=fp['project id'], document_id=fp['document id'], 
+                ann = AnnotatedEntity.objects.get(project_id=fp['project id'], document_id=fp['document id'],
                                                   start_ind=fp['start'], end_ind=fp['end'])
                 fp['user'] = ann.user.username
             except:
                 fp['user'] = None
         for fn in (i for e_i in examples['fn'].values() for i in e_i):
             try:
-                ann = AnnotatedEntity.objects.get(project_id=fn['project id'], document_id=fn['document id'], 
+                ann = AnnotatedEntity.objects.get(project_id=fn['project id'], document_id=fn['document id'],
                                                   start_ind=fn['start'], end_ind=fn['end'])
                 fn['user'] = ann.user.username
             except:
@@ -235,11 +239,11 @@ class ProjectMetrics(object):
         return
 
     def _eval_model(self, model: nn.Module, data: List, config: ConfigMetaCAT, tokenizer: TokenizerWrapperBase) -> Dict:
-        device = torch.device(config.general['device'])  # Create a torch device
-        batch_size_eval = config.general['batch_size_eval']
-        pad_id = config.model['padding_idx']
-        ignore_cpos = config.model['ignore_cpos']
-        class_weights = config.train['class_weights']
+        device = torch.device(config.general.device)  # Create a torch device
+        batch_size_eval = config.general.batch_size_eval
+        pad_id = config.model.padding_idx
+        ignore_cpos = config.model.ignore_cpos
+        class_weights = config.train.class_weights
 
         if class_weights is not None:
             class_weights = torch.FloatTensor(class_weights).to(device)
@@ -319,7 +323,7 @@ class ProjectMetrics(object):
         for meta_model_card in self.cat.get_model_card(as_dict=True)['MetaCAT models']:
             meta_model = meta_model_card['Category Name']
             logger.info(f'Checking metacat model: {meta_model}')
-            _meta_model = MetaCAT.load(self.model_pack_path + '/meta_' + meta_model)
+            _meta_model = MetaCATAddon.load(self.model_pack_path + '/meta_' + meta_model)
             meta_results = self._eval(_meta_model, self.mct_export)
             _meta_values = {v: k for k, v in meta_results['meta_values'].items()}
             pred_meta_values = []
@@ -381,7 +385,7 @@ class ProjectMetrics(object):
         meta_anns_df['total_anns'] = meta_anns_df[col_lst].sum(axis=1)
         meta_anns_df = meta_anns_df.sort_values(by='total_anns', ascending=False)
         meta_anns_df = meta_anns_df.rename_axis('cui').reset_index(drop=False)
-        meta_anns_df.insert(1, 'concept_name', meta_anns_df['cui'].map(self.cat.cdb.cui2preferred_name))
+        meta_anns_df.insert(1, 'concept_name', meta_anns_df['cui'].map(self.cat.cdb.get_name))
         return meta_anns_df
 
     def generate_report(self, meta_ann=False):
@@ -400,7 +404,7 @@ class ProjectMetrics(object):
         return {'user_stats': self.user_stats().to_dict('records'),
                 'concept_summary': self.concept_summary(),
                 'annotation_summary': anno_df.to_dict('records'),
-                'meta_anno_summary': meta_anns_summary, 
+                'meta_anno_summary': meta_anns_summary,
                 'projects2doc_ids': self.projects2doc_ids,
                 'docs2text': self.docs2texts,
                 'projects2name': self.projects2names,
