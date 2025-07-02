@@ -61,7 +61,7 @@ def main(port=8000,
                     with open(vocab_tmp_file, 'wb') as f:
                         f.write(vocab_file.content)
                     print("Downloading example dataset")
-                    ds = requests.get('https://raw.githubusercontent.com/CogStack/MedCATtrainer/master/notebook_docs/example_data/ortho.csv')
+                    ds = requests.get('https://raw.githubusercontent.com/CogStack/MedCATtrainer/main/notebook_docs/example_data/ortho.csv')
                     with open(dataset_tmp_file, 'w') as f:
                         f.write(ds.text)
 

@@ -2,7 +2,7 @@ name: qa-build
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   # run tests / lint / etc. before building container image?
@@ -10,10 +10,10 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout master
+      - name: Checkout main
         uses: actions/checkout@v4
         with:
-          ref: 'master'
+          ref: 'main'
 
       - name: Build
         run: |
