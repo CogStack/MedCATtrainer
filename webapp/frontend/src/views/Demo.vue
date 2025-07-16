@@ -3,11 +3,32 @@
     <div class="demo-text">
       <form @submit.prevent>
         <div class="form-group">
-          <label>Project Model:</label>
-          <select class="form-control" v-model="selectedProject">
-            <option :value="proj" v-for="proj of projects" :key="proj.id">{{proj.name}}
-            </option>
-          </select>
+          <label>Cached Models:</label>
+          <v-select class="form-control"
+                    v-model="selectedModel"
+                    label="name"
+                    :options="cachedModels">
+            <template v-slot:option="option">
+              <span v-if="option.type === 'cdb'">CDB - </span>
+              <span v-else>Model Pack -</span>
+                {{option.name}}
+              <span v-if="option.cached">
+                <v-tooltip activator="parent" text="Model ready">
+                  <template v-slot:activator="{ props }">
+                    <font-awesome-icon class="model-cached" icon="robot" v-bind="props"></font-awesome-icon>
+                  </template>
+                </v-tooltip>
+              </span>
+              <span v-else>
+                <v-tooltip activator="parent" text="The model has not been cached">
+                  <template v-slot:activator="{ props }">
+                    <font-awesome-icon class="model-not-cached" icon="robot" v-bind="props"></font-awesome-icon>
+                  </template>
+                </v-tooltip>
+              </span>
+            </template>
+          </v-select>
+
         </div>
         <div class="form-group">
           <label>Text to Annotate:</label>
@@ -16,7 +37,7 @@
         <div class="form-group">
           <label>CUI Filter</label>
           <textarea v-model="cuiFilters" class="form-control" name="cui"
-                    rows="3" placeholder="Comma separated list: S-91175000, S-84757009"></textarea>
+                    rows="3" placeholder="Comma separated list: 91175000, 84757009"></textarea>
         </div>
         <button @click="annotate()" class="btn btn-primary">Annotate</button>
       </form>
@@ -27,7 +48,7 @@
                        :taskName="task" :taskValues="taskValues" @select:concept="selectEntity"></clinical-text>
       </div>
       <div class="sidebar">
-        <concept-summary :selectedEnt="currentEnt" :project="selectedProject"
+        <concept-summary :selectedEnt="currentEnt" :project="selectedModel"
                          :searchFilterDBIndex="searchFilterDBIndex"></concept-summary>
       </div>
     </div>
@@ -44,14 +65,14 @@ const VALUES = ['Val']
 export default {
   name: 'Demo',
   components: {
-    ClinicalText,
-    ConceptSummary
+    ConceptSummary,
+    ClinicalText
   },
   data () {
     return {
       exampleText: '',
       projects: [],
-      selectedProject: {},
+      selectedModel: {},
       cuiFilters: '',
       ents: [],
       currentEnt: {},
@@ -59,30 +80,25 @@ export default {
       loadingMsg: null,
       task: TASK_NAME,
       taskValues: VALUES,
-      searchFilterDBIndex: null
+      searchFilterDBIndex: null,
+      cachedModels: [],
+      noModelsError: null
     }
   },
   created () {
-    let projectList = []
-    let that = this
-    const baseUrl = '/api/project-annotate-entities/'
-    let getProjects = function (url) {
-      that.$http.get(url).then(resp => {
-        if (resp.data.count === (projectList.length + resp.data.results.length)) {
-          that.projects = projectList.concat(resp.data.results)
-        } else {
-          const nextUrl = `${baseUrl}?${resp.data.next.split('?').slice(-1)}`
-          projectList = projectList.concat(resp.data.results)
-          getProjects(nextUrl)
-        }
-      })
-    }
-    getProjects(baseUrl)
+    this.$http.get('/api/cache-model/').then(resp => {
+      this.cachedModels = resp.data?.cached_models
+      if (this.cachedModels?.length == 0) {
+        this.noModelsError = true
+      } else {
+        this.cachedModels = Object.values(this.cachedModels)
+      }
+    })
   },
   methods: {
     annotate () {
       const payload = {
-        project_id: this.selectedProject.id,
+        model_id: this.selectedModel.cache_id,
         message: this.exampleText,
         cuis: this.cuiFilters,
       }
@@ -102,17 +118,19 @@ export default {
       this.currentEnt = this.ents[entIndex]
     },
     fetchCDBSearchIndex () {
-      if (this.selectedProject.cdb_search_filter.length > 0) {
-        this.$http.get(`/api/concept-dbs/${this.selectedProject.cdb_search_filter[0]}/`).then(resp => {
+      if (this.selectedModel.cdb_search_filter.length > 0) {
+
+        // just select the 'first' cdb_search_filter, as that's likely to be the correct one.
+        this.$http.get(`/api/concept-dbs/${this.selectedModel.cdb_search_filter[0]}/`).then(resp => {
           if (resp.data) {
-            this.searchFilterDBIndex = `${resp.data.name}_id_${this.selectedProject.cdb_search_filter}`
+            this.searchFilterDBIndex = `${resp.data.name}_id_${this.selectedModel.cdb_search_filter}`
           }
         })
       }
     }
   },
   watch: {
-    'selectedProject': {
+    'selectedModel': {
       handler () {
         this.fetchCDBSearchIndex()
       }
@@ -153,4 +171,15 @@ export default {
 form {
   margin: 5%;
 }
+
+.model-cached {
+  float: right;
+  color: $success
+}
+
+.model-not-cached {
+  float: right;
+  opacity: 0.5;
+}
+
 </style>

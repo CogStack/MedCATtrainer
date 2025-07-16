@@ -1,3 +1,4 @@
+from collections import defaultdict
 import traceback
 from smtplib import SMTPException
 from tempfile import NamedTemporaryFile
@@ -21,7 +22,7 @@ from .admin import download_projects_with_text, download_projects_without_text, 
 from .data_utils import upload_projects_export
 from .medcat_utils import ch2pt_from_pt2ch, get_all_ch, dedupe_preserve_order, snomed_ct_concept_path
 from .metrics import calculate_metrics
-from .model_cache import get_medcat, get_cached_cdb, VOCAB_MAP, clear_cached_medcat, CAT_MAP, CDB_MAP, is_model_loaded
+from .model_cache import cache_id_to_db_model, get_cached_medcat, get_medcat_from_cache_id, get_project_medcat, get_cached_cdb, VOCAB_MAP, clear_cached_medcat, CAT_MAP, CDB_MAP, is_model_loaded
 from .permissions import *
 from .serializers import *
 from .solr_utils import collections_available, search_collection, ensure_concept_searchable
@@ -278,12 +279,12 @@ def prepare_documents(request):
                 # If the document is not already annotated, annotate it
                 if (len(anns) == 0 and not is_validated) or update:
                     # Based on the project id get the right medcat
-                    cat = get_medcat(project=project)
+                    cat = get_project_medcat(project=project)
                     logger.info('loaded medcat model for project: %s', project.id)
 
                     # Set CAT filters
                     cat.config.linking['filters']['cuis'] = cuis
-                    
+
                     if not project.deid_model_annotation:
                         spacy_doc = cat(document.text)
                     else:
@@ -381,7 +382,7 @@ def add_annotation(request):
     project = ProjectAnnotateEntities.objects.get(id=p_id)
     document = Document.objects.get(id=d_id)
 
-    cat = get_medcat(project=project)
+    cat = get_project_medcat(project=project)
     id = create_annotation(source_val=source_val,
                            selection_occurrence_index=sel_occur_idx,
                            cui=cui,
@@ -412,7 +413,7 @@ def add_concept(request):
     user = request.user
     project = ProjectAnnotateEntities.objects.get(id=p_id)
     document = Document.objects.get(id=d_id)
-    cat = get_medcat(project=project)
+    cat = get_project_medcat(project=project)
 
     if cui in cat.cdb.cui2names:
         err_msg = f'Cannot add a concept "{name}" with cui:{cui}. CUI already linked to {cat.cdb.cui2names[cui]}'
@@ -462,7 +463,7 @@ def import_cdb_concepts(request):
 def _submit_document(project: ProjectAnnotateEntities, document: Document):
     if project.train_model_on_submit:
         try:
-            cat = get_medcat(project=project)
+            cat = get_project_medcat(project=project)
             train_medcat(cat, project, document)
         except Exception as e:
             if project.vocab.id:
@@ -513,7 +514,7 @@ def save_models(request):
     # Get project id
     p_id = request.data['project_id']
     project = ProjectAnnotateEntities.objects.get(id=p_id)
-    cat = get_medcat(project=project)
+    cat = get_project_medcat(project=project)
 
     cat.cdb.save(project.concept_db.cdb_file.path)
 
@@ -605,21 +606,19 @@ def update_meta_annotation(request):
 
 @api_view(http_method_names=['POST'])
 def annotate_text(request):
-    p_id = request.data['project_id']
+    model_cache_id = request.data['model_id']
     message = request.data['message']
     cuis = request.data['cuis']
-    if message is None or p_id is None:
+    if message is None or model_cache_id is None:
         return HttpResponseBadRequest('No message to annotate')
 
-    project = ProjectAnnotateEntities.objects.get(id=p_id)
-
-    cat = get_medcat(project=project)
+    cat = get_medcat_from_cache_id(model_cache_id)
     cat.config.linking['filters']['cuis'] = set(cuis)
     spacy_doc = cat(message)
 
     ents = []
     anno_tkns = []
-    for ent in spacy_doc._.ents:
+    for i, ent in enumerate(spacy_doc._.ents):
         cnt = Entity.objects.filter(label=ent._.cui).count()
         inc_ent = all(tkn not in anno_tkns for tkn in ent)
         if inc_ent and cnt != 0:
@@ -630,7 +629,8 @@ def annotate_text(request):
                 'value': ent.text,
                 'start_ind': ent.start_char,
                 'end_ind': ent.end_char,
-                'acc': ent._.context_similarity
+                'acc': ent._.context_similarity,
+                'id': i
             })
 
     ents.sort(key=lambda e: e['start_ind'])
@@ -694,6 +694,30 @@ def upload_deployment(request):
     return Response("successfully uploaded", 200)
 
 
+@api_view(http_method_names=['GET'])
+def cached_models(_):
+    """Provides the possibe list of cached and uncached models
+    """
+    cached_model_states = [(p.id, [v['id'] for v in p.cdb_search_filter.values()],
+                            get_cached_medcat(p)) for p in ProjectAnnotateEntities.objects.all()]
+    models = {}
+    for p_id, cdb_search_filter, (cache_state, model_id) in cached_model_states:
+        d_model = cache_id_to_db_model(model_id)
+        if model_id in models:
+            models[model_id]['projects'].append(p_id)
+            models[model_id]['cdb_search_filter'] = models[model_id]['cdb_search_filter'] | set(cdb_search_filter)
+        else:
+            models[model_id] = {
+                'cache_id': model_id,
+                'projects': [p_id],
+                'cdb_search_filter': set(cdb_search_filter),
+                'name': d_model[0].name if type(d_model) is tuple else d_model.name,
+                'type': 'cdb' if type(d_model) is tuple else 'model-pack',
+                'cached': cache_state is not None
+            }
+    return Response({'cached_models': models})
+
+
 @api_view(http_method_names=['GET', 'DELETE'])
 def cache_model(request, project_id):
     try:
@@ -701,7 +725,7 @@ def cache_model(request, project_id):
         is_loaded = is_model_loaded(project)
         if request.method == 'GET':
             if not is_loaded:
-                get_medcat(project)
+                get_project_medcat(project)
             return Response('success', 200)
         elif request.method == 'DELETE':
             if is_loaded:
@@ -713,7 +737,7 @@ def cache_model(request, project_id):
         return Response(f'Project with id:{project_id} does not exist', 404)
     except Exception as e:
         return Response({'message': f'{str(e)}'}, 500)
-    
+
 
 
 @api_view(http_method_names=['GET'])
@@ -926,7 +950,7 @@ def cuis_to_concepts(request):
 def project_progress(request):
     if request.GET.get('projects') is None:
         return HttpResponseBadRequest('Cannot get progress for empty projects')
-    
+
     projects = [int(p) for p in request.GET.get('projects', []).split(',')]
 
     projects2datasets = {p.id: (p, p.dataset) for p in [ProjectAnnotateEntities.objects.filter(id=p_id).first()

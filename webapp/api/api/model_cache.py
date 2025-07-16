@@ -1,13 +1,14 @@
 import logging
 import os
-from typing import Dict
+from typing import Dict, Tuple, Union
 
 import pkg_resources
 from medcat.cat import CAT
 from medcat.cdb import CDB
 from medcat.vocab import Vocab
+from regex import R
 
-from api.models import ConceptDB
+from api.models import ConceptDB, ModelPack, Vocabulary
 
 """
 Module level caches for CDBs, Vocabs and CAT instances.
@@ -47,38 +48,48 @@ def get_medcat_from_cdb_vocab(project,
     if cat_id in cat_map:
         cat = cat_map[cat_id]
     else:
-        if cdb_id in cdb_map:
-            cdb = cdb_map[cdb_id]
-        else:
-            cdb_path = project.concept_db.cdb_file.path
-            try:
-                cdb = CDB.load(cdb_path)
-            except KeyError as ke:
-                mc_v = pkg_resources.get_distribution('medcat').version
-                if int(mc_v.split('.')[0]) > 0:
-                    logger.error('Attempted to load MedCAT v0.x model with MCTrainer v1.x')
-                    raise Exception('Attempted to load MedCAT v0.x model with MCTrainer v1.x',
-                                    'Please re-configure this project to use a MedCAT v1.x CDB or consult the '
-                                    'MedCATTrainer Dev team if you believe this should work') from ke
-                raise
-
-            custom_config = os.getenv("MEDCAT_CONFIG_FILE")
-            if custom_config is not None and os.path.exists(custom_config):
-                cdb.config.parse_config_file(path=custom_config)
-            else:
-                logger.info("No MEDCAT_CONFIG_FILE env var set to valid path, using default config available on CDB")
-            cdb_map[cdb_id] = cdb
-
-        if vocab_id in vocab_map:
-            vocab = vocab_map[vocab_id]
-        else:
-            vocab_path = project.vocab.vocab_file.path
-            vocab = Vocab.load(vocab_path)
-            vocab_map[vocab_id] = vocab
+        cdb, vocab = _load_cdb_vocab(cdb_id, vocab_id, cdb_map=cdb_map, vocab_map=vocab_map)
         cat = CAT(cdb=cdb, config=cdb.config, vocab=vocab)
         cat_map[cat_id] = cat
         _clear_models(cat_map=cat_map, cdb_map=cdb_map, vocab_map=vocab_map)
     return cat
+
+
+def _load_cdb_vocab(cdb_id: str,
+                    vocab_id: str,
+                    cdb_map: Dict[str, CDB]=CDB_MAP,
+                    vocab_map: Dict[str, Vocab]=VOCAB_MAP):
+    if cdb_id in cdb_map:
+        cdb = cdb_map[cdb_id]
+    else:
+        conceptdb = ConceptDB.objects.get(id=cdb_id)
+        cdb_path = conceptdb.cdb_file.path
+        try:
+            cdb = CDB.load(cdb_path)
+        except KeyError as ke:
+            mc_v = pkg_resources.get_distribution('medcat').version
+            if int(mc_v.split('.')[0]) > 0:
+                logger.error('Attempted to load MedCAT v0.x model with MCTrainer v1.x')
+                raise Exception('Attempted to load MedCAT v0.x model with MCTrainer v1.x',
+                                'Please re-configure this project to use a MedCAT v1.x CDB or consult the '
+                                'MedCATTrainer Dev team if you believe this should work') from ke
+            raise
+
+        custom_config = os.getenv("MEDCAT_CONFIG_FILE")
+        if custom_config is not None and os.path.exists(custom_config):
+            cdb.config.parse_config_file(path=custom_config)
+        else:
+            logger.info("No MEDCAT_CONFIG_FILE env var set to valid path, using default config available on CDB")
+        cdb_map[cdb_id] = cdb
+
+    if vocab_id in vocab_map:
+        vocab = vocab_map[vocab_id]
+    else:
+        vocabulary = Vocabulary.objects.get(id=vocab_id)
+        vocab_path = vocabulary.vocab_file.path
+        vocab = Vocab.load(vocab_path)
+        vocab_map[vocab_id] = vocab
+    return cdb, vocab
 
 
 def get_medcat_from_model_pack(project, cat_map: Dict[str, CAT]=CAT_MAP) -> CAT:
@@ -91,10 +102,10 @@ def get_medcat_from_model_pack(project, cat_map: Dict[str, CAT]=CAT_MAP) -> CAT:
     return cat
 
 
-def get_medcat(project,
-               cdb_map: Dict[str, CDB]=CDB_MAP,
-               vocab_map: Dict[str, Vocab]=VOCAB_MAP,
-               cat_map: Dict[str, CAT]=CAT_MAP):
+def get_project_medcat(project,
+                       cdb_map: Dict[str, CDB]=CDB_MAP,
+                       vocab_map: Dict[str, Vocab]=VOCAB_MAP,
+                       cat_map: Dict[str, CAT]=CAT_MAP) -> CAT:
     try:
         if project.model_pack is None:
             cat = get_medcat_from_cdb_vocab(project, cdb_map, vocab_map, cat_map)
@@ -105,14 +116,54 @@ def get_medcat(project,
         raise Exception('Failure loading Project ConceptDB, Vocab or Model Pack. Are these set correctly?')
 
 
-def get_cached_medcat(project, cat_map: Dict[str, CAT]=CAT_MAP):
+def get_medcat_from_cache_id(cache_id: str,
+                             cdb_map: Dict[str, CDB]=CDB_MAP,
+                             vocab_map: Dict[str, Vocab]=VOCAB_MAP,
+                             cat_map: Dict[str, CAT]=CAT_MAP) -> CAT:
+    cat = cat_map.get(cache_id, None)
+    if cat is not None:
+        return cat
+
+    if cache_id.startswith('mp'):
+        model_pack_obj = ModelPack.objects.get(id=cache_id.replace('mp', ''))
+        cat = CAT.load_model_pack(model_pack_obj.model_pack.path)
+    else:
+        ids = cache_id.splits
+        conceptdb = ConceptDB.objects.get(id=ids[0])
+        vocablary = Vocabulary.objects.get(id=ids[1])
+        cdb, vocab = _load_cdb_vocab(conceptdb, vocablary, cdb_map=cdb_map, vocab_map=vocab_map)
+        cat = CAT(cdb=cdb, config=cdb.config, vocab=vocab)
+    cat_map[cache_id] = cat
+    return cat
+
+
+def get_cached_medcat(project, cat_map: Dict[str, CAT]=CAT_MAP) -> Tuple[CAT, str]:
     if project.model_pack is not None:
         cat_id = 'mp' + str(project.model_pack.id)
     else:
         cdb_id = project.concept_db.id
         vocab_id = project.vocab.id
         cat_id = str(cdb_id) + "-" + str(vocab_id)
-    return cat_map.get(cat_id)
+    return cat_map.get(cat_id), cat_id
+
+
+def cache_id_to_db_model(cache_id: str) -> Union[ModelPack, Tuple[ConceptDB, Vocabulary]]:
+    """Return the ORM DB model from this cache id.
+
+    Args:
+        cache_id (str): the cache_id derived from the model_pack or ConceptDB / Vocabulary ORM models.
+
+    Returns:
+        Union[ModelPack, Tuple[ConceptDB, Vocabulary]]: the backing ORM DB model
+    """
+    if cache_id.startswith('mp'):
+        model = ModelPack.objects.get(id=cache_id.replace('mp', ''))
+        return model
+    else:
+        ids = cache_id.split('-')
+        cdb_id, vocab_id = ids[0], ids[1]
+        cdb_model, vocab_model = ConceptDB.objects.get(id=cdb_id), Vocabulary.objects.get(id=vocab_id)
+        return cdb_model, vocab_model
 
 
 def clear_cached_medcat(project, cat_map: Dict[str, CAT]=CAT_MAP):

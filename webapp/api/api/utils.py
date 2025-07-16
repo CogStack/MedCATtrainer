@@ -13,7 +13,8 @@ from medcat.utils.filters import check_filters
 from medcat.utils.helpers import tkns_from_doc
 from medcat.utils.ner.deid import DeIdModel
 
-from .model_cache import get_medcat
+from api.model_cache import get_project_medcat
+
 from .models import Entity, AnnotatedEntity, ProjectAnnotateEntities, \
     MetaAnnotation, MetaTask, Document
 
@@ -244,7 +245,7 @@ def prep_docs(project_id: List[int], doc_ids: List[int], user_id: int):
     docs = Document.objects.filter(id__in=doc_ids)
 
     logger.info('Loading CAT object in bg process for project: %s', project.id)
-    cat = get_medcat(project=project)
+    cat = get_project_medcat(project=project)
 
     # Set CAT filters
     cat.config.linking['filters']['cuis'] = project.cuis

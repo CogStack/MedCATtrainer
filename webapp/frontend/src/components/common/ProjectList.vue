@@ -334,10 +334,10 @@ export default {
       if (this.selectedProjects.length === 0) {
         return {class: ''}
       } else {
-        let disabled = !(this.selectedProjects[0].concept_db === data.item.concept_db && 
+        let disabled = !(this.selectedProjects[0].concept_db === data.item.concept_db &&
                         this.selectedProjects[0].vocab === data.item.vocab) ||
                         this.selectedProjects[0].model_pack !== data.item.model_pack
-        return {class: disabled ? ' disabled-row' : ''}  
+        return {class: disabled ? ' disabled-row' : ''}
       }
     },
     submitMetricsReportReq () {

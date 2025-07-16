@@ -42,14 +42,14 @@ class ModelPack(models.Model):
     meta_cats = models.ManyToManyField('MetaCATModel', blank=True, default=None)
     create_time = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
-    last_modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=None, null=True)   
+    last_modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=None, null=True)
 
     @transaction.atomic
     def save(self, *args, **kwargs):
         is_new = self._state.adding
         if is_new:
             super().save(*args, **kwargs)
-        
+
         # Process the model pack
         logger.info('Loading model pack: %s', self.model_pack)
         model_pack_name = str(self.model_pack).replace(".zip", "")
@@ -98,7 +98,7 @@ class ModelPack(models.Model):
             self.meta_cats.set(metaCATmodels)  # Use set() instead of add() for atomic operation
         except Exception as exc:
             raise MedCATLoadException(f'Failure loading MetaCAT models - {unpacked_model_pack_path}') from exc
-            
+
         # Only save if this is an update (not a new instance)
         if not is_new:
             super().save(*args, **kwargs)
