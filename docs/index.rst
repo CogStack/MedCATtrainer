@@ -19,7 +19,8 @@ Welcome to MedCATtrainer's documentation!
    annotator_guide.md
    meta_annotations.md
    advanced_usage.md
-   maintanence.md
+   maintenance.md
+   client.md
 
 
 Indices and tables
